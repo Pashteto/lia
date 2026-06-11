@@ -14,7 +14,7 @@ A web-first discovery platform for **participatory cultural practices** in a sin
 |------|-------------|
 | `frontend/` | Web client (Next.js + TypeScript + Tailwind). Scaffolding to be added. |
 | `backend/` | API and services (Go modular monolith, PostgreSQL + PostGIS, Redis, S3). Scaffolding to be added. |
-| `design/` | Design explorations and mockups (`stitch_/`) — desktop variants, mobile, curatorial-minimalist direction. |
+| `design/` | Design system + reference screens. Active direction: **Apple HIG-based** (web-first, light/dark) — see `design/DESIGN.md`. `stitch_/` kept as historical archive. |
 | `docs/` | Project documentation — technical stack and the design agent brief. |
 
 ### Documentation (`docs/`)

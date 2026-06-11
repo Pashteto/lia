@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lia — Create event (Apple design system)</title>
+  <style>
+    body{ margin:0; padding:32px; background:#e9e9ee; font-family:-apple-system,system-ui,sans-serif; }
+    h1.page{ font:600 15px/1 -apple-system,system-ui,sans-serif; color:#3c3c43; opacity:.6; text-transform:uppercase; letter-spacing:.04em; margin:0 0 20px; }
+  </style>
+  <style>
+  .lia2{ font-family:-apple-system,"SF Pro Text","SF Pro Display",system-ui,"Segoe UI",Roboto,sans-serif; -webkit-font-smoothing:antialiased; }
+  .lia2 *{ box-sizing:border-box; }
+  .lia2-stage{ display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap; }
+  .L2{ --bg:#F2F2F7; --bg2:#FFFFFF; --label:#000; --label2:rgba(60,60,67,.6); --sep:rgba(60,60,67,.18);
+       --accent:#007AFF; --glass:rgba(249,249,249,.72); --fill:rgba(118,118,128,.12); --green:#34C759; }
+  .D2{ --bg:#000; --bg2:#1C1C1E; --label:#fff; --label2:rgba(235,235,245,.6); --sep:rgba(84,84,88,.6);
+       --accent:#0A84FF; --glass:rgba(30,30,30,.72); --fill:rgba(118,118,128,.24); --green:#30D158; }
+
+  .f-desk{ flex:1 1 560px; min-width:520px; background:var(--bg); border-radius:20px; overflow:hidden; border:1px solid var(--sep); }
+  .f-nav{ position:sticky; top:0; z-index:2; backdrop-filter:saturate(180%) blur(20px); -webkit-backdrop-filter:saturate(180%) blur(20px);
+          background:var(--glass); border-bottom:.5px solid var(--sep); padding:13px 22px; display:flex; align-items:center; justify-content:space-between; }
+  .f-nav .cancel{ color:var(--accent); font-size:15px; }
+  .f-nav .title{ font-size:16px; font-weight:600; color:var(--label); }
+  .f-nav .save{ color:#fff; background:var(--accent); font-size:14px; font-weight:600; padding:6px 14px; border-radius:980px; }
+  .f-body{ padding:18px 22px 24px; }
+
+  .grp{ margin-bottom:22px; }
+  .grp-h{ font-size:13px; color:var(--label2); text-transform:uppercase; letter-spacing:.02em; padding:0 4px 7px; }
+  .list{ background:var(--bg2); border-radius:12px; overflow:hidden; }
+  .row{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; position:relative; }
+  .row + .row::before{ content:""; position:absolute; left:14px; right:0; top:0; height:.5px; background:var(--sep); }
+  .row .k{ font-size:16px; color:var(--label); white-space:nowrap; }
+  .row .v{ font-size:16px; color:var(--label2); text-align:right; flex:1; }
+  .row .v.ph{ color:var(--label2); opacity:.7; }
+  .chev{ color:var(--label2); opacity:.5; }
+  .area{ padding:12px 14px; }
+  .area .k{ font-size:16px; color:var(--label); display:block; margin-bottom:6px; }
+  .area .txt{ font-size:15px; color:var(--label2); line-height:1.5; }
+
+  .cover{ height:150px; border-radius:12px; background:linear-gradient(135deg,#8a7f76,#3a3631); display:flex; align-items:center; justify-content:center;
+          color:rgba(255,255,255,.9); font-size:14px; margin-bottom:22px; border:1px dashed rgba(255,255,255,.4); }
+
+  .seg{ display:inline-flex; background:var(--fill); border-radius:9px; padding:2px; }
+  .seg span{ font-size:13px; font-weight:500; color:var(--label); padding:5px 11px; border-radius:7px; }
+  .seg span.on{ background:var(--bg2); box-shadow:0 1px 2px rgba(0,0,0,.12); }
+
+  .sw{ width:51px; height:31px; border-radius:980px; background:var(--green); position:relative; flex:0 0 auto; }
+  .sw::after{ content:""; position:absolute; top:2px; left:22px; width:27px; height:27px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.3); }
+
+  .step{ display:inline-flex; align-items:center; background:var(--fill); border-radius:8px; overflow:hidden; }
+  .step b{ font-size:18px; font-weight:500; color:var(--accent); padding:4px 12px; }
+  .step i{ width:.5px; align-self:stretch; background:var(--sep); }
+  .step .num{ font-size:16px; color:var(--label); padding:4px 10px; }
+
+  /* phone */
+  .f-phone{ flex:0 0 300px; width:300px; background:var(--bg); border-radius:38px; padding:10px; border:1px solid var(--sep); box-shadow:0 20px 50px rgba(0,0,0,.25); }
+  .f-screen{ background:var(--bg); border-radius:30px; overflow:hidden; height:620px; display:flex; flex-direction:column; }
+  .f-mnav{ backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); background:var(--glass); padding:46px 16px 11px; border-bottom:.5px solid var(--sep);
+           display:flex; align-items:center; justify-content:space-between; }
+  .f-mscroll{ flex:1; overflow:auto; padding:16px; }
+</style>
+</head>
+<body>
+  <h1 class="page">Lia · Создание события</h1>
+  <div class="lia2">
+ <div class="lia2-stage">
+
+  <!-- DESKTOP LIGHT -->
+  <div class="f-desk L2">
+    <div class="f-nav"><span class="cancel">Отмена</span><span class="title">Новое событие</span><span class="save">Сохранить</span></div>
+    <div class="f-body">
+      <div class="cover">＋ Загрузить обложку · 1600×900</div>
+
+      <div class="grp">
+        <div class="grp-h">Основное</div>
+        <div class="list">
+          <div class="row"><span class="k">Название</span><span class="v">Память и архив: разговор у работ</span></div>
+          <div class="area"><span class="k">Описание</span><span class="txt">Медиатор открывает разговор у работ выставки — не экскурсия, а совместное всматривание и обмен.</span></div>
+        </div>
+      </div>
+
+      <div class="grp">
+        <div class="grp-h">Формат и категория</div>
+        <div class="list">
+          <div class="row"><span class="k">Категория</span><span class="v">Медиация</span><span class="chev">›</span></div>
+          <div class="row"><span class="k">Формат</span><span class="v" style="flex:0 0 auto"></span><span class="seg"><span class="on">Очно</span><span>Онлайн</span></span></div>
+          <div class="row"><span class="k">Теги</span><span class="v ph">память · архив · разговор</span><span class="chev">›</span></div>
+        </div>
+      </div>
+
+      <div class="grp">
+        <div class="grp-h">Место и время</div>
+        <div class="list">
+          <div class="row"><span class="k">Место</span><span class="v">Галерея «Цех»</span><span class="chev">›</span></div>
+          <div class="row"><span class="k">Дата</span><span class="v">14 июня 2026</span></div>
+          <div class="row"><span class="k">Время</span><span class="v">19:00</span></div>
+        </div>
+      </div>
+
+      <div class="grp">
+        <div class="grp-h">Участники и цена</div>
+        <div class="list">
+          <div class="row"><span class="k">Лимит мест</span><span class="v" style="flex:0 0 auto"></span><span class="step"><b>−</b><i></i><span class="num">12</span><i></i><b>＋</b></span></div>
+          <div class="row"><span class="k">Бесплатно</span><span class="v" style="flex:0 0 auto"></span><span class="sw"></span></div>
+        </div>
+      </div>
+
+      <div class="grp">
+        <div class="grp-h">Публикация</div>
+        <div class="list">
+          <div class="row" style="display:block"><div class="seg" style="display:flex"><span>Черновик</span><span class="on">На модерацию</span><span>Опубликовано</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MOBILE DARK -->
+  <div class="f-phone D2">
+    <div class="f-screen">
+      <div class="f-mnav"><span class="cancel" style="color:var(--accent);font-size:15px">Отмена</span><span class="title" style="font-size:16px;font-weight:600;color:var(--label)">Новое событие</span><span class="save" style="color:#fff;background:var(--accent);font-size:13px;font-weight:600;padding:5px 12px;border-radius:980px">Готово</span></div>
+      <div class="f-mscroll">
+        <div class="cover" style="height:110px;margin-bottom:18px">＋ Обложка</div>
+        <div class="grp"><div class="grp-h">Основное</div>
+          <div class="list">
+            <div class="row"><span class="k" style="font-size:15px">Название</span><span class="v" style="font-size:14px">Память и архив…</span></div>
+            <div class="row"><span class="k" style="font-size:15px">Категория</span><span class="v" style="font-size:14px">Медиация</span><span class="chev">›</span></div>
+          </div>
+        </div>
+        <div class="grp"><div class="grp-h">Время</div>
+          <div class="list">
+            <div class="row"><span class="k" style="font-size:15px">Дата</span><span class="v" style="font-size:14px">14 июня</span></div>
+            <div class="row"><span class="k" style="font-size:15px">Время</span><span class="v" style="font-size:14px">19:00</span></div>
+          </div>
+        </div>
+        <div class="grp"><div class="grp-h">Участники</div>
+          <div class="list">
+            <div class="row"><span class="k" style="font-size:15px">Бесплатно</span><span class="v" style="flex:0 0 auto"></span><span class="sw"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+ </div>
+</div>
+</body>
+</html>

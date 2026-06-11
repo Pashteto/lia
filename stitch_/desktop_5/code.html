@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+
+<html lang="ru"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Панель Модерации</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Noto+Serif:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "secondary-fixed": "#e3e1ea",
+                      "on-secondary": "#ffffff",
+                      "on-secondary-fixed-variant": "#46464d",
+                      "secondary": "#5e5e65",
+                      "on-tertiary-fixed-variant": "#474646",
+                      "tertiary": "#000000",
+                      "primary": "#000000",
+                      "background": "#fdf8f8",
+                      "tertiary-fixed": "#e5e2e1",
+                      "inverse-on-surface": "#f4f0ef",
+                      "tertiary-container": "#1c1b1b",
+                      "surface-container-lowest": "#ffffff",
+                      "primary-fixed-dim": "#c9c6c5",
+                      "on-tertiary-fixed": "#1c1b1b",
+                      "outline-variant": "#c4c7c7",
+                      "primary-container": "#1c1b1b",
+                      "surface-dim": "#ddd9d8",
+                      "surface-container-low": "#f7f3f2",
+                      "on-primary-container": "#858383",
+                      "tertiary-fixed-dim": "#c8c6c5",
+                      "on-primary-fixed": "#1c1b1b",
+                      "surface-container-high": "#ebe7e6",
+                      "on-error": "#ffffff",
+                      "outline": "#747878",
+                      "error": "#ba1a1a",
+                      "surface-container": "#f1edec",
+                      "inverse-primary": "#c9c6c5",
+                      "surface-variant": "#e5e2e1",
+                      "surface-tint": "#5f5e5e",
+                      "surface-bright": "#fdf8f8",
+                      "on-primary": "#ffffff",
+                      "primary-fixed": "#e5e2e1",
+                      "on-primary-fixed-variant": "#474646",
+                      "on-secondary-container": "#64646b",
+                      "surface-container-highest": "#e5e2e1",
+                      "secondary-fixed-dim": "#c7c5ce",
+                      "on-surface": "#1c1b1b",
+                      "on-surface-variant": "#444748",
+                      "on-background": "#1c1b1b",
+                      "on-secondary-fixed": "#1b1b21",
+                      "on-tertiary": "#ffffff",
+                      "on-error-container": "#93000a",
+                      "inverse-surface": "#313030",
+                      "on-tertiary-container": "#858383",
+                      "error-container": "#ffdad6",
+                      "secondary-container": "#e3e1ea",
+                      "surface": "#fdf8f8"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "stack-lg": "32px",
+                      "margin-mobile": "16px",
+                      "unit": "4px",
+                      "container-max": "1120px",
+                      "gutter": "24px",
+                      "section-gap": "80px",
+                      "stack-sm": "8px",
+                      "stack-md": "16px",
+                      "margin-desktop": "48px"
+              },
+              "fontFamily": {
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "label-sm": [
+                              "Inter"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "display-lg": [
+                              "Noto Serif"
+                      ],
+                      "headline-md": [
+                              "Noto Serif"
+                      ],
+                      "headline-sm": [
+                              "Noto Serif"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "display-lg-mobile": [
+                              "Noto Serif"
+                      ]
+              },
+              "fontSize": {
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.4",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-sm": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg-mobile": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-surface-container-highest sticky top-0 w-full z-50 border-b border-outline-variant dark:border-outline">
+<div class="flex justify-between items-center h-16 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<div class="flex items-center gap-6">
+<div class="font-headline-sm text-headline-sm font-bold tracking-tight text-primary dark:text-on-surface">Participatory</div>
+<nav class="hidden md:flex gap-6">
+<a class="font-label-md text-label-md text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-on-surface transition-colors duration-200" href="#">Practices</a>
+<a class="font-label-md text-label-md text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-on-surface transition-colors duration-200" href="#">About</a>
+<a class="font-label-md text-label-md text-primary dark:text-on-surface font-bold border-b-2 border-primary pb-1" href="#">Community</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden md:flex gap-4">
+<button class="text-on-surface-variant hover:text-primary transition-colors duration-200">
+<span class="material-symbols-outlined">location_on</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors duration-200">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</div>
+<a class="font-label-md text-label-md text-primary dark:text-on-surface hover:text-primary transition-colors duration-200" href="#">Sign In</a>
+<img alt="User avatar" class="w-8 h-8 rounded-full border border-outline-variant" data-alt="A small, circular avatar image of a user, typical for a profile icon in a minimalist web interface. The image should be clean and simple, fitting a light-mode aesthetic with high contrast and a professional, approachable feel." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDASyqxyJ_vLeWitKWViE2gHwUhv-_Pz2MnzkKCileRhTU2WZcXOr_dZz39uRrd6485cBFzvc6zW8Wdk38COy0QrwCSqRTCSjiMY-vDU7CEtHs-g9WvzY0oKA2E3Fqs_rOMgCN3XfToApjvinxNyuguN4PvoVEydx53IH4NXLlpZeoTyq6a_OTXuGk6r8BFYeo6DsSpi5tqd_Kt4ab5CJVlyMnziKZg7VXTADRbeHBoOduRcehsumylcfHdOHLhNRuZ9Zqff6I2uA"/>
+</div>
+</div>
+</header>
+<main class="flex-grow flex w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg gap-gutter">
+<!-- Left: Queue List -->
+<aside class="w-full md:w-1/3 flex flex-col gap-stack-md border-r border-outline-variant pr-gutter pb-section-gap h-[calc(100vh-100px)] overflow-y-auto">
+<h1 class="font-headline-sm text-headline-sm mb-stack-sm">Очередь модерации</h1>
+<!-- List Items -->
+<div class="flex flex-col gap-unit">
+<!-- Active Item -->
+<button class="w-full text-left p-stack-sm bg-surface-container rounded-lg border border-primary flex flex-col gap-unit transition-colors hover:bg-surface-container-high focus:outline-none focus:ring-1 focus:ring-outline">
+<div class="flex justify-between items-start w-full">
+<span class="font-label-sm text-label-sm bg-surface px-2 py-1 rounded-full border border-outline-variant uppercase text-on-surface-variant">Выставка</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Сегодня, 10:45</span>
+</div>
+<h3 class="font-label-md text-label-md font-bold">Симбиоз Света и Тени</h3>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-1 text-sm">Галерея Современного Искусства</p>
+</button>
+<!-- Inactive Item 1 -->
+<button class="w-full text-left p-stack-sm bg-surface rounded-lg border border-outline-variant flex flex-col gap-unit transition-colors hover:bg-surface-container-high focus:outline-none focus:ring-1 focus:ring-outline">
+<div class="flex justify-between items-start w-full">
+<span class="font-label-sm text-label-sm bg-surface-container px-2 py-1 rounded-full border border-outline-variant uppercase text-on-surface-variant">Лекция</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Вчера, 18:20</span>
+</div>
+<h3 class="font-label-md text-label-md">Архитектура Будущего</h3>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-1 text-sm">Центр Урбанистики</p>
+</button>
+<!-- Inactive Item 2 -->
+<button class="w-full text-left p-stack-sm bg-surface rounded-lg border border-outline-variant flex flex-col gap-unit transition-colors hover:bg-surface-container-high focus:outline-none focus:ring-1 focus:ring-outline">
+<div class="flex justify-between items-start w-full">
+<span class="font-label-sm text-label-sm bg-surface-container px-2 py-1 rounded-full border border-outline-variant uppercase text-on-surface-variant">Воркшоп</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Вчера, 14:00</span>
+</div>
+<h3 class="font-label-md text-label-md">Основы Керамики</h3>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-1 text-sm">Студия "Глина"</p>
+</button>
+</div>
+</aside>
+<!-- Right: Detail View -->
+<section class="hidden md:flex w-2/3 flex-col gap-stack-lg h-[calc(100vh-100px)] overflow-y-auto pl-gutter pb-section-gap">
+<!-- Actions Header -->
+<div class="flex justify-between items-center bg-surface p-stack-md rounded-lg border border-outline-variant sticky top-0 z-10 shadow-sm">
+<div class="flex gap-stack-sm">
+<button class="bg-primary text-on-primary px-6 py-2 rounded-full font-label-md text-label-md transition-opacity hover:opacity-90">Одобрить</button>
+<button class="bg-surface text-on-surface px-6 py-2 rounded-full border border-outline-variant font-label-md text-label-md transition-colors hover:bg-surface-container-low">Отклонить</button>
+<button class="bg-surface text-on-surface px-6 py-2 rounded-full border border-outline-variant font-label-md text-label-md transition-colors hover:bg-surface-container-low">Запросить правки</button>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<!-- Content Preview -->
+<article class="bg-surface p-stack-lg rounded-[16px] border border-outline-variant flex flex-col gap-stack-md">
+<img alt="Симбиоз Света и Тени" class="w-full h-64 object-cover rounded-lg mb-stack-sm" data-alt="A modern art gallery interior with a stark, minimalist aesthetic. Bright white walls contrast with an abstract light installation casting sharp, geometric shadows. The atmosphere is quiet, intellectual, and sophisticated, reflecting a high-end cultural event space in a clean light-mode palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAEmeRbfX9hTJzZgZAbkJ9r3T9Bc_Ia5kBN2rPcZ4UBz5cobcn0DCRHOZxqiWx9rwiwBSWUcL2_PoGHJFNN7thLh8gXGnr8ivElGgrzFdI0KtBzeNH92Ly24CkZCDLO4tmsvyqtGNz0Cz9fE2BPBXO2UcS_7oxbvxVCAXUJOcOOo_R2V2xUbEc2nri_slpWwka2YQLBap9aXvEfnSwrN5bFa89ywzyzeMxRw_H5NGTkFrWziSPgmr5E0EKjgWNPhFxo_E6MtDNW4A"/>
+<div class="flex flex-col gap-unit">
+<div class="flex gap-stack-sm mb-unit">
+<span class="font-label-sm text-label-sm bg-surface-container px-3 py-1 rounded-full border border-outline-variant uppercase">Выставка</span>
+<span class="font-label-sm text-label-sm bg-surface-container px-3 py-1 rounded-full border border-outline-variant uppercase">Искусство</span>
+</div>
+<h2 class="font-display-lg text-display-lg leading-tight">Симбиоз Света и Тени</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Отправлено: Иван Иванов, 10:45</p>
+</div>
+<hr class="border-t border-outline-variant my-stack-sm w-full"/>
+<div class="grid grid-cols-2 gap-stack-lg">
+<div class="flex flex-col gap-stack-sm">
+<div class="flex items-start gap-stack-sm">
+<span class="material-symbols-outlined text-on-surface-variant">calendar_today</span>
+<div>
+<h4 class="font-label-md text-label-md font-bold">Даты проведения</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">15 Октября - 30 Ноября 2024</p>
+</div>
+</div>
+<div class="flex items-start gap-stack-sm">
+<span class="material-symbols-outlined text-on-surface-variant">location_on</span>
+<div>
+<h4 class="font-label-md text-label-md font-bold">Местоположение</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Галерея Современного Искусства<br/>ул. Творческая, 12</p>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-stack-sm">
+<div class="flex items-start gap-stack-sm">
+<span class="material-symbols-outlined text-on-surface-variant">group</span>
+<div>
+<h4 class="font-label-md text-label-md font-bold">Организатор</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Арт-группа "Синтез"</p>
+</div>
+</div>
+<div class="flex items-start gap-stack-sm">
+<span class="material-symbols-outlined text-on-surface-variant">payments</span>
+<div>
+<h4 class="font-label-md text-label-md font-bold">Вход</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Свободный, по регистрации</p>
+</div>
+</div>
+</div>
+</div>
+<hr class="border-t border-outline-variant my-stack-sm w-full"/>
+<div>
+<h4 class="font-headline-sm text-headline-sm mb-stack-sm">Описание</h4>
+<p class="font-body-md text-body-md text-on-surface-variant whitespace-pre-line">Проект «Симбиоз Света и Тени» исследует границы восприятия через призму оптических иллюзий и кинетических скульптур. Художники предлагают зрителям погрузиться в пространство, где свет становится осязаемым материалом, а тень обретает самостоятельную форму.
+
+На выставке будут представлены работы ведущих медиа-художников, создающих интерактивные инсталляции. Каждое произведение реагирует на присутствие зрителя, делая его соавтором визуального опыта. Кураторская концепция подчеркивает хрупкость границы между реальным и иллюзорным в цифровую эпоху.</p>
+</div>
+</article>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-low dark:bg-surface-container-lowest border-t border-outline-variant dark:border-outline mt-auto w-full py-stack-lg">
+<div class="grid grid-cols-1 md:flex md:justify-between items-start px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto gap-gutter">
+<div class="font-headline-sm text-headline-sm text-primary dark:text-on-surface">Participatory</div>
+<div class="flex flex-wrap gap-stack-md">
+<a class="font-label-sm text-label-sm text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-on-surface hover:underline transition-all focus:ring-1 focus:ring-outline" href="#">Product</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-on-surface hover:underline transition-all focus:ring-1 focus:ring-outline" href="#">Legal</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-on-surface hover:underline transition-all focus:ring-1 focus:ring-outline" href="#">Contacts</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-on-surface hover:underline transition-all focus:ring-1 focus:ring-outline" href="#">Language</a>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant mt-stack-md md:mt-0">© 2024 Participatory. All rights reserved.</p>
+</div>
+</footer>
+</body></html>

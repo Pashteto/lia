@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+
+<html lang="ru"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Главная - Participatory</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Noto+Serif:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed": "#e3e1ea",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-fixed-variant": "#46464d",
+                        "secondary": "#5e5e65",
+                        "on-tertiary-fixed-variant": "#474646",
+                        "tertiary": "#000000",
+                        "primary": "#000000",
+                        "background": "#fdf8f8",
+                        "tertiary-fixed": "#e5e2e1",
+                        "inverse-on-surface": "#f4f0ef",
+                        "tertiary-container": "#1c1b1b",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed-dim": "#c9c6c5",
+                        "on-tertiary-fixed": "#1c1b1b",
+                        "outline-variant": "#c4c7c7",
+                        "primary-container": "#1c1b1b",
+                        "surface-dim": "#ddd9d8",
+                        "surface-container-low": "#f7f3f2",
+                        "on-primary-container": "#858383",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "on-primary-fixed": "#1c1b1b",
+                        "surface-container-high": "#ebe7e6",
+                        "on-error": "#ffffff",
+                        "outline": "#747878",
+                        "error": "#ba1a1a",
+                        "surface-container": "#f1edec",
+                        "inverse-primary": "#c9c6c5",
+                        "surface-variant": "#e5e2e1",
+                        "surface-tint": "#5f5e5e",
+                        "surface-bright": "#fdf8f8",
+                        "on-primary": "#ffffff",
+                        "primary-fixed": "#e5e2e1",
+                        "on-primary-fixed-variant": "#474646",
+                        "on-secondary-container": "#64646b",
+                        "surface-container-highest": "#e5e2e1",
+                        "secondary-fixed-dim": "#c7c5ce",
+                        "on-surface": "#1c1b1b",
+                        "on-surface-variant": "#444748",
+                        "on-background": "#1c1b1b",
+                        "on-secondary-fixed": "#1b1b21",
+                        "on-tertiary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "inverse-surface": "#313030",
+                        "on-tertiary-container": "#858383",
+                        "error-container": "#ffdad6",
+                        "secondary-container": "#e3e1ea",
+                        "surface": "#fdf8f8"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-lg": "32px",
+                        "margin-mobile": "16px",
+                        "unit": "4px",
+                        "container-max": "1120px",
+                        "gutter": "24px",
+                        "section-gap": "80px",
+                        "stack-sm": "8px",
+                        "stack-md": "16px",
+                        "margin-desktop": "48px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "label-md": ["Inter"],
+                        "display-lg": ["Noto Serif"],
+                        "headline-md": ["Noto Serif"],
+                        "headline-sm": ["Noto Serif"],
+                        "body-md": ["Inter"],
+                        "display-lg-mobile": ["Noto Serif"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "label-sm": ["12px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                        "label-md": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                        "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "400"}],
+                        "headline-md": ["32px", {"lineHeight": "1.2", "fontWeight": "400"}],
+                        "headline-sm": ["24px", {"lineHeight": "1.3", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "display-lg-mobile": ["32px", {"lineHeight": "1.2", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style type="text/tailwindcss">
+        @layer utilities {
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+            .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col antialiased">
+<!-- TopAppBar (Mobile optimized based on JSON but hidden top links per rules) -->
+<header class="bg-surface sticky top-0 w-full z-50 border-b border-outline-variant flat no shadows md:hidden">
+<div class="flex justify-between items-center h-16 px-margin-mobile w-full">
+<div class="font-headline-sm text-headline-sm font-bold tracking-tight text-primary">Participatory</div>
+<div class="flex items-center gap-4">
+<button aria-label="Location" class="text-on-surface-variant hover:text-primary transition-colors duration-200">
+<span class="material-symbols-outlined">location_on</span>
+</button>
+<button aria-label="Notifications" class="text-on-surface-variant hover:text-primary transition-colors duration-200">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button aria-label="Menu" class="text-on-surface-variant hover:text-primary transition-colors duration-200 md:hidden" onclick="document.getElementById('mobile-menu').classList.toggle('hidden')">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</div>
+<!-- Mobile Dropdown Menu -->
+<div class="hidden bg-surface border-t border-outline-variant px-margin-mobile py-stack-md flex flex-col gap-stack-sm" id="mobile-menu">
+<a class="font-label-md text-label-md text-primary font-bold border-b-2 border-primary pb-1" href="#">Practices</a>
+<a class="font-label-md text-label-md text-on-surface-variant" href="#">About</a>
+<a class="font-label-md text-label-md text-on-surface-variant" href="#">Community</a>
+<button class="mt-4 bg-primary text-on-primary rounded-full px-6 py-3 font-label-md text-label-md text-center w-full" onclick="openSignInSheet()">Sign In</button>
+</div>
+</header>
+<!-- TopAppBar (Desktop - Hidden on mobile) -->
+<header class="bg-surface sticky top-0 w-full z-50 border-b border-outline-variant flat no shadows hidden md:block">
+<div class="flex justify-between items-center h-16 px-margin-desktop max-w-container-max mx-auto">
+<div class="font-headline-sm text-headline-sm font-bold tracking-tight text-primary">Participatory</div>
+<nav class="flex gap-6">
+<a class="font-label-md text-label-md text-primary font-bold border-b-2 border-primary pb-1" href="#">Practices</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">About</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">Community</a>
+</nav>
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="bg-surface-container-lowest border border-outline-variant rounded-lg pl-3 pr-10 py-2 font-body-md text-body-md focus:border-tertiary focus:outline-none w-48" placeholder="Search..." type="text"/>
+</div>
+<button aria-label="Location" class="text-on-surface-variant hover:text-primary transition-colors duration-200">
+<span class="material-symbols-outlined">location_on</span>
+</button>
+<button aria-label="Notifications" class="text-on-surface-variant hover:text-primary transition-colors duration-200">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="bg-primary text-on-primary rounded-full px-6 py-2 font-label-md text-label-md hover:bg-tertiary transition-colors" onclick="openSignInSheet()">Sign In</button>
+</div>
+</div>
+</header>
+<main class="flex-grow pb-[100px] md:pb-0">
+<!-- Hero Section -->
+<section class="px-margin-mobile md:px-margin-desktop py-section-gap max-w-container-max mx-auto text-center">
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary mb-stack-md">
+                Откройте для себя новые<br class="hidden md:block"/> культурные практики
+            </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto mb-stack-lg">
+                Присоединяйтесь к кураторским событиям, выставкам и воркшопам. Исследуйте искусство через непосредственное участие.
+            </p>
+<div class="flex flex-col sm:flex-row justify-center gap-4">
+<button class="bg-primary text-on-primary rounded-full px-8 py-3 font-label-md text-label-md hover:bg-tertiary transition-colors">
+                    Все события
+                </button>
+</div>
+</section>
+<!-- Event Cards List (Bento-inspired grid) -->
+<section class="px-margin-mobile md:px-margin-desktop pb-section-gap max-w-container-max mx-auto">
+<div class="flex justify-between items-end mb-stack-lg">
+<h2 class="font-headline-md text-headline-md text-primary">Ближайшие события</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+<!-- Event Card 1 (Large) -->
+<article class="col-span-1 md:col-span-2 bg-surface border border-outline-variant rounded-[16px] overflow-hidden flex flex-col h-full hover:border-outline transition-colors cursor-pointer" onclick="openSignInSheet()">
+<div class="h-64 bg-surface-variant relative overflow-hidden">
+<img alt="Event image" class="w-full h-full object-cover" data-alt="A brightly lit modern art gallery space featuring a minimalist installation. Crisp white walls contrast with sleek black geometric sculptures on the floor. Soft natural light pours in from an unseen window, highlighting the pristine, curatorial aesthetic. The overall mood is intellectual, calm, and sophisticated, perfectly aligned with a high-end cultural event setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-Cwc7WILIGuX0rT7oNUg-55_6wAYaaDLIrUYlKEOYKxPWQMVN-mRd8xwfg3DKmo1cxo0CWfPOycePt3IGuKzNE6SZaHy6jHg2gDpTB5qiUEinHlDsZKdxTfZLvCFfum_Ra6_DUyhn_lYhOYapfRNaOGlld23YEIh-EuwIAlTbAd-qElF9wflBvBGeRzEgx9xqeIwMhM1N9nOt4ESviVn3pnoWdGSJLOFuypZr3DBC9jUhv8w07Qy-k_-bA_O0c583OvzXaTsWXg"/>
+<div class="absolute top-4 left-4 flex gap-2">
+<span class="bg-surface text-primary font-label-sm text-label-sm px-3 py-1 rounded-full uppercase tracking-wider">Выставка</span>
+<span class="bg-surface text-primary font-label-sm text-label-sm px-3 py-1 rounded-full uppercase tracking-wider">Сегодня</span>
+</div>
+<button class="absolute top-4 right-4 bg-surface/80 backdrop-blur-sm p-2 rounded-full text-primary hover:bg-surface transition-colors" onclick="event.stopPropagation(); openSignInSheet()">
+<span class="material-symbols-outlined" data-icon="favorite">favorite</span>
+</button>
+</div>
+<div class="p-6 flex-grow flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-2 text-on-surface-variant mb-2">
+<span class="material-symbols-outlined text-sm">calendar_month</span>
+<span class="font-label-md text-label-md">12 Октября, 19:00</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-primary mb-2">Архитектура пустоты: Пространственный воркшоп</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4 line-clamp-2">
+                                Исследование негативного пространства в городской среде через серию практических упражнений и дискуссий.
+                            </p>
+</div>
+<div class="flex justify-between items-center pt-4 border-t border-outline-variant">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">location_on</span>
+<span class="font-label-md text-label-md">Галерея Центр</span>
+</div>
+<span class="font-label-md text-label-md font-bold text-primary">Бесплатно</span>
+</div>
+</div>
+</article>
+<!-- Event Card 2 -->
+<article class="bg-surface border border-outline-variant rounded-[16px] overflow-hidden flex flex-col h-full hover:border-outline transition-colors cursor-pointer" onclick="openSignInSheet()">
+<div class="h-48 bg-surface-variant relative overflow-hidden">
+<img alt="Event image" class="w-full h-full object-cover" data-alt="Close-up of hands working with abstract, minimalist paper models on a clean white desk. The lighting is bright and even, casting subtle shadows that emphasize the texture of the white paper. The scene suggests a focused, tactile creative process characteristic of a design or architecture workshop. A sophisticated, neutral color palette dominates the composition." src="https://lh3.googleusercontent.com/aida-public/AB6AXuALaU6AwtcdTimXVypfsEYQviRJeXdV4OtYVxl2O3l1tcDcBwIjktFvOYG31ziqTm0RR5dTLRu3Ycma4Q1XO0m_gE4f_jeUrfZk8ghXO4cfXMRtbABr5mrcVj2Wa6mW9ksReKUQXXJN4_j_k8PV1LBIKGXOWrbyDttxFkwgc1DsgjN2IO2KUAWSQ-YNPcaeFNSkVs32DxucvbKmGwN1ieJpeDevgD7HTMy3fVs-GDWKmBmr8kgMAzwh6uiKKcRUB_gbiAhoq0xbIw"/>
+<div class="absolute top-4 left-4 flex gap-2">
+<span class="bg-surface text-primary font-label-sm text-label-sm px-3 py-1 rounded-full uppercase tracking-wider border border-outline-variant">Воркшоп</span>
+</div>
+<button class="absolute top-4 right-4 bg-surface/80 backdrop-blur-sm p-2 rounded-full text-primary hover:bg-surface transition-colors" onclick="event.stopPropagation(); openSignInSheet()">
+<span class="material-symbols-outlined" data-icon="favorite">favorite</span>
+</button>
+</div>
+<div class="p-6 flex-grow flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-2 text-on-surface-variant mb-2">
+<span class="material-symbols-outlined text-sm">calendar_month</span>
+<span class="font-label-md text-label-md">15 Октября, 14:00</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-primary mb-2">Бумажная архитектура</h3>
+</div>
+<div class="flex justify-between items-center pt-4 border-t border-outline-variant mt-4">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">location_on</span>
+<span class="font-label-md text-label-md truncate max-w-[100px]">Студия 42</span>
+</div>
+<span class="font-label-md text-label-md font-bold text-primary">₽ 1,500</span>
+</div>
+</div>
+</article>
+<!-- Event Card 3 -->
+<article class="bg-surface border border-outline-variant rounded-[16px] overflow-hidden flex flex-col h-full hover:border-outline transition-colors cursor-pointer" onclick="openSignInSheet()">
+<div class="h-48 bg-surface-variant relative overflow-hidden">
+<img alt="Event image" class="w-full h-full object-cover" data-alt="A minimalist lecture hall or auditorium with sleek, modern seating arranged facing a clean, well-lit stage area. A single speaker stands near a simple podium, illuminated by crisp spotlighting against a dark background. The atmosphere is intellectual and engaged, capturing the essence of a high-end cultural talk or symposium. The color palette relies on stark contrasts of black, white, and subtle grays." src="https://lh3.googleusercontent.com/aida-public/AB6AXuATqMCNXTSiZ1PlRKhRiDmgYQKyErqB07nCXPIyjBw2fH2_nC0TE49QdNF2q4aaPlm_MaEOn1v8lel9zAaeRprrQtg9gyvkcOCMf_r7UQ9YoNLOHqNdsaaOEwghp9-SMN8gflhJrNYY_IqO7_q2dT3nyb3SugYQP-y2RQMBOfJlPbLA1644aoHMtGWE-CyTD_bykPiJtvto68Ga92jtMX2AV-kITEy-PWz8h8zZ6kkYlzFBXUvxDgZH5YGuzh2kebLpjaNVJIoB-g"/>
+<div class="absolute top-4 left-4 flex gap-2">
+<span class="bg-surface text-primary font-label-sm text-label-sm px-3 py-1 rounded-full uppercase tracking-wider border border-outline-variant">Лекция</span>
+</div>
+</div>
+<div class="p-6 flex-grow flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-2 text-on-surface-variant mb-2">
+<span class="material-symbols-outlined text-sm">calendar_month</span>
+<span class="font-label-md text-label-md">18 Октября, 19:30</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-primary mb-2">Новая кураторская этика</h3>
+</div>
+<div class="flex justify-between items-center pt-4 border-t border-outline-variant mt-4">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">location_on</span>
+<span class="font-label-md text-label-md truncate max-w-[100px]">Лекторий ММСИ</span>
+</div>
+<span class="font-label-md text-label-md font-bold text-primary">Бесплатно</span>
+</div>
+</div>
+</article>
+</div>
+</section>
+</main>
+<!-- Sticky Filter Button (Mobile) -->
+<div class="fixed bottom-6 left-0 right-0 flex justify-center z-40 md:hidden pointer-events-none">
+<button class="pointer-events-auto bg-primary text-on-primary rounded-full px-6 py-3 font-label-md text-label-md shadow-[0_4px_12px_rgba(0,0,0,0.15)] flex items-center gap-2" onclick="alert('Filters opened')">
+<span class="material-symbols-outlined" data-icon="tune">tune</span>
+            Фильтры
+        </button>
+</div>
+<!-- Footer -->
+<footer class="bg-surface-container-low border-t border-outline-variant w-full py-stack-lg pb-24 md:pb-stack-lg">
+<div class="grid grid-cols-1 md:flex md:justify-between items-start px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto gap-gutter">
+<div class="mb-stack-md md:mb-0">
+<div class="font-headline-sm text-headline-sm text-primary mb-2">Participatory</div>
+<p class="font-body-md text-body-md text-on-surface-variant">© 2024 Participatory. All rights reserved.</p>
+</div>
+<nav class="flex flex-col md:flex-row gap-4 md:gap-8">
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-all" href="#">Product</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-all" href="#">Legal</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-all" href="#">Contacts</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-all" href="#">Language</a>
+</nav>
+</div>
+</footer>
+<!-- Bottom Sheet for Sign In -->
+<div class="fixed inset-0 bg-primary/40 z-[60] hidden transition-opacity duration-300 opacity-0" id="signin-sheet-backdrop" onclick="closeSignInSheet()"></div>
+<div class="fixed bottom-0 left-0 right-0 bg-surface rounded-t-[24px] z-[70] transform translate-y-full transition-transform duration-300 ease-out shadow-[0_-4px_24px_rgba(0,0,0,0.1)] pb-safe" id="signin-sheet">
+<div class="px-6 py-4 flex justify-center border-b border-outline-variant/50">
+<div class="w-12 h-1 bg-outline-variant rounded-full"></div>
+</div>
+<div class="px-margin-mobile py-stack-md">
+<div class="flex justify-between items-center mb-stack-md">
+<h2 class="font-headline-sm text-headline-sm text-primary">Войдите в систему</h2>
+<button class="text-on-surface-variant hover:text-primary p-2" onclick="closeSignInSheet()">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-stack-lg">
+                Для бронирования места или добавления события в избранное требуется авторизация.
+            </p>
+<div class="flex flex-col gap-4">
+<button class="w-full bg-surface border border-outline-variant text-primary rounded-full px-6 py-3 font-label-md text-label-md flex justify-center items-center gap-2 hover:bg-surface-container-low transition-colors">
+                    Продолжить через Google
+                </button>
+<button class="w-full bg-primary text-on-primary rounded-full px-6 py-3 font-label-md text-label-md hover:bg-tertiary transition-colors">
+                    Войти по email
+                </button>
+</div>
+<div class="mt-stack-md text-center">
+<span class="font-body-md text-body-md text-on-surface-variant">Нет аккаунта? </span>
+<a class="font-label-md text-label-md text-primary underline" href="#">Зарегистрироваться</a>
+</div>
+</div>
+<!-- Safe area padding for newer iPhones -->
+<div class="h-[env(safe-area-inset-bottom)]"></div>
+</div>
+<script>
+        function openSignInSheet() {
+            const backdrop = document.getElementById('signin-sheet-backdrop');
+            const sheet = document.getElementById('signin-sheet');
+            
+            backdrop.classList.remove('hidden');
+            // Small delay to allow display:block to apply before animating opacity
+            setTimeout(() => {
+                backdrop.classList.remove('opacity-0');
+                sheet.classList.remove('translate-y-full');
+            }, 10);
+            
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        }
+
+        function closeSignInSheet() {
+            const backdrop = document.getElementById('signin-sheet-backdrop');
+            const sheet = document.getElementById('signin-sheet');
+            
+            backdrop.classList.add('opacity-0');
+            sheet.classList.add('translate-y-full');
+            
+            setTimeout(() => {
+                backdrop.classList.add('hidden');
+            }, 300); // Wait for transition to finish
+            
+            document.body.style.overflow = ''; // Restore scrolling
+        }
+    </script>
+</body></html>

@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+
+<html lang="ru"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Панель организатора - Participatory</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Noto+Serif:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed": "#e3e1ea",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-fixed-variant": "#46464d",
+                        "secondary": "#5e5e65",
+                        "on-tertiary-fixed-variant": "#474646",
+                        "tertiary": "#000000",
+                        "primary": "#000000",
+                        "background": "#fdf8f8",
+                        "tertiary-fixed": "#e5e2e1",
+                        "inverse-on-surface": "#f4f0ef",
+                        "tertiary-container": "#1c1b1b",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed-dim": "#c9c6c5",
+                        "on-tertiary-fixed": "#1c1b1b",
+                        "outline-variant": "#c4c7c7",
+                        "primary-container": "#1c1b1b",
+                        "surface-dim": "#ddd9d8",
+                        "surface-container-low": "#f7f3f2",
+                        "on-primary-container": "#858383",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "on-primary-fixed": "#1c1b1b",
+                        "surface-container-high": "#ebe7e6",
+                        "on-error": "#ffffff",
+                        "outline": "#747878",
+                        "error": "#ba1a1a",
+                        "surface-container": "#f1edec",
+                        "inverse-primary": "#c9c6c5",
+                        "surface-variant": "#e5e2e1",
+                        "surface-tint": "#5f5e5e",
+                        "surface-bright": "#fdf8f8",
+                        "on-primary": "#ffffff",
+                        "primary-fixed": "#e5e2e1",
+                        "on-primary-fixed-variant": "#474646",
+                        "on-secondary-container": "#64646b",
+                        "surface-container-highest": "#e5e2e1",
+                        "secondary-fixed-dim": "#c7c5ce",
+                        "on-surface": "#1c1b1b",
+                        "on-surface-variant": "#444748",
+                        "on-background": "#1c1b1b",
+                        "on-secondary-fixed": "#1b1b21",
+                        "on-tertiary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "inverse-surface": "#313030",
+                        "on-tertiary-container": "#858383",
+                        "error-container": "#ffdad6",
+                        "secondary-container": "#e3e1ea",
+                        "surface": "#fdf8f8"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-lg": "32px",
+                        "margin-mobile": "16px",
+                        "unit": "4px",
+                        "container-max": "1120px",
+                        "gutter": "24px",
+                        "section-gap": "80px",
+                        "stack-sm": "8px",
+                        "stack-md": "16px",
+                        "margin-desktop": "48px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "label-md": ["Inter"],
+                        "display-lg": ["Noto Serif"],
+                        "headline-md": ["Noto Serif"],
+                        "headline-sm": ["Noto Serif"],
+                        "body-md": ["Inter"],
+                        "display-lg-mobile": ["Noto Serif"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "1.2", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "1.4", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+                        "headline-md": ["32px", { "lineHeight": "1.2", "fontWeight": "400" }],
+                        "headline-sm": ["24px", { "lineHeight": "1.3", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "display-lg-mobile": ["32px", { "lineHeight": "1.2", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md text-body-md antialiased selection:bg-primary-fixed selection:text-on-primary-fixed min-h-screen flex flex-col">
+<!-- TopAppBar (Suppressed navigation links for dashboard intent, keeping brand and profile) -->
+<header class="sticky top-0 w-full z-50 bg-surface border-b border-outline-variant">
+<div class="flex justify-between items-center h-16 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<div class="flex items-center gap-4">
+<span class="font-headline-sm text-headline-sm font-bold tracking-tight text-primary">Participatory</span>
+<span class="hidden md:inline-block w-px h-6 bg-outline-variant mx-2"></span>
+<span class="hidden md:inline-block font-label-md text-label-md text-on-surface-variant">Панель организатора</span>
+</div>
+<div class="flex items-center gap-gutter">
+<button class="text-on-surface-variant hover:text-primary transition-colors duration-200">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-high border border-outline-variant overflow-hidden">
+<img alt="User avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4gSRVWAV8ZWPRWIUm6OBpEnV_1dGhydA1_712D7kS4swNpKZZIjbnEjx3d0pVuCmtwRrfjIr5_AQ2KSzOuPJc2GhBEMTT5J4B2DsVUNp56y-mBVLccHtAPrxVrj0Ao_1oYeo88NUPpKjT7gacd_OHp8cUk5DN2m7E392O1-2KEwelvfjhDszxzMynHzzuE6Sy2EkYZAkhzEEUM9TzhoJLEjYT92veV2-OrI6TxDISPxLpameHn6uP2tbzEGdLeLOTvmC-cWXtPw"/>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-grow w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg md:py-section-gap flex flex-col gap-section-gap">
+<!-- Header & CTA -->
+<section class="flex flex-col md:flex-row md:items-end justify-between gap-stack-lg">
+<div>
+<h1 class="font-display-lg-mobile text-display-lg-mobile md:font-display-lg md:text-display-lg text-primary mb-stack-sm">Сводка</h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl">Обзор ваших культурных инициатив, регистраций участников и задач, требующих вашего участия.</p>
+</div>
+<button class="bg-primary text-on-primary font-label-md text-label-md px-8 py-4 rounded-full hover:bg-tertiary-container transition-colors flex items-center gap-2 w-fit shrink-0">
+<span class="material-symbols-outlined icon-fill">add</span>
+                Создать событие
+            </button>
+</section>
+<!-- Stats Bento Row -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<!-- Stat Card 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter flex flex-col justify-between h-40 group hover:border-outline transition-colors">
+<div class="flex justify-between items-start">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Активные события</span>
+<span class="material-symbols-outlined text-outline">event_available</span>
+</div>
+<div class="font-display-lg-mobile text-display-lg-mobile md:font-headline-md md:text-headline-md text-primary">
+                    3
+                </div>
+</div>
+<!-- Stat Card 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter flex flex-col justify-between h-40 group hover:border-outline transition-colors">
+<div class="flex justify-between items-start">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Всего RSVPs</span>
+<span class="material-symbols-outlined text-outline">group</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-display-lg-mobile text-display-lg-mobile md:font-headline-md md:text-headline-md text-primary">142</span>
+<span class="font-label-sm text-label-sm text-surface-tint">+12 за неделю</span>
+</div>
+</div>
+<!-- Stat Card 3 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-gutter flex flex-col justify-between h-40 group hover:border-outline transition-colors">
+<div class="flex justify-between items-start">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Охват аудитории</span>
+<span class="material-symbols-outlined text-outline">visibility</span>
+</div>
+<div class="font-display-lg-mobile text-display-lg-mobile md:font-headline-md md:text-headline-md text-primary">
+                    8.5k
+                </div>
+</div>
+</section>
+<!-- Main Dashboard Content Grid -->
+<section class="grid grid-cols-1 lg:grid-cols-3 gap-gutter items-start">
+<!-- Left Column: Upcoming Events (Takes 2 columns on large screens) -->
+<div class="lg:col-span-2 flex flex-col gap-stack-lg">
+<div class="flex justify-between items-center border-b border-outline-variant pb-stack-sm">
+<h2 class="font-headline-sm text-headline-sm text-primary">Ближайшие события</h2>
+<a class="font-label-md text-label-md text-surface-tint hover:text-primary transition-colors underline decoration-outline-variant underline-offset-4" href="#">Смотреть все</a>
+</div>
+<div class="flex flex-col gap-stack-md">
+<!-- Event Item 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 flex flex-col sm:flex-row gap-6 items-start sm:items-center hover:border-outline transition-colors cursor-pointer group">
+<div class="w-16 h-16 rounded-lg bg-surface-container flex flex-col items-center justify-center shrink-0 border border-outline-variant">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Ноя</span>
+<span class="font-headline-sm text-headline-sm text-primary leading-none">12</span>
+</div>
+<div class="flex-grow">
+<div class="flex items-center gap-2 mb-1">
+<span class="px-2 py-0.5 rounded-full border border-outline-variant font-label-sm text-label-sm text-on-surface-variant bg-surface">Публичное</span>
+</div>
+<h3 class="font-body-lg text-body-lg text-primary font-medium">Симпозиум: Архитектура участия</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Галерея современного искусства, Зал 3</p>
+</div>
+<div class="flex flex-col items-end shrink-0 gap-1 mt-4 sm:mt-0">
+<span class="font-label-md text-label-md text-primary">85 / 100 мест</span>
+<div class="w-32 h-1 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[85%]"></div>
+</div>
+</div>
+</div>
+<!-- Event Item 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 flex flex-col sm:flex-row gap-6 items-start sm:items-center hover:border-outline transition-colors cursor-pointer group">
+<div class="w-16 h-16 rounded-lg bg-surface-container flex flex-col items-center justify-center shrink-0 border border-outline-variant">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Ноя</span>
+<span class="font-headline-sm text-headline-sm text-primary leading-none">24</span>
+</div>
+<div class="flex-grow">
+<div class="flex items-center gap-2 mb-1">
+<span class="px-2 py-0.5 rounded-full border border-outline-variant font-label-sm text-label-sm text-on-surface-variant bg-surface">Закрытое</span>
+</div>
+<h3 class="font-body-lg text-body-lg text-primary font-medium">Воркшоп кураторов</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Библиотека института</p>
+</div>
+<div class="flex flex-col items-end shrink-0 gap-1 mt-4 sm:mt-0">
+<span class="font-label-md text-label-md text-primary">12 / 15 мест</span>
+<div class="w-32 h-1 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[80%]"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Needs Attention & Drafts -->
+<div class="flex flex-col gap-stack-lg">
+<!-- Needs Attention Widget -->
+<div class="bg-surface-container-low border border-outline-variant rounded-xl p-6 relative overflow-hidden">
+<!-- Subtle accent bar -->
+<div class="absolute top-0 left-0 w-1 h-full bg-tertiary-container"></div>
+<h2 class="font-headline-sm text-headline-sm text-primary mb-stack-md flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary-container">error</span>
+                        Требует внимания
+                    </h2>
+<ul class="flex flex-col gap-4">
+<li class="flex gap-3 items-start">
+<span class="material-symbols-outlined text-outline-variant text-sm mt-0.5">circle</span>
+<div>
+<p class="font-body-md text-body-md text-primary">Подтвердить площадку</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Для события "Лекция о минимализме"</p>
+</div>
+</li>
+<li class="flex gap-3 items-start">
+<span class="material-symbols-outlined text-outline-variant text-sm mt-0.5">circle</span>
+<div>
+<p class="font-body-md text-body-md text-primary">3 заявки на возврат</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Требуется ручная обработка</p>
+</div>
+</li>
+</ul>
+</div>
+<!-- Drafts Section -->
+<div>
+<div class="flex justify-between items-center border-b border-outline-variant pb-stack-sm mb-stack-md">
+<h2 class="font-headline-sm text-headline-sm text-primary">Черновики</h2>
+</div>
+<div class="flex flex-col gap-3">
+<div class="group border border-outline-variant rounded-lg p-4 bg-surface hover:bg-surface-container-lowest transition-colors cursor-pointer flex justify-between items-center">
+<div>
+<h4 class="font-body-md text-body-md text-primary">Выставка фотографий</h4>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Изменено 2 дня назад</p>
+</div>
+<span class="material-symbols-outlined text-outline opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+</div>
+<div class="group border border-outline-variant rounded-lg p-4 bg-surface hover:bg-surface-container-lowest transition-colors cursor-pointer flex justify-between items-center">
+<div>
+<h4 class="font-body-md text-body-md text-primary">Открытая дискуссия</h4>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Изменено на прошлой неделе</p>
+</div>
+<span class="material-symbols-outlined text-outline opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer Component -->
+<footer class="w-full py-stack-lg bg-surface-container-low border-t border-outline-variant mt-auto">
+<div class="grid grid-cols-1 md:flex md:justify-between items-start px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto gap-gutter">
+<div class="font-headline-sm text-headline-sm text-primary">Participatory</div>
+<div class="flex flex-col md:flex-row gap-gutter md:gap-stack-lg">
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">Product</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">Legal</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">Contacts</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">Language</a>
+</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant mt-stack-md md:mt-0">
+                © 2024 Participatory. All rights reserved.
+            </div>
+</div>
+</footer>
+</body></html>

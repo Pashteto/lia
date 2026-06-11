@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+
+<html lang="ru"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Participatory - Практики, разговоры и встречи в Москве</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Noto+Serif:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed": "#e3e1ea",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-fixed-variant": "#46464d",
+                        "secondary": "#5e5e65",
+                        "on-tertiary-fixed-variant": "#474646",
+                        "tertiary": "#000000",
+                        "primary": "#000000",
+                        "background": "#fdf8f8",
+                        "tertiary-fixed": "#e5e2e1",
+                        "inverse-on-surface": "#f4f0ef",
+                        "tertiary-container": "#1c1b1b",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed-dim": "#c9c6c5",
+                        "on-tertiary-fixed": "#1c1b1b",
+                        "outline-variant": "#c4c7c7",
+                        "primary-container": "#1c1b1b",
+                        "surface-dim": "#ddd9d8",
+                        "surface-container-low": "#f7f3f2",
+                        "on-primary-container": "#858383",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "on-primary-fixed": "#1c1b1b",
+                        "surface-container-high": "#ebe7e6",
+                        "on-error": "#ffffff",
+                        "outline": "#747878",
+                        "error": "#ba1a1a",
+                        "surface-container": "#f1edec",
+                        "inverse-primary": "#c9c6c5",
+                        "surface-variant": "#e5e2e1",
+                        "surface-tint": "#5f5e5e",
+                        "surface-bright": "#fdf8f8",
+                        "on-primary": "#ffffff",
+                        "primary-fixed": "#e5e2e1",
+                        "on-primary-fixed-variant": "#474646",
+                        "on-secondary-container": "#64646b",
+                        "surface-container-highest": "#e5e2e1",
+                        "secondary-fixed-dim": "#c7c5ce",
+                        "on-surface": "#1c1b1b",
+                        "on-surface-variant": "#444748",
+                        "on-background": "#1c1b1b",
+                        "on-secondary-fixed": "#1b1b21",
+                        "on-tertiary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "inverse-surface": "#313030",
+                        "on-tertiary-container": "#858383",
+                        "error-container": "#ffdad6",
+                        "secondary-container": "#e3e1ea",
+                        "surface": "#fdf8f8"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-lg": "32px",
+                        "margin-mobile": "16px",
+                        "unit": "4px",
+                        "container-max": "1120px",
+                        "gutter": "24px",
+                        "section-gap": "80px",
+                        "stack-sm": "8px",
+                        "stack-md": "16px",
+                        "margin-desktop": "48px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "label-md": ["Inter"],
+                        "display-lg": ["Noto Serif"],
+                        "headline-md": ["Noto Serif"],
+                        "headline-sm": ["Noto Serif"],
+                        "body-md": ["Inter"],
+                        "display-lg-mobile": ["Noto Serif"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "label-sm": ["12px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                        "label-md": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                        "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "400"}],
+                        "headline-md": ["32px", {"lineHeight": "1.2", "fontWeight": "400"}],
+                        "headline-sm": ["24px", {"lineHeight": "1.3", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "display-lg-mobile": ["32px", {"lineHeight": "1.2", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md antialiased selection:bg-surface-dim selection:text-primary min-h-screen flex flex-col">
+<header class="sticky top-0 w-full z-50 bg-surface border-b border-outline-variant">
+<div class="flex justify-between items-center h-16 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<div class="flex items-center gap-8">
+<a class="font-headline-sm text-headline-sm font-bold tracking-tight text-primary" href="#">Participatory</a>
+<nav class="hidden md:flex items-center gap-6">
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">Practices</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">About</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">Community</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-primary hover:opacity-80 transition-opacity duration-150 p-2 rounded-full hover:bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">location_on</span>
+</button>
+<button class="text-primary hover:opacity-80 transition-opacity duration-150 p-2 rounded-full hover:bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications</span>
+</button>
+<button class="bg-primary text-on-primary font-label-md text-label-md px-6 py-2 rounded-full hover:opacity-80 transition-opacity duration-150 ml-2">
+                    Sign In
+                </button>
+</div>
+</div>
+</header>
+<main class="flex-grow">
+<section class="px-margin-mobile md:px-margin-desktop pt-24 pb-16 flex flex-col items-center justify-center text-center">
+<h1 class="font-display-lg-mobile text-display-lg-mobile md:font-display-lg md:text-display-lg text-primary max-w-4xl mx-auto mb-stack-lg leading-tight">
+                Практики, разговоры<br class="hidden md:block"/> и встречи в Москве
+            </h1>
+<div class="w-full max-w-2xl mx-auto relative group">
+<div class="absolute inset-0 bg-gradient-to-r from-surface-dim to-surface-container blur-xl opacity-50 group-hover:opacity-70 transition-opacity duration-500 rounded-full"></div>
+<div class="relative bg-surface-container-lowest border border-outline-variant rounded-full p-2 pl-6 flex items-center shadow-sm transition-all duration-300 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
+<span class="material-symbols-outlined text-on-surface-variant mr-3">auto_awesome</span>
+<input class="w-full bg-transparent border-none focus:ring-0 font-body-lg text-body-lg text-primary placeholder:text-on-surface-variant outline-none" placeholder="Опишите, какой опыт сейчас нужен..." type="text"/>
+<button class="bg-primary text-on-primary rounded-full px-8 py-3 ml-2 font-label-md text-label-md flex-shrink-0 hover:opacity-90 transition-opacity">
+                        Найти
+                    </button>
+</div>
+<div class="mt-4 flex flex-wrap justify-center gap-2">
+<button class="px-4 py-1.5 rounded-full border border-outline-variant text-label-sm font-label-sm text-on-surface-variant hover:border-primary hover:text-primary transition-colors bg-surface-container-lowest">#архитектура</button>
+<button class="px-4 py-1.5 rounded-full border border-outline-variant text-label-sm font-label-sm text-on-surface-variant hover:border-primary hover:text-primary transition-colors bg-surface-container-lowest">#тишина</button>
+<button class="px-4 py-1.5 rounded-full border border-outline-variant text-label-sm font-label-sm text-on-surface-variant hover:border-primary hover:text-primary transition-colors bg-surface-container-lowest">#современноеискусство</button>
+</div>
+</div>
+</section>
+<section class="py-section-gap overflow-hidden">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop mb-stack-md flex justify-between items-end">
+<h2 class="font-headline-md text-headline-md text-primary">Скоро</h2>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary hover:underline transition-all" href="#">Все события</a>
+</div>
+<div class="flex overflow-x-auto gap-gutter pb-8 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto snap-x snap-mandatory no-scrollbar">
+<article class="flex-none w-[85vw] md:w-[360px] snap-start bg-surface-container-lowest border border-outline-variant rounded-[16px] overflow-hidden flex flex-col group cursor-pointer hover:border-outline transition-colors">
+<div class="h-[220px] w-full bg-surface-variant relative overflow-hidden">
+<img alt="Minimalist art installation" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A striking digital installation art piece featuring glowing, generative geometric shapes suspended in a vast, minimalist gallery space. The room is illuminated by high-key, soft white lighting that creates a bright, modern light-mode aesthetic. The artwork relies on a sophisticated palette of deep blacks and pristine whites, punctuated by subtle architectural shadows. The mood is serene yet technologically advanced." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7gpFtefUY9wDr3QUvb5t-IWJW2QPoqYP_q1XET5IOsIU4u-4iSEkUMYsvJkA4cuEU3YpowSa5tLwlThdgQiT2KRchm-W-THKyUr2xkr1hXX1XPLeFOhEwDFfR14JigmXYUHIsIZWA2PYHCEo4D8oSdkZ63mZ3Y4T_65qoFb565nzCJV9mUrzASoYEyEGM8acnn-VAJEb36erPX-7pyEeJMoQC_tXwYNL1Y1Iitq-N1rAYbthqhxw2UkMD4TInHGaVvsylutfwGQ"/>
+<div class="absolute top-4 left-4 bg-surface-container-lowest/90 backdrop-blur-sm px-3 py-1 rounded-full border border-outline-variant">
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-wider">Сегодня, 19:00</span>
+</div>
+</div>
+<div class="p-[24px] flex flex-col flex-grow">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-headline-sm text-headline-sm text-primary leading-tight">Пространство и пустота в современной скульптуре</h3>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6 line-clamp-2">Открытая дискуссия с кураторами ГЭС-2 о роли негативного пространства в формировании зрительского опыта.</p>
+<div class="mt-auto flex items-center justify-between border-t border-outline-variant pt-4">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">location_on</span>
+<span class="font-label-md text-label-md">ГЭС-2</span>
+</div>
+<span class="font-label-md text-label-md text-primary bg-surface-container px-3 py-1 rounded-full">Бесплатно</span>
+</div>
+</div>
+</article>
+<article class="flex-none w-[85vw] md:w-[360px] snap-start bg-surface-container-lowest border border-outline-variant rounded-[16px] overflow-hidden flex flex-col group cursor-pointer hover:border-outline transition-colors">
+<div class="h-[220px] w-full bg-surface-variant relative overflow-hidden">
+<img alt="Brutalist architecture walk" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A low-angle shot of imposing brutalist architecture constructed from raw, textured concrete, set against a stark, pale grey sky. The composition is highly geometric and abstract, emphasizing sharp angles and deep shadows characteristic of mid-century modernist civic structures. The lighting is diffuse and flat, maintaining a bright, curatorial light-mode aesthetic. The mood is intellectual, austere, and historically grounded." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAda2cmyWoqi3-KVyTA96xezIXr2ALVx6qaH66RelvDK19NwQiFeno2gMwrs4_6MT0N653fmkvSeOoqid63eOnn-rGwxFWve8_iKRY0NUGvENw-Qz9CLI_V4e-wCQA1sZHJa81nUpnHa-A_kcfX06BMe7MfPGadbV398mOrvv_s4_kgcW8UcYy9wCZG1pj_Qifo6VxzNvAE6inlYL2mtcrUnuW9WTTg71RO4obBVMXVAbVBgdz1jhP2xycq5P_03y5Swm4oMp7i6A"/>
+<div class="absolute top-4 left-4 bg-surface-container-lowest/90 backdrop-blur-sm px-3 py-1 rounded-full border border-outline-variant">
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-wider">Завтра, 12:00</span>
+</div>
+</div>
+<div class="p-[24px] flex flex-col flex-grow">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-headline-sm text-headline-sm text-primary leading-tight">Архитектурная прогулка: Советский модернизм</h3>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6 line-clamp-2">Исследование экспериментальных форм и социальных концепций архитектуры 1970-х годов на юго-западе Москвы.</p>
+<div class="mt-auto flex items-center justify-between border-t border-outline-variant pt-4">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">location_on</span>
+<span class="font-label-md text-label-md">м. Профсоюзная</span>
+</div>
+<span class="font-label-md text-label-md text-primary bg-surface-container px-3 py-1 rounded-full">1500 ₽</span>
+</div>
+</div>
+</article>
+<article class="flex-none w-[85vw] md:w-[360px] snap-start bg-surface-container-lowest border border-outline-variant rounded-[16px] overflow-hidden flex flex-col group cursor-pointer hover:border-outline transition-colors">
+<div class="h-[220px] w-full bg-surface-variant relative overflow-hidden">
+<img alt="Contemporary dance performance" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A minimalist contemporary dance performance taking place in an expansive, white-walled gallery space. A solitary performer in simple, neutral-toned clothing executes a fluid, expressive movement. The space is flooded with soft, natural light entering through large, unseen windows, creating delicate gradients on the pristine floor. The aesthetic is clean, high-end, and deeply focused on the human form in empty space." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZNtT8YxcHWoJqInMGfhrQJBUYPF1GE1ecBA0fEmS6UEQGzwd8VFqHlrtzaooaxx8vrqpMlAiHAAmeSeJ2O-Qbx-_ZRtxVH2c3sndHgolEcMmoxhFtgc-uB8_7dutalkbUBlmyJh9EClBG0m4hv_h2KTjQMFH9FHdh87EbLTqSy0mnm6Af8XP1M6a4RMpL-9ux8764KUFUIjn6dvuA-BEMAwRV11soCMnbNeLHdcPXLOI3oOYdW4jJlKJ9hvTHc2zlxtlJphRTfA"/>
+<div class="absolute top-4 left-4 bg-surface-container-lowest/90 backdrop-blur-sm px-3 py-1 rounded-full border border-outline-variant">
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-wider">Чт, 20:00</span>
+</div>
+</div>
+<div class="p-[24px] flex flex-col flex-grow">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-headline-sm text-headline-sm text-primary leading-tight">Перформанс: Границы телесности</h3>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6 line-clamp-2">Пластический спектакль-исследование о том, как физические ограничения формируют новую свободу выражения.</p>
+<div class="mt-auto flex items-center justify-between border-t border-outline-variant pt-4">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">location_on</span>
+<span class="font-label-md text-label-md">Центр Зотов</span>
+</div>
+<span class="font-label-md text-label-md text-primary bg-surface-container px-3 py-1 rounded-full">2000 ₽</span>
+</div>
+</div>
+</article>
+</div>
+</section>
+<section class="py-section-gap bg-surface-container-low border-y border-outline-variant">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop mb-stack-md">
+<h2 class="font-headline-md text-headline-md text-primary">На выходные</h2>
+</div>
+<div class="flex overflow-x-auto gap-gutter pb-8 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto snap-x snap-mandatory no-scrollbar">
+<article class="flex-none w-[85vw] md:w-[480px] snap-start bg-surface-container-lowest border border-outline-variant rounded-[16px] overflow-hidden flex flex-col md:flex-row group cursor-pointer hover:border-outline transition-colors">
+<div class="h-[200px] md:h-auto md:w-[200px] bg-surface-variant relative overflow-hidden flex-shrink-0">
+<img alt="Pottery workshop" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A close-up, highly detailed shot of hands working wet clay on a pottery wheel in a brightly lit, minimalist ceramics studio. The aesthetic is clean, light, and focused on the tactile nature of the material. Soft, diffuse daylight creates smooth highlights on the grey clay and the surrounding pristine white surfaces. The mood is calm, meditative, and artisanal." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBcfnmAI33fDUtK8-8_Z38h9CJOAUmBklUU0H-0kNZ5W2nPgXkstcQQZbxe9eT4NayLaNQr4rWXLB4qinJizJS5BRD3AMJ5jC8GZspR_FIK6BnhHG3W34hwvzYj53_Ta-tpSRTCDT34XE3P-Oli5mOkHvkckfYkH7MSrVbth6mGJ_1TWZxhT3axccRDKGXYXjKRfhI9oYDQBq08WXMELK605sC1eEqBYqpVGQOfmFzxrei5qOP-ZlHAFEPgCbcDerJDR8d3B8eBug"/>
+</div>
+<div class="p-[24px] flex flex-col flex-grow justify-between">
+<div>
+<div class="mb-2">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Суббота, 14:00</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-primary leading-tight mb-3">Практика тишины: Работа с глиной</h3>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2">Медитативный воркшоп, где процесс создания формы важнее финального результата. Без слов.</p>
+</div>
+<div class="mt-4 flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface-variant">Студия "Слой"</span>
+<button class="px-4 py-2 border border-outline-variant rounded-full font-label-md text-label-md hover:bg-surface-container transition-colors">Записаться</button>
+</div>
+</div>
+</article>
+<article class="flex-none w-[85vw] md:w-[480px] snap-start bg-surface-container-lowest border border-outline-variant rounded-[16px] overflow-hidden flex flex-col md:flex-row group cursor-pointer hover:border-outline transition-colors">
+<div class="h-[200px] md:h-auto md:w-[200px] bg-surface-variant relative overflow-hidden flex-shrink-0">
+<img alt="Reading group discussion" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="An intimate, top-down view of a light-colored wooden table scattered with minimalist paperback books, handwritten notes on crisp white paper, and minimalist ceramic coffee cups. The setting is a bright, modern library or cultural space with a clean light-mode aesthetic. The lighting is soft and even, highlighting the textures of paper and wood against a backdrop of sophisticated simplicity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1BgFrtGPFYdg130dPqP6eyoV245rreoavXt1gNRflgzMCoZQSRwndCtQG5ffwTHHtvonYWEwy-zhELf9437Jxed2B_EmjaLZEgv3BHr_veuzvT2wEYnepUgUGhqoNyBMYvH_Xygevps5Rj2zmigRpC108RbRZZqdVajOYRmOUBCphzlIY9w7thPOMStLBCgaXADdJDk7XL_4Ee_Fdxt13tBcxz27RE4BgYUgdKvzp2bvRCAgM4pc3S6t8ViuwUvnuRodnMlhJDg"/>
+</div>
+<div class="p-[24px] flex flex-col flex-grow justify-between">
+<div>
+<div class="mb-2">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Воскресенье, 16:00</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-primary leading-tight mb-3">Ридинг-группа: Тексты о заботе</h3>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2">Совместное медленное чтение и обсуждение эссе о новых формах социальных связей.</p>
+</div>
+<div class="mt-4 flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface-variant">Библиотека Шанинки</span>
+<button class="px-4 py-2 border border-outline-variant rounded-full font-label-md text-label-md hover:bg-surface-container transition-colors">Мест нет</button>
+</div>
+</div>
+</article>
+</div>
+</section>
+<section class="py-section-gap">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop mb-stack-md flex justify-between items-end">
+<h2 class="font-headline-md text-headline-md text-primary">Медиации по выставкам</h2>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary hover:underline transition-all hidden md:block" href="#">Смотреть расписание</a>
+</div>
+<div class="px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-[16px] p-[24px] flex flex-col md:flex-row gap-6 items-start group hover:border-outline transition-colors cursor-pointer">
+<div class="w-full md:w-1/3 aspect-[4/3] md:aspect-square bg-surface-variant rounded-lg overflow-hidden flex-shrink-0">
+<img alt="Abstract painting in gallery" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A minimalist view inside a contemporary art museum. A single, large, highly textured abstract painting hangs on an expansive, pure white wall. In the foreground, slightly out of focus, the silhouette of a person looking attentively at the artwork. The space is illuminated by precise, museum-quality spotlights that create a high-contrast yet elegant atmosphere typical of a premium cultural institution." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2fuLGBpwdk7Y3HTyTJrnYy5kg2hpsAwQGKfvoHhCvO-XxwFiK4tvzPWHbOAvaTTu64Qxus4-bbxqwJEH6k9FcLlXeiaKZfq1Nvtd1BI2MOkbB0NIp3Ef63GpTFjicGsprLaPYclJdTOHqsOAd5uUhHOjP3q9NXNUDu8nl8Ps4MGCcS8ifJyH_KbbOMBtrVpN0tmwatWaDjS32QbxcmNqOCon9GmOVOcKGwHWdbJZDE3ciLdsYi00D8_KTW9D59Iw9KNpXAw_czg"/>
+</div>
+<div class="flex-grow">
+<div class="flex items-center gap-2 mb-3">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-wider">Новая Третьяковка</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-primary mb-2">Как смотреть абстракцию</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">Разговорная практика, направленная на развитие визуального словаря и эмпатического восприятия нефигуративного искусства.</p>
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-1 border border-outline-variant rounded-full font-label-sm text-label-sm text-on-surface-variant">Пт, 19:00</span>
+<span class="px-3 py-1 border border-outline-variant rounded-full font-label-sm text-label-sm text-on-surface-variant">Сб, 15:00</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-[16px] p-[24px] flex flex-col md:flex-row gap-6 items-start group hover:border-outline transition-colors cursor-pointer">
+<div class="w-full md:w-1/3 aspect-[4/3] md:aspect-square bg-surface-variant rounded-lg overflow-hidden flex-shrink-0">
+<img alt="Photography exhibition" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A starkly minimalist gallery space showcasing a series of small, precisely framed black and white photographs aligned perfectly on a seamless white wall. The composition is highly symmetrical, emphasizing order and curatorial precision. Soft, ambient gallery lighting eliminates harsh shadows, creating a pristine, elevated light-mode environment perfect for quiet contemplation." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBouWp7U2xvKykTic1dGx8r8mcuWoCRIaACqn8wfOql2tKZcUbLjpsZ9lVKOqY4q6TZkyjooNhx4uj_6PlXIeXg2hECNc9iZRDumypiejyV7xzMduDpUYrK2IsoSsvv07gJDoCXhRuiTifjQ4iO6oUiUqKH42GnSd-fy65CLbz-NGn1hAN-NrPmszLxym-omg5I4L0fU0-eZ1Ro8QKUwUTw4ZsLz4fVOHyZNeIRfV_AyRUvHjtYGFwlElWMax2SK7jk_OHCbXpF6A"/>
+</div>
+<div class="flex-grow">
+<div class="flex items-center gap-2 mb-3">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-wider">МАММ</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-primary mb-2">Документальность и вымысел</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">Медиация по выставке современной фотографии. Исследуем границы между фиксацией реальности и авторской манипуляцией.</p>
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-1 border border-outline-variant rounded-full font-label-sm text-label-sm text-on-surface-variant">Вс, 14:00</span>
+<span class="px-3 py-1 border border-outline-variant rounded-full font-label-sm text-label-sm text-on-surface-variant">Вс, 17:00</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<footer class="bg-surface-container-low dark:bg-surface-container-lowest border-t border-outline-variant dark:border-outline w-full py-stack-lg">
+<div class="grid grid-cols-1 md:flex md:justify-between items-start px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto gap-gutter">
+<div class="mb-8 md:mb-0">
+<div class="font-headline-sm text-headline-sm text-primary dark:text-on-surface mb-4">Participatory</div>
+<p class="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant">
+                    © 2024 Participatory. All rights reserved.
+                </p>
+</div>
+<nav class="flex flex-col md:flex-row gap-4 md:gap-8">
+<a class="font-label-sm text-label-sm text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-on-surface underline transition-all focus:ring-1 focus:ring-outline outline-none" href="#">Product</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-on-surface underline transition-all focus:ring-1 focus:ring-outline outline-none" href="#">Legal</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-on-surface underline transition-all focus:ring-1 focus:ring-outline outline-none" href="#">Contacts</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-on-surface underline transition-all focus:ring-1 focus:ring-outline outline-none" href="#">Language</a>
+</nav>
+</div>
+</footer>
+</body></html>

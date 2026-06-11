@@ -8,13 +8,19 @@ A web-first discovery platform for **participatory cultural practices** in a sin
 - **Organizers** — museums, galleries, independent curators and artists manage profiles, create/edit events, and view basic stats.
 - **Admins & moderators** — uphold the curatorial bar, review accounts and events, manage categories and tags.
 
-## Repository contents
+## Repository layout
 
 | Path | Description |
 |------|-------------|
-| `event_discovery_mvp_technical_stack.md` | Technical architecture for the first version — recommended stack (Go modular monolith, PostgreSQL + PostGIS, Redis, S3), MVP requirements, scaling path. |
-| `design_agent_prompt.md` | Master design brief for an AI agent to design and implement the web app pages (Next.js + TypeScript + Tailwind, Luma-like visual direction). |
-| `stitch_/` | Design explorations and mockups — desktop variants, mobile, and a curatorial-minimalist direction (screenshots + generated HTML). |
+| `frontend/` | Web client (Next.js + TypeScript + Tailwind). Scaffolding to be added. |
+| `backend/` | API and services (Go modular monolith, PostgreSQL + PostGIS, Redis, S3). Scaffolding to be added. |
+| `design/` | Design explorations and mockups (`stitch_/`) — desktop variants, mobile, curatorial-minimalist direction. |
+| `docs/` | Project documentation — technical stack and the design agent brief. |
+
+### Documentation (`docs/`)
+
+- `event_discovery_mvp_technical_stack.md` — technical architecture for the first version: recommended stack, MVP requirements, scaling path.
+- `design_agent_prompt.md` — master design brief for an AI agent to design and implement the web app pages (Luma-like visual direction).
 
 ## Notes
 

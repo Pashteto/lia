@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lia — AI search (Apple design system)</title>
+  <style>
+    body{ margin:0; padding:32px; background:#e9e9ee; font-family:-apple-system,system-ui,sans-serif; }
+    h1.page{ font:600 15px/1 -apple-system,system-ui,sans-serif; color:#3c3c43; opacity:.6; text-transform:uppercase; letter-spacing:.04em; margin:0 0 20px; }
+  </style>
+  <style>
+  .lia4{ font-family:-apple-system,"SF Pro Text","SF Pro Display",system-ui,"Segoe UI",Roboto,sans-serif; -webkit-font-smoothing:antialiased; }
+  .lia4 *{ box-sizing:border-box; }
+  .lia4-stage{ display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap; }
+  .L4{ --bg:#F2F2F7; --bg2:#FFFFFF; --label:#000; --label2:rgba(60,60,67,.6); --sep:rgba(60,60,67,.18);
+       --accent:#007AFF; --glass:rgba(249,249,249,.8); --fill:rgba(118,118,128,.12); }
+  .D4{ --bg:#000; --bg2:#1C1C1E; --label:#fff; --label2:rgba(235,235,245,.6); --sep:rgba(84,84,88,.6);
+       --accent:#0A84FF; --glass:rgba(30,30,30,.8); --fill:rgba(118,118,128,.24); }
+
+  .a-desk{ flex:1 1 560px; min-width:520px; background:var(--bg); border-radius:20px; overflow:hidden; border:1px solid var(--sep); position:relative; }
+  .a-nav{ position:sticky; top:0; z-index:2; backdrop-filter:saturate(180%) blur(20px); -webkit-backdrop-filter:saturate(180%) blur(20px);
+          background:var(--glass); border-bottom:.5px solid var(--sep); padding:14px 24px 12px; }
+  .a-large{ font-size:28px; font-weight:700; letter-spacing:-.02em; color:var(--label); }
+  .a-scroll{ max-height:560px; overflow:auto; padding:18px 24px 96px; }
+
+  .bubble{ background:var(--accent); color:#fff; font-size:16px; line-height:1.4; padding:11px 15px; border-radius:18px 18px 4px 18px;
+           max-width:78%; margin-left:auto; margin-bottom:16px; }
+  .assist{ display:flex; gap:10px; margin-bottom:16px; }
+  .assist .dot{ width:28px; height:28px; border-radius:50%; flex:0 0 auto; background:linear-gradient(135deg,#0A84FF,#5E5CE6); }
+  .assist .say{ background:var(--bg2); color:var(--label); font-size:16px; line-height:1.45; padding:11px 15px; border-radius:4px 18px 18px 18px; max-width:82%; }
+
+  .reslist{ display:flex; flex-direction:column; gap:12px; }
+  .res{ display:flex; gap:12px; background:var(--bg2); border-radius:14px; overflow:hidden; padding:10px; }
+  .res .cov{ width:84px; height:84px; border-radius:10px; background-size:cover; background-position:center; flex:0 0 auto; }
+  .res .info{ flex:1; min-width:0; }
+  .res .kick{ font-size:11px; font-weight:600; letter-spacing:.03em; color:var(--accent); text-transform:uppercase; }
+  .res .ttl{ font-size:16px; font-weight:600; color:var(--label); margin:2px 0 4px; line-height:1.25; }
+  .res .meta{ font-size:13px; color:var(--label2); }
+  .res .why{ font-size:13px; color:var(--label2); font-style:italic; margin-top:5px; }
+
+  .a-bar{ position:absolute; left:0; right:0; bottom:0; backdrop-filter:saturate(180%) blur(20px); -webkit-backdrop-filter:saturate(180%) blur(20px);
+          background:var(--glass); border-top:.5px solid var(--sep); padding:14px 24px; display:flex; gap:10px; align-items:center; }
+  .a-input{ flex:1; background:var(--fill); border-radius:20px; padding:10px 16px; font-size:15px; color:var(--label2); }
+  .a-send{ width:38px; height:38px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:18px; flex:0 0 auto; }
+
+  .a-phone{ flex:0 0 300px; width:300px; background:var(--bg); border-radius:38px; padding:10px; border:1px solid var(--sep); box-shadow:0 20px 50px rgba(0,0,0,.25); }
+  .a-pscreen{ background:var(--bg); border-radius:30px; overflow:hidden; height:620px; position:relative; }
+  .a-ptop{ backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); background:var(--glass); padding:48px 16px 12px; border-bottom:.5px solid var(--sep); }
+  .a-pscroll{ height:430px; overflow:auto; padding:14px 16px; }
+</style>
+</head>
+<body>
+  <h1 class="page">Lia · AI-поиск / ассистент</h1>
+  <div class="lia4">
+ <div class="lia4-stage">
+
+  <!-- DESKTOP LIGHT -->
+  <div class="a-desk L4">
+    <div class="a-nav"><div class="a-large">Подобрать</div></div>
+    <div class="a-scroll">
+      <div class="bubble">хочу что-то про память и архив, и чтобы можно было поговорить, а не просто слушать</div>
+      <div class="assist"><div class="dot"></div><div class="say">Нашла три встречи, где смотрят и обсуждают вместе — никакого формата «лекция со сцены». Вот с чего бы начала:</div></div>
+      <div class="reslist">
+        <div class="res"><div class="cov" style="background-image:url('https://picsum.photos/seed/lia-arc/300/300')"></div>
+          <div class="info"><div class="kick">Медиация</div><div class="ttl">Память и архив: разговор у работ</div>
+          <div class="meta">14 июня, 19:00 · Галерея «Цех»</div><div class="why">— прямо про память и архив, формат — разговор</div></div></div>
+        <div class="res"><div class="cov" style="background-image:url('https://picsum.photos/seed/lia-read/300/300')"></div>
+          <div class="info"><div class="kick">Читательская группа</div><div class="ttl">Читаем Зебальда</div>
+          <div class="meta">17 июня, 20:00 · «Порядок слов»</div><div class="why">— память и документ в тексте, обсуждение по кругу</div></div></div>
+        <div class="res"><div class="cov" style="background-image:url('https://picsum.photos/seed/lia-talk/300/300')"></div>
+          <div class="info"><div class="kick">Открытая лекция</div><div class="ttl">Что значит смотреть вместе</div>
+          <div class="meta">16 июня, 18:30 · «Винзавод»</div><div class="why">— со встроенным обсуждением, не монолог</div></div></div>
+      </div>
+    </div>
+    <div class="a-bar"><div class="a-input">Уточнить: «ближе к выходным» или «для одного»…</div><div class="a-send">↑</div></div>
+  </div>
+
+  <!-- MOBILE DARK -->
+  <div class="a-phone D4">
+    <div class="a-pscreen">
+      <div class="a-ptop"><div class="a-large" style="font-size:26px">Подобрать</div></div>
+      <div class="a-pscroll">
+        <div class="bubble" style="font-size:15px">про память и архив, чтобы поговорить</div>
+        <div class="assist"><div class="dot"></div><div class="say" style="font-size:15px">Три встречи, где смотрят и обсуждают вместе:</div></div>
+        <div class="reslist">
+          <div class="res"><div class="cov" style="background-image:url('https://picsum.photos/seed/lia-arc/300/300')"></div>
+            <div class="info"><div class="kick">Медиация</div><div class="ttl" style="font-size:15px">Память и архив</div><div class="meta">14 июня · «Цех»</div></div></div>
+          <div class="res"><div class="cov" style="background-image:url('https://picsum.photos/seed/lia-read/300/300')"></div>
+            <div class="info"><div class="kick">Чит. группа</div><div class="ttl" style="font-size:15px">Читаем Зебальда</div><div class="meta">17 июня · «Порядок слов»</div></div></div>
+        </div>
+      </div>
+      <div class="a-bar" style="padding:12px 14px 24px"><div class="a-input" style="font-size:14px">Уточнить запрос…</div><div class="a-send">↑</div></div>
+    </div>
+  </div>
+
+ </div>
+</div>
+</body>
+</html>

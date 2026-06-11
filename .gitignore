@@ -6,3 +6,6 @@
 
 # Redundant archive (contents are tracked under stitch_/)
 stitch_.zip
+
+# Visual companion working files
+.superpowers/

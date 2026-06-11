@@ -24,10 +24,10 @@ The platform is web-first, rendered Apple-style (system font stack, Apple materi
 
 | Area | Change |
 |---|---|
-| Typography | Drop Noto Serif + Inter. One system font stack `-apple-system, "SF Pro Text", "SF Pro Display", system-ui, "Segoe UI", Roboto, sans-serif`. Apple type ramp: Large Title (34) → Title 1/2/3 → Headline → Body (17) → Callout → Subhead → Footnote → Caption. SF covers Cyrillic. |
+| Typography | Drop Noto Serif + Inter. One system font stack `-apple-system, "SF Pro Text", "SF Pro Display", system-ui, "Segoe UI", Roboto, sans-serif`. Apple type ramp: Large Title (34) → Title 2 → Headline → Body (17) → Subhead → Footnote → Caption. SF covers Cyrillic. |
 | Color | Apple semantic system colors (see Color tokens), defined for light and dark. |
 | Elevation/materials | Apple materials: translucent blurred Liquid Glass for navigation layers (nav bars, tab bars, sheets, popovers); thin separators; subtle system shadows on cards/sheets. Liquid Glass used on chrome only, not on content (per Apple guidance). |
-| Shape | Continuous ("squircle") radii: ~10–12px controls, 16–20px cards/sheets. |
+| Shape | Continuous ("squircle") radii: ~10–12px controls, 16–18px cards, 20px+ sheets. |
 | Controls | Native patterns: filled/tinted/plain buttons (not pills), segmented controls, switches, steppers, grouped inset lists (Settings-style), large-title navigation, Apple-style search field, sheets/popovers. |
 
 ---
@@ -39,7 +39,7 @@ The platform is web-first, rendered Apple-style (system font stack, Apple materi
 | Token | Light | Dark |
 |---|---|---|
 | `bg` (base) | `#FFFFFF` | `#000000` |
-| `bg-grouped` | `#F2F2F7` | `#000000` |
+| `bg-grouped` | `#F2F2F7` | `#000000` (intentional per UIKit — grouped background is pure black in dark mode, same as `bg`) |
 | `bg-secondary` (cards on grouped) | `#FFFFFF` | `#1C1C1E` |
 | `bg-tertiary` | `#FFFFFF` | `#2C2C2E` |
 | `label` | `#000000` | `#FFFFFF` |
@@ -91,6 +91,8 @@ CSS implementation:
 ```css
 backdrop-filter: saturate(180%) blur(20px);
 ```
+
+> Pair with the `glass` background token. Dark mode omits `saturate` — use plain `blur(20px)` over `rgba(30,30,30,.72)`.
 
 Light surface: `rgba(249,249,249,.72)` + blur 20px saturate 180%.  
 Dark surface: `rgba(30,30,30,.72)` + blur 20px.

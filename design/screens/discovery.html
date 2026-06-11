@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lia — Discovery (Apple design system)</title>
+  <style>
+    body{ margin:0; padding:32px; background:#e9e9ee; font-family:-apple-system,system-ui,sans-serif; }
+    h1.page{ font:600 15px/1 -apple-system,system-ui,sans-serif; color:#3c3c43; opacity:.6; text-transform:uppercase; letter-spacing:.04em; margin:0 0 20px; }
+  </style>
+  <style>
+  .lia{ font-family:-apple-system,"SF Pro Text","SF Pro Display",system-ui,"Segoe UI",Roboto,sans-serif; -webkit-font-smoothing:antialiased; }
+  .lia *{ box-sizing:border-box; }
+  .lia-stage{ display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap; }
+
+  /* ---- Light tokens (desktop) ---- */
+  .L{ --bg:#F2F2F7; --bg2:#FFFFFF; --label:#000; --label2:rgba(60,60,67,.6); --label3:rgba(60,60,67,.3);
+      --sep:rgba(60,60,67,.18); --accent:#007AFF; --glass:rgba(249,249,249,.72); --fill:rgba(118,118,128,.12); }
+  /* ---- Dark tokens (mobile) ---- */
+  .D{ --bg:#000; --bg2:#1C1C1E; --label:#fff; --label2:rgba(235,235,245,.6); --label3:rgba(235,235,245,.3);
+      --sep:rgba(84,84,88,.65); --accent:#0A84FF; --glass:rgba(30,30,30,.72); --fill:rgba(118,118,128,.24); }
+
+  /* desktop frame */
+  .desk{ flex:1 1 560px; min-width:520px; background:var(--bg); border-radius:20px; overflow:hidden;
+         border:1px solid var(--sep); }
+  .desk .nav{ position:sticky; top:0; backdrop-filter:saturate(180%) blur(20px); -webkit-backdrop-filter:saturate(180%) blur(20px);
+         background:var(--glass); border-bottom:.5px solid var(--sep); padding:14px 24px 12px; }
+  .desk .navrow{ display:flex; align-items:center; justify-content:space-between; }
+  .brand{ font-weight:600; font-size:17px; color:var(--label); letter-spacing:-.01em; }
+  .navbtns{ display:flex; gap:18px; align-items:center; }
+  .navbtns a{ color:var(--accent); font-size:15px; font-weight:500; text-decoration:none; }
+  .largetitle{ font-size:34px; font-weight:700; letter-spacing:-.022em; color:var(--label); margin:14px 0 12px; }
+  .search{ display:flex; align-items:center; gap:8px; background:var(--fill); border-radius:12px; padding:9px 12px; color:var(--label2); font-size:15px; }
+  .filters{ display:flex; gap:8px; overflow:auto; padding:14px 24px 4px; }
+  .chip{ white-space:nowrap; font-size:14px; font-weight:500; padding:7px 14px; border-radius:980px; background:var(--fill); color:var(--label); }
+  .chip.on{ background:var(--accent); color:#fff; }
+  .grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; padding:16px 24px 24px; }
+  .card{ background:var(--bg2); border-radius:18px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.08),0 8px 24px rgba(0,0,0,.04); }
+  .card .cov{ height:130px; background-size:cover; background-position:center; }
+  .card .body{ padding:12px 14px 14px; }
+  .kick{ font-size:12px; font-weight:600; letter-spacing:.02em; color:var(--accent); text-transform:uppercase; }
+  .ttl{ font-size:17px; font-weight:600; letter-spacing:-.01em; color:var(--label); margin:3px 0 6px; line-height:1.25; }
+  .meta{ font-size:13px; color:var(--label2); line-height:1.4; }
+
+  /* mobile frame */
+  .phone{ flex:0 0 300px; width:300px; background:var(--bg); border-radius:38px; padding:10px; border:1px solid var(--sep);
+          box-shadow:0 20px 50px rgba(0,0,0,.25); position:relative; }
+  .screen{ background:var(--bg); border-radius:30px; overflow:hidden; height:620px; position:relative; display:flex; flex-direction:column; }
+  .mnav{ backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); background:var(--glass); padding:50px 18px 10px; border-bottom:.5px solid var(--sep); }
+  .mnav .largetitle{ font-size:30px; margin:8px 0 10px; }
+  .mfilters{ display:flex; gap:7px; overflow:auto; padding-top:4px; }
+  .mscroll{ flex:1; overflow:auto; padding:14px 16px 14px; display:flex; flex-direction:column; gap:14px; }
+  .mcard{ background:var(--bg2); border-radius:16px; overflow:hidden; }
+  .mcard .cov{ height:120px; background-size:cover; background-position:center; }
+  .mcard .body{ padding:11px 13px 13px; }
+  .tabbar{ position:absolute; left:0; right:0; bottom:0; display:flex; justify-content:space-around; padding:10px 0 26px;
+           backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); background:var(--glass); border-top:.5px solid var(--sep); }
+  .tab{ display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10px; color:var(--label2); }
+  .tab.on{ color:var(--accent); }
+  .tab .ico{ width:24px; height:24px; border-radius:6px; background:currentColor; opacity:.9; -webkit-mask-size:cover; }
+  .notch{ position:absolute; top:14px; left:50%; transform:translateX(-50%); width:110px; height:30px; background:#000; border-radius:18px; z-index:5; }
+</style>
+</head>
+<body>
+  <h1 class="page">Lia · Главная / Discovery</h1>
+  <div class="lia">
+ <div class="lia-stage">
+
+  <!-- DESKTOP / LIGHT -->
+  <div class="desk L">
+    <div class="nav">
+      <div class="navrow">
+        <span class="brand">Lia</span>
+        <span class="navbtns"><a>Создать событие</a><a>Войти</a></span>
+      </div>
+      <div class="largetitle">События</div>
+      <div class="search">⌕ Поиск по названию, месту, ведущему</div>
+    </div>
+    <div class="filters">
+      <span class="chip on">Все</span><span class="chip">Сегодня</span><span class="chip">Выходные</span>
+      <span class="chip">Медиации</span><span class="chip">Мастер-классы</span><span class="chip">Лекции</span><span class="chip">Рядом</span>
+    </div>
+    <div class="grid">
+      <div class="card"><div class="cov" style="background-image:url('https://picsum.photos/seed/lia-arc/600/400')"></div>
+        <div class="body"><div class="kick">Медиация</div><div class="ttl">Память и архив: разговор у работ</div>
+        <div class="meta">14 июня, 19:00 · Галерея «Цех»<br>12 мест · бесплатно</div></div></div>
+      <div class="card"><div class="cov" style="background-image:url('https://picsum.photos/seed/lia-paper/600/400')"></div>
+        <div class="body"><div class="kick">Мастерская</div><div class="ttl">Бумага ручного отлива</div>
+        <div class="meta">15 июня, 12:00 · Мастерская на Рочдельской<br>8 мест · 1 500 ₽</div></div></div>
+      <div class="card"><div class="cov" style="background-image:url('https://picsum.photos/seed/lia-talk/600/400')"></div>
+        <div class="body"><div class="kick">Открытая лекция</div><div class="ttl">Что значит смотреть вместе</div>
+        <div class="meta">16 июня, 18:30 · ЦСИ «Винзавод»<br>40 мест · бесплатно</div></div></div>
+      <div class="card"><div class="cov" style="background-image:url('https://picsum.photos/seed/lia-read/600/400')"></div>
+        <div class="body"><div class="kick">Читательская группа</div><div class="ttl">Читаем Зебальда</div>
+        <div class="meta">17 июня, 20:00 · Книжный «Порядок слов»<br>10 мест · бесплатно</div></div></div>
+    </div>
+  </div>
+
+  <!-- MOBILE / DARK -->
+  <div class="phone D">
+    <div class="notch"></div>
+    <div class="screen">
+      <div class="mnav">
+        <div class="largetitle">События</div>
+        <div class="search">⌕ Поиск</div>
+        <div class="mfilters">
+          <span class="chip on">Все</span><span class="chip">Сегодня</span><span class="chip">Рядом</span><span class="chip">Медиации</span>
+        </div>
+      </div>
+      <div class="mscroll">
+        <div class="mcard"><div class="cov" style="background-image:url('https://picsum.photos/seed/lia-arc/600/400')"></div>
+          <div class="body"><div class="kick">Медиация</div><div class="ttl">Память и архив: разговор у работ</div>
+          <div class="meta">14 июня, 19:00 · Галерея «Цех»</div></div></div>
+        <div class="mcard"><div class="cov" style="background-image:url('https://picsum.photos/seed/lia-paper/600/400')"></div>
+          <div class="body"><div class="kick">Мастерская</div><div class="ttl">Бумага ручного отлива</div>
+          <div class="meta">15 июня, 12:00 · Рочдельская</div></div></div>
+      </div>
+      <div class="tabbar">
+        <span class="tab on"><span class="ico"></span>События</span>
+        <span class="tab"><span class="ico"></span>Поиск</span>
+        <span class="tab"><span class="ico"></span>Избранное</span>
+        <span class="tab"><span class="ico"></span>Профиль</span>
+      </div>
+    </div>
+  </div>
+
+ </div>
+</div>
+</body>
+</html>

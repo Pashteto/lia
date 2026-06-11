@@ -122,7 +122,7 @@ Cards and sheets use subtle system shadows (not heavy drop shadows). Hairline bo
 
 1. [Главная / Discovery](screens/discovery.html) — large-title "События", Apple search field, capsule filter row, event card grid on grouped bg, glass nav (desktop) / glass tab bar (mobile).
 2. [Создание события](screens/create-event.html) — grouped inset form (Settings-style): sections Основное / Формат / Место и время / Участники / Публикация; segmented (format, publication status), switch (Бесплатно), stepper (capacity), cover upload; glass nav with Отмена/Сохранить.
-3. [Детали события + регистрация](screens/event-detail.html) — large cover → large title → key-facts block (когда/где/участники/формат) on grouped bg → sections О встрече / Ведущий (avatar) / Место; sticky glass bottom bar with price + "Записаться".
+3. [Детали события + регистрация](screens/event-detail.html) — large cover → large title → key-facts block (когда/где/участники/формат) on grouped bg → sections О встрече / Ведущий (avatar) / Место; sticky glass bottom bar with price + "Записаться". (Detail/reading views use a plain white `bg` base with grouped blocks layered on top — the inverse of list screens, per Apple's `systemBackground` vs `systemGroupedBackground` convention.)
 4. [AI-поиск / ассистент](screens/ai-search.html) — natural-language curatorial query as a user bubble → short assistant reply → result cards each with a "почему подошло" rationale; Liquid Glass input bar.
 
 [Все экраны](screens/index.html)

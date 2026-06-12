@@ -1,0 +1,129 @@
+@import "tailwindcss";
+
+/*
+ * Lia design tokens — Apple HIG.
+ * Source of truth: ../../design/DESIGN.md (and design/screens/*.html).
+ * Light values are the defaults; dark overrides apply via `prefers-color-scheme`
+ * and an explicit `.dark` class (so screens can be eyeballed in both themes).
+ * Do NOT bundle SF Pro as a webfont — system stack only (DESIGN.md Legal note).
+ */
+
+/* Enable a class-based dark variant in addition to the OS preference. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  /* Backgrounds */
+  --bg: #ffffff; /* systemBackground (detail/reading base) */
+  --bg-grouped: #f2f2f7; /* systemGroupedBackground (list screens) */
+  --bg-secondary: #ffffff; /* cards on grouped bg */
+  --bg-tertiary: #ffffff;
+
+  /* Labels */
+  --label: #000000;
+  --label-secondary: rgba(60, 60, 67, 0.6);
+  --label-tertiary: rgba(60, 60, 67, 0.3);
+
+  /* Lines & fills */
+  --separator: rgba(60, 60, 67, 0.18);
+  --fill: rgba(118, 118, 128, 0.12);
+
+  /* Accent / status */
+  --accent: #007aff;
+  --success: #34c759;
+
+  /* Material */
+  --glass: rgba(249, 249, 249, 0.72);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #000000;
+    --bg-grouped: #000000; /* intentional per UIKit: grouped == base in dark */
+    --bg-secondary: #1c1c1e;
+    --bg-tertiary: #2c2c2e;
+    --label: #ffffff;
+    --label-secondary: rgba(235, 235, 245, 0.6);
+    --label-tertiary: rgba(235, 235, 245, 0.3);
+    --separator: rgba(84, 84, 88, 0.65);
+    --fill: rgba(118, 118, 128, 0.24);
+    --accent: #0a84ff;
+    --success: #30d158;
+    --glass: rgba(30, 30, 30, 0.72);
+  }
+}
+
+/* Explicit class override (wins over OS preference). */
+.dark {
+  --bg: #000000;
+  --bg-grouped: #000000;
+  --bg-secondary: #1c1c1e;
+  --bg-tertiary: #2c2c2e;
+  --label: #ffffff;
+  --label-secondary: rgba(235, 235, 245, 0.6);
+  --label-tertiary: rgba(235, 235, 245, 0.3);
+  --separator: rgba(84, 84, 88, 0.65);
+  --fill: rgba(118, 118, 128, 0.24);
+  --accent: #0a84ff;
+  --success: #30d158;
+  --glass: rgba(30, 30, 30, 0.72);
+}
+
+/* Expose tokens to Tailwind utilities (bg-bg, text-label, rounded-card, …). */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-grouped: var(--bg-grouped);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-bg-tertiary: var(--bg-tertiary);
+  --color-label: var(--label);
+  --color-label-secondary: var(--label-secondary);
+  --color-label-tertiary: var(--label-tertiary);
+  --color-separator: var(--separator);
+  --color-fill: var(--fill);
+  --color-accent: var(--accent);
+  --color-success: var(--success);
+  --color-glass: var(--glass);
+
+  /* System font stack (renders SF Pro on Apple, OS font elsewhere). */
+  --font-sans: -apple-system, "SF Pro Text", "SF Pro Display", system-ui,
+    "Segoe UI", Roboto, sans-serif;
+
+  /* Continuous (squircle) radii. */
+  --radius-control: 12px;
+  --radius-card-sm: 16px;
+  --radius-card: 18px;
+  --radius-fact: 14px;
+  --radius-sheet: 20px;
+  --radius-seg: 9px;
+  --radius-capsule: 980px;
+
+  /* System shadows (subtle — no heavy drop shadows). */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.04);
+  --shadow-card-subtle: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-phone: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+html {
+  background: var(--bg-grouped);
+  color: var(--label);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Liquid Glass — chrome layers only (nav/tab/sheet bars), never content. */
+@utility glass {
+  background: var(--glass);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+/* Dark omits saturate per DESIGN.md. */
+@media (prefers-color-scheme: dark) {
+  .glass {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+}
+.dark .glass {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}

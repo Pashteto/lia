@@ -38,7 +38,11 @@ export function EventCard({
       )}
       <div className="space-y-2 p-4">
         <div className="flex items-center justify-between gap-2">
-          <Kicker>{event.category.label}</Kicker>
+          {event.category ? (
+            <Kicker>{event.category.label}</Kicker>
+          ) : (
+            <span />
+          )}
           <span className="text-[13px] text-label-secondary">
             {event.format === "online" ? "Онлайн" : "Очно"}
           </span>

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Providers } from "./providers";
 import "./globals.css";
 
 // No webfont import: the design system uses the system font stack only
@@ -17,7 +18,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru" className="h-full antialiased">
-      <body className="min-h-full bg-bg-grouped text-label">{children}</body>
+      <body className="min-h-full bg-bg-grouped text-label">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

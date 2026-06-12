@@ -38,5 +38,6 @@ pnpm lint
 
 - **No SF Pro webfont** — system font stack only (Apple license; see `DESIGN.md` Decisions). SF renders on Apple devices, OS font elsewhere.
 - Dark mode: `prefers-color-scheme` plus an explicit `.dark` class (the in-nav theme toggle flips it for review).
-- Data is currently **mock** (`lib/mock-events.ts`). Wiring to the Go backend API (TanStack Query) is the next step. Mock cover images come from Unsplash — see `next.config.ts` `images.remotePatterns`; swap for the real S3/CDN host when integrating.
+- Discovery fetches published events from the **Go backend** (`GET /api/v1/events?status=published`) server-side for SSR (`lib/api.ts`), with TanStack Query owning client-side refetch (`app/providers.tsx`). If the backend is unreachable it **falls back to mock data** (`lib/mock-events.ts`) so the page still renders. Set the API base via `NEXT_PUBLIC_API_URL` (see `.env.example`; defaults to `http://localhost:8080`).
+- The backend events model has no category/venue-name/cover yet, so cards degrade gracefully (no kicker/venue). Mock cover images come from Unsplash — see `next.config.ts` `images.remotePatterns`; swap for the real S3/CDN host later.
 - UI copy is **Russian**; identifiers/components stay **English**.

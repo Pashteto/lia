@@ -3,28 +3,44 @@
 import { EventCard } from "@/components/ui/EventCard";
 import { FilterChip } from "@/components/ui/FilterChip";
 import { SearchField } from "@/components/ui/SearchField";
-import { FILTERS, MOCK_EVENTS } from "@/lib/mock-events";
+import { fetchPublishedEvents } from "@/lib/api";
+import { FILTERS } from "@/lib/mock-events";
+import type { LiaEvent } from "@/lib/types";
+import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
 /**
  * Discovery feed: large title, search field, capsule filter row, event grid.
- * Filtering here is a scaffold stub over mock data — real filtering will hit
- * the backend search endpoint.
+ *
+ * Data comes from the backend `GET /api/v1/events?status=published`. The server
+ * component fetches the initial list (SSR) and passes it as `initialEvents`;
+ * TanStack Query then owns client-side refetching. Filtering/search is applied
+ * client-side over the fetched list.
  */
-export function DiscoveryFeed() {
+export function DiscoveryFeed({
+  initialEvents,
+}: {
+  initialEvents: LiaEvent[];
+}) {
   const [active, setActive] = useState("all");
   const [query, setQuery] = useState("");
 
+  const { data: allEvents = [], isError } = useQuery({
+    queryKey: ["events", "published"],
+    queryFn: fetchPublishedEvents,
+    initialData: initialEvents,
+  });
+
   const events = useMemo(() => {
-    return MOCK_EVENTS.filter((e) => {
-      const matchesFilter = active === "all" || e.category.slug === active;
+    return allEvents.filter((e) => {
+      const matchesFilter = active === "all" || e.category?.slug === active;
       const matchesQuery =
         query.trim() === "" ||
         e.title.toLowerCase().includes(query.toLowerCase()) ||
-        e.organizer.name.toLowerCase().includes(query.toLowerCase());
+        (e.organizer?.name ?? "").toLowerCase().includes(query.toLowerCase());
       return matchesFilter && matchesQuery;
     });
-  }, [active, query]);
+  }, [allEvents, active, query]);
 
   return (
     <main className="mx-auto max-w-3xl px-5 pb-28 pt-6">
@@ -48,7 +64,11 @@ export function DiscoveryFeed() {
         ))}
       </div>
 
-      {events.length > 0 ? (
+      {isError && allEvents.length === 0 ? (
+        <p className="py-16 text-center text-[15px] text-label-secondary">
+          Не удалось загрузить события. Проверьте, что бэкенд запущен.
+        </p>
+      ) : events.length > 0 ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {events.map((event) => (
             <EventCard key={event.id} event={event} />

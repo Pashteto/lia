@@ -40,7 +40,8 @@ export interface LiaEvent {
   id: string;
   title: string;
   description?: string;
-  category: EventCategory;
+  /** Optional: the backend events model has no category yet. */
+  category?: EventCategory;
   format: EventFormat;
   status: EventStatus;
   startsAt: string; // ISO 8601
@@ -50,6 +51,27 @@ export interface LiaEvent {
   capacity?: number;
   attendeeCount?: number;
   coverUrl?: string;
-  organizer: Organizer;
+  /** Optional: the backend exposes organizer_id only (no profile join yet). */
+  organizer?: Organizer;
   venue?: Venue;
+}
+
+/** Shape returned by the backend `GET /api/v1/events` (Lia API Event model). */
+export interface ApiEvent {
+  id: string;
+  organizer_id?: string;
+  venue_id?: string;
+  title: string;
+  description?: string;
+  status: EventStatus;
+  format?: EventFormat;
+  price_type?: PriceType;
+  price_min?: number;
+  price_max?: number;
+  external_ticket_url?: string;
+  starts_at: string;
+  ends_at?: string;
+  published_at?: string;
+  created_at?: string;
+  updated_at?: string;
 }

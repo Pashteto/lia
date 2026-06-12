@@ -63,6 +63,9 @@ export interface ApiEvent {
   venue_id?: string;
   title: string;
   description?: string;
+  category?: string;
+  venue_name?: string;
+  venue_metro?: string;
   status: EventStatus;
   format?: EventFormat;
   price_type?: PriceType;

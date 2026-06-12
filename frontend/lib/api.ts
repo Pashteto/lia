@@ -13,6 +13,7 @@ export function apiEventToLia(e: ApiEvent): LiaEvent {
     id: e.id,
     title: e.title,
     description: e.description,
+    category: e.category ? { slug: e.category, label: e.category } : undefined,
     format: (e.format as EventFormat) ?? "offline",
     status: e.status,
     startsAt: e.starts_at,
@@ -20,7 +21,10 @@ export function apiEventToLia(e: ApiEvent): LiaEvent {
     priceType: (e.price_type as PriceType) ?? "free",
     priceMin: e.price_min,
     organizer: e.organizer_id ? { id: e.organizer_id, name: "" } : undefined,
-    // category / venue name / cover are not yet provided by the backend.
+    venue: e.venue_name
+      ? { id: e.venue_id ?? "", name: e.venue_name, metro: e.venue_metro }
+      : undefined,
+    // cover image is not yet provided by the backend.
   };
 }
 
@@ -38,4 +42,18 @@ export async function fetchPublishedEvents(): Promise<LiaEvent[]> {
   }
   const data = (await res.json()) as ApiEvent[];
   return data.map(apiEventToLia);
+}
+
+/**
+ * Fetches a single event by id. Returns null on 404; throws on other errors.
+ */
+export async function fetchEvent(id: string): Promise<LiaEvent | null> {
+  const res = await fetch(`${API_V1}/events/${id}`, { next: { revalidate: 30 } });
+  if (res.status === 404) {
+    return null;
+  }
+  if (!res.ok) {
+    throw new Error(`fetch event failed: ${res.status}`);
+  }
+  return apiEventToLia((await res.json()) as ApiEvent);
 }

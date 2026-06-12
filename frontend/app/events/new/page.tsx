@@ -1,13 +1,8 @@
-import { ComingSoon } from "@/components/ComingSoon";
+import { CreateEventForm } from "@/components/CreateEventForm";
 
-// TODO: build from design/screens/create-event.html
-// (grouped inset form: Основное / Формат / Место и время / Участники / Публикация).
+// Create event — built from design/screens/create-event.html.
+// Grouped inset form (Основное / Формат / Место и время / Участники / Публикация);
+// submits to POST /api/v1/events and redirects to the new event's detail page.
 export default function CreateEventPage() {
-  return (
-    <ComingSoon
-      kicker="Создание события"
-      title="Новое событие"
-      note="Форма создания события ещё не реализована в этом скаффолде. Смотри design/screens/create-event.html."
-    />
-  );
+  return <CreateEventForm />;
 }

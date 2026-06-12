@@ -1,4 +1,10 @@
-import type { ApiEvent, EventFormat, LiaEvent, PriceType } from "./types";
+import type {
+  ApiEvent,
+  EventFormat,
+  EventStatus,
+  LiaEvent,
+  PriceType,
+} from "./types";
 
 // Base URL of the Go backend. Overridable via env; defaults to local compose.
 // NEXT_PUBLIC_ prefix so the value is available in both server and client code.
@@ -54,6 +60,35 @@ export async function fetchEvent(id: string): Promise<LiaEvent | null> {
   }
   if (!res.ok) {
     throw new Error(`fetch event failed: ${res.status}`);
+  }
+  return apiEventToLia((await res.json()) as ApiEvent);
+}
+
+/** Payload for creating an event (mirrors the backend EventInput). */
+export interface CreateEventInput {
+  title: string;
+  description?: string;
+  category?: string;
+  venue_name?: string;
+  venue_metro?: string;
+  status?: EventStatus;
+  format?: EventFormat;
+  price_type?: PriceType;
+  price_min?: number;
+  starts_at: string; // ISO 8601
+  ends_at?: string;
+}
+
+/** Creates an event via POST /events; returns the created event. */
+export async function createEvent(input: CreateEventInput): Promise<LiaEvent> {
+  const res = await fetch(`${API_V1}/events`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`create event failed: ${res.status} ${detail}`);
   }
   return apiEventToLia((await res.json()) as ApiEvent);
 }

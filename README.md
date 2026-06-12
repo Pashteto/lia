@@ -12,8 +12,8 @@ A web-first discovery platform for **participatory cultural practices** in a sin
 
 | Path | Description |
 |------|-------------|
-| `frontend/` | Web client (Next.js + TypeScript + Tailwind). Scaffolding to be added. |
-| `backend/` | API and services (Go modular monolith, PostgreSQL + PostGIS, Redis, S3). Scaffolding to be added. |
+| `frontend/` | Web client (Next.js App Router + TypeScript + Tailwind v4 + pnpm). Discovery, event-detail, and create-event screens built against the API; AI-search stub. See `frontend/README.md`. |
+| `backend/` | API and services (Go modular monolith from `go-microservice-template`, PostgreSQL + PostGIS). `events` domain wired end-to-end; other domains are documented skeletons. See `backend/README.md`. |
 | `design/` | Design system + reference screens. Active direction: **Apple HIG-based** (web-first, light/dark) — see `design/DESIGN.md`. `stitch_/` kept as historical archive. |
 | `docs/` | Project documentation — technical stack and the design agent brief. |
 
@@ -22,7 +22,11 @@ A web-first discovery platform for **participatory cultural practices** in a sin
 - `event_discovery_mvp_technical_stack.md` — technical architecture for the first version: recommended stack, MVP requirements, scaling path.
 - `design_agent_prompt.md` — master design brief for an AI agent to design and implement the web app pages (Luma-like visual direction).
 
+## Status
+
+Frontend + backend are scaffolded with a working create → list → detail loop over the real API. Current state, how to run both sides, what's next, and known gotchas live in [`docs/HANDOFF.md`](docs/HANDOFF.md). Scaffold history: [`docs/superpowers/plans/`](docs/superpowers/plans/). Active work is on PR branch `scaffold/frontend-backend` (PR #1).
+
 ## Notes
 
 - Product UI copy is in **Russian**; code, comments, and file/component names stay in **English**.
-- Documentation last actualized: 2026-05-24.
+- Documentation last actualized: 2026-06-12.

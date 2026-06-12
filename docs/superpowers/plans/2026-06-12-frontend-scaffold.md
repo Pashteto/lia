@@ -4,6 +4,8 @@
 
 **Status:** ✅ Done. `pnpm build` + `pnpm lint` pass; Discovery renders the expected Russian content in light/dark.
 
+> **Follow-on since this plan** (see [`../../HANDOFF.md`](../../HANDOFF.md)): wired Discovery to the live API (SSR + TanStack Query), built the **event-detail** and **create-event** screens, and mapped the enriched category/venue fields. AI-search remains the only stub.
+
 **Decisions:** Foundation + one worked example (Discovery). Tailwind v4 (CSS-first `@theme`). pnpm. System font stack only (no SF webfont — Apple license, per DESIGN.md).
 
 ---

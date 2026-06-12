@@ -22,6 +22,9 @@ func EventToAPI(event *domainModels.Event) *apiModels.Event {
 		ID:                strfmt.UUID(event.ID.String()),
 		Title:             &event.Title,
 		Description:       event.Description,
+		Category:          event.Category,
+		VenueName:         event.VenueName,
+		VenueMetro:        event.VenueMetro,
 		Status:            &status,
 		Format:            event.Format,
 		PriceType:         event.PriceType,
@@ -63,10 +66,13 @@ func EventFromAPIInput(in *apiModels.EventInput) (*domainModels.Event, error) {
 	}
 
 	event := &domainModels.Event{
-		Description:       in.Description,
-		Format:            defaultStr(in.Format, "offline"),
-		PriceType:         defaultStr(in.PriceType, "free"),
-		ExternalURL:       in.ExternalTicketURL,
+		Description: in.Description,
+		Category:    in.Category,
+		VenueName:   in.VenueName,
+		VenueMetro:  in.VenueMetro,
+		Format:      defaultStr(in.Format, "offline"),
+		PriceType:   defaultStr(in.PriceType, "free"),
+		ExternalURL: in.ExternalTicketURL,
 	}
 
 	if in.Title != nil {

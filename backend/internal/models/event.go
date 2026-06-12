@@ -23,6 +23,11 @@ type Event struct {
 	VenueID     uuid.UUID   `pg:"venue_id,type:uuid,use_zero"`
 	Title       string      `pg:"title,notnull"`
 	Description string      `pg:"description,use_zero"`
+	// Category / Venue* are denormalized for now (see migration 000005); they
+	// move to dedicated categories / venues modules later.
+	Category    string      `pg:"category,use_zero"`
+	VenueName   string      `pg:"venue_name,use_zero"`
+	VenueMetro  string      `pg:"venue_metro,use_zero"`
 	Status      EventStatus `pg:"-"`
 	StatusSQL   string      `pg:"status,use_zero"`
 	Format      string      `pg:"format,use_zero"`

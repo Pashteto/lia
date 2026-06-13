@@ -11,6 +11,19 @@ import (
 	domainModels "github.com/Pashteto/lia/internal/models"
 )
 
+// CategoryToAPI converts a domain Category to its API representation.
+func CategoryToAPI(c *domainModels.Category) *apiModels.Category {
+	if c == nil {
+		return nil
+	}
+	id := strfmt.UUID(c.ID.String())
+	return &apiModels.Category{
+		ID:    &id,
+		Slug:  &c.Slug,
+		Label: &c.Label,
+	}
+}
+
 // EventToAPI converts a domain Event to its API representation.
 func EventToAPI(event *domainModels.Event) *apiModels.Event {
 	if event == nil {
@@ -22,7 +35,6 @@ func EventToAPI(event *domainModels.Event) *apiModels.Event {
 		ID:                strfmt.UUID(event.ID.String()),
 		Title:             &event.Title,
 		Description:       event.Description,
-		Category:          event.Category,
 		VenueName:         event.VenueName,
 		VenueMetro:        event.VenueMetro,
 		Status:            &status,
@@ -55,6 +67,11 @@ func EventToAPI(event *domainModels.Event) *apiModels.Event {
 		out.PublishedAt = strfmt.DateTime(*event.PublishedAt)
 	}
 
+	out.Categories = make([]*apiModels.Category, 0, len(event.Categories))
+	for _, c := range event.Categories {
+		out.Categories = append(out.Categories, CategoryToAPI(c))
+	}
+
 	return out
 }
 
@@ -67,7 +84,6 @@ func EventFromAPIInput(in *apiModels.EventInput) (*domainModels.Event, error) {
 
 	event := &domainModels.Event{
 		Description: in.Description,
-		Category:    in.Category,
 		VenueName:   in.VenueName,
 		VenueMetro:  in.VenueMetro,
 		Format:      defaultStr(in.Format, "offline"),
@@ -108,6 +124,12 @@ func EventFromAPIInput(in *apiModels.EventInput) (*domainModels.Event, error) {
 	if !time.Time(in.EndsAt).IsZero() {
 		ends := time.Time(in.EndsAt)
 		event.EndsAt = &ends
+	}
+
+	for _, raw := range in.CategoryIds {
+		if parsed, err := uuid.FromString(raw.String()); err == nil {
+			event.CategoryIDs = append(event.CategoryIDs, parsed)
+		}
 	}
 
 	return event, nil

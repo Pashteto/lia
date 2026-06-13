@@ -67,7 +67,7 @@ func (r *pgRepository) Create(event *models.Event) error {
 		return nil
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("create event %q: %w", event.Title, err)
 	}
 
 	logger.Log().Infof("event created: %s (ID: %s)", event.Title, event.ID)

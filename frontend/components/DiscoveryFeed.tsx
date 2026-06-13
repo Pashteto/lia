@@ -33,7 +33,8 @@ export function DiscoveryFeed({
 
   const events = useMemo(() => {
     return allEvents.filter((e) => {
-      const matchesFilter = active === "all" || e.category?.slug === active;
+      const matchesFilter =
+        active === "all" || e.categories.some((c) => c.slug === active);
       const matchesQuery =
         query.trim() === "" ||
         e.title.toLowerCase().includes(query.toLowerCase()) ||

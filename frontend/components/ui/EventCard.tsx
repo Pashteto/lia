@@ -38,8 +38,8 @@ export function EventCard({
       )}
       <div className="space-y-2 p-4">
         <div className="flex items-center justify-between gap-2">
-          {event.category ? (
-            <Kicker>{event.category.label}</Kicker>
+          {event.categories.length > 0 ? (
+            <Kicker>{event.categories[0].label}</Kicker>
           ) : (
             <span />
           )}

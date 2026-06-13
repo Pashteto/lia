@@ -16,6 +16,8 @@ type Repository interface {
 	// List returns all categories ordered by sort_order.
 	List() ([]*models.Category, error)
 	// GetByIDs returns the categories matching the given ids (order by sort_order).
+	// Results contain at most one entry per id (id is the primary key); callers
+	// rely on this to detect missing ids by comparing lengths.
 	GetByIDs(ids []uuid.UUID) ([]*models.Category, error)
 }
 

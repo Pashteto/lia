@@ -19,7 +19,11 @@ export function apiEventToLia(e: ApiEvent): LiaEvent {
     id: e.id,
     title: e.title,
     description: e.description,
-    category: e.category ? { slug: e.category, label: e.category } : undefined,
+    categories: (e.categories ?? []).map((c) => ({
+      id: c.id,
+      slug: c.slug,
+      label: c.label,
+    })),
     format: (e.format as EventFormat) ?? "offline",
     status: e.status,
     startsAt: e.starts_at,
@@ -32,6 +36,22 @@ export function apiEventToLia(e: ApiEvent): LiaEvent {
       : undefined,
     // cover image is not yet provided by the backend.
   };
+}
+
+/** A category from the curated taxonomy. */
+export interface ApiCategory {
+  id: string;
+  slug: string;
+  label: string;
+}
+
+/** Fetches the curated category taxonomy. Throws on network/HTTP error. */
+export async function getCategories(): Promise<ApiCategory[]> {
+  const res = await fetch(`${API_V1}/categories`, { next: { revalidate: 300 } });
+  if (!res.ok) {
+    throw new Error(`fetch categories failed: ${res.status}`);
+  }
+  return (await res.json()) as ApiCategory[];
 }
 
 /**
@@ -68,7 +88,7 @@ export async function fetchEvent(id: string): Promise<LiaEvent | null> {
 export interface CreateEventInput {
   title: string;
   description?: string;
-  category?: string;
+  category_ids?: string[];
   venue_name?: string;
   venue_metro?: string;
   status?: EventStatus;

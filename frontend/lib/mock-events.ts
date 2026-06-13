@@ -1,10 +1,17 @@
-import type { EventCategory, LiaEvent } from "./types";
+import type { LiaEvent } from "./types";
+
+// A discovery filter chip. Special chips (all/today/weekend/nearby) are not
+// real categories, so this is its own shape rather than EventCategory.
+export interface DiscoveryFilter {
+  slug: string;
+  label: string;
+}
 
 // Mock data for the Discovery scaffold. Content (titles, organizers) is drawn
-// from the curatorial copy in design/screens/discovery.html. Replace with real
-// API data (TanStack Query against the Go backend) when wiring the API.
+// from the curatorial copy in design/screens/discovery.html. The deployed demo
+// (lia.pashteto.com) renders from this when the backend is unreachable.
 
-export const FILTERS: ({ slug: "all"; label: string } | EventCategory)[] = [
+export const FILTERS: DiscoveryFilter[] = [
   { slug: "all", label: "Все" },
   { slug: "today", label: "Сегодня" },
   { slug: "weekend", label: "Выходные" },
@@ -20,7 +27,7 @@ export const MOCK_EVENTS: LiaEvent[] = [
     title: "Память и архив: разговор у работ",
     description:
       "Совместная медиация в залах постоянной экспозиции. Смотрим, говорим, замечаем — без экскурсионного монолога.",
-    category: { slug: "mediation", label: "Медиации" },
+    categories: [{ id: "cat-mediation", slug: "mediation", label: "Медиации" }],
     format: "offline",
     status: "published",
     startsAt: "2026-06-13T19:00:00+03:00",
@@ -37,7 +44,7 @@ export const MOCK_EVENTS: LiaEvent[] = [
     title: "Бумага ручного отлива",
     description:
       "Мастерская: делаем лист бумаги из вторсырья и растительных волокон. Уносим с собой.",
-    category: { slug: "workshop", label: "Мастер-классы" },
+    categories: [{ id: "cat-workshop", slug: "workshop", label: "Мастер-классы" }],
     format: "offline",
     status: "published",
     startsAt: "2026-06-14T14:00:00+03:00",
@@ -55,7 +62,7 @@ export const MOCK_EVENTS: LiaEvent[] = [
     title: "Что значит смотреть вместе",
     description:
       "Открытая лекция о практиках совместного просмотра и о том, как зритель становится участником.",
-    category: { slug: "lecture", label: "Лекции" },
+    categories: [{ id: "cat-lecture", slug: "lecture", label: "Лекции" }],
     format: "online",
     status: "published",
     startsAt: "2026-06-15T18:30:00+03:00",
@@ -70,7 +77,10 @@ export const MOCK_EVENTS: LiaEvent[] = [
     title: "Читаем Зебальда",
     description:
       "Читательская группа: медленное чтение и разговор. В этот раз — «Кольца Сатурна».",
-    category: { slug: "mediation", label: "Медиации" },
+    categories: [
+      { id: "cat-mediation", slug: "mediation", label: "Медиации" },
+      { id: "cat-lecture", slug: "lecture", label: "Лекции" },
+    ],
     format: "offline",
     status: "published",
     startsAt: "2026-06-16T20:00:00+03:00",

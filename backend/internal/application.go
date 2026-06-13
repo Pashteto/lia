@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/Pashteto/lia/config"
+	categoriesdomain "github.com/Pashteto/lia/internal/categories"
 	eventsdomain "github.com/Pashteto/lia/internal/events"
 	grpcmod "github.com/Pashteto/lia/internal/grpc"
 	grpcclientmod "github.com/Pashteto/lia/internal/grpcclient"
@@ -34,6 +35,9 @@ type App struct {
 
 	// eventsSvc is the events domain service. Nil when the database is disabled.
 	eventsSvc eventsdomain.Service
+
+	// categoriesSvc is the categories domain service. Nil when the DB is disabled.
+	categoriesSvc categoriesdomain.Service
 }
 
 // NewApplication creates a new App instance.
@@ -125,8 +129,12 @@ func (app *App) registerModules() error {
 	// Events is the worked example; future domains (organizers, venues, rsvp,
 	// search, notifications, ai) follow the same pattern — see internal/<domain>.
 	if repoModule != nil {
-		app.eventsSvc = eventsdomain.NewService(eventsdomain.NewRepository(repoModule.DB()))
-		logger.Log().Info("events module wired to repository")
+		app.categoriesSvc = categoriesdomain.NewService(categoriesdomain.NewRepository(repoModule.DB()))
+		app.eventsSvc = eventsdomain.NewService(
+			eventsdomain.NewRepository(repoModule.DB()),
+			app.categoriesSvc,
+		)
+		logger.Log().Info("events + categories modules wired to repository")
 	}
 
 	logger.Log().Info("infrastructure modules initialized successfully")
@@ -140,6 +148,7 @@ func (app *App) registerModules() error {
 
 		// Inject domain services (events handlers register only when set).
 		httpModule.SetEventsService(app.eventsSvc)
+		httpModule.SetCategoriesService(app.categoriesSvc)
 
 		app.modules.Register(httpModule)
 

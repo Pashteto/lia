@@ -30,6 +30,8 @@ export interface Venue {
 }
 
 export interface EventCategory {
+  /** Stable category id (uuid) from the backend. */
+  id: string;
   /** Stable slug used for filtering. */
   slug: string;
   /** Russian display label, e.g. "Медиации". */
@@ -40,8 +42,8 @@ export interface LiaEvent {
   id: string;
   title: string;
   description?: string;
-  /** Optional: the backend events model has no category yet. */
-  category?: EventCategory;
+  /** Categories from the curated taxonomy (many-to-many). */
+  categories: EventCategory[];
   format: EventFormat;
   status: EventStatus;
   startsAt: string; // ISO 8601
@@ -63,7 +65,7 @@ export interface ApiEvent {
   venue_id?: string;
   title: string;
   description?: string;
-  category?: string;
+  categories?: { id: string; slug: string; label: string }[];
   venue_name?: string;
   venue_metro?: string;
   status: EventStatus;

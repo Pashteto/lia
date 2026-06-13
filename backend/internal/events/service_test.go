@@ -8,6 +8,7 @@ import (
 
 	"github.com/gofrs/uuid"
 
+	"github.com/Pashteto/lia/internal/categories"
 	"github.com/Pashteto/lia/internal/models"
 )
 
@@ -35,6 +36,16 @@ func (m *mockRepo) List(ListFilter) ([]*models.Event, error) {
 	return m.list, nil
 }
 
+// mockValidator is an in-memory CategoryValidator.
+type mockValidator struct {
+	err      error
+	resolved []*models.Category
+}
+
+func (m *mockValidator) Validate(context.Context, []uuid.UUID) ([]*models.Category, error) {
+	return m.resolved, m.err
+}
+
 func validEvent() *models.Event {
 	return &models.Event{
 		Title:    "Память и архив",
@@ -45,7 +56,7 @@ func validEvent() *models.Event {
 
 func TestService_Create(t *testing.T) {
 	repo := &mockRepo{}
-	svc := NewService(repo)
+	svc := NewService(repo, &mockValidator{})
 
 	if err := svc.Create(context.Background(), validEvent()); err != nil {
 		t.Fatalf("Create returned error: %v", err)
@@ -55,8 +66,37 @@ func TestService_Create(t *testing.T) {
 	}
 }
 
+func TestService_Create_WithCategories(t *testing.T) {
+	id, _ := uuid.NewV4()
+	resolved := []*models.Category{{ID: id, Slug: "lecture", Label: "Лекции"}}
+	repo := &mockRepo{}
+	svc := NewService(repo, &mockValidator{resolved: resolved})
+
+	ev := validEvent()
+	ev.CategoryIDs = []uuid.UUID{id}
+	if err := svc.Create(context.Background(), ev); err != nil {
+		t.Fatalf("Create returned error: %v", err)
+	}
+	if len(repo.created.Categories) != 1 {
+		t.Fatalf("expected resolved categories on the event, got %d", len(repo.created.Categories))
+	}
+}
+
+func TestService_Create_UnknownCategory(t *testing.T) {
+	repo := &mockRepo{}
+	svc := NewService(repo, &mockValidator{err: categories.ErrInvalidInput})
+
+	ev := validEvent()
+	bad, _ := uuid.NewV4()
+	ev.CategoryIDs = []uuid.UUID{bad}
+	err := svc.Create(context.Background(), ev)
+	if !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("expected ErrInvalidInput, got %v", err)
+	}
+}
+
 func TestService_Create_InvalidInput(t *testing.T) {
-	svc := NewService(&mockRepo{})
+	svc := NewService(&mockRepo{}, &mockValidator{})
 
 	err := svc.Create(context.Background(), &models.Event{}) // missing title/starts_at
 	if !errors.Is(err, ErrInvalidInput) {
@@ -65,7 +105,7 @@ func TestService_Create_InvalidInput(t *testing.T) {
 }
 
 func TestService_GetByID_InvalidUUID(t *testing.T) {
-	svc := NewService(&mockRepo{})
+	svc := NewService(&mockRepo{}, &mockValidator{})
 
 	_, err := svc.GetByID(context.Background(), "not-a-uuid")
 	if !errors.Is(err, ErrInvalidInput) {
@@ -74,7 +114,7 @@ func TestService_GetByID_InvalidUUID(t *testing.T) {
 }
 
 func TestService_List_InvalidStatus(t *testing.T) {
-	svc := NewService(&mockRepo{})
+	svc := NewService(&mockRepo{}, &mockValidator{})
 
 	_, err := svc.List(context.Background(), "bogus")
 	if !errors.Is(err, ErrInvalidInput) {
@@ -84,7 +124,7 @@ func TestService_List_InvalidStatus(t *testing.T) {
 
 func TestService_List_OK(t *testing.T) {
 	repo := &mockRepo{list: []*models.Event{validEvent()}}
-	svc := NewService(repo)
+	svc := NewService(repo, &mockValidator{})
 
 	got, err := svc.List(context.Background(), "published")
 	if err != nil {

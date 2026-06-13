@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/Button";
-import { Kicker } from "@/components/ui/Kicker";
 import { fetchEvent } from "@/lib/api";
 import {
   formatAttendance,
@@ -66,7 +65,18 @@ export default async function EventDetailPage({
 
         {/* Title */}
         <div className="mt-5">
-          {event.category && <Kicker>{event.category.label}</Kicker>}
+          {event.categories.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {event.categories.map((c) => (
+                <span
+                  key={c.id}
+                  className="rounded-full bg-fill px-2.5 py-1 text-[12px] font-medium uppercase tracking-[0.03em] text-label-secondary"
+                >
+                  {c.label}
+                </span>
+              ))}
+            </div>
+          )}
           <h1 className="mt-2 text-[28px] font-bold leading-tight tracking-[-0.022em]">
             {event.title}
           </h1>

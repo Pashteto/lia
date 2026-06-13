@@ -3,10 +3,10 @@
 import { Button } from "@/components/ui/Button";
 import { Segmented } from "@/components/ui/Segmented";
 import { Switch } from "@/components/ui/Switch";
-import { createEvent, type CreateEventInput } from "@/lib/api";
+import { createEvent, getCategories, type CreateEventInput } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Controller, useForm, useWatch } from "react-hook-form";
@@ -15,7 +15,7 @@ import { z } from "zod";
 const schema = z.object({
   title: z.string().min(1, "Укажите название"),
   description: z.string().optional(),
-  category: z.string().optional(),
+  categoryIds: z.array(z.string()).optional(),
   format: z.enum(["offline", "online"]),
   venueName: z.string().optional(),
   venueMetro: z.string().optional(),
@@ -45,10 +45,16 @@ export function CreateEventForm() {
       format: "offline",
       isFree: true,
       status: "draft",
+      categoryIds: [],
     },
   });
 
   const isFree = useWatch({ control, name: "isFree" });
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ["categories"],
+    queryFn: getCategories,
+  });
 
   const mutation = useMutation({
     mutationFn: (input: CreateEventInput) => createEvent(input),
@@ -59,7 +65,7 @@ export function CreateEventForm() {
     const input: CreateEventInput = {
       title: v.title,
       description: v.description || undefined,
-      category: v.category || undefined,
+      category_ids: v.categoryIds && v.categoryIds.length > 0 ? v.categoryIds : undefined,
       venue_name: v.venueName || undefined,
       venue_metro: v.venueMetro || undefined,
       format: v.format,
@@ -108,11 +114,44 @@ export function CreateEventForm() {
               {...register("description")}
             />
           </Field>
-          <Field label="Категория">
-            <input
-              className={inputCls}
-              placeholder="Медиации, Мастер-классы, Лекции…"
-              {...register("category")}
+          <Field label="Категории">
+            <Controller
+              control={control}
+              name="categoryIds"
+              render={({ field }) => {
+                const selected = field.value ?? [];
+                const toggle = (id: string) =>
+                  field.onChange(
+                    selected.includes(id)
+                      ? selected.filter((s) => s !== id)
+                      : [...selected, id],
+                  );
+                return (
+                  <div className="flex flex-wrap gap-2">
+                    {categories.length === 0 && (
+                      <span className="text-[13px] text-label-secondary">
+                        Категории недоступны (бэкенд офлайн)
+                      </span>
+                    )}
+                    {categories.map((c) => {
+                      const on = selected.includes(c.id);
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => toggle(c.id)}
+                          className={cn(
+                            "rounded-full px-3 py-1.5 text-[15px] transition",
+                            on ? "bg-accent text-white" : "bg-fill text-label",
+                          )}
+                        >
+                          {c.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              }}
             />
           </Field>
         </Section>

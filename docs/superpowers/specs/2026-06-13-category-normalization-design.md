@@ -144,6 +144,21 @@ Edit `backend/api/swagger.yaml`, then regenerate with `make generate-all`
 - **Frontend**: `pnpm lint` + `pnpm build` clean; Playwright end-to-end
   create → list → detail exercising **multiple** categories on one event.
 
+## Deployment
+
+The public demo (`https://lia.pashteto.com`, oracle-1) is **frontend-only,
+serving mock data — no backend is deployed**, and that stays true here. So once
+the feature is built, tested, and merged, "get it online" means:
+
+- **Rebuild + redeploy the frontend demo only** via the documented update flow
+  (rsync `frontend/` → `oracle-1:/home/ubuntu/lia-frontend/`, `docker build`,
+  `docker rm -f && docker run` the `lia-frontend` container on `127.0.0.1:3001`).
+- Because the demo renders from mocks, the **multi-category change is only
+  visible online if `lib/mock-events.ts` is updated to the `categories` array** —
+  this is a required dev task, not optional polish.
+- The real backend + categories API are **not** deployed; they're proven locally
+  and in CI only (no backend infra on the shared box — that's a separate decision).
+
 ## Out of scope
 
 - Venues normalization and PostGIS "events nearby" (separate spec).

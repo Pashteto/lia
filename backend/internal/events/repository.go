@@ -127,10 +127,10 @@ func (r *pgRepository) loadCategories(events []*models.Event) error {
 	}
 
 	var rows []struct {
-		EventID uuid.UUID `pg:"event_id"`
-		ID      uuid.UUID `pg:"id"`
 		Slug    string    `pg:"slug"`
 		Label   string    `pg:"label"`
+		EventID uuid.UUID `pg:"event_id"`
+		ID      uuid.UUID `pg:"id"`
 	}
 	if _, err := r.db.Query(&rows,
 		`SELECT ec.event_id, c.id, c.slug, c.label

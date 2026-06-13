@@ -11,9 +11,9 @@ import (
 )
 
 type mockRepo struct {
+	getErr error
 	list   []*models.Category
 	byIDs  []*models.Category
-	getErr error
 }
 
 func (m *mockRepo) List() ([]*models.Category, error) { return m.list, nil }

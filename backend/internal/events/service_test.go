@@ -38,8 +38,8 @@ func (m *mockRepo) List(ListFilter) ([]*models.Event, error) {
 
 // mockValidator is an in-memory CategoryValidator.
 type mockValidator struct {
-	resolved []*models.Category
 	err      error
+	resolved []*models.Category
 }
 
 func (m *mockValidator) Validate(context.Context, []uuid.UUID) ([]*models.Category, error) {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/gofrs/uuid"
 
@@ -51,7 +52,17 @@ func (s *service) Validate(_ context.Context, ids []uuid.UUID) ([]*models.Catego
 		return nil, fmt.Errorf("resolve categories: %w", err)
 	}
 	if len(found) != len(unique) {
-		return nil, fmt.Errorf("%w: one or more category_ids do not exist", ErrInvalidInput)
+		foundSet := make(map[uuid.UUID]struct{}, len(found))
+		for _, c := range found {
+			foundSet[c.ID] = struct{}{}
+		}
+		missing := make([]string, 0, len(unique)-len(found))
+		for _, id := range unique {
+			if _, ok := foundSet[id]; !ok {
+				missing = append(missing, id.String())
+			}
+		}
+		return nil, fmt.Errorf("%w: unknown category_ids: %s", ErrInvalidInput, strings.Join(missing, ", "))
 	}
 	return found, nil
 }

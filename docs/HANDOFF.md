@@ -1,6 +1,6 @@
 # Lia — Handoff
 
-_Last updated: 2026-06-13. PRs #1 (scaffold) and #2 (deploy artifacts) are **merged** to `main`; base branch is `main`. Active branch: `feat/category-normalization` (design spec approved — implementation plan next)._
+_Last updated: 2026-06-13. PRs #1 (scaffold), #2 (deploy artifacts), and the category-normalization branch are **merged** to `main`._
 
 Where the project stands after the frontend + backend scaffold and the first feature slices.
 
@@ -30,9 +30,10 @@ Frontend falls back to mock data (`lib/mock-events.ts`) when the backend is unre
 - **Frontend demo**: `https://lia.pashteto.com` (host `oracle-1`, hand-managed nginx + docker — no Terraform). Frontend-only, serves mock data; **no backend is deployed anywhere**. `NEXT_PUBLIC_API_URL` is baked to a dead port so SSR/client fall back to mocks. Deploy image is `frontend/Dockerfile` (+ `.dockerignore`), now committed. Update = rsync `frontend/` to the box, rebuild, `docker rm -f && docker run` the `lia-frontend` container (`127.0.0.1:3001`).
 - The box is **shared** with another project; specific vhosts/containers there are off-limits. Deploy/runbook detail lives outside the repo (deploy memory / ops notes), not in git.
 
+**Recently done:** **Category normalization** (merged). The denormalized `events.category` text is now a curated, many-to-many **categories** taxonomy: seeded `categories` table + `event_categories` join (migrations 000006/000007), an `internal/categories` module, `GET /categories`, events embed `categories[]` and accept `category_ids` on create; frontend has a multi-select picker, renders category chips, and `mock-events.ts` is multi-category. Verified end-to-end (live API + frontend SSR). Spec/plan: [`superpowers/specs/2026-06-13-category-normalization-design.md`](superpowers/specs/2026-06-13-category-normalization-design.md), [`superpowers/plans/2026-06-13-category-normalization.md`](superpowers/plans/2026-06-13-category-normalization.md). _The frontend-demo redeploy (mock data, now multi-category) is still pending — see Deploy._
+
 ## What's next
 
-0. **Category normalization** — _in progress_ on `feat/category-normalization`. Replace the denormalized `events.category` text with a curated, many-to-many **categories** taxonomy (seeded table + `event_categories` join), full-stack (backend module + `GET /categories` + frontend picker/rendering + `mock-events.ts`). Design spec: [`superpowers/specs/2026-06-13-category-normalization-design.md`](superpowers/specs/2026-06-13-category-normalization-design.md). Deploy is **frontend-demo-only** (mock data) — no backend deploy.
 1. **Normalize venues** into a dedicated `venues` module (the other half of the denormalized `venue_name`/`venue_metro` columns). Its own spec — carries the PostGIS geo dimension and unlocks "events nearby".
 2. **AI-search screen** + `internal/ai` module. Per the tech-stack doc the assistant is **search-only over real events** (no event hallucination). **Provider needs sign-off** before wiring — GigaChat / YandexGPT are the documented defaults; OpenAI/Anthropic only if legally/payment-wise permitted for this project (and per org data-handling rules).
 3. **Auth + RSVP**. The detail "Записаться" button is a stub. Needs the `rsvp` module and replacing `HTTP_MOCK_AUTH=true` with real auth (email magic-link / OTP) — a security-surface change; review deliberately (touches access/audit controls).

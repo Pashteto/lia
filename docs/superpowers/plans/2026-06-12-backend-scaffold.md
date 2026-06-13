@@ -4,7 +4,7 @@
 
 **Status:** ✅ Done. `go build/vet/test ./...` pass; `docker compose up` runs PostGIS + migrations + app and the events endpoints work end-to-end.
 
-> **Follow-on since this plan** (see [`../../HANDOFF.md`](../../HANDOFF.md)): enriched the `events` model with `category` / `venue_name` / `venue_metro` (migration 000005) so the discovery UI can show category + venue. CI-equivalent `golangci-lint` (v1) wired into the verification loop.
+> **Follow-on since this plan** (see [`../../HANDOFF.md`](../../HANDOFF.md)): enriched the `events` model with `category` / `venue_name` / `venue_metro` (migration 000005) so the discovery UI can show category + venue. CI-equivalent `golangci-lint` (v1) wired into the verification loop. **Next**: those denormalized columns are being normalized — `category` first, into a curated many-to-many taxonomy (`internal/categories` + `event_categories` join), per [`../specs/2026-06-13-category-normalization-design.md`](../specs/2026-06-13-category-normalization-design.md); venues to follow.
 
 **Decisions:** Foundation + one worked example (`events`). Module `github.com/Pashteto/lia` (binary `lia`). Reuse the template's stack (chi-less go-swagger HTTP, go-pg, golang-migrate, protobuf).
 

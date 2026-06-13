@@ -189,6 +189,26 @@ paths:
           schema:
             $ref: "#/definitions/Error"
 
+  /categories:
+    get:
+      summary: List categories
+      description: Returns the curated category taxonomy, ordered by sort_order.
+      operationId: listCategories
+      tags:
+        - categories
+      security: []
+      responses:
+        200:
+          description: List of categories
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Category"
+        503:
+          description: Service unavailable (database disabled)
+          schema:
+            $ref: "#/definitions/Error"
+
   /health:
     get:
       summary: Health check
@@ -241,9 +261,10 @@ definitions:
         maxLength: 255
       description:
         type: string
-      category:
-        type: string
-        description: Category label (denormalized for now)
+      categories:
+        type: array
+        items:
+          $ref: "#/definitions/Category"
       venue_name:
         type: string
       venue_metro:
@@ -312,8 +333,11 @@ definitions:
         maxLength: 255
       description:
         type: string
-      category:
-        type: string
+      category_ids:
+        type: array
+        items:
+          type: string
+          format: uuid
       venue_name:
         type: string
       venue_metro:
@@ -351,6 +375,21 @@ definitions:
       ends_at:
         type: string
         format: date-time
+
+  Category:
+    type: object
+    required:
+      - id
+      - slug
+      - label
+    properties:
+      id:
+        type: string
+        format: uuid
+      slug:
+        type: string
+      label:
+        type: string
 
   User:
     type: object

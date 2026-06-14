@@ -3,7 +3,7 @@
 import { createVenue, searchVenues, type ApiVenue } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const inputCls =
   "w-full rounded-control bg-fill px-3.5 py-2.5 text-[17px] text-label outline-none placeholder:text-label-secondary focus:ring-2 focus:ring-accent";
@@ -30,11 +30,30 @@ export function VenuePicker({
   const [debounced, setDebounced] = useState("");
   const [selected, setSelected] = useState<ApiVenue | null>(null);
   const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(query), 250);
     return () => clearTimeout(t);
   }, [query]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
 
   const { data: results = [] } = useQuery({
     queryKey: ["venues", debounced],
@@ -66,7 +85,7 @@ export function VenuePicker({
   );
 
   return (
-    <div className="relative">
+    <div ref={containerRef} className="relative">
       <input
         className={inputCls}
         placeholder="Площадка — начните вводить название"

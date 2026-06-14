@@ -3,6 +3,7 @@
 package venues
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -81,7 +82,7 @@ func (r *pgRepository) FindOrCreateByName(v *models.Venue) (*models.Venue, error
 	if err == nil {
 		return existing, nil
 	}
-	if err != pg.ErrNoRows {
+	if !errors.Is(err, pg.ErrNoRows) {
 		return nil, fmt.Errorf("find venue by name: %w", err)
 	}
 	if _, err := r.db.Model(v).Insert(); err != nil {

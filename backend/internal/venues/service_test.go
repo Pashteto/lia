@@ -12,10 +12,11 @@ import (
 	"github.com/Pashteto/lia/internal/models"
 )
 
+//nolint:govet // fieldalignment false positive: all 4-field orderings produce 56B
 type mockRepo struct {
 	searchResult []*models.Venue
-	getResult    *models.Venue
 	getErr       error
+	getResult    *models.Venue
 	created      *models.Venue
 }
 

@@ -164,6 +164,9 @@ func (r *pgRepository) loadCategories(events []*models.Event) error {
 // loadVenues populates Venue on each event whose venue_id is set (non-zero),
 // in a single query (no N+1).
 func (r *pgRepository) loadVenues(events []*models.Event) error {
+	if len(events) == 0 {
+		return nil
+	}
 	ids := make([]uuid.UUID, 0, len(events))
 	seen := make(map[uuid.UUID]struct{})
 	for _, e := range events {
@@ -199,6 +202,8 @@ func (r *pgRepository) loadVenues(events []*models.Event) error {
 			Metro: rows[i].Metro, District: rows[i].District,
 		}
 	}
+	// A venue_id with no matching row (e.g. a stale/dangling reference) is left
+	// as e.Venue == nil — intentional, since venue_id is a loose reference (no FK).
 	for _, e := range events {
 		if v, ok := byID[e.VenueID]; ok {
 			e.Venue = v

@@ -73,6 +73,10 @@ func (r *pgRepository) GetByIDs(ids []uuid.UUID) ([]*models.Venue, error) {
 	return list, nil
 }
 
+// FindOrCreateByName is non-atomic (SELECT then INSERT): two concurrent calls
+// with the same normalized name can create two rows. Acceptable per spec (no
+// unique constraint on name); a future migration may add a partial unique index
+// if dedup needs hardening.
 func (r *pgRepository) FindOrCreateByName(v *models.Venue) (*models.Venue, error) {
 	existing := new(models.Venue)
 	err := r.db.Model(existing).

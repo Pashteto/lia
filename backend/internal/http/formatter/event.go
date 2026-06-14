@@ -16,10 +16,9 @@ func VenueToAPI(v *domainModels.Venue) *apiModels.Venue {
 	if v == nil {
 		return nil
 	}
-	id := strfmt.UUID(v.ID.String())
 	name := v.Name
 	return &apiModels.Venue{
-		ID:       &id,
+		ID:       strfmt.UUID(v.ID.String()),
 		Name:     &name,
 		Address:  v.Address,
 		Metro:    v.Metro,

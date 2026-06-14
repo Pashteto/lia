@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/Button";
 import { Segmented } from "@/components/ui/Segmented";
 import { Switch } from "@/components/ui/Switch";
+import { VenuePicker } from "@/components/VenuePicker";
 import { createEvent, getCategories, type CreateEventInput } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,8 +18,7 @@ const schema = z.object({
   description: z.string().optional(),
   categoryIds: z.array(z.string()).optional(),
   format: z.enum(["offline", "online"]),
-  venueName: z.string().optional(),
-  venueMetro: z.string().optional(),
+  venueId: z.string().optional(),
   startsAt: z.string().min(1, "Укажите дату и время"),
   endsAt: z.string().optional(),
   isFree: z.boolean(),
@@ -46,6 +46,7 @@ export function CreateEventForm() {
       isFree: true,
       status: "draft",
       categoryIds: [],
+      venueId: "",
     },
   });
 
@@ -66,8 +67,7 @@ export function CreateEventForm() {
       title: v.title,
       description: v.description || undefined,
       category_ids: v.categoryIds && v.categoryIds.length > 0 ? v.categoryIds : undefined,
-      venue_name: v.venueName || undefined,
-      venue_metro: v.venueMetro || undefined,
+      venue_id: v.venueId || undefined,
       format: v.format,
       status: v.status,
       price_type: v.isFree ? "free" : "from",
@@ -177,10 +177,13 @@ export function CreateEventForm() {
 
         <Section title="Место и время">
           <Field label="Место">
-            <input className={inputCls} placeholder="Площадка / venue" {...register("venueName")} />
-          </Field>
-          <Field label="Метро">
-            <input className={inputCls} placeholder="Ближайшее метро" {...register("venueMetro")} />
+            <Controller
+              control={control}
+              name="venueId"
+              render={({ field }) => (
+                <VenuePicker value={field.value ?? ""} onChange={field.onChange} />
+              )}
+            />
           </Field>
           <Field label="Начало" error={errors.startsAt?.message}>
             <input type="datetime-local" className={inputCls} {...register("startsAt")} />

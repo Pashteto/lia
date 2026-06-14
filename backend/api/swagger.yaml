@@ -209,6 +209,63 @@ paths:
           schema:
             $ref: "#/definitions/Error"
 
+  /venues:
+    get:
+      summary: Search venues
+      description: Returns venues whose name matches q (case-insensitive substring), ordered by name.
+      operationId: listVenues
+      tags:
+        - venues
+      security: []
+      parameters:
+        - name: q
+          in: query
+          description: Name search substring
+          required: false
+          type: string
+        - name: limit
+          in: query
+          description: Max results (default 20)
+          required: false
+          type: integer
+      responses:
+        200:
+          description: List of venues
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Venue"
+        503:
+          description: Service unavailable (database disabled)
+          schema:
+            $ref: "#/definitions/Error"
+    post:
+      summary: Create venue
+      description: Creates a venue (find-or-create by normalized name).
+      operationId: createVenue
+      tags:
+        - venues
+      security: []
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/VenueInput"
+      responses:
+        201:
+          description: Venue created (or existing match returned)
+          schema:
+            $ref: "#/definitions/Venue"
+        400:
+          description: Invalid input
+          schema:
+            $ref: "#/definitions/Error"
+        503:
+          description: Service unavailable (database disabled)
+          schema:
+            $ref: "#/definitions/Error"
+
   /health:
     get:
       summary: Health check
@@ -255,6 +312,8 @@ definitions:
       venue_id:
         type: string
         format: uuid
+      venue:
+        $ref: "#/definitions/Venue"
       title:
         type: string
         minLength: 1
@@ -265,10 +324,6 @@ definitions:
         type: array
         items:
           $ref: "#/definitions/Category"
-      venue_name:
-        type: string
-      venue_metro:
-        type: string
       status:
         type: string
         enum:
@@ -338,10 +393,6 @@ definitions:
         items:
           type: string
           format: uuid
-      venue_name:
-        type: string
-      venue_metro:
-        type: string
       status:
         type: string
         enum:
@@ -375,6 +426,39 @@ definitions:
       ends_at:
         type: string
         format: date-time
+
+  Venue:
+    type: object
+    required:
+      - id
+      - name
+    properties:
+      id:
+        type: string
+        format: uuid
+      name:
+        type: string
+      address:
+        type: string
+      metro:
+        type: string
+      district:
+        type: string
+
+  VenueInput:
+    type: object
+    required:
+      - name
+    properties:
+      name:
+        type: string
+        minLength: 1
+      address:
+        type: string
+      metro:
+        type: string
+      district:
+        type: string
 
   Category:
     type: object

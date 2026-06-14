@@ -4,7 +4,7 @@
 
 **Status:** ✅ Done. `pnpm build` + `pnpm lint` pass; Discovery renders the expected Russian content in light/dark.
 
-> **Follow-on since this plan** (see [`../../HANDOFF.md`](../../HANDOFF.md)): wired Discovery to the live API (SSR + TanStack Query), built the **event-detail** and **create-event** screens, and mapped the enriched category/venue fields. AI-search remains the only stub. **Next**: category goes from a single free-text field to a multi-select over a curated taxonomy (`GET /categories` picker + `categories[]` rendering + `mock-events.ts` update), per [`../specs/2026-06-13-category-normalization-design.md`](../specs/2026-06-13-category-normalization-design.md).
+> **Follow-on since this plan** (see [`../../HANDOFF.md`](../../HANDOFF.md)): wired Discovery to the live API (SSR + TanStack Query), built the **event-detail** and **create-event** screens, and mapped the enriched category/venue fields. AI-search remains the only stub. Since then (both merged): category became a **multi-select over a curated taxonomy** (`GET /categories` picker + `categories[]` rendering), and the free-text venue inputs became a **pick-or-create typeahead** (`VenuePicker` over `GET`/`POST /venues`, submitting `venue_id`). See [`../specs/2026-06-13-category-normalization-design.md`](../specs/2026-06-13-category-normalization-design.md) and [`../specs/2026-06-14-venue-normalization-design.md`](../specs/2026-06-14-venue-normalization-design.md). **Next**: AI-search screen + `ai` module.
 
 **Decisions:** Foundation + one worked example (Discovery). Tailwind v4 (CSS-first `@theme`). pnpm. System font stack only (no SF webfont — Apple license, per DESIGN.md).
 

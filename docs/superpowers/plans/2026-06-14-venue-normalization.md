@@ -1,5 +1,7 @@
 # Venue Normalization Implementation Plan
 
+> **Status: ✅ Implemented and merged to `main` (2026-06-14).** Executed subagent-driven (all tasks reviewed); verified end-to-end (live API + frontend SSR). Identity only — geo deferred. Kept as the implementation record.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Replace the denormalized `events.venue_name` / `events.venue_metro` text columns with a dedicated `venues` entity that events reference by `venue_id`, with a pick-or-create searchable typeahead, end-to-end (backend + go-swagger API + Next.js frontend).

@@ -1,5 +1,7 @@
 # Category Normalization Implementation Plan
 
+> **Status: ✅ Implemented and merged to `main` (2026-06-13).** Executed subagent-driven (all tasks reviewed); verified end-to-end (live API + frontend SSR). Kept as the implementation record.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Replace the denormalized `events.category` text column with a curated, seeded `categories` taxonomy and a many-to-many `event_categories` join, wired end-to-end through the backend module, the API, and the frontend.

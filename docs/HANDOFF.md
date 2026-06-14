@@ -7,8 +7,8 @@ Where the project stands after the frontend + backend scaffold and the first fea
 ## What exists
 
 - **Docs**: tech-stack brief (`docs/event_discovery_mvp_technical_stack.md`), Apple-HIG design system (`design/DESIGN.md` + `design/screens/*.html`), scaffold plans (`docs/superpowers/plans/`).
-- **Frontend** (`frontend/`): Next.js App Router + TS + Tailwind v4 + pnpm. Apple-HIG tokens in `app/globals.css`. Built screens: **Discovery** (live API data), **event-detail** (`GET /events/{id}`), **create-event** (RHF + Zod, `POST /events`). AI-search is a stub.
-- **Backend** (`backend/`): Go modular monolith `github.com/Pashteto/lia` from `go-microservice-template`. PostgreSQL + PostGIS via docker-compose. **`events`** domain wired end-to-end (model → repository → service → swagger HTTP). Other domains (`organizers`, `venues`, `users`, `rsvp`, `search`, `notifications`, `ai`) are `doc.go` skeletons.
+- **Frontend** (`frontend/`): Next.js App Router + TS + Tailwind v4 + pnpm. Apple-HIG tokens in `app/globals.css`. Built screens: **Discovery** (live API data, category filter), **event-detail** (`GET /events/{id}`, category chips + venue), **create-event** (RHF + Zod, `POST /events`, category multi-select + venue pick-or-create typeahead). AI-search is a stub.
+- **Backend** (`backend/`): Go modular monolith `github.com/Pashteto/lia` from `go-microservice-template`. PostgreSQL + PostGIS via docker-compose. Wired end-to-end (model → repository → service → swagger HTTP): **`events`**, **`categories`** (`GET /categories`; many-to-many via `event_categories`), and **`venues`** (`GET`/`POST /venues`; events reference a loose `venue_id`, embed nested `venue`). Remaining domains (`organizers`, `users`, `rsvp`, `search`, `notifications`, `ai`) are `doc.go` skeletons.
 
 A full **create → list → detail** loop works against the real API (verified with Playwright).
 

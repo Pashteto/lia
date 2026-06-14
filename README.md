@@ -13,7 +13,7 @@ A web-first discovery platform for **participatory cultural practices** in a sin
 | Path | Description |
 |------|-------------|
 | `frontend/` | Web client (Next.js App Router + TypeScript + Tailwind v4 + pnpm). Discovery, event-detail, and create-event screens built against the API; AI-search stub. See `frontend/README.md`. |
-| `backend/` | API and services (Go modular monolith from `go-microservice-template`, PostgreSQL + PostGIS). `events` domain wired end-to-end; other domains are documented skeletons. See `backend/README.md`. |
+| `backend/` | API and services (Go modular monolith from `go-microservice-template`, PostgreSQL + PostGIS). `events`, `categories`, and `venues` domains wired end-to-end; remaining domains are documented skeletons. See `backend/README.md`. |
 | `design/` | Design system + reference screens. Active direction: **Apple HIG-based** (web-first, light/dark) — see `design/DESIGN.md`. `stitch_/` kept as historical archive. |
 | `docs/` | Project documentation — technical stack and the design agent brief. |
 
@@ -24,9 +24,9 @@ A web-first discovery platform for **participatory cultural practices** in a sin
 
 ## Status
 
-Frontend + backend are scaffolded with a working create → list → detail loop over the real API. Current state, how to run both sides, what's next, and known gotchas live in [`docs/HANDOFF.md`](docs/HANDOFF.md). Scaffold history: [`docs/superpowers/plans/`](docs/superpowers/plans/). Active work is on PR branch `scaffold/frontend-backend` (PR #1).
+Frontend + backend are scaffolded with a working create → list → detail loop over the real API, plus **category** and **venue** normalization (both merged to `main`). Current state, how to run both sides, what's next, and known gotchas live in [`docs/HANDOFF.md`](docs/HANDOFF.md). Specs + implementation plans: [`docs/superpowers/`](docs/superpowers/).
 
 ## Notes
 
 - Product UI copy is in **Russian**; code, comments, and file/component names stay in **English**.
-- Documentation last actualized: 2026-06-12.
+- Documentation last actualized: 2026-06-14.

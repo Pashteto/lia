@@ -12,6 +12,8 @@ Stack: **Go modular monolith** (built from the `go-microservice-template`) with 
 docker compose up -d --build      # PostGIS + migrations + app
 curl localhost:8080/api/v1/health
 curl localhost:8080/api/v1/events
+curl localhost:8080/api/v1/categories
+curl "localhost:8080/api/v1/venues?q="
 docker compose down               # to reset the DB: also rm -rf data/
 ```
 
@@ -31,8 +33,10 @@ go test ./...              # unit tests
 
 | Module | Status | Notes |
 |--------|--------|-------|
-| `events` | ✅ **worked example** | End-to-end: migration → `models.Event` → `events.Repository` (go-pg) → `events.Service` → swagger HTTP handlers (`GET /events`, `GET /events/{id}`, `POST /events`). Wired in `application.go` via `http.Module.SetEventsService`. |
-| `organizers`, `venues`, `users`, `rsvp`, `search`, `notifications`, `ai` | 📦 skeleton | `doc.go` package stubs marking responsibility + roadmap. Implement following the `events` pattern. |
+| `events` | ✅ **worked example** | End-to-end: migration → `models.Event` → `events.Repository` (go-pg) → `events.Service` → swagger HTTP handlers (`GET /events`, `GET /events/{id}`, `POST /events`). Wired in `application.go` via `http.Module.SetEventsService`. Events embed `categories[]` and a nested `venue`, validate `category_ids`/`venue_id` on create, and load both (batched, no N+1). |
+| `categories` | ✅ wired | Curated, many-to-many taxonomy (`categories` table + `event_categories` join, migrations 000006/000007). `GET /categories`; events accept `category_ids`. |
+| `venues` | ✅ wired | Venue entity (`venues` table, migration 000008) with search + find-or-create. `GET /venues?q=`, `POST /venues`; events reference a loose `venue_id` (zero UUID = none, no FK). Identity only — geo (lat/lon, PostGIS nearby) deferred to a follow-up spec. |
+| `organizers`, `users`, `rsvp`, `search`, `notifications`, `ai` | 📦 skeleton | `doc.go` package stubs marking responsibility + roadmap. Implement following the `events` pattern. |
 
 The template's central `repository`/`service` layers carry the original `users` example (fetched via the gRPC client). New domains follow the self-contained `events` pattern: a `Repository` over the shared `*pg.DB` (exposed by `repository.Module.DB()`), a `Service`, and handlers registered in `internal/http/module.go`.
 

@@ -23,9 +23,10 @@ type Event struct {
 	VenueID     uuid.UUID   `pg:"venue_id,type:uuid,use_zero"`
 	Title       string      `pg:"title,notnull"`
 	Description string      `pg:"description,use_zero"`
-	// VenueName / VenueMetro remain denormalized until the venues module lands.
-	VenueName  string `pg:"venue_name,use_zero"`
-	VenueMetro string `pg:"venue_metro,use_zero"`
+	// Venue is normalized into the venues entity (migration 000008). It is the
+	// loaded read model (not a column); VenueID is the loose reference (zero
+	// UUID = "no venue", no DB FK — see migration comment).
+	Venue *Venue `pg:"-"`
 	// Category is normalized into the categories taxonomy (migration 000006/7).
 	// CategoryIDs is write-only input (set from the API), Categories is the
 	// loaded read model; neither is a column on the events table.

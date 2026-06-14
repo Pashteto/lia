@@ -31,11 +31,57 @@ export function apiEventToLia(e: ApiEvent): LiaEvent {
     priceType: (e.price_type as PriceType) ?? "free",
     priceMin: e.price_min,
     organizer: e.organizer_id ? { id: e.organizer_id, name: "" } : undefined,
-    venue: e.venue_name
-      ? { id: e.venue_id ?? "", name: e.venue_name, metro: e.venue_metro }
+    venue: e.venue
+      ? {
+          id: e.venue.id,
+          name: e.venue.name,
+          metro: e.venue.metro,
+          address: e.venue.address,
+          district: e.venue.district,
+        }
       : undefined,
     // cover image is not yet provided by the backend.
   };
+}
+
+/** A venue from the backend. */
+export interface ApiVenue {
+  id: string;
+  name: string;
+  address?: string;
+  metro?: string;
+  district?: string;
+}
+
+/** Searches venues by name substring. Throws on network/HTTP error. */
+export async function searchVenues(q: string, limit = 20): Promise<ApiVenue[]> {
+  const params = new URLSearchParams();
+  if (q.trim()) params.set("q", q.trim());
+  params.set("limit", String(limit));
+  const res = await fetch(`${API_V1}/venues?${params.toString()}`);
+  if (!res.ok) {
+    throw new Error(`search venues failed: ${res.status}`);
+  }
+  return (await res.json()) as ApiVenue[];
+}
+
+/** Creates (find-or-create) a venue. Throws on network/HTTP error. */
+export async function createVenue(input: {
+  name: string;
+  address?: string;
+  metro?: string;
+  district?: string;
+}): Promise<ApiVenue> {
+  const res = await fetch(`${API_V1}/venues`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`create venue failed: ${res.status} ${detail}`);
+  }
+  return (await res.json()) as ApiVenue;
 }
 
 /** A category from the curated taxonomy. */
@@ -89,8 +135,7 @@ export interface CreateEventInput {
   title: string;
   description?: string;
   category_ids?: string[];
-  venue_name?: string;
-  venue_metro?: string;
+  venue_id?: string;
   status?: EventStatus;
   format?: EventFormat;
   price_type?: PriceType;

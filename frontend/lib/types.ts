@@ -27,6 +27,7 @@ export interface Venue {
   /** Метро / district label, e.g. "Парк культуры". */
   metro?: string;
   address?: string;
+  district?: string;
 }
 
 export interface EventCategory {
@@ -66,8 +67,7 @@ export interface ApiEvent {
   title: string;
   description?: string;
   categories?: { id: string; slug: string; label: string }[];
-  venue_name?: string;
-  venue_metro?: string;
+  venue?: { id: string; name: string; address?: string; metro?: string; district?: string };
   status: EventStatus;
   format?: EventFormat;
   price_type?: PriceType;

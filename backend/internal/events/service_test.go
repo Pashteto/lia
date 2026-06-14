@@ -10,6 +10,7 @@ import (
 
 	"github.com/Pashteto/lia/internal/categories"
 	"github.com/Pashteto/lia/internal/models"
+	"github.com/Pashteto/lia/internal/venues"
 )
 
 // mockRepo is an in-memory Repository for tests.
@@ -46,6 +47,16 @@ func (m *mockValidator) Validate(context.Context, []uuid.UUID) ([]*models.Catego
 	return m.resolved, m.err
 }
 
+// mockVenueValidator is an in-memory VenueValidator.
+type mockVenueValidator struct {
+	resolved *models.Venue
+	err      error
+}
+
+func (m *mockVenueValidator) Validate(context.Context, uuid.UUID) (*models.Venue, error) {
+	return m.resolved, m.err
+}
+
 func validEvent() *models.Event {
 	return &models.Event{
 		Title:    "Память и архив",
@@ -56,7 +67,7 @@ func validEvent() *models.Event {
 
 func TestService_Create(t *testing.T) {
 	repo := &mockRepo{}
-	svc := NewService(repo, &mockValidator{})
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{})
 
 	if err := svc.Create(context.Background(), validEvent()); err != nil {
 		t.Fatalf("Create returned error: %v", err)
@@ -70,7 +81,7 @@ func TestService_Create_WithCategories(t *testing.T) {
 	id, _ := uuid.NewV4()
 	resolved := []*models.Category{{ID: id, Slug: "lecture", Label: "Лекции"}}
 	repo := &mockRepo{}
-	svc := NewService(repo, &mockValidator{resolved: resolved})
+	svc := NewService(repo, &mockValidator{resolved: resolved}, &mockVenueValidator{})
 
 	ev := validEvent()
 	ev.CategoryIDs = []uuid.UUID{id}
@@ -84,7 +95,7 @@ func TestService_Create_WithCategories(t *testing.T) {
 
 func TestService_Create_UnknownCategory(t *testing.T) {
 	repo := &mockRepo{}
-	svc := NewService(repo, &mockValidator{err: categories.ErrInvalidInput})
+	svc := NewService(repo, &mockValidator{err: categories.ErrInvalidInput}, &mockVenueValidator{})
 
 	ev := validEvent()
 	bad, _ := uuid.NewV4()
@@ -96,7 +107,7 @@ func TestService_Create_UnknownCategory(t *testing.T) {
 }
 
 func TestService_Create_InvalidInput(t *testing.T) {
-	svc := NewService(&mockRepo{}, &mockValidator{})
+	svc := NewService(&mockRepo{}, &mockValidator{}, &mockVenueValidator{})
 
 	err := svc.Create(context.Background(), &models.Event{}) // missing title/starts_at
 	if !errors.Is(err, ErrInvalidInput) {
@@ -105,7 +116,7 @@ func TestService_Create_InvalidInput(t *testing.T) {
 }
 
 func TestService_GetByID_InvalidUUID(t *testing.T) {
-	svc := NewService(&mockRepo{}, &mockValidator{})
+	svc := NewService(&mockRepo{}, &mockValidator{}, &mockVenueValidator{})
 
 	_, err := svc.GetByID(context.Background(), "not-a-uuid")
 	if !errors.Is(err, ErrInvalidInput) {
@@ -114,7 +125,7 @@ func TestService_GetByID_InvalidUUID(t *testing.T) {
 }
 
 func TestService_List_InvalidStatus(t *testing.T) {
-	svc := NewService(&mockRepo{}, &mockValidator{})
+	svc := NewService(&mockRepo{}, &mockValidator{}, &mockVenueValidator{})
 
 	_, err := svc.List(context.Background(), "bogus")
 	if !errors.Is(err, ErrInvalidInput) {
@@ -124,7 +135,7 @@ func TestService_List_InvalidStatus(t *testing.T) {
 
 func TestService_List_OK(t *testing.T) {
 	repo := &mockRepo{list: []*models.Event{validEvent()}}
-	svc := NewService(repo, &mockValidator{})
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{})
 
 	got, err := svc.List(context.Background(), "published")
 	if err != nil {
@@ -132,5 +143,34 @@ func TestService_List_OK(t *testing.T) {
 	}
 	if len(got) != 1 {
 		t.Fatalf("expected 1 event, got %d", len(got))
+	}
+}
+
+func TestService_Create_WithVenue(t *testing.T) {
+	id, _ := uuid.NewV4()
+	resolved := &models.Venue{ID: id, Name: "Винзавод"}
+	repo := &mockRepo{}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{resolved: resolved})
+
+	ev := validEvent()
+	ev.VenueID = id
+	if err := svc.Create(context.Background(), ev); err != nil {
+		t.Fatalf("Create returned error: %v", err)
+	}
+	if repo.created.Venue == nil || repo.created.Venue.ID != id {
+		t.Fatalf("expected resolved venue on the event, got %v", repo.created.Venue)
+	}
+}
+
+func TestService_Create_UnknownVenue(t *testing.T) {
+	repo := &mockRepo{}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{err: venues.ErrInvalidInput})
+
+	ev := validEvent()
+	bad, _ := uuid.NewV4()
+	ev.VenueID = bad
+	err := svc.Create(context.Background(), ev)
+	if !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("expected ErrInvalidInput, got %v", err)
 	}
 }

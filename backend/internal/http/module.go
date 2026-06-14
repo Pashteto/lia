@@ -14,6 +14,7 @@ import (
 	"github.com/Pashteto/lia/config"
 	categoriesdomain "github.com/Pashteto/lia/internal/categories"
 	eventsdomain "github.com/Pashteto/lia/internal/events"
+	venuesdomain "github.com/Pashteto/lia/internal/venues"
 	"github.com/Pashteto/lia/internal/grpcclient"
 	"github.com/Pashteto/lia/internal/http/auth"
 	"github.com/Pashteto/lia/internal/http/handlers"
@@ -31,6 +32,7 @@ type Module struct {
 	grpcClient grpcclient.IClient
 	events     eventsdomain.Service
 	categories categoriesdomain.Service
+	venues     venuesdomain.Service
 	server     *httpserver.Server
 	api        *operations.LiaAPIAPI
 	handler    *http.Handler
@@ -56,6 +58,11 @@ func (m *Module) SetEventsService(svc eventsdomain.Service) {
 // SetCategoriesService injects the categories domain service. Call before Init.
 func (m *Module) SetCategoriesService(svc categoriesdomain.Service) {
 	m.categories = svc
+}
+
+// SetVenuesService injects the venues domain service. Call before Init.
+func (m *Module) SetVenuesService(svc venuesdomain.Service) {
+	m.venues = svc
 }
 
 // Name returns the module identifier.
@@ -150,6 +157,11 @@ func (m *Module) initAPI() error {
 
 	if m.categories != nil {
 		api.CategoriesListCategoriesHandler = handlers.NewListCategories(m.categories)
+	}
+
+	if m.venues != nil {
+		api.VenuesListVenuesHandler = handlers.NewListVenues(m.venues)
+		api.VenuesCreateVenueHandler = handlers.NewCreateVenue(m.venues)
 	}
 
 	// TODO: Add more handlers as you expand the API

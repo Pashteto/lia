@@ -11,6 +11,21 @@ import (
 	domainModels "github.com/Pashteto/lia/internal/models"
 )
 
+// VenueToAPI converts a domain Venue to its API representation.
+func VenueToAPI(v *domainModels.Venue) *apiModels.Venue {
+	if v == nil {
+		return nil
+	}
+	name := v.Name
+	return &apiModels.Venue{
+		ID:       strfmt.UUID(v.ID.String()),
+		Name:     &name,
+		Address:  v.Address,
+		Metro:    v.Metro,
+		District: v.District,
+	}
+}
+
 // CategoryToAPI converts a domain Category to its API representation.
 func CategoryToAPI(c *domainModels.Category) *apiModels.Category {
 	if c == nil {
@@ -35,8 +50,6 @@ func EventToAPI(event *domainModels.Event) *apiModels.Event {
 		ID:                strfmt.UUID(event.ID.String()),
 		Title:             &event.Title,
 		Description:       event.Description,
-		VenueName:         event.VenueName,
-		VenueMetro:        event.VenueMetro,
 		Status:            &status,
 		Format:            event.Format,
 		PriceType:         event.PriceType,
@@ -72,6 +85,8 @@ func EventToAPI(event *domainModels.Event) *apiModels.Event {
 		out.Categories = append(out.Categories, CategoryToAPI(c))
 	}
 
+	out.Venue = VenueToAPI(event.Venue)
+
 	return out
 }
 
@@ -84,8 +99,6 @@ func EventFromAPIInput(in *apiModels.EventInput) (*domainModels.Event, error) {
 
 	event := &domainModels.Event{
 		Description: in.Description,
-		VenueName:   in.VenueName,
-		VenueMetro:  in.VenueMetro,
 		Format:      defaultStr(in.Format, "offline"),
 		PriceType:   defaultStr(in.PriceType, "free"),
 		ExternalURL: in.ExternalTicketURL,

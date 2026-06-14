@@ -9,6 +9,7 @@ import (
 
 	"github.com/Pashteto/lia/internal/categories"
 	"github.com/Pashteto/lia/internal/models"
+	"github.com/Pashteto/lia/internal/venues"
 	"github.com/Pashteto/lia/pkg/logger"
 )
 
@@ -37,15 +38,21 @@ type CategoryValidator interface {
 	Validate(ctx context.Context, ids []uuid.UUID) ([]*models.Category, error)
 }
 
+// VenueValidator resolves and validates a venue id. Satisfied by venues.Service.
+type VenueValidator interface {
+	Validate(ctx context.Context, id uuid.UUID) (*models.Venue, error)
+}
+
 type service struct {
 	repo       Repository
 	categories CategoryValidator
+	venues     VenueValidator
 }
 
-// NewService creates an events service backed by the given repository and a
-// category validator.
-func NewService(repo Repository, categories CategoryValidator) Service {
-	return &service{repo: repo, categories: categories}
+// NewService creates an events service backed by the given repository, a
+// category validator, and a venue validator.
+func NewService(repo Repository, categories CategoryValidator, venues VenueValidator) Service {
+	return &service{repo: repo, categories: categories, venues: venues}
 }
 
 func (s *service) Create(ctx context.Context, event *models.Event) error {
@@ -65,6 +72,15 @@ func (s *service) Create(ctx context.Context, event *models.Event) error {
 		return fmt.Errorf("validate categories: %w", err)
 	}
 	event.Categories = resolved
+
+	venue, err := s.venues.Validate(ctx, event.VenueID)
+	if err != nil {
+		if errors.Is(err, venues.ErrInvalidInput) {
+			return fmt.Errorf("%w: %s", ErrInvalidInput, err.Error())
+		}
+		return fmt.Errorf("validate venue: %w", err)
+	}
+	event.Venue = venue
 
 	if err := s.repo.Create(event); err != nil {
 		return fmt.Errorf("create event: %w", err)

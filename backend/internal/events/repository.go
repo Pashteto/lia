@@ -85,6 +85,10 @@ func (r *pgRepository) GetByID(id uuid.UUID) (*models.Event, error) {
 		return nil, err
 	}
 
+	if err := r.loadVenues([]*models.Event{event}); err != nil {
+		return nil, err
+	}
+
 	return event, nil
 }
 
@@ -106,6 +110,10 @@ func (r *pgRepository) List(filter ListFilter) ([]*models.Event, error) {
 	}
 
 	if err := r.loadCategories(list); err != nil {
+		return nil, err
+	}
+
+	if err := r.loadVenues(list); err != nil {
 		return nil, err
 	}
 
@@ -148,6 +156,57 @@ func (r *pgRepository) loadCategories(events []*models.Event) error {
 			e.Categories = append(e.Categories, &models.Category{
 				ID: row.ID, Slug: row.Slug, Label: row.Label,
 			})
+		}
+	}
+	return nil
+}
+
+// loadVenues populates Venue on each event whose venue_id is set (non-zero),
+// in a single query (no N+1).
+func (r *pgRepository) loadVenues(events []*models.Event) error {
+	if len(events) == 0 {
+		return nil
+	}
+	ids := make([]uuid.UUID, 0, len(events))
+	seen := make(map[uuid.UUID]struct{})
+	for _, e := range events {
+		if e.VenueID != uuid.Nil {
+			if _, ok := seen[e.VenueID]; !ok {
+				seen[e.VenueID] = struct{}{}
+				ids = append(ids, e.VenueID)
+			}
+		}
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+
+	var rows []struct {
+		Name     string    `pg:"name"`
+		Address  string    `pg:"address"`
+		Metro    string    `pg:"metro"`
+		District string    `pg:"district"`
+		ID       uuid.UUID `pg:"id"`
+	}
+	if _, err := r.db.Query(&rows,
+		`SELECT id, name, address, metro, district FROM venues WHERE id IN (?)`,
+		pg.In(ids),
+	); err != nil {
+		return fmt.Errorf("load event venues: %w", err)
+	}
+
+	byID := make(map[uuid.UUID]*models.Venue, len(rows))
+	for i := range rows {
+		byID[rows[i].ID] = &models.Venue{
+			ID: rows[i].ID, Name: rows[i].Name, Address: rows[i].Address,
+			Metro: rows[i].Metro, District: rows[i].District,
+		}
+	}
+	// A venue_id with no matching row (e.g. a stale/dangling reference) is left
+	// as e.Venue == nil — intentional, since venue_id is a loose reference (no FK).
+	for _, e := range events {
+		if v, ok := byID[e.VenueID]; ok {
+			e.Venue = v
 		}
 	}
 	return nil

@@ -1,6 +1,6 @@
 # Lia — Handoff
 
-_Last updated: 2026-06-13. PRs #1 (scaffold), #2 (deploy artifacts), and the category-normalization branch are **merged** to `main`._
+_Last updated: 2026-06-14. Merged to `main`: scaffold (PR #1), deploy artifacts (PR #2), category normalization, and venue normalization._
 
 Where the project stands after the frontend + backend scaffold and the first feature slices.
 
@@ -30,11 +30,14 @@ Frontend falls back to mock data (`lib/mock-events.ts`) when the backend is unre
 - **Frontend demo**: `https://lia.pashteto.com` (host `oracle-1`, hand-managed nginx + docker — no Terraform). Frontend-only, serves mock data; **no backend is deployed anywhere**. `NEXT_PUBLIC_API_URL` is baked to a dead port so SSR/client fall back to mocks. Deploy image is `frontend/Dockerfile` (+ `.dockerignore`), now committed. Update = rsync `frontend/` to the box, rebuild, `docker rm -f && docker run` the `lia-frontend` container (`127.0.0.1:3001`).
 - The box is **shared** with another project; specific vhosts/containers there are off-limits. Deploy/runbook detail lives outside the repo (deploy memory / ops notes), not in git.
 
-**Recently done:** **Category normalization** (merged). The denormalized `events.category` text is now a curated, many-to-many **categories** taxonomy: seeded `categories` table + `event_categories` join (migrations 000006/000007), an `internal/categories` module, `GET /categories`, events embed `categories[]` and accept `category_ids` on create; frontend has a multi-select picker, renders category chips, and `mock-events.ts` is multi-category. Verified end-to-end (live API + frontend SSR). Spec/plan: [`superpowers/specs/2026-06-13-category-normalization-design.md`](superpowers/specs/2026-06-13-category-normalization-design.md), [`superpowers/plans/2026-06-13-category-normalization.md`](superpowers/plans/2026-06-13-category-normalization.md). _The frontend-demo redeploy (mock data, now multi-category) is still pending — see Deploy._
+**Recently done:**
+
+- **Venue normalization** (merged). The denormalized `events.venue_name`/`venue_metro` are now a dedicated **`venues`** entity: `venues` table + backfill (migration 000008), an `internal/venues` module with search + find-or-create, `GET`/`POST /venues`, events reference a loose `venue_id` (zero UUID = none, no FK) and embed a nested `venue`; frontend has a pick-or-create **typeahead** (`VenuePicker`) and renders venue name/metro. Identity only — **geo deferred** (see What's next). Verified end-to-end (live API + frontend SSR). Spec/plan: [`superpowers/specs/2026-06-14-venue-normalization-design.md`](superpowers/specs/2026-06-14-venue-normalization-design.md), [`superpowers/plans/2026-06-14-venue-normalization.md`](superpowers/plans/2026-06-14-venue-normalization.md).
+- **Category normalization** (merged). Curated, many-to-many **categories** taxonomy: seeded `categories` table + `event_categories` join (migrations 000006/000007), `internal/categories` module, `GET /categories`, events embed `categories[]` / accept `category_ids`; frontend multi-select picker + chips. Spec/plan: [`superpowers/specs/2026-06-13-category-normalization-design.md`](superpowers/specs/2026-06-13-category-normalization-design.md). The frontend demo was **redeployed 2026-06-13** with the multi-category build.
 
 ## What's next
 
-1. **Normalize venues** into a dedicated `venues` module (the other half of the denormalized `venue_name`/`venue_metro` columns). Its own spec — carries the PostGIS geo dimension and unlocks "events nearby".
+1. **Venue geo** — the deferred half of venues: add `lat`/`lon` (+ PostGIS `geography(Point)` + GIST index) to `venues`, a coordinate source (manual vs an external geocoder — Yandex/2GIS/DaData, needs an external-API + org data-handling decision), a `GET /events/nearby` distance query, and a map/nearby UI. Its own spec (see the "notes for the follow-on geo spec" in the venue spec).
 2. **AI-search screen** + `internal/ai` module. Per the tech-stack doc the assistant is **search-only over real events** (no event hallucination). **Provider needs sign-off** before wiring — GigaChat / YandexGPT are the documented defaults; OpenAI/Anthropic only if legally/payment-wise permitted for this project (and per org data-handling rules).
 3. **Auth + RSVP**. The detail "Записаться" button is a stub. Needs the `rsvp` module and replacing `HTTP_MOCK_AUTH=true` with real auth (email magic-link / OTP) — a security-surface change; review deliberately (touches access/audit controls).
 4. **Images** — S3 upload + cover URLs on events (model has no cover field yet).

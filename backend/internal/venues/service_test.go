@@ -101,3 +101,33 @@ func TestService_Validate_OK(t *testing.T) {
 		t.Fatalf("expected resolved venue, got %v", got)
 	}
 }
+
+func TestService_Create_RejectsHalfCoords(t *testing.T) {
+	svc := NewService(&mockRepo{})
+	lat := 55.75
+	_, err := svc.Create(context.Background(), &models.Venue{Name: "X", Lat: &lat})
+	if !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("expected ErrInvalidInput for lat without lon, got %v", err)
+	}
+}
+
+func TestService_Create_RejectsOutOfRange(t *testing.T) {
+	svc := NewService(&mockRepo{})
+	lat, lon := 91.0, 10.0
+	_, err := svc.Create(context.Background(), &models.Venue{Name: "X", Lat: &lat, Lon: &lon})
+	if !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("expected ErrInvalidInput for lat>90, got %v", err)
+	}
+}
+
+func TestService_Create_AcceptsValidCoords(t *testing.T) {
+	repo := &mockRepo{}
+	svc := NewService(repo)
+	lat, lon := 55.75, 37.62
+	if _, err := svc.Create(context.Background(), &models.Venue{Name: "X", Lat: &lat, Lon: &lon}); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if repo.created == nil || repo.created.Lat == nil || *repo.created.Lat != 55.75 {
+		t.Fatal("expected coords passed through to repo")
+	}
+}

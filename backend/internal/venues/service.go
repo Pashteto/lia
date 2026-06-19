@@ -53,6 +53,23 @@ func (s *service) GetByID(_ context.Context, id uuid.UUID) (*models.Venue, error
 	return v, nil
 }
 
+// ValidateCoords enforces that lat/lon are either both nil or both set and in range.
+func ValidateCoords(lat, lon *float64) error {
+	if (lat == nil) != (lon == nil) {
+		return fmt.Errorf("%w: lat and lon must be provided together", ErrInvalidInput)
+	}
+	if lat == nil {
+		return nil
+	}
+	if *lat < -90 || *lat > 90 {
+		return fmt.Errorf("%w: lat out of range", ErrInvalidInput)
+	}
+	if *lon < -180 || *lon > 180 {
+		return fmt.Errorf("%w: lon out of range", ErrInvalidInput)
+	}
+	return nil
+}
+
 func (s *service) Create(_ context.Context, v *models.Venue) (*models.Venue, error) {
 	if v == nil {
 		return nil, fmt.Errorf("%w: venue is required", ErrInvalidInput)
@@ -64,6 +81,10 @@ func (s *service) Create(_ context.Context, v *models.Venue) (*models.Venue, err
 	v.Address = strings.TrimSpace(v.Address)
 	v.Metro = strings.TrimSpace(v.Metro)
 	v.District = strings.TrimSpace(v.District)
+
+	if err := ValidateCoords(v.Lat, v.Lon); err != nil {
+		return nil, err
+	}
 
 	created, err := s.repo.FindOrCreateByName(v)
 	if err != nil {

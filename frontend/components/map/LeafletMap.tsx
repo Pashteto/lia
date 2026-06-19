@@ -52,7 +52,7 @@ export function LeafletMap({
     if (!elRef.current || mapRef.current) return;
     const map = L.map(elRef.current).setView(center, zoom);
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "© OpenStreetMap",
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       maxZoom: 19,
     }).addTo(map);
     layerRef.current = L.layerGroup().addTo(map);
@@ -82,6 +82,8 @@ export function LeafletMap({
         });
       } else {
         markerRef.current.setLatLng(markerPos);
+        if (draggableMarker) markerRef.current.dragging?.enable();
+        else markerRef.current.dragging?.disable();
       }
     } else if (markerRef.current) {
       markerRef.current.remove();
@@ -96,7 +98,16 @@ export function LeafletMap({
     layer.clearLayers();
     (pins ?? []).forEach((p) => {
       const m = L.marker([p.lat, p.lon], { icon });
-      if (p.label) m.bindPopup(p.href ? `<a href="${p.href}">${p.label}</a>` : p.label);
+      if (p.href) {
+        const a = document.createElement("a");
+        a.href = p.href;
+        a.textContent = p.label ?? "";
+        m.bindPopup(a);
+      } else if (p.label) {
+        const span = document.createElement("span");
+        span.textContent = p.label;
+        m.bindPopup(span);
+      }
       layer.addLayer(m);
     });
   }, [pins]);

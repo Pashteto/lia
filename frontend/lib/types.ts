@@ -59,6 +59,8 @@ export interface LiaEvent {
   /** Optional: the backend exposes organizer_id only (no profile join yet). */
   organizer?: Organizer;
   venue?: Venue;
+  /** Distance from the user's location in metres; set only for nearby results. */
+  distanceM?: number;
 }
 
 /** Shape returned by the backend `GET /api/v1/events` (Lia API Event model). */
@@ -81,4 +83,6 @@ export interface ApiEvent {
   published_at?: string;
   created_at?: string;
   updated_at?: string;
+  /** Present on `/events/nearby` responses; distance from requested coordinates. */
+  distance_m?: number;
 }

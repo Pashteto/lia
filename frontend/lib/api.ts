@@ -42,6 +42,7 @@ export function apiEventToLia(e: ApiEvent): LiaEvent {
           lon: e.venue.lon,
         }
       : undefined,
+    distanceM: e.distance_m,
     // cover image is not yet provided by the backend.
   };
 }
@@ -135,6 +136,27 @@ export async function fetchPublishedEvents(): Promise<LiaEvent[]> {
   if (!res.ok) {
     throw new Error(`fetch events failed: ${res.status}`);
   }
+  const data = (await res.json()) as ApiEvent[];
+  return data.map(apiEventToLia);
+}
+
+/**
+ * Fetches events near a given coordinate via `GET /events/nearby`.
+ * The backend returns events within 50 km, pre-sorted nearest-first, each with
+ * `distance_m`. Events without a venue / coordinates are excluded server-side.
+ */
+export async function fetchNearbyEvents(
+  lat: number,
+  lon: number,
+  limit = 50,
+): Promise<LiaEvent[]> {
+  const params = new URLSearchParams({
+    lat: String(lat),
+    lon: String(lon),
+    limit: String(limit),
+  });
+  const res = await fetch(`${API_V1}/events/nearby?${params.toString()}`);
+  if (!res.ok) throw new Error(`fetch nearby failed: ${res.status}`);
   const data = (await res.json()) as ApiEvent[];
   return data.map(apiEventToLia);
 }

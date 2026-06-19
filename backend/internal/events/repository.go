@@ -238,26 +238,14 @@ func (r *pgRepository) loadVenues(events []*models.Event) error {
 		return nil
 	}
 
-	var rows []struct {
-		Name     string    `pg:"name"`
-		Address  string    `pg:"address"`
-		Metro    string    `pg:"metro"`
-		District string    `pg:"district"`
-		ID       uuid.UUID `pg:"id"`
-	}
-	if _, err := r.db.Query(&rows,
-		`SELECT id, name, address, metro, district FROM venues WHERE id IN (?)`,
-		pg.In(ids),
-	); err != nil {
+	var venues []*models.Venue
+	if err := r.db.Model(&venues).Where("id IN (?)", pg.In(ids)).Select(); err != nil {
 		return fmt.Errorf("load event venues: %w", err)
 	}
 
-	byID := make(map[uuid.UUID]*models.Venue, len(rows))
-	for i := range rows {
-		byID[rows[i].ID] = &models.Venue{
-			ID: rows[i].ID, Name: rows[i].Name, Address: rows[i].Address,
-			Metro: rows[i].Metro, District: rows[i].District,
-		}
+	byID := make(map[uuid.UUID]*models.Venue, len(venues))
+	for _, v := range venues {
+		byID[v.ID] = v
 	}
 	// A venue_id with no matching row (e.g. a stale/dangling reference) is left
 	// as e.Venue == nil — intentional, since venue_id is a loose reference (no FK).

@@ -28,6 +28,8 @@ export interface Venue {
   metro?: string;
   address?: string;
   district?: string;
+  lat?: number;
+  lon?: number;
 }
 
 export interface EventCategory {
@@ -67,7 +69,7 @@ export interface ApiEvent {
   title: string;
   description?: string;
   categories?: { id: string; slug: string; label: string }[];
-  venue?: { id: string; name: string; address?: string; metro?: string; district?: string };
+  venue?: { id: string; name: string; address?: string; metro?: string; district?: string; lat?: number; lon?: number };
   status: EventStatus;
   format?: EventFormat;
   price_type?: PriceType;

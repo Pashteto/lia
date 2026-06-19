@@ -38,6 +38,8 @@ export function apiEventToLia(e: ApiEvent): LiaEvent {
           metro: e.venue.metro,
           address: e.venue.address,
           district: e.venue.district,
+          lat: e.venue.lat,
+          lon: e.venue.lon,
         }
       : undefined,
     // cover image is not yet provided by the backend.
@@ -51,6 +53,8 @@ export interface ApiVenue {
   address?: string;
   metro?: string;
   district?: string;
+  lat?: number;
+  lon?: number;
 }
 
 /** Searches venues by name substring. Throws on network/HTTP error. */
@@ -71,6 +75,8 @@ export async function createVenue(input: {
   address?: string;
   metro?: string;
   district?: string;
+  lat?: number;
+  lon?: number;
 }): Promise<ApiVenue> {
   const res = await fetch(`${API_V1}/venues`, {
     method: "POST",
@@ -80,6 +86,23 @@ export async function createVenue(input: {
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
     throw new Error(`create venue failed: ${res.status} ${detail}`);
+  }
+  return (await res.json()) as ApiVenue;
+}
+
+/** Updates a venue via PATCH /venues/{id}. Throws on network/HTTP error. */
+export async function updateVenue(
+  id: string,
+  input: { name?: string; address?: string; metro?: string; district?: string; lat?: number; lon?: number },
+): Promise<ApiVenue> {
+  const res = await fetch(`${API_V1}/venues/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`update venue failed: ${res.status} ${detail}`);
   }
   return (await res.json()) as ApiVenue;
 }

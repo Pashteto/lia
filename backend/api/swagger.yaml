@@ -209,6 +209,39 @@ paths:
           schema:
             $ref: "#/definitions/Error"
 
+  /venues/{id}:
+    patch:
+      summary: Update venue
+      description: Updates a venue's fields and/or coordinates.
+      operationId: updateVenue
+      tags:
+        - venues
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uuid
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/VenueInput"
+      responses:
+        200:
+          description: Updated venue
+          schema:
+            $ref: "#/definitions/Venue"
+        400:
+          description: Invalid input
+          schema:
+            $ref: "#/definitions/Error"
+        503:
+          description: Service unavailable (database disabled)
+          schema:
+            $ref: "#/definitions/Error"
+
   /venues:
     get:
       summary: Search venues
@@ -445,6 +478,12 @@ definitions:
         type: string
       district:
         type: string
+      lat:
+        type: number
+        format: double
+      lon:
+        type: number
+        format: double
 
   VenueInput:
     type: object
@@ -460,6 +499,12 @@ definitions:
         type: string
       district:
         type: string
+      lat:
+        type: number
+        format: double
+      lon:
+        type: number
+        format: double
 
   Category:
     type: object

@@ -17,13 +17,20 @@ func VenueToAPI(v *domainModels.Venue) *apiModels.Venue {
 		return nil
 	}
 	name := v.Name
-	return &apiModels.Venue{
+	out := &apiModels.Venue{
 		ID:       strfmt.UUID(v.ID.String()),
 		Name:     &name,
 		Address:  v.Address,
 		Metro:    v.Metro,
 		District: v.District,
 	}
+	if v.Lat != nil {
+		out.Lat = *v.Lat
+	}
+	if v.Lon != nil {
+		out.Lon = *v.Lon
+	}
+	return out
 }
 
 // CategoryToAPI converts a domain Category to its API representation.

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/go-pg/pg/v10"
 	"github.com/gofrs/uuid"
@@ -26,6 +27,10 @@ type Service interface {
 	// Validate resolves a non-zero venue id; returns (nil,nil) for the zero id
 	// (meaning "no venue"), or ErrInvalidInput if a non-zero id does not exist.
 	Validate(ctx context.Context, id uuid.UUID) (*models.Venue, error)
+	// Update patches writable fields on an existing venue. Empty string args leave
+	// the current value unchanged. Coords replace unconditionally (both nil clears
+	// them; both non-nil sets them; mixed is rejected by ValidateCoords).
+	Update(ctx context.Context, id uuid.UUID, name, address, metro, district string, lat, lon *float64) (*models.Venue, error)
 }
 
 type service struct {
@@ -103,6 +108,43 @@ func (s *service) Validate(_ context.Context, id uuid.UUID) (*models.Venue, erro
 			return nil, fmt.Errorf("%w: venue %s does not exist", ErrInvalidInput, id)
 		}
 		return nil, fmt.Errorf("validate venue: %w", err)
+	}
+	return v, nil
+}
+
+func (s *service) Update(_ context.Context, id uuid.UUID, name, address, metro, district string, lat, lon *float64) (*models.Venue, error) {
+	if id == uuid.Nil {
+		return nil, fmt.Errorf("%w: id is required", ErrInvalidInput)
+	}
+	if err := ValidateCoords(lat, lon); err != nil {
+		return nil, err
+	}
+	v, err := s.repo.GetByID(id)
+	if err != nil {
+		if errors.Is(err, pg.ErrNoRows) {
+			return nil, fmt.Errorf("%w: venue %s does not exist", ErrInvalidInput, id)
+		}
+		return nil, fmt.Errorf("get venue: %w", err)
+	}
+	if n := strings.TrimSpace(name); n != "" {
+		v.Name = n
+	}
+	if a := strings.TrimSpace(address); a != "" {
+		v.Address = a
+	}
+	if m := strings.TrimSpace(metro); m != "" {
+		v.Metro = m
+	}
+	if d := strings.TrimSpace(district); d != "" {
+		v.District = d
+	}
+	v.Lat, v.Lon = lat, lon
+	v.UpdatedAt = time.Now()
+	if err := s.repo.Update(v); err != nil {
+		if errors.Is(err, pg.ErrNoRows) {
+			return nil, fmt.Errorf("%w: venue %s does not exist", ErrInvalidInput, id)
+		}
+		return nil, fmt.Errorf("update venue: %w", err)
 	}
 	return v, nil
 }

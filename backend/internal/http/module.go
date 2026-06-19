@@ -162,6 +162,7 @@ func (m *Module) initAPI() error {
 	if m.venues != nil {
 		api.VenuesListVenuesHandler = handlers.NewListVenues(m.venues)
 		api.VenuesCreateVenueHandler = handlers.NewCreateVenue(m.venues)
+		api.VenuesUpdateVenueHandler = handlers.NewUpdateVenue(m.venues)
 	}
 
 	// TODO: Add more handlers as you expand the API

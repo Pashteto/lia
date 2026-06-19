@@ -28,6 +28,10 @@ type Repository interface {
 	// FindOrCreateByName returns an existing venue whose lower(name) matches
 	// v.Name, else inserts v and returns it.
 	FindOrCreateByName(v *models.Venue) (*models.Venue, error)
+	// Update persists name, address, metro, district, lat, lon and updated_at
+	// for an existing venue (identified by primary key). Returns pg.ErrNoRows
+	// if no row was matched.
+	Update(v *models.Venue) error
 }
 
 type pgRepository struct {
@@ -93,4 +97,18 @@ func (r *pgRepository) FindOrCreateByName(v *models.Venue) (*models.Venue, error
 		return nil, fmt.Errorf("insert venue %q: %w", v.Name, err)
 	}
 	return v, nil
+}
+
+func (r *pgRepository) Update(v *models.Venue) error {
+	res, err := r.db.Model(v).
+		Column("name", "address", "metro", "district", "lat", "lon", "updated_at").
+		WherePK().
+		Update()
+	if err != nil {
+		return fmt.Errorf("update venue %s: %w", v.ID, err)
+	}
+	if res.RowsAffected() == 0 {
+		return pg.ErrNoRows
+	}
+	return nil
 }

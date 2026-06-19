@@ -29,6 +29,9 @@ type Service interface {
 	GetByID(ctx context.Context, id string) (*models.Event, error)
 	// List returns events, optionally filtered by status.
 	List(ctx context.Context, status string) ([]*models.Event, error)
+	// Nearby returns published events nearest to (lat, lon), within 50 km,
+	// up to limit results. Both lat and lon are required.
+	Nearby(ctx context.Context, lat, lon *float64, limit int) ([]*NearbyResult, error)
 }
 
 // CategoryValidator resolves and validates category ids. Satisfied by
@@ -121,4 +124,18 @@ func (s *service) List(_ context.Context, status string) ([]*models.Event, error
 	}
 
 	return list, nil
+}
+
+func (s *service) Nearby(_ context.Context, lat, lon *float64, limit int) ([]*NearbyResult, error) {
+	if lat == nil || lon == nil {
+		return nil, fmt.Errorf("%w: lat and lon are required", ErrInvalidInput)
+	}
+	if *lat < -90 || *lat > 90 || *lon < -180 || *lon > 180 {
+		return nil, fmt.Errorf("%w: coordinates out of range", ErrInvalidInput)
+	}
+	res, err := s.repo.Nearby(*lat, *lon, limit)
+	if err != nil {
+		return nil, fmt.Errorf("nearby events: %w", err)
+	}
+	return res, nil
 }

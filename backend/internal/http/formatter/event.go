@@ -95,6 +95,15 @@ func EventToAPI(event *domainModels.Event) *apiModels.Event {
 	return out
 }
 
+// EventToAPIWithDistance is EventToAPI plus the nearby distance in meters.
+// The generated Event.Distancem field is *float64 (x-nullable: true).
+func EventToAPIWithDistance(e *domainModels.Event, distanceM float64) *apiModels.Event {
+	out := EventToAPI(e)
+	d := distanceM
+	out.Distancem = &d
+	return out
+}
+
 // EventFromAPIInput converts an API EventInput into a domain Event.
 // Applies the same defaults as the database (draft / offline / free).
 func EventFromAPIInput(in *apiModels.EventInput) (*domainModels.Event, error) {

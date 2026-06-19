@@ -153,6 +153,7 @@ func (m *Module) initAPI() error {
 		api.EventsListEventsHandler = handlers.NewListEvents(m.events)
 		api.EventsGetEventByIDHandler = handlers.NewGetEventByID(m.events)
 		api.EventsCreateEventHandler = handlers.NewCreateEvent(m.events)
+		api.EventsNearbyEventsHandler = handlers.NewNearbyEvents(m.events)
 	}
 
 	if m.categories != nil {

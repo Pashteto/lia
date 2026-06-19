@@ -156,6 +156,45 @@ paths:
           schema:
             $ref: "#/definitions/Error"
 
+  /events/nearby:
+    get:
+      summary: Events nearby
+      description: Published events whose venue has coordinates, nearest first (within 50km).
+      operationId: nearbyEvents
+      tags:
+        - events
+      security: []
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          type: number
+          format: double
+        - name: lon
+          in: query
+          required: true
+          type: number
+          format: double
+        - name: limit
+          in: query
+          required: false
+          type: integer
+      responses:
+        200:
+          description: Nearest events
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Event"
+        400:
+          description: Invalid input
+          schema:
+            $ref: "#/definitions/Error"
+        503:
+          description: Service unavailable (database disabled)
+          schema:
+            $ref: "#/definitions/Error"
+
   /events/{id}:
     get:
       summary: Get event by ID
@@ -402,6 +441,11 @@ definitions:
         type: string
         format: date-time
         readOnly: true
+      distance_m:
+        type: number
+        format: double
+        readOnly: true
+        x-nullable: true
 
   EventInput:
     type: object

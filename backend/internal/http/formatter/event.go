@@ -24,12 +24,10 @@ func VenueToAPI(v *domainModels.Venue) *apiModels.Venue {
 		Metro:    v.Metro,
 		District: v.District,
 	}
-	if v.Lat != nil {
-		out.Lat = *v.Lat
-	}
-	if v.Lon != nil {
-		out.Lon = *v.Lon
-	}
+	// Lat/Lon are *float64 in both the domain model and the generated API model.
+	// Assign pointers directly so coordless venues omit the fields (omitempty).
+	out.Lat = v.Lat
+	out.Lon = v.Lon
 	return out
 }
 

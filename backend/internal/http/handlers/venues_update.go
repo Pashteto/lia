@@ -32,16 +32,13 @@ func (h *UpdateVenue) Handle(params venuesops.UpdateVenueParams) middleware.Resp
 	var name, address, metro, district string
 	var lat, lon *float64
 	if in != nil {
-		if in.Name != nil {
-			name = *in.Name
-		}
+		name = in.Name
 		address = in.Address
 		metro = in.Metro
 		district = in.District
-		// Always forward coords as pointers so the service can apply ValidateCoords.
-		// Zero values (0.0, 0.0) are a valid coordinate pair and will be persisted.
-		lat = &in.Lat
-		lon = &in.Lon
+		// Lat/Lon are *float64 from VenueUpdateInput; nil means "omit/preserve".
+		lat = in.Lat
+		lon = in.Lon
 	}
 	updated, err := h.venues.Update(params.HTTPRequest.Context(), id, name, address, metro, district, lat, lon)
 	if err != nil {

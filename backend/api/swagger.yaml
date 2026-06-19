@@ -227,7 +227,7 @@ paths:
           in: body
           required: true
           schema:
-            $ref: "#/definitions/VenueInput"
+            $ref: "#/definitions/VenueUpdateInput"
       responses:
         200:
           description: Updated venue
@@ -481,9 +481,11 @@ definitions:
       lat:
         type: number
         format: double
+        x-nullable: true
       lon:
         type: number
         format: double
+        x-nullable: true
 
   VenueInput:
     type: object
@@ -502,9 +504,31 @@ definitions:
       lat:
         type: number
         format: double
+        x-nullable: true
       lon:
         type: number
         format: double
+        x-nullable: true
+
+  VenueUpdateInput:
+    type: object
+    properties:
+      name:
+        type: string
+      address:
+        type: string
+      metro:
+        type: string
+      district:
+        type: string
+      lat:
+        type: number
+        format: double
+        x-nullable: true
+      lon:
+        type: number
+        format: double
+        x-nullable: true
 
   Category:
     type: object

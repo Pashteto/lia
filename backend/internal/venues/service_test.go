@@ -159,3 +159,29 @@ func TestService_Update_RejectsOutOfRange(t *testing.T) {
 		t.Fatalf("expected ErrInvalidInput, got %v", err)
 	}
 }
+
+func TestService_Update_PreservesCoordsWhenOmitted(t *testing.T) {
+	existingLat, existingLon := 55.75, 37.62
+	existing := &models.Venue{Name: "Hall", Lat: &existingLat, Lon: &existingLon}
+	repo := &mockRepo{getResult: existing}
+	svc := NewService(repo)
+	id, _ := uuid.NewV4()
+
+	// PATCH with name only, no coords.
+	got, err := svc.Update(context.Background(), id, "New Name", "", "", "", nil, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got.Name != "New Name" {
+		t.Fatalf("expected name updated to %q, got %q", "New Name", got.Name)
+	}
+	if got.Lat == nil || *got.Lat != 55.75 {
+		t.Fatalf("expected Lat preserved as 55.75, got %v", got.Lat)
+	}
+	if got.Lon == nil || *got.Lon != 37.62 {
+		t.Fatalf("expected Lon preserved as 37.62, got %v", got.Lon)
+	}
+	if repo.updated == nil {
+		t.Fatal("expected Update to be called on repo")
+	}
+}

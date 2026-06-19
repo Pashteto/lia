@@ -28,8 +28,9 @@ type Service interface {
 	// (meaning "no venue"), or ErrInvalidInput if a non-zero id does not exist.
 	Validate(ctx context.Context, id uuid.UUID) (*models.Venue, error)
 	// Update patches writable fields on an existing venue. Empty string args leave
-	// the current value unchanged. Coords replace unconditionally (both nil clears
-	// them; both non-nil sets them; mixed is rejected by ValidateCoords).
+	// the current value unchanged. Coordinates are replaced only when provided
+	// (both non-nil); omitting them (both nil) leaves the stored coordinates
+	// unchanged. Half-specified coordinates (exactly one nil) are rejected.
 	Update(ctx context.Context, id uuid.UUID, name, address, metro, district string, lat, lon *float64) (*models.Venue, error)
 }
 
@@ -138,7 +139,11 @@ func (s *service) Update(_ context.Context, id uuid.UUID, name, address, metro, 
 	if d := strings.TrimSpace(district); d != "" {
 		v.District = d
 	}
-	v.Lat, v.Lon = lat, lon
+	// Only overwrite coords when provided; nil means "omit/preserve".
+	// ValidateCoords above already guarantees lat!=nil ⇒ lon!=nil.
+	if lat != nil {
+		v.Lat, v.Lon = lat, lon
+	}
 	v.UpdatedAt = time.Now()
 	if err := s.repo.Update(v); err != nil {
 		if errors.Is(err, pg.ErrNoRows) {

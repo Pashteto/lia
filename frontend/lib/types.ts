@@ -28,6 +28,8 @@ export interface Venue {
   metro?: string;
   address?: string;
   district?: string;
+  lat?: number;
+  lon?: number;
 }
 
 export interface EventCategory {
@@ -57,6 +59,8 @@ export interface LiaEvent {
   /** Optional: the backend exposes organizer_id only (no profile join yet). */
   organizer?: Organizer;
   venue?: Venue;
+  /** Distance from the user's location in metres; set only for nearby results. */
+  distanceM?: number;
 }
 
 /** Shape returned by the backend `GET /api/v1/events` (Lia API Event model). */
@@ -67,7 +71,7 @@ export interface ApiEvent {
   title: string;
   description?: string;
   categories?: { id: string; slug: string; label: string }[];
-  venue?: { id: string; name: string; address?: string; metro?: string; district?: string };
+  venue?: { id: string; name: string; address?: string; metro?: string; district?: string; lat?: number; lon?: number };
   status: EventStatus;
   format?: EventFormat;
   price_type?: PriceType;
@@ -79,4 +83,6 @@ export interface ApiEvent {
   published_at?: string;
   created_at?: string;
   updated_at?: string;
+  /** Present on `/events/nearby` responses; distance from requested coordinates. */
+  distance_m?: number;
 }

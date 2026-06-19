@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/go-pg/pg/v10"
 	"github.com/gofrs/uuid"
@@ -26,6 +27,11 @@ type Service interface {
 	// Validate resolves a non-zero venue id; returns (nil,nil) for the zero id
 	// (meaning "no venue"), or ErrInvalidInput if a non-zero id does not exist.
 	Validate(ctx context.Context, id uuid.UUID) (*models.Venue, error)
+	// Update patches writable fields on an existing venue. Empty string args leave
+	// the current value unchanged. Coordinates are replaced only when provided
+	// (both non-nil); omitting them (both nil) leaves the stored coordinates
+	// unchanged. Half-specified coordinates (exactly one nil) are rejected.
+	Update(ctx context.Context, id uuid.UUID, name, address, metro, district string, lat, lon *float64) (*models.Venue, error)
 }
 
 type service struct {
@@ -53,6 +59,23 @@ func (s *service) GetByID(_ context.Context, id uuid.UUID) (*models.Venue, error
 	return v, nil
 }
 
+// ValidateCoords enforces that lat/lon are either both nil or both set and in range.
+func ValidateCoords(lat, lon *float64) error {
+	if (lat == nil) != (lon == nil) {
+		return fmt.Errorf("%w: lat and lon must be provided together", ErrInvalidInput)
+	}
+	if lat == nil {
+		return nil
+	}
+	if *lat < -90 || *lat > 90 {
+		return fmt.Errorf("%w: lat out of range", ErrInvalidInput)
+	}
+	if *lon < -180 || *lon > 180 {
+		return fmt.Errorf("%w: lon out of range", ErrInvalidInput)
+	}
+	return nil
+}
+
 func (s *service) Create(_ context.Context, v *models.Venue) (*models.Venue, error) {
 	if v == nil {
 		return nil, fmt.Errorf("%w: venue is required", ErrInvalidInput)
@@ -64,6 +87,10 @@ func (s *service) Create(_ context.Context, v *models.Venue) (*models.Venue, err
 	v.Address = strings.TrimSpace(v.Address)
 	v.Metro = strings.TrimSpace(v.Metro)
 	v.District = strings.TrimSpace(v.District)
+
+	if err := ValidateCoords(v.Lat, v.Lon); err != nil {
+		return nil, err
+	}
 
 	created, err := s.repo.FindOrCreateByName(v)
 	if err != nil {
@@ -82,6 +109,47 @@ func (s *service) Validate(_ context.Context, id uuid.UUID) (*models.Venue, erro
 			return nil, fmt.Errorf("%w: venue %s does not exist", ErrInvalidInput, id)
 		}
 		return nil, fmt.Errorf("validate venue: %w", err)
+	}
+	return v, nil
+}
+
+func (s *service) Update(_ context.Context, id uuid.UUID, name, address, metro, district string, lat, lon *float64) (*models.Venue, error) {
+	if id == uuid.Nil {
+		return nil, fmt.Errorf("%w: id is required", ErrInvalidInput)
+	}
+	if err := ValidateCoords(lat, lon); err != nil {
+		return nil, err
+	}
+	v, err := s.repo.GetByID(id)
+	if err != nil {
+		if errors.Is(err, pg.ErrNoRows) {
+			return nil, fmt.Errorf("%w: venue %s does not exist", ErrInvalidInput, id)
+		}
+		return nil, fmt.Errorf("get venue: %w", err)
+	}
+	if n := strings.TrimSpace(name); n != "" {
+		v.Name = n
+	}
+	if a := strings.TrimSpace(address); a != "" {
+		v.Address = a
+	}
+	if m := strings.TrimSpace(metro); m != "" {
+		v.Metro = m
+	}
+	if d := strings.TrimSpace(district); d != "" {
+		v.District = d
+	}
+	// Only overwrite coords when provided; nil means "omit/preserve".
+	// ValidateCoords above already guarantees lat!=nil ⇒ lon!=nil.
+	if lat != nil {
+		v.Lat, v.Lon = lat, lon
+	}
+	v.UpdatedAt = time.Now()
+	if err := s.repo.Update(v); err != nil {
+		if errors.Is(err, pg.ErrNoRows) {
+			return nil, fmt.Errorf("%w: venue %s does not exist", ErrInvalidInput, id)
+		}
+		return nil, fmt.Errorf("update venue: %w", err)
 	}
 	return v, nil
 }

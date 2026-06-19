@@ -18,6 +18,8 @@ type mockRepo struct {
 	getErr       error
 	getResult    *models.Venue
 	created      *models.Venue
+	updated      *models.Venue
+	updateErr    error
 }
 
 func (m *mockRepo) Search(string, int) ([]*models.Venue, error) { return m.searchResult, nil }
@@ -32,6 +34,7 @@ func (m *mockRepo) FindOrCreateByName(v *models.Venue) (*models.Venue, error) {
 	m.created = v
 	return v, nil
 }
+func (m *mockRepo) Update(v *models.Venue) error { m.updated = v; return m.updateErr }
 
 func venue(name string) *models.Venue {
 	id, _ := uuid.NewV4()
@@ -99,5 +102,86 @@ func TestService_Validate_OK(t *testing.T) {
 	}
 	if got == nil || got.ID != v.ID {
 		t.Fatalf("expected resolved venue, got %v", got)
+	}
+}
+
+func TestService_Create_RejectsHalfCoords(t *testing.T) {
+	svc := NewService(&mockRepo{})
+	lat := 55.75
+	_, err := svc.Create(context.Background(), &models.Venue{Name: "X", Lat: &lat})
+	if !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("expected ErrInvalidInput for lat without lon, got %v", err)
+	}
+}
+
+func TestService_Create_RejectsOutOfRange(t *testing.T) {
+	svc := NewService(&mockRepo{})
+	lat, lon := 91.0, 10.0
+	_, err := svc.Create(context.Background(), &models.Venue{Name: "X", Lat: &lat, Lon: &lon})
+	if !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("expected ErrInvalidInput for lat>90, got %v", err)
+	}
+}
+
+func TestService_Create_AcceptsValidCoords(t *testing.T) {
+	repo := &mockRepo{}
+	svc := NewService(repo)
+	lat, lon := 55.75, 37.62
+	if _, err := svc.Create(context.Background(), &models.Venue{Name: "X", Lat: &lat, Lon: &lon}); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if repo.created == nil || repo.created.Lat == nil || *repo.created.Lat != 55.75 {
+		t.Fatal("expected coords passed through to repo")
+	}
+}
+
+func TestService_Update_SetsCoords(t *testing.T) {
+	existing := &models.Venue{Name: "Hall"}
+	repo := &mockRepo{getResult: existing}
+	svc := NewService(repo)
+	id, _ := uuid.NewV4()
+	lat, lon := 55.75, 37.62
+	got, err := svc.Update(context.Background(), id, "", "", "", "", &lat, &lon)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got.Lat == nil || *got.Lat != 55.75 || repo.updated == nil {
+		t.Fatal("expected coords set and update called")
+	}
+}
+
+func TestService_Update_RejectsOutOfRange(t *testing.T) {
+	repo := &mockRepo{getResult: &models.Venue{Name: "Hall"}}
+	svc := NewService(repo)
+	id, _ := uuid.NewV4()
+	lat, lon := 200.0, 0.0
+	if _, err := svc.Update(context.Background(), id, "", "", "", "", &lat, &lon); !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("expected ErrInvalidInput, got %v", err)
+	}
+}
+
+func TestService_Update_PreservesCoordsWhenOmitted(t *testing.T) {
+	existingLat, existingLon := 55.75, 37.62
+	existing := &models.Venue{Name: "Hall", Lat: &existingLat, Lon: &existingLon}
+	repo := &mockRepo{getResult: existing}
+	svc := NewService(repo)
+	id, _ := uuid.NewV4()
+
+	// PATCH with name only, no coords.
+	got, err := svc.Update(context.Background(), id, "New Name", "", "", "", nil, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got.Name != "New Name" {
+		t.Fatalf("expected name updated to %q, got %q", "New Name", got.Name)
+	}
+	if got.Lat == nil || *got.Lat != 55.75 {
+		t.Fatalf("expected Lat preserved as 55.75, got %v", got.Lat)
+	}
+	if got.Lon == nil || *got.Lon != 37.62 {
+		t.Fatalf("expected Lon preserved as 37.62, got %v", got.Lon)
+	}
+	if repo.updated == nil {
+		t.Fatal("expected Update to be called on repo")
 	}
 }

@@ -15,10 +15,11 @@ import (
 
 // mockRepo is an in-memory Repository for tests.
 type mockRepo struct {
-	created *models.Event
-	getErr  error
-	get     *models.Event
-	list    []*models.Event
+	created      *models.Event
+	getErr       error
+	get          *models.Event
+	list         []*models.Event
+	nearbyResult []*NearbyResult
 }
 
 func (m *mockRepo) Create(event *models.Event) error {
@@ -35,6 +36,10 @@ func (m *mockRepo) GetByID(uuid.UUID) (*models.Event, error) {
 
 func (m *mockRepo) List(ListFilter) ([]*models.Event, error) {
 	return m.list, nil
+}
+
+func (m *mockRepo) Nearby(lat, lon float64, limit int) ([]*NearbyResult, error) {
+	return m.nearbyResult, nil
 }
 
 // mockValidator is an in-memory CategoryValidator.
@@ -55,6 +60,11 @@ type mockVenueValidator struct {
 
 func (m *mockVenueValidator) Validate(context.Context, uuid.UUID) (*models.Venue, error) {
 	return m.resolved, m.err
+}
+
+// newServiceWithMock is a convenience helper used by Nearby tests.
+func newServiceWithMock(repo *mockRepo) Service {
+	return NewService(repo, &mockValidator{}, &mockVenueValidator{})
 }
 
 func validEvent() *models.Event {
@@ -172,5 +182,22 @@ func TestService_Create_UnknownVenue(t *testing.T) {
 	err := svc.Create(context.Background(), ev)
 	if !errors.Is(err, ErrInvalidInput) {
 		t.Fatalf("expected ErrInvalidInput, got %v", err)
+	}
+}
+
+func TestService_Nearby_RequiresCoords(t *testing.T) {
+	svc := newServiceWithMock(&mockRepo{})
+	if _, err := svc.Nearby(context.Background(), nil, nil, 10); !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("expected ErrInvalidInput when coords missing, got %v", err)
+	}
+}
+
+func TestService_Nearby_OK(t *testing.T) {
+	repo := &mockRepo{nearbyResult: []*NearbyResult{{Event: &models.Event{Title: "X"}, DistanceM: 1200}}}
+	svc := newServiceWithMock(repo)
+	lat, lon := 55.75, 37.62
+	got, err := svc.Nearby(context.Background(), &lat, &lon, 10)
+	if err != nil || len(got) != 1 || got[0].DistanceM != 1200 {
+		t.Fatalf("unexpected: %v %v", got, err)
 	}
 }

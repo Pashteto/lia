@@ -156,6 +156,45 @@ paths:
           schema:
             $ref: "#/definitions/Error"
 
+  /events/nearby:
+    get:
+      summary: Events nearby
+      description: Published events whose venue has coordinates, nearest first (within 50km).
+      operationId: nearbyEvents
+      tags:
+        - events
+      security: []
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          type: number
+          format: double
+        - name: lon
+          in: query
+          required: true
+          type: number
+          format: double
+        - name: limit
+          in: query
+          required: false
+          type: integer
+      responses:
+        200:
+          description: Nearest events
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Event"
+        400:
+          description: Invalid input
+          schema:
+            $ref: "#/definitions/Error"
+        503:
+          description: Service unavailable (database disabled)
+          schema:
+            $ref: "#/definitions/Error"
+
   /events/{id}:
     get:
       summary: Get event by ID
@@ -204,6 +243,39 @@ paths:
             type: array
             items:
               $ref: "#/definitions/Category"
+        503:
+          description: Service unavailable (database disabled)
+          schema:
+            $ref: "#/definitions/Error"
+
+  /venues/{id}:
+    patch:
+      summary: Update venue
+      description: Updates a venue's fields and/or coordinates.
+      operationId: updateVenue
+      tags:
+        - venues
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uuid
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/VenueUpdateInput"
+      responses:
+        200:
+          description: Updated venue
+          schema:
+            $ref: "#/definitions/Venue"
+        400:
+          description: Invalid input
+          schema:
+            $ref: "#/definitions/Error"
         503:
           description: Service unavailable (database disabled)
           schema:
@@ -369,6 +441,11 @@ definitions:
         type: string
         format: date-time
         readOnly: true
+      distance_m:
+        type: number
+        format: double
+        readOnly: true
+        x-nullable: true
 
   EventInput:
     type: object
@@ -445,6 +522,14 @@ definitions:
         type: string
       district:
         type: string
+      lat:
+        type: number
+        format: double
+        x-nullable: true
+      lon:
+        type: number
+        format: double
+        x-nullable: true
 
   VenueInput:
     type: object
@@ -460,6 +545,34 @@ definitions:
         type: string
       district:
         type: string
+      lat:
+        type: number
+        format: double
+        x-nullable: true
+      lon:
+        type: number
+        format: double
+        x-nullable: true
+
+  VenueUpdateInput:
+    type: object
+    properties:
+      name:
+        type: string
+      address:
+        type: string
+      metro:
+        type: string
+      district:
+        type: string
+      lat:
+        type: number
+        format: double
+        x-nullable: true
+      lon:
+        type: number
+        format: double
+        x-nullable: true
 
   Category:
     type: object

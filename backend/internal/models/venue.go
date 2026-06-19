@@ -20,6 +20,8 @@ type Venue struct {
 	Address   string    `pg:"address,use_zero"`
 	Metro     string    `pg:"metro,use_zero"`
 	District  string    `pg:"district,use_zero"`
+	Lat       *float64  `pg:"lat"`
+	Lon       *float64  `pg:"lon"`
 	CreatedAt time.Time `pg:"created_at,notnull,default:now()"`
 	UpdatedAt time.Time `pg:"updated_at,notnull,default:now()"`
 }

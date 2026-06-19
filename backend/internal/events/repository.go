@@ -25,6 +25,18 @@ type ListFilter struct {
 // DefaultListLimit is applied when ListFilter.Limit is unset.
 const DefaultListLimit = 50
 
+// NearbyResult wraps an event with its distance from the query point.
+type NearbyResult struct {
+	Event     *models.Event
+	DistanceM float64
+}
+
+// nearbyRow is an internal scan target that embeds Event and adds DistanceM.
+type nearbyRow struct {
+	models.Event
+	DistanceM float64 `pg:"distance_m"`
+}
+
 // Repository defines event persistence operations.
 type Repository interface {
 	// Create inserts a new event (ID auto-generated via BeforeInsert).
@@ -33,6 +45,9 @@ type Repository interface {
 	GetByID(id uuid.UUID) (*models.Event, error)
 	// List returns events matching the filter, newest start first.
 	List(filter ListFilter) ([]*models.Event, error)
+	// Nearby returns published events whose venue has coordinates, ordered
+	// nearest-first, capped at 50 km from (lat, lon).
+	Nearby(lat, lon float64, limit int) ([]*NearbyResult, error)
 }
 
 // pgRepository is a go-pg backed Repository.
@@ -161,6 +176,48 @@ func (r *pgRepository) loadCategories(events []*models.Event) error {
 	return nil
 }
 
+// Nearby returns published events whose venue has coordinates, ordered
+// nearest-first, within 50 km of the given point. limit defaults to
+// DefaultListLimit when <= 0.
+func (r *pgRepository) Nearby(lat, lon float64, limit int) ([]*NearbyResult, error) {
+	if limit <= 0 {
+		limit = DefaultListLimit
+	}
+	var rows []nearbyRow
+	_, err := r.db.Query(&rows, `
+		SELECT e.*, ST_Distance(v.geog, ST_SetSRID(ST_MakePoint(?0, ?1), 4326)::geography) AS distance_m
+		FROM events e
+		JOIN venues v ON v.id = e.venue_id
+		WHERE v.geog IS NOT NULL
+		  AND e.status = 'published'
+		  AND ST_DWithin(v.geog, ST_SetSRID(ST_MakePoint(?0, ?1), 4326)::geography, 50000)
+		ORDER BY v.geog <-> ST_SetSRID(ST_MakePoint(?0, ?1), 4326)::geography
+		LIMIT ?2`,
+		lon, lat, limit)
+	if err != nil {
+		return nil, fmt.Errorf("nearby events from db: %w", err)
+	}
+	events := make([]*models.Event, len(rows))
+	results := make([]*NearbyResult, len(rows))
+	for i := range rows {
+		e := rows[i].Event
+		// go-pg does not call AfterSelect for raw-SQL scans; invoke it manually
+		// so Event.Status (the Go enum) is populated from Event.StatusSQL.
+		if err := e.AfterSelect(context.Background()); err != nil {
+			return nil, fmt.Errorf("nearby events: scan row %d: %w", i, err)
+		}
+		events[i] = &e
+		results[i] = &NearbyResult{Event: &e, DistanceM: rows[i].DistanceM}
+	}
+	if err := r.loadCategories(events); err != nil {
+		return nil, err
+	}
+	if err := r.loadVenues(events); err != nil {
+		return nil, err
+	}
+	return results, nil
+}
+
 // loadVenues populates Venue on each event whose venue_id is set (non-zero),
 // in a single query (no N+1).
 func (r *pgRepository) loadVenues(events []*models.Event) error {
@@ -181,26 +238,14 @@ func (r *pgRepository) loadVenues(events []*models.Event) error {
 		return nil
 	}
 
-	var rows []struct {
-		Name     string    `pg:"name"`
-		Address  string    `pg:"address"`
-		Metro    string    `pg:"metro"`
-		District string    `pg:"district"`
-		ID       uuid.UUID `pg:"id"`
-	}
-	if _, err := r.db.Query(&rows,
-		`SELECT id, name, address, metro, district FROM venues WHERE id IN (?)`,
-		pg.In(ids),
-	); err != nil {
+	var venues []*models.Venue
+	if err := r.db.Model(&venues).Where("id IN (?)", pg.In(ids)).Select(); err != nil {
 		return fmt.Errorf("load event venues: %w", err)
 	}
 
-	byID := make(map[uuid.UUID]*models.Venue, len(rows))
-	for i := range rows {
-		byID[rows[i].ID] = &models.Venue{
-			ID: rows[i].ID, Name: rows[i].Name, Address: rows[i].Address,
-			Metro: rows[i].Metro, District: rows[i].District,
-		}
+	byID := make(map[uuid.UUID]*models.Venue, len(venues))
+	for _, v := range venues {
+		byID[v.ID] = v
 	}
 	// A venue_id with no matching row (e.g. a stale/dangling reference) is left
 	// as e.Venue == nil — intentional, since venue_id is a loose reference (no FK).

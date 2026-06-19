@@ -1,6 +1,6 @@
 # Lia — Handoff
 
-_Last updated: 2026-06-14. Merged to `main`: scaffold (PR #1), deploy artifacts (PR #2), category normalization, and venue normalization._
+_Last updated: 2026-06-19. Merged to `main`: scaffold (PR #1), deploy artifacts (PR #2), category normalization, and venue normalization. On branch `feat/venue-geo` (awaiting merge): venue geo._
 
 Where the project stands after the frontend + backend scaffold and the first feature slices.
 
@@ -32,21 +32,23 @@ Frontend falls back to mock data (`lib/mock-events.ts`) when the backend is unre
 
 **Recently done:**
 
+- **Venue geo** (branch `feat/venue-geo`, awaiting merge). The deferred geo half of venues: `venues.lat`/`lon` (`*float64`, nullable) + a PostGIS generated `geog geography(Point,4326)` column + GIST index (migration `000009`); `PATCH /venues/{id}` (dedicated `VenueUpdateInput`, **preserve-on-omit** coord semantics); `GET /events/nearby?lat&lon&limit` (PostGIS `ST_DWithin`/`<->`, nearest-first, **50 km cap**, published-only, excludes coordless venues; per-event `distance_m`). Frontend: a Leaflet (`+ OSM tiles`) map wrapper, **browser-side OSM Nominatim** address search (backend never geocodes — no keys/server egress), a venue **pin-picker** modal, an **event-detail venue map**, a Discovery **"рядом со мной"** distance-sorted list, and a **`/map`** browse screen (pins capped at 100). **Data-handling:** browser-only egress (addresses → Nominatim, tiles → OSM); public venue data, no PII, no secrets. Verified: `go build/vet/test`; live API end-to-end (coord create/PATCH-preserve/nearby ordering + 50 km cap + no `distance_m` leak); `pnpm lint`/`build`; SSR-safety of all maps. **Not automation-verified:** pixel-level Leaflet canvas render (no Playwright in the build env — data flow + SSR confirmed). Spec/plan: [`superpowers/specs/2026-06-19-venue-geo-design.md`](superpowers/specs/2026-06-19-venue-geo-design.md), [`superpowers/plans/2026-06-19-venue-geo.md`](superpowers/plans/2026-06-19-venue-geo.md).
 - **Venue normalization** (merged). The denormalized `events.venue_name`/`venue_metro` are now a dedicated **`venues`** entity: `venues` table + backfill (migration 000008), an `internal/venues` module with search + find-or-create, `GET`/`POST /venues`, events reference a loose `venue_id` (zero UUID = none, no FK) and embed a nested `venue`; frontend has a pick-or-create **typeahead** (`VenuePicker`) and renders venue name/metro. Identity only — **geo deferred** (see What's next). Verified end-to-end (live API + frontend SSR). Spec/plan: [`superpowers/specs/2026-06-14-venue-normalization-design.md`](superpowers/specs/2026-06-14-venue-normalization-design.md), [`superpowers/plans/2026-06-14-venue-normalization.md`](superpowers/plans/2026-06-14-venue-normalization.md).
 - **Category normalization** (merged). Curated, many-to-many **categories** taxonomy: seeded `categories` table + `event_categories` join (migrations 000006/000007), `internal/categories` module, `GET /categories`, events embed `categories[]` / accept `category_ids`; frontend multi-select picker + chips. Spec/plan: [`superpowers/specs/2026-06-13-category-normalization-design.md`](superpowers/specs/2026-06-13-category-normalization-design.md). The frontend demo was **redeployed 2026-06-13** with the multi-category build.
 
 ## What's next
 
-1. **Venue geo** — the deferred half of venues: add `lat`/`lon` (+ PostGIS `geography(Point)` + GIST index) to `venues`, a coordinate source (manual vs an external geocoder — Yandex/2GIS/DaData, needs an external-API + org data-handling decision), a `GET /events/nearby` distance query, and a map/nearby UI. Its own spec (see the "notes for the follow-on geo spec" in the venue spec).
-2. **AI-search screen** + `internal/ai` module. Per the tech-stack doc the assistant is **search-only over real events** (no event hallucination). **Provider needs sign-off** before wiring — GigaChat / YandexGPT are the documented defaults; OpenAI/Anthropic only if legally/payment-wise permitted for this project (and per org data-handling rules).
-3. **Auth + RSVP**. The detail "Записаться" button is a stub. Needs the `rsvp` module and replacing `HTTP_MOCK_AUTH=true` with real auth (email magic-link / OTP) — a security-surface change; review deliberately (touches access/audit controls).
-4. **Images** — S3 upload + cover URLs on events (model has no cover field yet).
+1. **AI-search screen** + `internal/ai` module. Per the tech-stack doc the assistant is **search-only over real events** (no event hallucination). **Provider needs sign-off** before wiring — GigaChat / YandexGPT are the documented defaults; OpenAI/Anthropic only if legally/payment-wise permitted for this project (and per org data-handling rules).
+2. **Auth + RSVP**. The detail "Записаться" button is a stub. Needs the `rsvp` module and replacing `HTTP_MOCK_AUTH=true` with real auth (email magic-link / OTP) — a security-surface change; review deliberately (touches access/audit controls).
+3. **Images** — S3 upload + cover URLs on events (model has no cover field yet).
 
 ## Known gotchas (don't re-discover these)
 
 - **Template codegen**: after `make rename`, run `make generate-all` (go-swagger server + protobuf) before `go build` — that code is gitignored and regenerated in CI.
 - **`rename.sh` regex**: the template's rejected dots/uppercase; relaxed to accept full Go module paths. Dockerfile binary-copy path and the `COPY .git` line were also fixed for the monorepo-subdir layout.
-- **go-pg + gofrs UUID**: cannot scan SQL `NULL` into a uuid field. "Unset" organizer/venue is the **zero UUID** (`NOT NULL DEFAULT`), and `events.Create` avoids `RETURNING *`.
+- **go-pg + gofrs UUID**: cannot scan SQL `NULL` into a uuid field. "Unset" organizer/venue is the **zero UUID** (`NOT NULL DEFAULT`), and `events.Create` avoids `RETURNING *`. (Nullable non-uuid columns like `venues.lat`/`lon` are fine as `*float64`.)
+- **go-pg raw `Query` skips hooks**: `events.repository.Nearby` scans events via raw SQL (for the PostGIS `distance_m`), so `AfterSelect` (which maps `StatusSQL`→`Status`) must be called manually per row, else `status` reads as the zero value. Prefer the model-based load (`db.Model(&x).Where(...).Select()`) when you don't need raw SQL — `loadVenues` uses it so nested-venue columns (incl. `lat`/`lon`) can't silently drift.
+- **swagger nullable fields**: declare optional `number` fields (e.g. coords, `distance_m`) with `x-nullable: true` so go-swagger generates `*float64` (+ `omitempty`) — otherwise unset values serialize as `0` and a partial `PATCH` zeroes stored data. Create vs update use distinct bodies (`VenueInput` requires `name`; `VenueUpdateInput` doesn't).
 - **golangci-lint**: CI installs **v1** (the `.golangci.yml` is v1 format) — do **not** migrate it to v2. Locally, install v1 to lint as CI does.
 - **Local Docker**: Docker Desktop was unstable in dev; Postgres stayed up while the app container died. Workaround: run the app binary on the host (`go build -o /tmp/lia ./cmd/lia.go` then `serve` with `DATABASE_*`/`HTTP_*` env) against the containerized Postgres.
 

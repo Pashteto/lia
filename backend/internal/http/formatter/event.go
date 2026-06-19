@@ -17,13 +17,18 @@ func VenueToAPI(v *domainModels.Venue) *apiModels.Venue {
 		return nil
 	}
 	name := v.Name
-	return &apiModels.Venue{
+	out := &apiModels.Venue{
 		ID:       strfmt.UUID(v.ID.String()),
 		Name:     &name,
 		Address:  v.Address,
 		Metro:    v.Metro,
 		District: v.District,
 	}
+	// Lat/Lon are *float64 in both the domain model and the generated API model.
+	// Assign pointers directly so coordless venues omit the fields (omitempty).
+	out.Lat = v.Lat
+	out.Lon = v.Lon
+	return out
 }
 
 // CategoryToAPI converts a domain Category to its API representation.
@@ -87,6 +92,15 @@ func EventToAPI(event *domainModels.Event) *apiModels.Event {
 
 	out.Venue = VenueToAPI(event.Venue)
 
+	return out
+}
+
+// EventToAPIWithDistance is EventToAPI plus the nearby distance in meters.
+// The generated Event.Distancem field is *float64 (x-nullable: true).
+func EventToAPIWithDistance(e *domainModels.Event, distanceM float64) *apiModels.Event {
+	out := EventToAPI(e)
+	d := distanceM
+	out.Distancem = &d
 	return out
 }
 

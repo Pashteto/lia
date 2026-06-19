@@ -153,6 +153,7 @@ func (m *Module) initAPI() error {
 		api.EventsListEventsHandler = handlers.NewListEvents(m.events)
 		api.EventsGetEventByIDHandler = handlers.NewGetEventByID(m.events)
 		api.EventsCreateEventHandler = handlers.NewCreateEvent(m.events)
+		api.EventsNearbyEventsHandler = handlers.NewNearbyEvents(m.events)
 	}
 
 	if m.categories != nil {
@@ -162,6 +163,7 @@ func (m *Module) initAPI() error {
 	if m.venues != nil {
 		api.VenuesListVenuesHandler = handlers.NewListVenues(m.venues)
 		api.VenuesCreateVenueHandler = handlers.NewCreateVenue(m.venues)
+		api.VenuesUpdateVenueHandler = handlers.NewUpdateVenue(m.venues)
 	}
 
 	// TODO: Add more handlers as you expand the API

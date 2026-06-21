@@ -1,0 +1,42 @@
+# Production override for oracle-1. Apply with:
+#   docker compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml up -d
+# --env-file feeds ${VAR} interpolation by parsing KEY=VALUE literally (no shell
+# execution), so passwords with shell-special chars are safe. Credentials come
+# from .env.prod (git-ignored) — never the committed dev/dev defaults.
+
+services:
+  postgres:
+    # Remove the host port mapping: Postgres is compose-internal only in prod.
+    ports: !override []
+    environment:
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+    # Replace the dev bind-mount with a persistent named volume.
+    volumes: !override
+      - lia_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME}"]
+
+  migrate:
+    command:
+      - "-path=/migrations"
+      - "-database"
+      - "postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@postgres:5432/${DATABASE_NAME}?sslmode=disable"
+      - "up"
+
+  app:
+    # Host-bind to 127.0.0.1:9080 (nginx fronts it). Replaces the dev 8080/9090
+    # mappings entirely (!override, not merge) so gRPC and :8080 stay unpublished.
+    ports: !override
+      - "127.0.0.1:9080:8080"
+    environment:
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_NAME: ${DATABASE_NAME}
+      # Narrow CORS from the "*" default to the demo frontend origin only.
+      HTTP_CORS_ALLOWED_ORIGINS: "https://lia.pashteto.com"
+      GRPC_ENABLED: "false"
+
+volumes:
+  lia_pgdata:

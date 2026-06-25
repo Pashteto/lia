@@ -26,7 +26,12 @@ export default async function DiscoveryPage() {
             <Link href="/events/new" className="hidden sm:block">
               <Button variant="tinted">Создать событие</Button>
             </Link>
-            <Button variant="plain">Войти</Button>
+            {/* Auth isn't built yet (backend still runs HTTP_MOCK_AUTH; no auth
+                module). Render an honest disabled stub instead of a dead button
+                that looks broken when clicked. */}
+            <Button variant="plain" disabled title="Вход появится позже">
+              Войти
+            </Button>
           </>
         }
       />

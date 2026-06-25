@@ -9,10 +9,17 @@ import marker from "leaflet/dist/images/marker-icon.png";
 import marker2x from "leaflet/dist/images/marker-icon-2x.png";
 import shadow from "leaflet/dist/images/marker-shadow.png";
 
+// Static image imports resolve to a `{ src }` object under some bundlers and to
+// a bare URL string under others (Turbopack prod). Normalize both — passing an
+// undefined iconUrl makes Leaflet throw ("iconUrl not set") the moment a marker
+// is added, which crashed every map (and so every event-detail page).
+const assetUrl = (img: unknown): string =>
+  typeof img === "string" ? img : (img as { src: string }).src;
+
 const icon = L.icon({
-  iconUrl: (marker as unknown as { src: string }).src,
-  iconRetinaUrl: (marker2x as unknown as { src: string }).src,
-  shadowUrl: (shadow as unknown as { src: string }).src,
+  iconUrl: assetUrl(marker),
+  iconRetinaUrl: assetUrl(marker2x),
+  shadowUrl: assetUrl(shadow),
   iconSize: [25, 41],
   iconAnchor: [12, 41],
 });

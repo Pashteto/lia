@@ -27,8 +27,8 @@ RUN mv ${GRPC_WEB} ${GRPC_WEB_PATH}
 RUN chmod +x ${GRPC_WEB_PATH}
 
 RUN go env -w GO111MODULE=on
-RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.11
-RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.6.2
+RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 
 
 # create a build artifact

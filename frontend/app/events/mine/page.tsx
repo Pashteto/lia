@@ -1,11 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 
+import { EventApplicationsPanel } from "@/components/EventApplicationsPanel";
 import { EventCard } from "@/components/ui/EventCard";
 import { fetchMyEvents } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import type { LiaEvent } from "@/lib/types";
 
 const STATUS_LABEL: Record<string, string> = {
   draft: "Черновик",
@@ -13,6 +16,24 @@ const STATUS_LABEL: Record<string, string> = {
   rejected: "Отклонено",
   cancelled: "Отменено",
 };
+
+/** Collapsible "Заявки" expander shown on application-mode events. */
+function ApplicationsExpander({ event }: { event: LiaEvent }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-1">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center gap-1 rounded-control px-2 py-1.5 text-[13px] font-medium text-accent hover:bg-accent/8 transition"
+      >
+        <span>{open ? "▾" : "▸"}</span>
+        <span>Заявки</span>
+      </button>
+      {open && <EventApplicationsPanel eventId={event.id} />}
+    </div>
+  );
+}
 
 // "Мои события" — events created by the signed-in user, including drafts that
 // don't appear in the public discovery feed. Backed by GET /events/mine.
@@ -77,6 +98,9 @@ export default function MyEventsPage() {
                 </span>
               )}
               <EventCard event={e} />
+              {e.signupMode === "application" && (
+                <ApplicationsExpander event={e} />
+              )}
             </div>
           ))}
         </div>

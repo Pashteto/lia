@@ -94,9 +94,12 @@ export function CreateEventForm() {
       </header>
 
       <div className="mx-auto max-w-2xl px-5 pt-5">
-        {/* Cover upload placeholder */}
-        <div className="mb-6 flex aspect-[16/9] w-full items-center justify-center rounded-card border border-dashed border-separator bg-bg-secondary text-[15px] text-label-secondary">
-          Обложка — загрузка появится позже
+        {/* Cover upload is not built yet — it needs image storage (S3/MinIO) and
+            a cover field on the backend. Shown as a compact, intentional notice
+            rather than a large empty drop zone that reads as broken. */}
+        <div className="mb-6 flex items-center gap-3 rounded-card bg-bg-secondary px-4 py-3 text-[14px] text-label-secondary">
+          <span aria-hidden className="text-[18px]">🖼️</span>
+          <span>Загрузка обложки появится позже — пока событие сохраняется без изображения.</span>
         </div>
 
         <Section title="Основное">

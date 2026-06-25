@@ -33,6 +33,7 @@ export function DiscoveryFeed({
   // Nearby state — null means "normal mode", array means "near-me mode".
   const [nearby, setNearby] = useState<LiaEvent[] | null>(null);
   const [geoError, setGeoError] = useState<string | null>(null);
+  const [geoLoading, setGeoLoading] = useState(false);
 
   const { data: allEvents = [], isError } = useQuery({
     queryKey: ["events", "published"],
@@ -54,9 +55,11 @@ export function DiscoveryFeed({
 
   const enableNearby = () => {
     if (!navigator.geolocation) {
-      setGeoError("Геолокация недоступна");
+      setGeoError("Геолокация не поддерживается этим браузером");
       return;
     }
+    setGeoError(null);
+    setGeoLoading(true);
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         try {
@@ -69,15 +72,31 @@ export function DiscoveryFeed({
           setGeoError(null);
         } catch {
           setGeoError("Не удалось загрузить события рядом");
+        } finally {
+          setGeoLoading(false);
         }
       },
-      () => setGeoError("Доступ к геолокации отклонён"),
+      (err) => {
+        // Distinguish the three GeolocationPositionError codes — collapsing them
+        // all to "доступ отклонён" mislabels a timeout / unavailable position
+        // (e.g. OS location services off) as a permission denial.
+        setGeoError(
+          err.code === err.PERMISSION_DENIED
+            ? "Доступ к геолокации отклонён. Разрешите его в настройках сайта."
+            : err.code === err.TIMEOUT
+              ? "Не удалось определить местоположение (тайм-аут). Попробуйте ещё раз."
+              : "Местоположение недоступно. Проверьте, включены ли службы геолокации.",
+        );
+        setGeoLoading(false);
+      },
+      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 60_000 },
     );
   };
 
   const resetNearby = () => {
     setNearby(null);
     setGeoError(null);
+    setGeoLoading(false);
   };
 
   // Which list to render and whether to show a distance badge per card.
@@ -120,9 +139,10 @@ export function DiscoveryFeed({
           <button
             type="button"
             onClick={enableNearby}
-            className="rounded-full bg-fill px-4 py-1.5 text-[14px] font-medium text-label-primary transition hover:bg-fill-secondary"
+            disabled={geoLoading}
+            className="rounded-full bg-fill px-4 py-1.5 text-[14px] font-medium text-label-primary transition hover:bg-fill-secondary disabled:opacity-60"
           >
-            рядом со мной
+            {geoLoading ? "Определяем…" : "рядом со мной"}
           </button>
         )}
         {geoError && (

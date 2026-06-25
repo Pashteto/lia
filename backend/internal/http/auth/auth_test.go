@@ -4,20 +4,52 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/gofrs/uuid"
+	"google.golang.org/grpc"
 
 	"github.com/Pashteto/lia/internal/models"
 	"github.com/Pashteto/lia/internal/service"
+	gg "github.com/Pashteto/lia/protocols/gateguard"
 )
 
-func TestGatekeeperValidator_NotWired(t *testing.T) {
-	v := NewGatekeeperValidator(GatekeeperConfig{Address: "localhost:9091", Timeout: 5 * time.Second})
+// fakeGGClient fakes the GateGuard gRPC client.
+type fakeGGClient struct {
+	user *gg.User
+	err  error
+}
 
-	claims, err := v.Validate(context.Background(), "any-token")
+func (f *fakeGGClient) CheckAuth(_ context.Context, _ *gg.TokenRequest, _ ...grpc.CallOption) (*gg.User, error) {
+	return f.user, f.err
+}
+func (f *fakeGGClient) SignInOAuth(_ context.Context, _ *gg.User, _ ...grpc.CallOption) (*gg.TokenResponse, error) {
+	return nil, nil
+}
+
+func TestGatekeeperValidator_MapsUserToClaims(t *testing.T) {
+	id := uuid.Must(uuid.NewV4())
+	v := newValidatorWithClient(&fakeGGClient{
+		user: &gg.User{Uuid: id.Bytes(), Email: "alice@example.com", Name: "Alice"},
+	})
+
+	claims, err := v.Validate(context.Background(), "session-token")
+	if err != nil {
+		t.Fatalf("Validate returned error: %v", err)
+	}
+	if claims.Email != "alice@example.com" || claims.Name != "Alice" {
+		t.Errorf("claims mismatch: %+v", claims)
+	}
+	if claims.Subject != id.String() {
+		t.Errorf("expected subject %s, got %s", id, claims.Subject)
+	}
+}
+
+func TestGatekeeperValidator_CheckAuthError(t *testing.T) {
+	v := newValidatorWithClient(&fakeGGClient{err: fmt.Errorf("invalid token")})
+
+	claims, err := v.Validate(context.Background(), "bad-token")
 	if err == nil {
-		t.Error("expected an error until the gatekeeper gRPC client is wired")
+		t.Error("expected error when CheckAuth fails")
 	}
 	if claims != nil {
 		t.Errorf("expected nil claims, got %v", claims)

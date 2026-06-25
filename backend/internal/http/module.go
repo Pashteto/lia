@@ -82,10 +82,14 @@ func (m *Module) Init(_ context.Context) error {
 		if d, err := time.ParseDuration(m.config.Gatekeeper.Timeout); err == nil && d > 0 {
 			timeout = d
 		}
-		authOpts = append(authOpts, auth.WithValidator(auth.NewGatekeeperValidator(auth.GatekeeperConfig{
+		validator, err := auth.NewGatekeeperValidator(auth.GatekeeperConfig{
 			Address: m.config.Gatekeeper.Address,
 			Timeout: timeout,
-		})))
+		})
+		if err != nil {
+			return fmt.Errorf("init gatekeeper validator: %w", err)
+		}
+		authOpts = append(authOpts, auth.WithValidator(validator))
 	}
 	m.auth = auth.NewAuth(m.service, m.config.MockAuth, m.config.AdminEmails, authOpts...)
 

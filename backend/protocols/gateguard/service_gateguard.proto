@@ -1,0 +1,176 @@
+syntax = "proto3";
+package gateguard.service;
+
+option go_package = "github.com/Pashteto/lia/protocols/gateguard";
+
+import "models_gateguard.proto";
+
+// GateguardService is GRPC server implementation
+// for gateguard requests
+service GateguardService {
+  // SignInOAuth is
+  rpc SignInOAuth(models.User) returns(TokenResponse);
+
+  // SignOut is
+  rpc SignOut(TokenRequest) returns (Empty);
+
+  // CheckAuth is
+  rpc CheckAuth(TokenRequest) returns(models.User);
+
+  rpc UserByUUID(UUIDRequest) returns(models.User);
+
+  rpc UserByEmail(EmailRequest) returns(models.User);
+
+  // DeleteUser is
+  rpc DeleteUser(TokenRequest) returns (Empty);
+
+  // Users is
+  rpc Users(Empty) returns(models.Users);
+
+  rpc UpdateUserRole(UpdateUserRoleRequest) returns(Empty);
+
+  // AddOrganizationToUser is
+  rpc AddOrganizationToUser(AddOrganizationRequest) returns(AddOrganizationResponse);
+
+  // RemoveOrganizationFromUser is
+  rpc RemoveOrganizationFromUser(RemoveOrganizationRequest) returns(RemoveOrganizationResponse);
+
+  // InviteUserByEmail is
+  rpc InviteUserByEmail(InviteUserByEmailRequest) returns(InviteUserByEmailResponse);
+
+  // AllInvitations is
+  rpc AllInvitations(AllInvitationsRequest) returns(AllInvitationsResponse);
+
+  // ReactToInvitation is
+  rpc ReactToInvitation(ReactToInvitationRequest) returns(ReactToInvitationResponse);
+
+  // SetUserPreferredStacks is
+  rpc SetUserPreferredStacks(SetUserPreferredStacksRequest) returns (Empty);
+
+  // SetUserPreferredStacks is
+  rpc SetUserTrialUsed(SetUserTrialUsedRequest) returns (Empty);
+}
+
+message SetUserPreferredStacksRequest {
+  bytes user_uuid = 1;
+  repeated int64 preferred_stacks = 2;
+}
+
+message SetUserTrialUsedRequest {
+  bytes user_uuid  = 1;
+  bool  trial_used = 2;
+}
+
+message UpdateUserRoleRequest {
+  bytes user_uuid        = 1;
+  models.UserRole role   = 2;
+}
+
+// TokenRequest is request message for methods
+// that needs only session JWT
+message TokenRequest {
+  bytes token = 1;
+}
+
+// TokenResponse is response with session JWT
+message TokenResponse {
+  bytes token = 1;
+  bool user_created_or_restored = 2;
+}
+
+message UUIDRequest {
+  bytes uuid = 1;
+}
+
+message EmailRequest {
+  string email = 1;
+}
+
+// AddOrganizationRequest is request message for adding an organization to a user
+message AddOrganizationRequest {
+  bytes user_uuid         = 1;
+  bytes organization_uuid = 2;
+}
+
+message RemoveOrganizationRequest {
+  bytes user_uuid         = 1;
+  bytes organization_uuid = 2;
+}
+
+message AddOrganizationResponse {
+  optional Empty                 success = 1;
+  optional AddOrganizationError  error   = 2;
+}
+
+enum AddOrganizationError {
+  AoeValidationError           = 0;
+  AoeUserNotFound              = 1;
+  AoeOrganizationAlreadyExists = 2;
+}
+
+message RemoveOrganizationResponse {
+  optional Empty                    success = 1;
+  optional RemoveOrganizationError error = 2;
+}
+
+enum RemoveOrganizationError {
+  RoeValidationError        = 0;
+  RoeUserNotFound           = 1;
+  RoeOrganizationNotFound   = 2;
+}
+
+message InviteUserByEmailRequest {
+  string         email             = 1;
+  bytes          inviter_uuid      = 2;
+  string         inviter_email     = 3;
+  optional bytes organization_uuid = 4;
+  string         invitee_role      = 5;
+}
+
+message InviteUserByEmailResponse {
+  optional Empty                  success = 1;
+  optional InviteUserByEmailError error   = 2;
+}
+
+enum InviteUserByEmailError {
+  IueValidationError              = 0;
+  IueOrganizationNotFound         = 1;
+  IueOrganizationInviteNotAllowed = 2;
+  IueUserAlreadyExists            = 3;
+  IueInvitesRateLimitReached      = 4;
+}
+
+message AllInvitationsRequest {
+  optional string                  inviter      = 1;
+  optional string                  invitee      = 2;
+  optional bytes                   organization = 3;
+  repeated models.InvitationStatus statuses     = 4;
+  optional int32                   limit        = 5;
+  optional int32                   offset       = 6;
+}
+
+message AllInvitationsResponse {
+  repeated models.Invitation invitations = 1;
+  bool                       has_more    = 2;
+}
+
+message ReactToInvitationRequest {
+  string                  invitee       = 1;
+  string                  ref_code      = 2;
+  models.InvitationStatus status        = 3;
+}
+
+message ReactToInvitationResponse {
+  optional Empty                  success = 1;
+  optional ReactToInvitationError error   = 2;
+}
+
+enum ReactToInvitationError {
+  RtiValidationError              = 0;
+  RtiOrganizationConflict         = 1;
+  RtiInviteStatusConflict         = 2;
+  RtiInviteUserMismatch           = 3;
+}
+
+// Empty is
+message Empty {}

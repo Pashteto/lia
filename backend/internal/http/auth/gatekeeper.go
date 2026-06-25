@@ -4,33 +4,68 @@ import (
 	"context"
 	"fmt"
 	"time"
+
+	"github.com/gofrs/uuid"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+
+	gg "github.com/Pashteto/lia/protocols/gateguard"
 )
 
-// GatekeeperConfig is the subset of configuration the validator needs to reach
-// gateway.fm's Gatekeeper service.
+// GatekeeperConfig is the subset of configuration needed to reach GateGuard.
 type GatekeeperConfig struct {
 	Address string
 	Timeout time.Duration
 }
 
-// gatekeeperValidator validates bearer tokens against Gatekeeper.
-//
-// TODO(gatekeeper): wire the real gRPC client once the Gatekeeper proto/client
-// module and a reachable instance are confirmed (design spec §9). Until then
-// Validate returns an error, so non-mock auth SAFELY DENIES rather than guessing
-// the token contract. This is the single seam to fill to go live.
+// ggClient is the slice of the generated GateguardServiceClient used here
+// (satisfied by gg.NewGateguardServiceClient). Kept small so tests can fake it.
+type ggClient interface {
+	CheckAuth(ctx context.Context, in *gg.TokenRequest, opts ...grpc.CallOption) (*gg.User, error)
+	SignInOAuth(ctx context.Context, in *gg.User, opts ...grpc.CallOption) (*gg.TokenResponse, error)
+}
+
+// gatekeeperValidator validates bearer tokens against GateGuard's CheckAuth RPC.
+// The token stays opaque to Lia — GateGuard validates the JWT and returns the user.
 type gatekeeperValidator struct {
-	cfg GatekeeperConfig
+	cfg    GatekeeperConfig
+	client ggClient
 }
 
-// NewGatekeeperValidator builds a TokenValidator backed by Gatekeeper.
-func NewGatekeeperValidator(cfg GatekeeperConfig) TokenValidator {
-	return &gatekeeperValidator{cfg: cfg}
+// NewGatekeeperValidator dials GateGuard and returns a TokenValidator. The gRPC
+// connection is lazy (grpc.NewClient connects on first call).
+//
+// Transport is insecure: GateGuard runs on the box's internal/loopback network
+// alongside Lia. Switch to TLS credentials if it ever moves off-box (spec §7).
+func NewGatekeeperValidator(cfg GatekeeperConfig) (TokenValidator, error) {
+	conn, err := grpc.NewClient(cfg.Address, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return nil, fmt.Errorf("dial gatekeeper %q: %w", cfg.Address, err)
+	}
+	return &gatekeeperValidator{cfg: cfg, client: gg.NewGateguardServiceClient(conn)}, nil
 }
 
-func (g *gatekeeperValidator) Validate(_ context.Context, _ string) (*Claims, error) {
-	return nil, fmt.Errorf(
-		"gatekeeper validation not yet wired (address=%q): confirm client/proto and a reachable instance (spec §9)",
-		g.cfg.Address,
-	)
+// newValidatorWithClient injects a client (used by tests).
+func newValidatorWithClient(c ggClient) *gatekeeperValidator {
+	return &gatekeeperValidator{client: c}
+}
+
+func (g *gatekeeperValidator) Validate(ctx context.Context, token string) (*Claims, error) {
+	if g.cfg.Timeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, g.cfg.Timeout)
+		defer cancel()
+	}
+
+	u, err := g.client.CheckAuth(ctx, &gg.TokenRequest{Token: []byte(token)})
+	if err != nil {
+		return nil, fmt.Errorf("gatekeeper checkauth: %w", err)
+	}
+
+	subject := ""
+	if id, err := uuid.FromBytes(u.Uuid); err == nil {
+		subject = id.String()
+	}
+
+	return &Claims{Subject: subject, Email: u.Email, Name: u.Name}, nil
 }

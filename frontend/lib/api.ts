@@ -56,6 +56,7 @@ export function apiEventToLia(e: ApiEvent): LiaEvent {
     distanceM: e.distance_m,
     coverUrl: e.cover_url,
     signupMode: e.signup_mode,
+    capacity: e.capacity,
     seatsRemaining: e.seats_remaining,
     myRsvpStatus: e.my_rsvp_status,
     curatorQuestion: e.curator_question,

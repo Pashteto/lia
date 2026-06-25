@@ -115,6 +115,7 @@ export interface ApiEvent {
   distance_m?: number;
   cover_url?: string;
   signup_mode?: SignupMode;
+  capacity?: number;
   seats_remaining?: number;
   my_rsvp_status?: RsvpStatus | "";
   curator_question?: string;

@@ -1,6 +1,15 @@
 # Auth slice — Gatekeeper integration (design)
 
-_Date: 2026-06-25. Status: design, pending Gatekeeper-contract confirmation (see §9)._
+_Date: 2026-06-25. Status: **Phase A (backend) done + B (GateGuard deployed) done; Phase C (demo-login + flip) pending.** Gatekeeper contract resolved — it's gateway.fm's **GateGuard**, self-hosted on the box (§9 closed). Plan: [`../plans/2026-06-25-auth-gatekeeper.md`](../plans/2026-06-25-auth-gatekeeper.md)._
+
+> **Update (2026-06-25):** the abstract "Gatekeeper" is gateway.fm's **GateGuard**
+> (`/Users/dodonovpavel/gateway_fm/appstore/gateguard`), a pure-gRPC token store.
+> Decisions since first draft: (1) **self-host** a copy of GateGuard on the box
+> (reuse Lia's Postgres) rather than point at an external instance; (2) login =
+> **demo-login without Google** (enter email → `SignInOAuth` mints a JWT → cookie),
+> since real Google OAuth needs creds + a presto front we don't have — that's a
+> later upgrade. The §4/§6 OIDC-redirect flow below is superseded by demo-login
+> for now; the backend validation design (§5) is unchanged and implemented.
 
 ## 1. Goal
 
@@ -156,23 +165,21 @@ Request with Authorization: Bearer <jwt>
   path (Gatekeeper stubbed/mocked in the test env).
 - CI parity: `go build/vet/test`, golangci-lint v1, `pnpm lint`/`build`.
 
-## 9. Dependencies to confirm (Gatekeeper-side facts, not yet in repo)
+## 9. Dependencies — RESOLVED (GateGuard)
 
-These are external to this repo and must be confirmed before implementation; the
-spec assumes a sensible default for each so design can proceed:
+All three are now answered (was: "to confirm"):
 
-1. **Client/contract** — the Gatekeeper Go client / proto module path (or gRPC
-   contract). _Assumption:_ a gRPC `ValidateToken` as in §5.2.
-2. **Reachable instance** — a Gatekeeper instance the demo box can reach
-   (address + TLS), or this stays design-for-later with prod wiring deferred.
-   _Assumption:_ reachable at a configured `address`; if not, ship the code with
-   `MockAuth=true` retained until an instance exists.
-3. **OIDC details** — Gatekeeper's authorize/token endpoints, client id/secret,
-   and redirect-uri registration for `lia.pashteto.com`. _Assumption:_ standard
-   OIDC authorization-code flow.
-
-If any assumption is wrong, the affected section (§5.2 / §6.1–6.2) is revised
-before the implementation plan is finalized.
+1. **Client/contract** — ✅ GateGuard's protos vendored to `backend/protocols/gateguard`
+   (generated client force-committed). Validation RPC is
+   `GateguardService.CheckAuth(TokenRequest{token}) → User`. No `ValidateToken`;
+   token is opaque, GateGuard validates the JWT internally.
+2. **Reachable instance** — ✅ self-hosted on the box: `gateguard:9090` (internal
+   compose network), reusing Lia's Postgres (`gateguard` DB) + a Redis. Insecure
+   transport on the loopback bridge (no TLS needed on-box).
+3. **Login / token issuance** — ✅ **demo-login, no Google** (decided): enter email
+   → backend calls `GateguardService.SignInOAuth(User{email,name})` → JWT → cookie
+   on the lia domain. The OIDC authorize/token endpoints + Google creds + presto
+   front are **not** needed for the demo; they're the later production upgrade.
 
 ## 10. Rollout sequence
 

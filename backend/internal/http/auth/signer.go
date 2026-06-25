@@ -45,7 +45,16 @@ func (s *gatekeeperSigner) SignIn(ctx context.Context, email, name string) (stri
 		defer cancel()
 	}
 
-	resp, err := s.client.SignInOAuth(ctx, &gg.User{Email: email, Name: name})
+	// Status and Role MUST be set explicitly. GateGuard maps an unset proto
+	// status (0 = Unknown) to an internal "unsupported" sentinel and then panics
+	// stringifying it when inserting the user (index out of range). Send a valid,
+	// active common user so the GateGuard-side record is well-formed.
+	resp, err := s.client.SignInOAuth(ctx, &gg.User{
+		Email:  email,
+		Name:   name,
+		Status: gg.UserStatus_UserActive,
+		Role:   gg.UserRole_UserRoleCommon,
+	})
 	if err != nil {
 		return "", fmt.Errorf("gateguard signin: %w", err)
 	}

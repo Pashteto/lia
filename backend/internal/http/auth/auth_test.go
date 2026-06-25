@@ -19,13 +19,42 @@ type fakeGGClient struct {
 	err       error
 	tokenResp *gg.TokenResponse
 	signErr   error
+
+	gotSignInUser *gg.User // captures the User passed to SignInOAuth
 }
 
 func (f *fakeGGClient) CheckAuth(_ context.Context, _ *gg.TokenRequest, _ ...grpc.CallOption) (*gg.User, error) {
 	return f.user, f.err
 }
-func (f *fakeGGClient) SignInOAuth(_ context.Context, _ *gg.User, _ ...grpc.CallOption) (*gg.TokenResponse, error) {
+func (f *fakeGGClient) SignInOAuth(_ context.Context, in *gg.User, _ ...grpc.CallOption) (*gg.TokenResponse, error) {
+	f.gotSignInUser = in
 	return f.tokenResp, f.signErr
+}
+
+// TestSigner_SignIn_SendsValidStatusAndRole guards against the demo-login 503:
+// GateGuard maps an unset (Unknown=0) proto status to its internal "unsupported"
+// sentinel and then panics stringifying it during user insert
+// ("index out of range [2] with length 2"). Lia must send a valid, explicit
+// Status (and Role) so the provisioned GateGuard user is well-formed.
+func TestSigner_SignIn_SendsValidStatusAndRole(t *testing.T) {
+	fake := &fakeGGClient{tokenResp: &gg.TokenResponse{Token: []byte("jwt-123")}}
+	s := newSignerWithClient(fake)
+
+	if _, err := s.SignIn(context.Background(), "demo@lia.test", "Demo"); err != nil {
+		t.Fatalf("SignIn returned error: %v", err)
+	}
+	if fake.gotSignInUser == nil {
+		t.Fatal("SignInOAuth was not called")
+	}
+	if fake.gotSignInUser.Status != gg.UserStatus_UserActive {
+		t.Errorf("expected Status=UserActive (%d), got %v", gg.UserStatus_UserActive, fake.gotSignInUser.Status)
+	}
+	if fake.gotSignInUser.Role != gg.UserRole_UserRoleCommon {
+		t.Errorf("expected Role=UserRoleCommon (%d), got %v", gg.UserRole_UserRoleCommon, fake.gotSignInUser.Role)
+	}
+	if fake.gotSignInUser.Email != "demo@lia.test" || fake.gotSignInUser.Name != "Demo" {
+		t.Errorf("email/name mismatch: %+v", fake.gotSignInUser)
+	}
 }
 
 func TestSigner_SignIn_ReturnsToken(t *testing.T) {

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
@@ -63,7 +64,9 @@ func (h *SignUp) Handle(params rsvpops.SignUpParams, principal *apimodels.User) 
 		case errors.Is(err, rsvpdomain.ErrInvalidInput):
 			return rsvpops.NewSignUpBadRequest().WithPayload(DefaultError(http.StatusBadRequest, err, nil))
 		case errors.Is(err, rsvpdomain.ErrExternal):
-			return rsvpops.NewSignUpUnprocessableEntity().WithPayload(DefaultError(http.StatusUnprocessableEntity, err, nil))
+			url := strings.TrimPrefix(err.Error(), rsvpdomain.ErrExternal.Error()+": ")
+			return rsvpops.NewSignUpUnprocessableEntity().WithPayload(
+				DefaultError(http.StatusUnprocessableEntity, errors.New(url), nil))
 		default:
 			return rsvpSvcUnavailable(err)
 		}
@@ -249,7 +252,15 @@ func (h *DecideApplication) Handle(params rsvpops.DecideApplicationParams, princ
 		return rsvpops.NewDecideApplicationNotFound().
 			WithPayload(DefaultError(http.StatusNotFound, err, nil))
 	}
-	accept := params.Body.Decision != nil && *params.Body.Decision == "accept"
+	if params.Body == nil || params.Body.Decision == nil {
+		payload := DefaultError(http.StatusBadRequest, errors.New("decision is required"), nil)
+		return middleware.ResponderFunc(func(w http.ResponseWriter, _ runtime.Producer) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			_ = json.NewEncoder(w).Encode(payload)
+		})
+	}
+	accept := *params.Body.Decision == "accept"
 	row, err := h.rsvp.Decide(params.HTTPRequest.Context(), eventID, organizerID, rsvpID, accept)
 	if err != nil {
 		logger.Log().Errorf("decide application rsvp %s: %s", rsvpID, err.Error())

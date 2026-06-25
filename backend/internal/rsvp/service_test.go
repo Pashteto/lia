@@ -7,15 +7,15 @@ import (
 
 	"github.com/gofrs/uuid"
 
-	"github.com/go-pg/pg/v10"
 	"github.com/Pashteto/lia/internal/models"
+	"github.com/go-pg/pg/v10"
 )
 
 // fakeRepo is an in-memory Repository for service tests.
 type fakeRepo struct {
-	event   *models.Event
-	rsvps   map[uuid.UUID]*models.Rsvp // by rsvp id
-	seats   int                        // current going count
+	event *models.Event
+	rsvps map[uuid.UUID]*models.Rsvp // by rsvp id
+	seats int                        // current going count
 }
 
 func newFake(e *models.Event) *fakeRepo {

@@ -17,8 +17,8 @@ import (
 var (
 	ErrInvalidInput = errors.New("invalid input")
 	ErrNotFound     = errors.New("not found")
-	ErrConflict     = errors.New("conflict")  // duplicate registration / wrong state
-	ErrForbidden    = errors.New("forbidden") // caller is not the event organizer
+	ErrConflict     = errors.New("conflict")              // duplicate registration / wrong state
+	ErrForbidden    = errors.New("forbidden")             // caller is not the event organizer
 	ErrExternal     = errors.New("external registration") // signup happens on organizer's site
 )
 

@@ -145,7 +145,7 @@ func TestEventToAPIIncludesSignupFields(t *testing.T) {
 		Capacity:        &cap,
 		CuratorQuestion: "почему?",
 		SeatsRemaining:  &remaining,
-		MyRsvpStatus:   "applied",
+		MyRsvpStatus:    "applied",
 	}
 	out := EventToAPI(e)
 	if out.SignupMode != "application" {

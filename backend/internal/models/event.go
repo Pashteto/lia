@@ -15,22 +15,22 @@ import (
 type Event struct {
 	tableName struct{} `pg:"events,discard_unknown_columns"` //nolint:unused // go-pg table marker
 
-	ID          uuid.UUID   `pg:"id,pk,type:uuid"`
+	ID uuid.UUID `pg:"id,pk,type:uuid"`
 	// OrganizerID / VenueID use the zero UUID to mean "unset" rather than SQL
 	// NULL: go-pg + gofrs cannot scan NULL into a uuid field. Real FK references
 	// arrive with the organizers / venues modules.
-	OrganizerID uuid.UUID   `pg:"organizer_id,type:uuid,use_zero"`
-	VenueID     uuid.UUID   `pg:"venue_id,type:uuid,use_zero"`
-	CoverFileID uuid.UUID   `pg:"cover_file_id,type:uuid,use_zero"`
+	OrganizerID uuid.UUID `pg:"organizer_id,type:uuid,use_zero"`
+	VenueID     uuid.UUID `pg:"venue_id,type:uuid,use_zero"`
+	CoverFileID uuid.UUID `pg:"cover_file_id,type:uuid,use_zero"`
 	// CoverURL is a transient field (not a DB column) populated by the repository
 	// when cover_file_id is non-zero. It is the publicly fetchable URL of the cover image.
-	CoverURL    string      `pg:"-"`
+	CoverURL string `pg:"-"`
 	// Organizer is the transient public read-model of the event's creator (the
 	// user referenced by OrganizerID). Not a DB column; populated by the
 	// repository's loadOrganizers. Carries display data only (no email).
-	Organizer   *Organizer  `pg:"-"`
-	Title       string      `pg:"title,notnull"`
-	Description string      `pg:"description,use_zero"`
+	Organizer   *Organizer `pg:"-"`
+	Title       string     `pg:"title,notnull"`
+	Description string     `pg:"description,use_zero"`
 	// Venue is normalized into the venues entity (migration 000008). It is the
 	// loaded read model (not a column); VenueID is the loose reference (zero
 	// UUID = "no venue", no DB FK — see migration comment).
@@ -58,11 +58,11 @@ type Event struct {
 	SeatsRemaining *int   `pg:"-"` // nil = unlimited; computed = capacity - going
 	MyRsvpStatus   string `pg:"-"` // caller's RsvpStatus on this event, "" if none
 
-	StartsAt    time.Time   `pg:"starts_at,notnull"`
-	EndsAt      *time.Time  `pg:"ends_at"`
-	PublishedAt *time.Time  `pg:"published_at"`
-	CreatedAt   time.Time   `pg:"created_at,notnull,default:now()"`
-	UpdatedAt   time.Time   `pg:"updated_at,notnull,default:now()"`
+	StartsAt    time.Time  `pg:"starts_at,notnull"`
+	EndsAt      *time.Time `pg:"ends_at"`
+	PublishedAt *time.Time `pg:"published_at"`
+	CreatedAt   time.Time  `pg:"created_at,notnull,default:now()"`
+	UpdatedAt   time.Time  `pg:"updated_at,notnull,default:now()"`
 }
 
 // Organizer is the public display read-model of an event's creator. It is the

@@ -2,10 +2,125 @@ package auth
 
 import (
 	"context"
+	"fmt"
 	"testing"
+	"time"
+
+	"github.com/gofrs/uuid"
 
 	"github.com/Pashteto/lia/internal/models"
+	"github.com/Pashteto/lia/internal/service"
 )
+
+func TestGatekeeperValidator_NotWired(t *testing.T) {
+	v := NewGatekeeperValidator(GatekeeperConfig{Address: "localhost:9091", Timeout: 5 * time.Second})
+
+	claims, err := v.Validate(context.Background(), "any-token")
+	if err == nil {
+		t.Error("expected an error until the gatekeeper gRPC client is wired")
+	}
+	if claims != nil {
+		t.Errorf("expected nil claims, got %v", claims)
+	}
+}
+
+// fakeValidator is a TokenValidator stub for testing CheckAuth without Gatekeeper.
+type fakeValidator struct {
+	claims *Claims
+	err    error
+}
+
+func (f *fakeValidator) Validate(_ context.Context, _ string) (*Claims, error) {
+	return f.claims, f.err
+}
+
+func TestAuth_CheckAuth_ProvisionsNewUser(t *testing.T) {
+	created := false
+	var createdEmail, createdName string
+	svc := &mockService{
+		GetUserByEmailFunc: func(_ context.Context, email string) (*models.User, error) {
+			return nil, fmt.Errorf("%w: %s", service.ErrNotFound, email)
+		},
+		CreateUserFunc: func(_ context.Context, u *models.User) error {
+			created = true
+			createdEmail = u.Email
+			createdName = u.Name
+			return nil
+		},
+	}
+	v := &fakeValidator{claims: &Claims{Subject: "sub-1", Email: "new@example.com", Name: "New Person"}}
+	a := NewAuth(svc, false, nil, WithValidator(v))
+
+	user, err := a.CheckAuth("Bearer good-token")
+	if err != nil {
+		t.Fatalf("CheckAuth returned error: %v", err)
+	}
+	if !created {
+		t.Fatal("expected a new user to be provisioned")
+	}
+	if createdEmail != "new@example.com" || createdName != "New Person" {
+		t.Errorf("provisioned user mismatch: email=%q name=%q", createdEmail, createdName)
+	}
+	if user.Email == nil || string(*user.Email) != "new@example.com" {
+		t.Errorf("principal email mismatch: %v", user.Email)
+	}
+	if user.Name == nil || *user.Name != "New Person" {
+		t.Errorf("principal name mismatch: %v", user.Name)
+	}
+	if user.UUID == "" {
+		t.Error("principal UUID is empty")
+	}
+}
+
+func TestAuth_CheckAuth_ReusesExistingUser(t *testing.T) {
+	existing := uuid.Must(uuid.NewV4())
+	svc := &mockService{
+		GetUserByEmailFunc: func(_ context.Context, _ string) (*models.User, error) {
+			return &models.User{UUID: existing, Email: "e@example.com", Name: "Existing", Status: models.UserActive}, nil
+		},
+		CreateUserFunc: func(_ context.Context, _ *models.User) error {
+			t.Error("CreateUser should not be called for an existing user")
+			return nil
+		},
+	}
+	v := &fakeValidator{claims: &Claims{Subject: "sub-2", Email: "e@example.com", Name: "Existing"}}
+	a := NewAuth(svc, false, nil, WithValidator(v))
+
+	user, err := a.CheckAuth("Bearer good-token")
+	if err != nil {
+		t.Fatalf("CheckAuth returned error: %v", err)
+	}
+	if string(user.UUID) != existing.String() {
+		t.Errorf("expected existing UUID %s, got %s", existing, user.UUID)
+	}
+}
+
+func TestAuth_CheckAuth_ValidatorError(t *testing.T) {
+	svc := &mockService{}
+	v := &fakeValidator{err: fmt.Errorf("token expired")}
+	a := NewAuth(svc, false, nil, WithValidator(v))
+
+	user, err := a.CheckAuth("Bearer bad-token")
+	if err == nil {
+		t.Error("expected error for invalid token, got nil")
+	}
+	if user != nil {
+		t.Errorf("expected nil user on validation failure, got %v", user)
+	}
+}
+
+func TestAuth_CheckAuth_NoValidatorConfigured(t *testing.T) {
+	svc := &mockService{}
+	a := NewAuth(svc, false, nil) // non-mock, no validator wired
+
+	user, err := a.CheckAuth("Bearer any-token")
+	if err == nil {
+		t.Error("expected error when no validator is configured, got nil")
+	}
+	if user != nil {
+		t.Errorf("expected nil user, got %v", user)
+	}
+}
 
 // mockService is a mock implementation of service.IService for testing.
 type mockService struct {

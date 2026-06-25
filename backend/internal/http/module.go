@@ -74,8 +74,20 @@ func (m *Module) Name() string {
 func (m *Module) Init(_ context.Context) error {
 	logger.Log().Infof("initializing %s module", m.Name())
 
-	// Initialize auth
-	m.auth = auth.NewAuth(m.service, m.config.MockAuth, m.config.AdminEmails)
+	// Initialize auth. In non-mock mode, wire the Gatekeeper token validator from
+	// config; if it's absent, CheckAuth safely denies (no silent open access).
+	var authOpts []auth.Option
+	if !m.config.MockAuth && m.config.Gatekeeper != nil {
+		timeout := 5 * time.Second
+		if d, err := time.ParseDuration(m.config.Gatekeeper.Timeout); err == nil && d > 0 {
+			timeout = d
+		}
+		authOpts = append(authOpts, auth.WithValidator(auth.NewGatekeeperValidator(auth.GatekeeperConfig{
+			Address: m.config.Gatekeeper.Address,
+			Timeout: timeout,
+		})))
+	}
+	m.auth = auth.NewAuth(m.service, m.config.MockAuth, m.config.AdminEmails, authOpts...)
 
 	// Initialize API
 	if err := m.initAPI(); err != nil {

@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/gofrs/uuid"
 
 	eventsdomain "github.com/Pashteto/lia/internal/events"
 	"github.com/Pashteto/lia/internal/http/formatter"
@@ -91,11 +92,19 @@ func NewCreateEvent(svc eventsdomain.Service) *CreateEvent {
 }
 
 // Handle POST /events.
-func (h *CreateEvent) Handle(params eventsops.CreateEventParams) middleware.Responder {
+func (h *CreateEvent) Handle(params eventsops.CreateEventParams, principal *apimodels.User) middleware.Responder {
 	event, err := formatter.EventFromAPIInput(params.Body)
 	if err != nil {
 		return eventsops.NewCreateEventBadRequest().
 			WithPayload(DefaultError(http.StatusBadRequest, err, nil))
+	}
+
+	// The organizer is the authenticated user — never trust a client-supplied
+	// organizer_id from the request body.
+	if principal != nil {
+		if id, err := uuid.FromString(principal.UUID.String()); err == nil {
+			event.OrganizerID = id
+		}
 	}
 
 	if err := h.events.Create(params.HTTPRequest.Context(), event); err != nil {

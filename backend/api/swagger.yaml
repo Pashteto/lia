@@ -135,7 +135,8 @@ paths:
       operationId: createEvent
       tags:
         - events
-      security: []
+      security:
+        - jwt: []
       parameters:
         - name: body
           in: body

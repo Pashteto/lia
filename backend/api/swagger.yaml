@@ -500,6 +500,251 @@ paths:
           schema:
             $ref: "#/definitions/Error"
 
+  /events/{id}/rsvp:
+    post:
+      summary: Sign up for an event
+      description: Registers the authenticated user for an event (open or application mode).
+      operationId: signUp
+      tags:
+        - rsvp
+      security:
+        - jwt: []
+      parameters:
+        - name: id
+          in: path
+          description: Event UUID
+          required: true
+          type: string
+          format: uuid
+        - name: body
+          in: body
+          required: false
+          schema:
+            $ref: "#/definitions/RsvpInput"
+      responses:
+        201:
+          description: Registration created
+          schema:
+            $ref: "#/definitions/Rsvp"
+        400:
+          description: Invalid input
+          schema:
+            $ref: "#/definitions/Error"
+        401:
+          description: Unauthorized
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          description: Event not found
+          schema:
+            $ref: "#/definitions/Error"
+        409:
+          description: Already registered for this event
+          schema:
+            $ref: "#/definitions/Error"
+        422:
+          description: External registration — URL in error detail
+          schema:
+            $ref: "#/definitions/Error"
+    delete:
+      summary: Cancel event registration
+      description: Removes the authenticated user's registration for an event.
+      operationId: cancelRsvp
+      tags:
+        - rsvp
+      security:
+        - jwt: []
+      parameters:
+        - name: id
+          in: path
+          description: Event UUID
+          required: true
+          type: string
+          format: uuid
+      responses:
+        204:
+          description: Registration cancelled
+        401:
+          description: Unauthorized
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          description: Event or registration not found
+          schema:
+            $ref: "#/definitions/Error"
+
+  /me/practices:
+    get:
+      summary: List my event registrations
+      description: Returns events the authenticated user has registered for (practices).
+      operationId: myPractices
+      tags:
+        - rsvp
+      security:
+        - jwt: []
+      parameters:
+        - name: tab
+          in: query
+          description: Filter by time window
+          required: false
+          type: string
+          enum: [upcoming, past]
+          default: upcoming
+      responses:
+        200:
+          description: List of RSVP records
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Rsvp"
+        401:
+          description: Unauthorized
+          schema:
+            $ref: "#/definitions/Error"
+
+  /me/applications:
+    get:
+      summary: List my event applications
+      description: Returns the authenticated user's applications (application-mode events).
+      operationId: myApplications
+      tags:
+        - rsvp
+      security:
+        - jwt: []
+      parameters:
+        - name: status
+          in: query
+          description: Filter by application status
+          required: false
+          type: string
+      responses:
+        200:
+          description: List of RSVP records
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Rsvp"
+        401:
+          description: Unauthorized
+          schema:
+            $ref: "#/definitions/Error"
+
+  /events/{id}/applications:
+    get:
+      summary: List applications for an event
+      description: Returns all applications submitted for an event (organizer only).
+      operationId: listEventApplications
+      tags:
+        - rsvp
+      security:
+        - jwt: []
+      parameters:
+        - name: id
+          in: path
+          description: Event UUID
+          required: true
+          type: string
+          format: uuid
+      responses:
+        200:
+          description: List of RSVP records
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Rsvp"
+        401:
+          description: Unauthorized
+          schema:
+            $ref: "#/definitions/Error"
+        403:
+          description: Forbidden — caller is not the organizer
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          description: Event not found
+          schema:
+            $ref: "#/definitions/Error"
+
+  /events/{id}/applications/{rsvpId}/decision:
+    post:
+      summary: Accept or decline an application
+      description: Organizer accepts or declines a pending application for their event.
+      operationId: decideApplication
+      tags:
+        - rsvp
+      security:
+        - jwt: []
+      parameters:
+        - name: id
+          in: path
+          description: Event UUID
+          required: true
+          type: string
+          format: uuid
+        - name: rsvpId
+          in: path
+          description: RSVP UUID
+          required: true
+          type: string
+          format: uuid
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/DecisionInput"
+      responses:
+        200:
+          description: Updated RSVP record
+          schema:
+            $ref: "#/definitions/Rsvp"
+        401:
+          description: Unauthorized
+          schema:
+            $ref: "#/definitions/Error"
+        403:
+          description: Forbidden — caller is not the organizer
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          description: Event or application not found
+          schema:
+            $ref: "#/definitions/Error"
+        409:
+          description: Application already decided
+          schema:
+            $ref: "#/definitions/Error"
+
+  /events/{id}/calendar.ics:
+    get:
+      summary: Download event as iCalendar
+      description: Returns the event as a downloadable .ics file (public endpoint).
+      operationId: eventCalendar
+      tags:
+        - rsvp
+      security: []
+      produces:
+        - text/calendar
+      parameters:
+        - name: id
+          in: path
+          description: Event UUID
+          required: true
+          type: string
+          format: uuid
+      responses:
+        200:
+          description: iCalendar data
+          schema:
+            type: string
+        404:
+          description: Event not found
+          schema:
+            $ref: "#/definitions/Error"
+        422:
+          description: Cannot generate calendar for this event
+          schema:
+            $ref: "#/definitions/Error"
+
   /health:
     get:
       summary: Health check
@@ -661,6 +906,25 @@ definitions:
         x-nullable: true
       organizer:
         $ref: "#/definitions/Organizer"
+      signup_mode:
+        type: string
+        enum: [open, application, external]
+      capacity:
+        type: integer
+        format: int64
+        x-nullable: true
+      curator_question:
+        type: string
+      external_registration_url:
+        type: string
+      seats_remaining:
+        type: integer
+        format: int64
+        readOnly: true
+        x-nullable: true
+      my_rsvp_status:
+        type: string
+        readOnly: true
 
   Organizer:
     type: object
@@ -738,6 +1002,17 @@ definitions:
         type: string
         format: uuid
         x-nullable: true
+      signup_mode:
+        type: string
+        enum: [open, application, external]
+      capacity:
+        type: integer
+        format: int64
+        x-nullable: true
+      curator_question:
+        type: string
+      external_registration_url:
+        type: string
 
   EventPatch:
     type: object
@@ -794,6 +1069,17 @@ definitions:
         type: string
         format: uuid
         x-nullable: true
+      signup_mode:
+        type: string
+        enum: [open, application, external]
+      capacity:
+        type: integer
+        format: int64
+        x-nullable: true
+      curator_question:
+        type: string
+      external_registration_url:
+        type: string
 
   Venue:
     type: object
@@ -946,6 +1232,48 @@ definitions:
         format: date-time
         description: Timestamp when health check was performed (UTC)
         x-example: "2024-01-20T10:30:00Z"
+
+  Rsvp:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+        readOnly: true
+      event_id:
+        type: string
+        format: uuid
+        readOnly: true
+      user_id:
+        type: string
+        format: uuid
+        readOnly: true
+      status:
+        type: string
+        readOnly: true
+      application_answer:
+        type: string
+      created_at:
+        type: string
+        format: date-time
+        readOnly: true
+      event:
+        $ref: "#/definitions/Event"
+
+  RsvpInput:
+    type: object
+    properties:
+      application_answer:
+        type: string
+
+  DecisionInput:
+    type: object
+    required:
+      - decision
+    properties:
+      decision:
+        type: string
+        enum: [accept, decline]
 
   Error:
     type: object

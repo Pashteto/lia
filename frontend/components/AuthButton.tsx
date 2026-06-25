@@ -10,7 +10,7 @@ import { useAuth } from "@/lib/auth-context";
 // signed-in email + "Выйти" when authed. Demo-login takes just an email — no
 // password (see lib/auth.ts).
 export function AuthButton() {
-  const { email, isAuthed, ready, logout } = useAuth();
+  const { email, isAuthed, ready, logout, role } = useAuth();
   const [open, setOpen] = useState(false);
 
   // Before the stored session is read, render a stable placeholder so the
@@ -32,6 +32,14 @@ export function AuthButton() {
         >
           Мои события
         </Link>
+        {role === "admin" && (
+          <Link
+            href="/admin"
+            className="text-[14px] font-medium text-accent"
+          >
+            Админ
+          </Link>
+        )}
         <span
           className="hidden max-w-[12rem] truncate text-[14px] text-label-secondary sm:block"
           title={email ?? undefined}

@@ -14,7 +14,7 @@ import type { LiaEvent } from "@/lib/types";
 const STATUS_LABEL: Record<string, string> = {
   draft: "Черновик",
   pending_review: "На модерации",
-  rejected: "Отклонено",
+  rejected: "Снято модератором",
   cancelled: "Отменено",
 };
 

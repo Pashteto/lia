@@ -38,7 +38,10 @@ services:
 
   app:
     environment:
-      # Point Lia at GateGuard. Inert until HTTP_MOCK_AUTH is flipped to false
-      # (Phase C): the validator is only wired when mock auth is off.
+      # Point Lia at GateGuard. The validator is only wired when mock auth is off.
       HTTP_GATEKEEPER_ADDRESS: "gateguard:9090"
       HTTP_GATEKEEPER_TIMEOUT: "5s"
+      # Real auth toggle. Default stays "true" (mock) so the committed state is
+      # safe; flip per-deploy by setting HTTP_MOCK_AUTH=false in .env.prod.
+      # NOTE: with false and no demo-login UI yet, POST /events (jwt) returns 401.
+      HTTP_MOCK_AUTH: "${HTTP_MOCK_AUTH:-true}"

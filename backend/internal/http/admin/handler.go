@@ -82,6 +82,10 @@ func (h *handler) me(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) overview(w http.ResponseWriter, r *http.Request, _ *domain.User) {
+	if h.deps.Moderation == nil {
+		writeErr(w, http.StatusServiceUnavailable, "moderation service not available")
+		return
+	}
 	c, err := h.deps.Moderation.Overview(r.Context())
 	if err != nil {
 		writeErr(w, http.StatusInternalServerError, "overview failed")

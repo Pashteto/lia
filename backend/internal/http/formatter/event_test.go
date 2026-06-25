@@ -132,3 +132,32 @@ func TestEventPatchToUpdateParams_MapsProvidedFields(t *testing.T) {
 		t.Fatalf("omitted field should be nil, got %+v", p.Description)
 	}
 }
+
+func TestEventToAPIIncludesSignupFields(t *testing.T) {
+	cap := 10
+	remaining := 4
+	e := &domainModels.Event{
+		ID:              uuid.Must(uuid.NewV4()),
+		Title:           "x",
+		StartsAt:        time.Now(),
+		Status:          domainModels.EventPublished,
+		SignupMode:      "application",
+		Capacity:        &cap,
+		CuratorQuestion: "почему?",
+		SeatsRemaining:  &remaining,
+		MyRsvpStatus:   "applied",
+	}
+	out := EventToAPI(e)
+	if out.SignupMode != "application" {
+		t.Fatalf("signup_mode = %q", out.SignupMode)
+	}
+	if out.Capacity == nil || *out.Capacity != 10 {
+		t.Fatalf("capacity = %v", out.Capacity)
+	}
+	if out.SeatsRemaining == nil || *out.SeatsRemaining != 4 {
+		t.Fatalf("seats_remaining = %v", out.SeatsRemaining)
+	}
+	if out.MyRsvpStatus != "applied" {
+		t.Fatalf("my_rsvp_status = %q", out.MyRsvpStatus)
+	}
+}

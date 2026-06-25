@@ -172,6 +172,10 @@ func (r *pgRepository) GetByID(id uuid.UUID) (*models.Event, error) {
 		return nil, err
 	}
 
+	if err := r.loadSeats([]*models.Event{event}); err != nil {
+		return nil, err
+	}
+
 	return event, nil
 }
 
@@ -209,6 +213,10 @@ func (r *pgRepository) List(filter ListFilter) ([]*models.Event, error) {
 	}
 
 	if err := r.loadOrganizers(list); err != nil {
+		return nil, err
+	}
+
+	if err := r.loadSeats(list); err != nil {
 		return nil, err
 	}
 
@@ -440,6 +448,50 @@ func (r *pgRepository) loadOrganizers(events []*models.Event) error {
 			org.AvatarURL = r.store.URL(info.storageKey)
 		}
 		e.Organizer = org
+	}
+	return nil
+}
+
+// loadSeats populates SeatsRemaining on each event that has a capacity, by
+// counting going RSVPs in a single query (no N+1). Events with nil capacity are
+// left as unlimited (SeatsRemaining stays nil).
+func (r *pgRepository) loadSeats(events []*models.Event) error {
+	if len(events) == 0 {
+		return nil
+	}
+	ids := make([]uuid.UUID, 0, len(events))
+	for _, e := range events {
+		if e.Capacity != nil {
+			ids = append(ids, e.ID)
+		}
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	var rows []struct {
+		EventID uuid.UUID `pg:"event_id"`
+		Going   int       `pg:"going"`
+	}
+	if _, err := r.db.Query(&rows,
+		`SELECT event_id, COUNT(*) AS going FROM event_rsvps
+		 WHERE event_id IN (?) AND status = 'going' GROUP BY event_id`,
+		pg.In(ids),
+	); err != nil {
+		return fmt.Errorf("load seats: %w", err)
+	}
+	goingByID := make(map[uuid.UUID]int, len(rows))
+	for _, row := range rows {
+		goingByID[row.EventID] = row.Going
+	}
+	for _, e := range events {
+		if e.Capacity == nil {
+			continue
+		}
+		remaining := *e.Capacity - goingByID[e.ID]
+		if remaining < 0 {
+			remaining = 0
+		}
+		e.SeatsRemaining = &remaining
 	}
 	return nil
 }

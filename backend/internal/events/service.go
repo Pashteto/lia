@@ -61,19 +61,22 @@ type Service interface {
 // the current value"; a non-nil field overwrites it. CategoryIDs is nil to
 // preserve, non-nil to replace the category set.
 type UpdateParams struct {
-	Title       *string
-	Description *string
-	Format      *string
-	PriceType   *string
-	PriceMin    *int64
-	PriceMax    *int64
-	ExternalURL *string
-	VenueID     *uuid.UUID
-	CoverFileID *uuid.UUID
-	CategoryIDs []uuid.UUID
-	StartsAt    *time.Time
-	EndsAt      *time.Time
-	Status      *string
+	Title                   *string
+	Description             *string
+	Format                  *string
+	PriceType               *string
+	PriceMin                *int64
+	PriceMax                *int64
+	ExternalURL             *string
+	VenueID                 *uuid.UUID
+	CoverFileID             *uuid.UUID
+	CategoryIDs             []uuid.UUID
+	StartsAt                *time.Time
+	EndsAt                  *time.Time
+	Status                  *string
+	SignupMode              *string
+	CuratorQuestion         *string
+	ExternalRegistrationURL *string
 }
 
 // ownerSettableStatus reports whether an owner may set the given status via the
@@ -232,6 +235,15 @@ func (s *service) Update(ctx context.Context, id, ownerID uuid.UUID, p UpdatePar
 	}
 	if p.ExternalURL != nil {
 		event.ExternalURL = *p.ExternalURL
+	}
+	if p.SignupMode != nil {
+		event.SignupMode = *p.SignupMode
+	}
+	if p.CuratorQuestion != nil {
+		event.CuratorQuestion = *p.CuratorQuestion
+	}
+	if p.ExternalRegistrationURL != nil {
+		event.ExternalRegistrationURL = *p.ExternalRegistrationURL
 	}
 	if p.VenueID != nil {
 		event.VenueID = *p.VenueID

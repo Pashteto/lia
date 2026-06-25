@@ -108,6 +108,19 @@ func EventToAPI(event *domainModels.Event) *apiModels.Event {
 		out.Organizer = org
 	}
 
+	out.SignupMode = event.SignupMode
+	out.CuratorQuestion = event.CuratorQuestion
+	out.ExternalRegistrationURL = event.ExternalRegistrationURL
+	if event.Capacity != nil {
+		c := int64(*event.Capacity)
+		out.Capacity = &c
+	}
+	if event.SeatsRemaining != nil {
+		s := int64(*event.SeatsRemaining)
+		out.SeatsRemaining = &s
+	}
+	out.MyRsvpStatus = event.MyRsvpStatus
+
 	return out
 }
 
@@ -130,10 +143,17 @@ func EventFromAPIInput(in *apiModels.EventInput) (*domainModels.Event, error) {
 	}
 
 	event := &domainModels.Event{
-		Description: in.Description,
-		Format:      defaultStr(in.Format, "offline"),
-		PriceType:   defaultStr(in.PriceType, "free"),
-		ExternalURL: in.ExternalTicketURL,
+		Description:             in.Description,
+		Format:                  defaultStr(in.Format, "offline"),
+		PriceType:               defaultStr(in.PriceType, "free"),
+		ExternalURL:             in.ExternalTicketURL,
+		SignupMode:              in.SignupMode,
+		CuratorQuestion:         in.CuratorQuestion,
+		ExternalRegistrationURL: in.ExternalRegistrationURL,
+	}
+	if in.Capacity != nil {
+		c := int(*in.Capacity)
+		event.Capacity = &c
 	}
 
 	if in.Title != nil {
@@ -269,5 +289,18 @@ func EventPatchToUpdateParams(in *apiModels.EventPatch) eventsdomain.UpdateParam
 		}
 		p.CategoryIDs = ids
 	}
+	if in.SignupMode != "" {
+		v := in.SignupMode
+		p.SignupMode = &v
+	}
+	if in.CuratorQuestion != "" {
+		v := in.CuratorQuestion
+		p.CuratorQuestion = &v
+	}
+	if in.ExternalRegistrationURL != "" {
+		v := in.ExternalRegistrationURL
+		p.ExternalRegistrationURL = &v
+	}
+	// capacity is set at create; PATCH support deferred
 	return p
 }

@@ -22,6 +22,14 @@ interface AuthState {
   ready: boolean;
   /** Role from the server (e.g. "admin"), or null. */
   role: string | null;
+  /**
+   * True once the role lifecycle has settled for the current session — i.e.
+   * getMe() has resolved (success or error) after mount or after a login.
+   * False on mount until the fetch settles, and reset to false on logout.
+   * When there is no token on mount, stays false; the gate uses isAuthed to
+   * short-circuit before checking roleResolved.
+   */
+  roleResolved: boolean;
   /** Demo-login with an email; persists the session. Throws on failure. */
   login: (email: string, name?: string) => Promise<void>;
   /** Register with email + password; persists the session. Throws on failure. */
@@ -94,19 +102,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const [role, setRole] = useState<string | null>(null);
+  const [roleResolved, setRoleResolved] = useState(false);
 
   // Populate role from the server on mount when a session already exists.
   useEffect(() => {
     if (getToken()) {
-      getMe().then((me) => setRole(me?.role ?? null)).catch(() => setRole(null));
+      getMe()
+        .then((me) => setRole(me?.role ?? null))
+        .catch(() => setRole(null))
+        .finally(() => setRoleResolved(true));
     }
+    // No token → leave roleResolved=false; the gate uses isAuthed first.
   }, []);
 
   const login = useCallback(async (loginEmail: string, name?: string) => {
     const token = await demoLogin(loginEmail, name);
     setSession(token, loginEmail);
     notifyAuthListeners();
-    getMe().then((me) => setRole(me?.role ?? null)).catch(() => setRole(null));
+    getMe()
+      .then((me) => setRole(me?.role ?? null))
+      .catch(() => setRole(null))
+      .finally(() => setRoleResolved(true));
   }, []);
 
   const register = useCallback(
@@ -114,7 +130,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const token = await registerWithPassword(regEmail, name, password);
       setSession(token, regEmail);
       notifyAuthListeners();
-      getMe().then((me) => setRole(me?.role ?? null)).catch(() => setRole(null));
+      getMe()
+        .then((me) => setRole(me?.role ?? null))
+        .catch(() => setRole(null))
+        .finally(() => setRoleResolved(true));
     },
     [],
   );
@@ -124,7 +143,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const token = await loginWithPassword(loginEmail, password);
       setSession(token, loginEmail);
       notifyAuthListeners();
-      getMe().then((me) => setRole(me?.role ?? null)).catch(() => setRole(null));
+      getMe()
+        .then((me) => setRole(me?.role ?? null))
+        .catch(() => setRole(null))
+        .finally(() => setRoleResolved(true));
     },
     [],
   );
@@ -132,6 +154,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(() => {
     clearSession();
     setRole(null);
+    setRoleResolved(false);
     notifyAuthListeners();
   }, []);
 
@@ -141,12 +164,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isAuthed: email !== null,
       ready,
       role,
+      roleResolved,
       login,
       register,
       loginPassword,
       logout,
     }),
-    [email, ready, role, login, register, loginPassword, logout],
+    [email, ready, role, roleResolved, login, register, loginPassword, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

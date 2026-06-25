@@ -8,16 +8,28 @@ import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/cn";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { ready, role } = useAuth();
+  const { ready, isAuthed, role, roleResolved } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (ready && role !== "admin") router.replace("/");
-  }, [ready, role, router]);
+    // State 2: no session at all — redirect immediately, no need to wait for role.
+    if (ready && !isAuthed) {
+      router.replace("/");
+      return;
+    }
+    // State 4: session exists, role resolved, and it's not admin — redirect.
+    if (ready && isAuthed && roleResolved && role !== "admin") {
+      router.replace("/");
+    }
+  }, [ready, isAuthed, role, roleResolved, router]);
 
-  // Avoid flicker before session/role is known
+  // State 1: still hydrating — render nothing.
   if (!ready) return null;
-  // Redirecting — render nothing while navigation lands
+  // State 2: no session — redirect in effect above; render nothing while it lands.
+  if (!isAuthed) return null;
+  // State 3: session exists but role fetch still in flight — show loading indicator.
+  if (!roleResolved) return <p className="p-8 text-center text-label-secondary">Загрузка…</p>;
+  // State 4 (non-admin): redirect in effect above; render nothing while it lands.
   if (role !== "admin") return null;
 
   return (

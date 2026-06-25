@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/Button";
+import { SignupCTA } from "@/components/SignupCTA";
 import { EventCover } from "@/components/ui/EventCover";
 import { VenueMap } from "@/components/VenueMap";
 import { fetchEvent } from "@/lib/api";
@@ -136,10 +136,7 @@ export default async function EventDetailPage({
       <div className="fixed inset-x-0 bottom-0 z-10 border-t border-separator bg-bg">
         <div className="mx-auto flex max-w-2xl items-center justify-between gap-4 px-5 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
           <span className="text-[17px] font-semibold">{formatPrice(event)}</span>
-          {/* TODO: wire RSVP (POST /events/{id}/rsvp) — needs auth + rsvp module */}
-          <Button variant="filled" className="px-8">
-            Записаться
-          </Button>
+          <SignupCTA event={event} />
         </div>
       </div>
     </div>

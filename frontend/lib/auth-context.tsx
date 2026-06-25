@@ -44,6 +44,12 @@ function subscribeAuth(callback: () => void) {
   };
 }
 
+// `ready` flips false→true once on mount via the server/client snapshot
+// difference; it is not driven by auth events, so it needs no live subscription.
+function subscribeReady(): () => void {
+  return () => {};
+}
+
 /** Client snapshot: read the live localStorage state. */
 function getAuthSnapshot(): string | null {
   return getToken() ? getStoredEmail() : null;
@@ -74,7 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     getAuthServerSnapshot,
   );
   const ready = useSyncExternalStore(
-    subscribeAuth,
+    subscribeReady,
     getReadySnapshot,
     getReadyServerSnapshot,
   );

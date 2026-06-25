@@ -163,6 +163,22 @@ func (m *Module) initAPI() error {
 	api.UsersGetUserByEmailHandler = handlers.NewGetUserByEmail(m.service, m.grpcClient)
 	api.HealthGetHealthHandler = handlers.NewHealth()
 
+	// Demo-login (DEMO-ONLY): mints GateGuard tokens via SignInOAuth. The signer
+	// is wired only when gatekeeper is configured; otherwise the handler 503s.
+	var signer auth.Signer
+	if m.config.Gatekeeper != nil {
+		timeout := 5 * time.Second
+		if d, err := time.ParseDuration(m.config.Gatekeeper.Timeout); err == nil && d > 0 {
+			timeout = d
+		}
+		s, err := auth.NewSigner(auth.GatekeeperConfig{Address: m.config.Gatekeeper.Address, Timeout: timeout})
+		if err != nil {
+			return fmt.Errorf("init demo-login signer: %w", err)
+		}
+		signer = s
+	}
+	api.AuthDemoLoginHandler = handlers.NewDemoLogin(signer)
+
 	// Events domain handlers (registered only when the events service is wired,
 	// i.e. when the database module is enabled).
 	if m.events != nil {

@@ -31,6 +31,36 @@ security:
   - jwt: []
 
 paths:
+  /auth/demo-login:
+    post:
+      summary: Demo login (no Google)
+      description: >-
+        DEMO-ONLY. Mints a GateGuard session token for the given email
+        (get-or-create). Not for production — anyone can mint a token for any
+        email; this is a known non-production control alongside HTTP_MOCK_AUTH.
+      operationId: demoLogin
+      tags:
+        - auth
+      security: []
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/DemoLoginInput"
+      responses:
+        200:
+          description: Session token issued
+          schema:
+            $ref: "#/definitions/DemoLoginResponse"
+        400:
+          description: Invalid input
+          schema:
+            $ref: "#/definitions/Error"
+        503:
+          description: Auth backend unavailable
+          schema:
+            $ref: "#/definitions/Error"
   /users:
     get:
       summary: Get user by email
@@ -367,6 +397,26 @@ paths:
               message: "service unhealthy"
 
 definitions:
+  DemoLoginInput:
+    type: object
+    required:
+      - email
+    properties:
+      email:
+        type: string
+        format: email
+        description: User email (demo login is keyed by email)
+      name:
+        type: string
+        description: Optional display name
+  DemoLoginResponse:
+    type: object
+    required:
+      - token
+    properties:
+      token:
+        type: string
+        description: "GateGuard session JWT (send as Authorization: Bearer <token>)"
   Event:
     type: object
     required:

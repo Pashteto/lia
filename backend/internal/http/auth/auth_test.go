@@ -15,15 +15,45 @@ import (
 
 // fakeGGClient fakes the GateGuard gRPC client.
 type fakeGGClient struct {
-	user *gg.User
-	err  error
+	user      *gg.User
+	err       error
+	tokenResp *gg.TokenResponse
+	signErr   error
 }
 
 func (f *fakeGGClient) CheckAuth(_ context.Context, _ *gg.TokenRequest, _ ...grpc.CallOption) (*gg.User, error) {
 	return f.user, f.err
 }
 func (f *fakeGGClient) SignInOAuth(_ context.Context, _ *gg.User, _ ...grpc.CallOption) (*gg.TokenResponse, error) {
-	return nil, nil
+	return f.tokenResp, f.signErr
+}
+
+func TestSigner_SignIn_ReturnsToken(t *testing.T) {
+	s := newSignerWithClient(&fakeGGClient{tokenResp: &gg.TokenResponse{Token: []byte("jwt-123")}})
+
+	tok, err := s.SignIn(context.Background(), "alice@example.com", "Alice")
+	if err != nil {
+		t.Fatalf("SignIn returned error: %v", err)
+	}
+	if tok != "jwt-123" {
+		t.Errorf("expected token jwt-123, got %q", tok)
+	}
+}
+
+func TestSigner_SignIn_Error(t *testing.T) {
+	s := newSignerWithClient(&fakeGGClient{signErr: fmt.Errorf("gateguard down")})
+
+	if _, err := s.SignIn(context.Background(), "a@b.com", "A"); err == nil {
+		t.Error("expected error when SignInOAuth fails")
+	}
+}
+
+func TestSigner_SignIn_EmptyToken(t *testing.T) {
+	s := newSignerWithClient(&fakeGGClient{tokenResp: &gg.TokenResponse{Token: nil}})
+
+	if _, err := s.SignIn(context.Background(), "a@b.com", "A"); err == nil {
+		t.Error("expected error when GateGuard returns an empty token")
+	}
 }
 
 func TestGatekeeperValidator_MapsUserToClaims(t *testing.T) {

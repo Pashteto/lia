@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -33,6 +34,43 @@ func (m *mockEventsService) List(context.Context, string) ([]*domainmodels.Event
 }
 func (m *mockEventsService) Nearby(context.Context, *float64, *float64, int) ([]*eventsdomain.NearbyResult, error) {
 	return nil, nil
+}
+
+func TestCreateEvent_QuotaExceeded_Returns429(t *testing.T) {
+	svc := &mockEventsService{createErr: fmt.Errorf("%w: 10/10 this month", eventsdomain.ErrQuotaExceeded)}
+	h := NewCreateEvent(svc)
+
+	title := "Quota Test"
+	starts := strfmt.DateTime(time.Now())
+	params := eventsops.CreateEventParams{
+		Body: &models.EventInput{
+			Title:    &title,
+			StartsAt: &starts,
+		},
+	}
+	req, _ := http.NewRequest(http.MethodPost, "/api/v1/events", nil)
+	params.HTTPRequest = req
+
+	pu := strfmt.UUID(uuid.Must(uuid.NewV4()).String())
+	email := strfmt.Email("u@example.com")
+	name := "U"
+	status := "active"
+	principal := &models.User{UUID: pu, Email: &email, Name: &name, Status: &status}
+
+	resp := h.Handle(params, principal)
+	if resp == nil {
+		t.Fatal("nil responder")
+	}
+	tooMany, ok := resp.(*eventsops.CreateEventTooManyRequests)
+	if !ok {
+		t.Fatalf("expected *CreateEventTooManyRequests, got %T", resp)
+	}
+	if tooMany.Payload == nil {
+		t.Fatal("expected non-nil payload")
+	}
+	if tooMany.Payload.Code == nil || *tooMany.Payload.Code != 429 {
+		t.Errorf("expected payload code 429, got %v", tooMany.Payload.Code)
+	}
 }
 
 func TestCreateEvent_SetsOrganizerFromPrincipal(t *testing.T) {

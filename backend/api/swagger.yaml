@@ -182,6 +182,10 @@ paths:
           description: Invalid input
           schema:
             $ref: "#/definitions/Error"
+        429:
+          description: Monthly event creation quota exceeded
+          schema:
+            $ref: "#/definitions/Error"
         503:
           description: Service unavailable (database disabled)
           schema:

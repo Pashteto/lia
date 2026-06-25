@@ -109,12 +109,17 @@ func (h *CreateEvent) Handle(params eventsops.CreateEventParams, principal *apim
 
 	if err := h.events.Create(params.HTTPRequest.Context(), event); err != nil {
 		logger.Log().Errorf("create event: %s", err.Error())
-		if errors.Is(err, eventsdomain.ErrInvalidInput) {
+		switch {
+		case errors.Is(err, eventsdomain.ErrInvalidInput):
 			return eventsops.NewCreateEventBadRequest().
 				WithPayload(DefaultError(http.StatusBadRequest, err, nil))
+		case errors.Is(err, eventsdomain.ErrQuotaExceeded):
+			return eventsops.NewCreateEventTooManyRequests().
+				WithPayload(DefaultError(http.StatusTooManyRequests, errors.New("Достигнут лимит: 10 событий в месяц. Лимит обновится 1-го числа."), nil))
+		default:
+			return eventsops.NewCreateEventServiceUnavailable().
+				WithPayload(DefaultError(http.StatusServiceUnavailable, err, nil))
 		}
-		return eventsops.NewCreateEventServiceUnavailable().
-			WithPayload(DefaultError(http.StatusServiceUnavailable, err, nil))
 	}
 
 	return eventsops.NewCreateEventCreated().WithPayload(formatter.EventToAPI(event))

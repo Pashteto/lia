@@ -23,6 +23,9 @@ type mockRepo struct {
 	countByOrganizer int
 	countErr         error
 	countSinceArg    time.Time // captured arg from CountByOrganizerSince
+	updated          *models.Event
+	updateErr        error
+	listFilter       ListFilter
 }
 
 func (m *mockRepo) Create(event *models.Event) error {
@@ -37,8 +40,14 @@ func (m *mockRepo) GetByID(uuid.UUID) (*models.Event, error) {
 	return m.get, nil
 }
 
-func (m *mockRepo) List(ListFilter) ([]*models.Event, error) {
+func (m *mockRepo) List(f ListFilter) ([]*models.Event, error) {
+	m.listFilter = f
 	return m.list, nil
+}
+
+func (m *mockRepo) Update(event *models.Event) error {
+	m.updated = event
+	return m.updateErr
 }
 
 func (m *mockRepo) Nearby(lat, lon float64, limit int) ([]*NearbyResult, error) {
@@ -315,5 +324,91 @@ func TestCreate_PriorMonthEventNotCounted(t *testing.T) {
 	moscowSince := got.In(loc)
 	if moscowSince.Day() != 1 || moscowSince.Hour() != 0 || moscowSince.Minute() != 0 || moscowSince.Second() != 0 {
 		t.Errorf("since in Moscow time must be 1st at 00:00:00, got %v", moscowSince)
+	}
+}
+
+func ownedDraft(owner uuid.UUID) *models.Event {
+	return &models.Event{
+		ID:          uuid.Must(uuid.NewV4()),
+		OrganizerID: owner,
+		Title:       "Draft",
+		Status:      models.EventDraft,
+		StartsAt:    time.Now().Add(24 * time.Hour),
+	}
+}
+
+func TestService_Update_NonOwner_ReturnsNotFound(t *testing.T) {
+	owner := uuid.Must(uuid.NewV4())
+	other := uuid.Must(uuid.NewV4())
+	ev := ownedDraft(owner)
+	repo := &mockRepo{get: ev}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+
+	_, err := svc.Update(context.Background(), ev.ID, other, UpdateParams{})
+	if !errors.Is(err, ErrNotFound) {
+		t.Fatalf("expected ErrNotFound, got %v", err)
+	}
+}
+
+func TestService_Update_PublishedIsLocked(t *testing.T) {
+	owner := uuid.Must(uuid.NewV4())
+	ev := ownedDraft(owner)
+	ev.Status = models.EventPublished
+	repo := &mockRepo{get: ev}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+
+	_, err := svc.Update(context.Background(), ev.ID, owner, UpdateParams{})
+	if !errors.Is(err, ErrNotEditable) {
+		t.Fatalf("expected ErrNotEditable, got %v", err)
+	}
+}
+
+func TestService_Update_AppliesOnlyProvidedFields(t *testing.T) {
+	owner := uuid.Must(uuid.NewV4())
+	ev := ownedDraft(owner)
+	ev.Description = "keep me"
+	repo := &mockRepo{get: ev}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+
+	newTitle := "Updated Title"
+	if _, err := svc.Update(context.Background(), ev.ID, owner, UpdateParams{Title: &newTitle}); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if repo.updated.Title != "Updated Title" {
+		t.Fatalf("title not applied: %q", repo.updated.Title)
+	}
+	if repo.updated.Description != "keep me" {
+		t.Fatalf("omitted field not preserved: %q", repo.updated.Description)
+	}
+}
+
+func TestService_Update_PublishSetsPublishedAt(t *testing.T) {
+	owner := uuid.Must(uuid.NewV4())
+	ev := ownedDraft(owner)
+	repo := &mockRepo{get: ev}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+
+	published := "published"
+	if _, err := svc.Update(context.Background(), ev.ID, owner, UpdateParams{Status: &published}); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if repo.updated.Status != models.EventPublished {
+		t.Fatalf("status not set to published: %v", repo.updated.Status)
+	}
+	if repo.updated.PublishedAt == nil {
+		t.Fatal("expected PublishedAt to be set on publish")
+	}
+}
+
+func TestService_Update_RejectsNonSettableStatus(t *testing.T) {
+	owner := uuid.Must(uuid.NewV4())
+	ev := ownedDraft(owner)
+	repo := &mockRepo{get: ev}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+
+	pending := "pending_review"
+	_, err := svc.Update(context.Background(), ev.ID, owner, UpdateParams{Status: &pending})
+	if !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("expected ErrInvalidInput, got %v", err)
 	}
 }

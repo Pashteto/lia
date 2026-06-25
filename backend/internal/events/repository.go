@@ -53,6 +53,10 @@ type Repository interface {
 	// Nearby returns published events whose venue has coordinates, ordered
 	// nearest-first, capped at 50 km from (lat, lon).
 	Nearby(lat, lon float64, limit int) ([]*NearbyResult, error)
+	// Update persists changes to an existing event. When event.CategoryIDs is
+	// non-nil, the event_categories links are replaced to match. Returns
+	// pg.ErrNoRows when no row matches.
+	Update(event *models.Event) error
 	// CountByOrganizerSince returns the number of events created by the given
 	// organizer at or after since (all statuses, draft + published).
 	CountByOrganizerSince(organizer uuid.UUID, since time.Time) (int, error)
@@ -97,6 +101,50 @@ func (r *pgRepository) Create(event *models.Event) error {
 	}
 
 	logger.Log().Infof("event created: %s (ID: %s)", event.Title, event.ID)
+	return nil
+}
+
+func (r *pgRepository) Update(event *models.Event) error {
+	logger.Log().Infof("updating event: %s", event.ID)
+
+	err := r.db.RunInTransaction(context.Background(), func(tx *pg.Tx) error {
+		res, err := tx.Model(event).
+			Column(
+				"title", "description", "venue_id", "cover_file_id", "status",
+				"format", "price_type", "price_min", "price_max",
+				"external_ticket_url", "starts_at", "ends_at", "published_at",
+				"updated_at",
+			).
+			WherePK().
+			Update()
+		if err != nil {
+			return fmt.Errorf("update event %s: %w", event.ID, err)
+		}
+		if res.RowsAffected() == 0 {
+			return pg.ErrNoRows
+		}
+
+		// Replace category links only when the caller provided a new set.
+		// A nil CategoryIDs means "preserve existing links".
+		if event.CategoryIDs != nil {
+			if _, err := tx.Exec(`DELETE FROM event_categories WHERE event_id = ?`, event.ID); err != nil {
+				return fmt.Errorf("clear event %s categories: %w", event.ID, err)
+			}
+			for _, cid := range event.CategoryIDs {
+				if _, err := tx.Exec(
+					`INSERT INTO event_categories (event_id, category_id) VALUES (?, ?)
+					 ON CONFLICT DO NOTHING`,
+					event.ID, cid,
+				); err != nil {
+					return fmt.Errorf("link event %s to category %s: %w", event.ID, cid, err)
+				}
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("update event %s: %w", event.ID, err)
+	}
 	return nil
 }
 

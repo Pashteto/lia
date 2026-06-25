@@ -22,6 +22,9 @@ var (
 	ErrNotFound = errors.New("not found")
 	// ErrQuotaExceeded indicates the organizer has reached their monthly event limit.
 	ErrQuotaExceeded = errors.New("monthly event limit reached")
+	// ErrNotEditable indicates the event is in a status that cannot be edited
+	// (only draft events are editable).
+	ErrNotEditable = errors.New("not editable")
 )
 
 // startOfMonthMoscow returns midnight on the first day of t's calendar month
@@ -40,6 +43,9 @@ func startOfMonthMoscow(t time.Time) time.Time {
 type Service interface {
 	// Create validates and persists a new event.
 	Create(ctx context.Context, event *models.Event) error
+	// Update applies a partial update to an event owned by ownerID. Only draft
+	// events are editable; non-owners get ErrNotFound (existence is not leaked).
+	Update(ctx context.Context, id, ownerID uuid.UUID, p UpdateParams) (*models.Event, error)
 	// GetByID returns a single event by its string UUID.
 	GetByID(ctx context.Context, id string) (*models.Event, error)
 	// List returns events, optionally filtered by status.
@@ -49,6 +55,46 @@ type Service interface {
 	// Nearby returns published events nearest to (lat, lon), within 50 km,
 	// up to limit results. Both lat and lon are required.
 	Nearby(ctx context.Context, lat, lon *float64, limit int) ([]*NearbyResult, error)
+}
+
+// UpdateParams is a partial event update. A nil pointer field means "preserve
+// the current value"; a non-nil field overwrites it. CategoryIDs is nil to
+// preserve, non-nil to replace the category set.
+type UpdateParams struct {
+	Title       *string
+	Description *string
+	Format      *string
+	PriceType   *string
+	PriceMin    *int64
+	PriceMax    *int64
+	ExternalURL *string
+	VenueID     *uuid.UUID
+	CoverFileID *uuid.UUID
+	CategoryIDs []uuid.UUID
+	StartsAt    *time.Time
+	EndsAt      *time.Time
+	Status      *string
+}
+
+// ownerSettableStatus reports whether an owner may set the given status via the
+// edit endpoint. Moderation statuses (pending_review, rejected) are excluded.
+func ownerSettableStatus(s models.EventStatus) bool {
+	switch s {
+	case models.EventDraft, models.EventPublished, models.EventCancelled:
+		return true
+	default:
+		return false
+	}
+}
+
+// isNoRows reports whether err is (or wraps) a go-pg "no rows" error. Mirrors
+// the detection used in GetByID.
+func isNoRows(err error) bool {
+	if wrapped := errors.Unwrap(err); wrapped != nil &&
+		wrapped.Error() == "pg: no rows in result set" {
+		return true
+	}
+	return false
 }
 
 // CategoryValidator resolves and validates category ids. Satisfied by
@@ -141,6 +187,116 @@ func (s *service) GetByID(_ context.Context, id string) (*models.Event, error) {
 	}
 
 	return event, nil
+}
+
+func (s *service) Update(ctx context.Context, id, ownerID uuid.UUID, p UpdateParams) (*models.Event, error) {
+	if id == uuid.Nil {
+		return nil, fmt.Errorf("%w: id is required", ErrInvalidInput)
+	}
+
+	event, err := s.repo.GetByID(id)
+	if err != nil {
+		if isNoRows(err) {
+			return nil, fmt.Errorf("%w: event %s", ErrNotFound, id)
+		}
+		return nil, fmt.Errorf("get event by id: %w", err)
+	}
+
+	// Non-owner access is indistinguishable from not-found (no existence leak).
+	if event.OrganizerID != ownerID {
+		return nil, fmt.Errorf("%w: event %s", ErrNotFound, id)
+	}
+
+	// Only drafts are editable.
+	if event.Status != models.EventDraft {
+		return nil, fmt.Errorf("%w: event %s is %s", ErrNotEditable, id, event.Status)
+	}
+
+	if p.Title != nil {
+		event.Title = *p.Title
+	}
+	if p.Description != nil {
+		event.Description = *p.Description
+	}
+	if p.Format != nil {
+		event.Format = *p.Format
+	}
+	if p.PriceType != nil {
+		event.PriceType = *p.PriceType
+	}
+	if p.PriceMin != nil {
+		event.PriceMin = p.PriceMin
+	}
+	if p.PriceMax != nil {
+		event.PriceMax = p.PriceMax
+	}
+	if p.ExternalURL != nil {
+		event.ExternalURL = *p.ExternalURL
+	}
+	if p.VenueID != nil {
+		event.VenueID = *p.VenueID
+	}
+	if p.CoverFileID != nil {
+		event.CoverFileID = *p.CoverFileID
+	}
+	if p.StartsAt != nil {
+		event.StartsAt = *p.StartsAt
+	}
+	if p.EndsAt != nil {
+		event.EndsAt = p.EndsAt
+	}
+
+	if p.Status != nil {
+		target, err := models.EventStatusFromString(*p.Status)
+		if err != nil {
+			return nil, fmt.Errorf("%w: %s", ErrInvalidInput, err.Error())
+		}
+		if !ownerSettableStatus(target) {
+			return nil, fmt.Errorf("%w: status %q is not settable", ErrInvalidInput, *p.Status)
+		}
+		event.Status = target
+		if target == models.EventPublished && event.PublishedAt == nil {
+			now := time.Now()
+			event.PublishedAt = &now
+		}
+	}
+
+	if p.CategoryIDs != nil {
+		resolved, err := s.categories.Validate(ctx, p.CategoryIDs)
+		if err != nil {
+			if errors.Is(err, categories.ErrInvalidInput) {
+				return nil, fmt.Errorf("%w: %s", ErrInvalidInput, err.Error())
+			}
+			return nil, fmt.Errorf("validate categories: %w", err)
+		}
+		event.CategoryIDs = p.CategoryIDs
+		event.Categories = resolved
+	}
+
+	if p.VenueID != nil {
+		venue, err := s.venues.Validate(ctx, event.VenueID)
+		if err != nil {
+			if errors.Is(err, venues.ErrInvalidInput) {
+				return nil, fmt.Errorf("%w: %s", ErrInvalidInput, err.Error())
+			}
+			return nil, fmt.Errorf("validate venue: %w", err)
+		}
+		event.Venue = venue
+	}
+
+	if err := event.Validate(); err != nil {
+		return nil, fmt.Errorf("%w: %s", ErrInvalidInput, err.Error())
+	}
+
+	if err := s.repo.Update(event); err != nil {
+		return nil, fmt.Errorf("update event: %w", err)
+	}
+
+	reloaded, err := s.repo.GetByID(id)
+	if err != nil {
+		return nil, fmt.Errorf("reload event: %w", err)
+	}
+	return reloaded, nil
 }
 
 func (s *service) List(_ context.Context, status string) ([]*models.Event, error) {

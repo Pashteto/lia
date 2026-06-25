@@ -113,6 +113,17 @@ type S3StorageConfig struct {
 	UseSSL    bool   `mapstructure:"use_ssl"`
 }
 
+// CleanupConfig holds orphan-file cleanup settings.
+type CleanupConfig struct {
+	// Interval is how often the cleanup job runs (e.g. "24h").
+	Interval string `mapstructure:"interval"`
+	// Grace is the minimum age a file must be before it is considered an
+	// orphan (e.g. "24h").
+	Grace string `mapstructure:"grace"`
+	// Enabled controls whether the cleanup module is started.
+	Enabled bool `mapstructure:"enabled"`
+}
+
 // Scheme represents the application configuration scheme.
 type Scheme struct {
 	// Database configuration for repository module (optional; nil if disabled).
@@ -132,6 +143,9 @@ type Scheme struct {
 
 	// Storage configuration for blob storage (optional; nil if disabled).
 	Storage *StorageConfig `mapstructure:"storage"`
+
+	// Cleanup configuration for orphan-file cleanup (always non-nil; enabled by default).
+	Cleanup *CleanupConfig `mapstructure:"cleanup"`
 
 	// Env is the application environment (e.g. prod, dev, local).
 	Env string `mapstructure:"env"`

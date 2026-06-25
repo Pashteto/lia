@@ -11,6 +11,7 @@ import (
 
 	"github.com/Pashteto/lia/config"
 	categoriesdomain "github.com/Pashteto/lia/internal/categories"
+	cleanupmod "github.com/Pashteto/lia/internal/cleanup"
 	eventsdomain "github.com/Pashteto/lia/internal/events"
 	filesdomain "github.com/Pashteto/lia/internal/files"
 	venuesdomain "github.com/Pashteto/lia/internal/venues"
@@ -149,6 +150,7 @@ func (app *App) registerModules() error {
 	// Wire storage + files service. Storage is independent of repoModule but the
 	// files repository requires a DB connection, so we only build filesSvc when
 	// repoModule is available.
+	var filesRepo filesdomain.Repository
 	if app.config.Storage != nil {
 		bs, err := storage.New(toStorageSettings(app.config.Storage))
 		if err != nil {
@@ -156,7 +158,8 @@ func (app *App) registerModules() error {
 		}
 		app.blobStore = bs
 		if repoModule != nil {
-			app.filesSvc = filesdomain.NewService(filesdomain.NewRepository(repoModule.DB()), bs)
+			filesRepo = filesdomain.NewRepository(repoModule.DB())
+			app.filesSvc = filesdomain.NewService(filesRepo, bs)
 			app.eventsSvc = eventsdomain.NewService(
 				eventsdomain.NewRepository(repoModule.DB(), app.blobStore),
 				app.categoriesSvc,
@@ -166,6 +169,19 @@ func (app *App) registerModules() error {
 			logger.Log().Info("events module wired to repository + storage")
 		}
 		logger.Log().Infof("storage backend %q wired", app.config.Storage.Backend)
+	}
+
+	// Register cleanup module when files + storage are wired and cleanup is enabled.
+	if app.config.Cleanup != nil && app.config.Cleanup.Enabled && filesRepo != nil && app.blobStore != nil {
+		graceDur := parseDurationDefault(app.config.Cleanup.Grace, 24*time.Hour)
+		intervalDur := parseDurationDefault(app.config.Cleanup.Interval, 24*time.Hour)
+		cleaner := filesdomain.NewCleaner(filesRepo, app.blobStore, graceDur)
+		cleanupModule := cleanupmod.NewModule(cleaner, intervalDur)
+		app.modules.Register(cleanupModule)
+		if err := cleanupModule.Init(ctx); err != nil {
+			return fmt.Errorf("init cleanup module: %w", err)
+		}
+		logger.Log().Infof("cleanup module registered (interval=%s grace=%s)", intervalDur, graceDur)
 	}
 
 	// Wire events after storage so it gets the blob store (may be nil if
@@ -288,6 +304,15 @@ func (app *App) Service() service.IService {
 // CreateAddr creates an address string from host and port.
 func CreateAddr(host string, port int) string {
 	return fmt.Sprintf("%s:%v", host, port)
+}
+
+// parseDurationDefault parses s as a duration; returns fallback on failure.
+func parseDurationDefault(s string, fallback time.Duration) time.Duration {
+	if d, err := time.ParseDuration(s); err == nil {
+		return d
+	}
+	logger.Log().Warnf("invalid duration %q, using default %s", s, fallback)
+	return fallback
 }
 
 // toStorageSettings maps a config.StorageConfig to storage.StorageSettings.

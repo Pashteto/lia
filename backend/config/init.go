@@ -105,6 +105,15 @@ func setDefaults() {
 	// Events quota
 	viper.SetDefault("events_monthly_limit", 10)
 
+	// Cleanup module defaults
+	viper.SetDefault("cleanup.enabled", true)
+	viper.SetDefault("cleanup.interval", "24h")
+	viper.SetDefault("cleanup.grace", "24h")
+
+	viper.BindEnv("cleanup.enabled", "FILE_CLEANUP_ENABLED")   //nolint:errcheck
+	viper.BindEnv("cleanup.interval", "FILE_CLEANUP_INTERVAL") //nolint:errcheck
+	viper.BindEnv("cleanup.grace", "FILE_CLEANUP_GRACE")       //nolint:errcheck
+
 	// S3 env overrides (secrets come from environment, not config files)
 	viper.BindEnv("storage.s3.endpoint", "S3_ENDPOINT")   //nolint:errcheck
 	viper.BindEnv("storage.s3.region", "S3_REGION")       //nolint:errcheck

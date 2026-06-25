@@ -28,7 +28,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   // State 2: no session — redirect in effect above; render nothing while it lands.
   if (!isAuthed) return null;
   // State 3: session exists but role fetch still in flight — show loading indicator.
-  if (!roleResolved) return <p className="p-8 text-center text-label-secondary">Загрузка…</p>;
+  if (!roleResolved)
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-bg-grouped">
+        <p className="text-label-secondary">Загрузка…</p>
+      </div>
+    );
   // State 4 (non-admin): redirect in effect above; render nothing while it lands.
   if (role !== "admin") return null;
 

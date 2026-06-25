@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS audit_log;
+DROP TABLE IF EXISTS event_status_history;
+ALTER TABLE users DROP COLUMN IF EXISTS role;

@@ -12,6 +12,7 @@ import (
 	"github.com/Pashteto/lia/config"
 	categoriesdomain "github.com/Pashteto/lia/internal/categories"
 	eventsdomain "github.com/Pashteto/lia/internal/events"
+	filesdomain "github.com/Pashteto/lia/internal/files"
 	venuesdomain "github.com/Pashteto/lia/internal/venues"
 	grpcmod "github.com/Pashteto/lia/internal/grpc"
 	grpcclientmod "github.com/Pashteto/lia/internal/grpcclient"
@@ -19,6 +20,7 @@ import (
 	"github.com/Pashteto/lia/internal/module"
 	"github.com/Pashteto/lia/internal/repository"
 	"github.com/Pashteto/lia/internal/service"
+	"github.com/Pashteto/lia/internal/storage"
 	wsmod "github.com/Pashteto/lia/internal/websocket"
 	"github.com/Pashteto/lia/pkg/logger"
 	"github.com/Pashteto/lia/pkg/version"
@@ -42,6 +44,12 @@ type App struct {
 
 	// venuesSvc is the venues domain service. Nil when the DB is disabled.
 	venuesSvc venuesdomain.Service
+
+	// filesSvc is the files domain service. Nil when DB or storage is disabled.
+	filesSvc filesdomain.Service
+
+	// blobStore is the blob storage backend. Nil when storage is disabled.
+	blobStore storage.Storage
 }
 
 // NewApplication creates a new App instance.
@@ -143,6 +151,21 @@ func (app *App) registerModules() error {
 		logger.Log().Info("events + categories + venues modules wired to repository")
 	}
 
+	// Wire storage + files service. Storage is independent of repoModule but the
+	// files repository requires a DB connection, so we only build filesSvc when
+	// repoModule is available.
+	if app.config.Storage != nil {
+		bs, err := storage.New(toStorageSettings(app.config.Storage))
+		if err != nil {
+			return fmt.Errorf("init storage: %w", err)
+		}
+		app.blobStore = bs
+		if repoModule != nil {
+			app.filesSvc = filesdomain.NewService(filesdomain.NewRepository(repoModule.DB()), bs)
+		}
+		logger.Log().Infof("storage backend %q wired", app.config.Storage.Backend)
+	}
+
 	logger.Log().Info("infrastructure modules initialized successfully")
 
 	// 4. Transport: HTTP module (optional) - receives both service AND grpcClient
@@ -156,6 +179,8 @@ func (app *App) registerModules() error {
 		httpModule.SetEventsService(app.eventsSvc)
 		httpModule.SetCategoriesService(app.categoriesSvc)
 		httpModule.SetVenuesService(app.venuesSvc)
+		httpModule.SetStorage(app.blobStore)
+		httpModule.SetFilesService(app.filesSvc)
 
 		app.modules.Register(httpModule)
 
@@ -249,4 +274,28 @@ func (app *App) Service() service.IService {
 // CreateAddr creates an address string from host and port.
 func CreateAddr(host string, port int) string {
 	return fmt.Sprintf("%s:%v", host, port)
+}
+
+// toStorageSettings maps a config.StorageConfig to storage.StorageSettings.
+// Keeping this helper in application.go avoids a config→storage import cycle.
+func toStorageSettings(cfg *config.StorageConfig) storage.StorageSettings {
+	if cfg == nil {
+		return storage.StorageSettings{}
+	}
+	ss := storage.StorageSettings{
+		Backend:    cfg.Backend,
+		LocalDir:   cfg.LocalDir,
+		PublicBase: cfg.PublicBase,
+	}
+	if cfg.S3 != nil {
+		ss.S3 = storage.S3Config{
+			Endpoint:  cfg.S3.Endpoint,
+			Region:    cfg.S3.Region,
+			Bucket:    cfg.S3.Bucket,
+			AccessKey: cfg.S3.AccessKey,
+			SecretKey: cfg.S3.SecretKey,
+			UseSSL:    cfg.S3.UseSSL,
+		}
+	}
+	return ss
 }

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/go-openapi/loads"
@@ -14,6 +15,7 @@ import (
 	"github.com/Pashteto/lia/config"
 	categoriesdomain "github.com/Pashteto/lia/internal/categories"
 	eventsdomain "github.com/Pashteto/lia/internal/events"
+	filesdomain "github.com/Pashteto/lia/internal/files"
 	venuesdomain "github.com/Pashteto/lia/internal/venues"
 	"github.com/Pashteto/lia/internal/grpcclient"
 	"github.com/Pashteto/lia/internal/http/auth"
@@ -21,7 +23,9 @@ import (
 	"github.com/Pashteto/lia/internal/http/middlewares"
 	httpserver "github.com/Pashteto/lia/internal/http/server"
 	"github.com/Pashteto/lia/internal/http/server/operations"
+	"github.com/Pashteto/lia/internal/http/uploads"
 	"github.com/Pashteto/lia/internal/service"
+	"github.com/Pashteto/lia/internal/storage"
 	"github.com/Pashteto/lia/pkg/logger"
 )
 
@@ -33,6 +37,8 @@ type Module struct {
 	events     eventsdomain.Service
 	categories categoriesdomain.Service
 	venues     venuesdomain.Service
+	files      filesdomain.Service
+	storage    storage.Storage
 	server     *httpserver.Server
 	api        *operations.LiaAPIAPI
 	handler    *http.Handler
@@ -63,6 +69,17 @@ func (m *Module) SetCategoriesService(svc categoriesdomain.Service) {
 // SetVenuesService injects the venues domain service. Call before Init.
 func (m *Module) SetVenuesService(svc venuesdomain.Service) {
 	m.venues = svc
+}
+
+// SetFilesService injects the files domain service. Call before Init.
+// When nil, upload/serve endpoints return 503 (mux returns 404 for unregistered paths).
+func (m *Module) SetFilesService(svc filesdomain.Service) {
+	m.files = svc
+}
+
+// SetStorage injects the blob storage backend. Call before Init.
+func (m *Module) SetStorage(store storage.Storage) {
+	m.storage = store
 }
 
 // Name returns the module identifier.
@@ -204,13 +221,33 @@ func (m *Module) initAPI() error {
 	// api.UsersDeleteUserHandler = handlers.NewDeleteUser(m.service)
 	// api.UsersListUsersHandler = handlers.NewListUsers(m.service)
 
+	// Build the base swagger handler.
+	base := api.Serve(nil)
+
+	// Mount the plain uploads/serve handler ahead of the swagger mux so that
+	// /api/v1/uploads and /api/v1/files/* are served without swagger validation.
+	var router http.Handler
+	if m.storage != nil && m.files != nil {
+		mounted := uploads.NewHandler(m.storage, m.files, m.auth.CheckAuth)
+		router = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			p := r.URL.Path
+			if strings.HasPrefix(p, "/api/v1/uploads") || strings.HasPrefix(p, "/api/v1/files/") {
+				mounted.ServeHTTP(w, r)
+				return
+			}
+			base.ServeHTTP(w, r)
+		})
+	} else {
+		router = base
+	}
+
 	// Build middleware chain
 	handler := alice.New(
 		middlewares.Recovery(),
 		middlewares.Logger(),
 		middlewares.Cors(m.config.CORS),
 		middlewares.RateLimit(m.config.RateLimit),
-	).Then(api.Serve(nil))
+	).Then(router)
 
 	m.api = api
 	m.handler = &handler

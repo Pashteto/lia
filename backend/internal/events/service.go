@@ -44,6 +44,8 @@ type Service interface {
 	GetByID(ctx context.Context, id string) (*models.Event, error)
 	// List returns events, optionally filtered by status.
 	List(ctx context.Context, status string) ([]*models.Event, error)
+	// ListByOrganizer returns all events (any status) created by the given user.
+	ListByOrganizer(ctx context.Context, organizerID uuid.UUID) ([]*models.Event, error)
 	// Nearby returns published events nearest to (lat, lon), within 50 km,
 	// up to limit results. Both lat and lon are required.
 	Nearby(ctx context.Context, lat, lon *float64, limit int) ([]*NearbyResult, error)
@@ -151,6 +153,15 @@ func (s *service) List(_ context.Context, status string) ([]*models.Event, error
 	list, err := s.repo.List(ListFilter{Status: status})
 	if err != nil {
 		return nil, fmt.Errorf("list events: %w", err)
+	}
+
+	return list, nil
+}
+
+func (s *service) ListByOrganizer(_ context.Context, organizerID uuid.UUID) ([]*models.Event, error) {
+	list, err := s.repo.List(ListFilter{OrganizerID: organizerID})
+	if err != nil {
+		return nil, fmt.Errorf("list events by organizer: %w", err)
 	}
 
 	return list, nil

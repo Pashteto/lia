@@ -32,6 +32,9 @@ func (m *mockEventsService) GetByID(context.Context, string) (*domainmodels.Even
 func (m *mockEventsService) List(context.Context, string) ([]*domainmodels.Event, error) {
 	return nil, nil
 }
+func (m *mockEventsService) ListByOrganizer(context.Context, uuid.UUID) ([]*domainmodels.Event, error) {
+	return nil, nil
+}
 func (m *mockEventsService) Nearby(context.Context, *float64, *float64, int) ([]*eventsdomain.NearbyResult, error) {
 	return nil, nil
 }

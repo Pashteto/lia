@@ -25,6 +25,10 @@ type Event struct {
 	// CoverURL is a transient field (not a DB column) populated by the repository
 	// when cover_file_id is non-zero. It is the publicly fetchable URL of the cover image.
 	CoverURL    string      `pg:"-"`
+	// Organizer is the transient public read-model of the event's creator (the
+	// user referenced by OrganizerID). Not a DB column; populated by the
+	// repository's loadOrganizers. Carries display data only (no email).
+	Organizer   *Organizer  `pg:"-"`
 	Title       string      `pg:"title,notnull"`
 	Description string      `pg:"description,use_zero"`
 	// Venue is normalized into the venues entity (migration 000008). It is the
@@ -48,6 +52,15 @@ type Event struct {
 	PublishedAt *time.Time  `pg:"published_at"`
 	CreatedAt   time.Time   `pg:"created_at,notnull,default:now()"`
 	UpdatedAt   time.Time   `pg:"updated_at,notnull,default:now()"`
+}
+
+// Organizer is the public display read-model of an event's creator. It is the
+// loaded counterpart of Event.OrganizerID and intentionally excludes email and
+// other private user fields, since event responses are a public surface.
+type Organizer struct {
+	UUID      uuid.UUID
+	Name      string
+	AvatarURL string
 }
 
 // Validate checks that the event has the required fields and valid data.

@@ -96,6 +96,17 @@ func EventToAPI(event *domainModels.Event) *apiModels.Event {
 		out.CoverURL = &event.CoverURL
 	}
 
+	if event.Organizer != nil {
+		org := &apiModels.Organizer{
+			UUID: strfmt.UUID(event.Organizer.UUID.String()),
+			Name: event.Organizer.Name,
+		}
+		if event.Organizer.AvatarURL != "" {
+			org.AvatarURL = &event.Organizer.AvatarURL
+		}
+		out.Organizer = org
+	}
+
 	return out
 }
 
@@ -109,7 +120,9 @@ func EventToAPIWithDistance(e *domainModels.Event, distanceM float64) *apiModels
 }
 
 // EventFromAPIInput converts an API EventInput into a domain Event.
-// Applies the same defaults as the database (draft / offline / free).
+// Applies sensible defaults (published / offline / free): a new event with no
+// explicit status is published so it is immediately visible in the discovery
+// feed (which lists status=published). Clients can pass "draft" to hide it.
 func EventFromAPIInput(in *apiModels.EventInput) (*domainModels.Event, error) {
 	if in == nil {
 		return nil, fmt.Errorf("event input is required")
@@ -126,7 +139,7 @@ func EventFromAPIInput(in *apiModels.EventInput) (*domainModels.Event, error) {
 		event.Title = *in.Title
 	}
 
-	status := defaultStr(in.Status, "draft")
+	status := defaultStr(in.Status, "published")
 	parsedStatus, err := domainModels.EventStatusFromString(status)
 	if err != nil {
 		return nil, fmt.Errorf("parse status: %w", err)

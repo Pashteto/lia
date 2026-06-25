@@ -126,3 +126,41 @@ func (h *CreateEvent) Handle(params eventsops.CreateEventParams, principal *apim
 
 	return eventsops.NewCreateEventCreated().WithPayload(formatter.EventToAPI(event))
 }
+
+// ListMyEvents handler returns all events (any status, including drafts) created
+// by the authenticated user.
+type ListMyEvents struct {
+	events eventsdomain.Service
+}
+
+// NewListMyEvents constructs a ListMyEvents handler.
+func NewListMyEvents(svc eventsdomain.Service) *ListMyEvents {
+	return &ListMyEvents{events: svc}
+}
+
+// Handle returns the caller's own events.
+func (h *ListMyEvents) Handle(params eventsops.ListMyEventsParams, principal *apimodels.User) middleware.Responder {
+	if principal == nil {
+		return eventsops.NewListMyEventsUnauthorized().
+			WithPayload(DefaultError(http.StatusUnauthorized, errors.New("authentication required"), nil))
+	}
+	id, err := uuid.FromString(principal.UUID.String())
+	if err != nil {
+		return eventsops.NewListMyEventsUnauthorized().
+			WithPayload(DefaultError(http.StatusUnauthorized, err, nil))
+	}
+
+	list, err := h.events.ListByOrganizer(params.HTTPRequest.Context(), id)
+	if err != nil {
+		logger.Log().Errorf("list my events: %s", err.Error())
+		return eventsops.NewListMyEventsServiceUnavailable().
+			WithPayload(DefaultError(http.StatusServiceUnavailable, err, nil))
+	}
+
+	payload := make([]*apimodels.Event, 0, len(list))
+	for _, e := range list {
+		payload = append(payload, formatter.EventToAPI(e))
+	}
+
+	return eventsops.NewListMyEventsOK().WithPayload(payload)
+}

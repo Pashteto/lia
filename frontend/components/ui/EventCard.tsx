@@ -1,7 +1,7 @@
+import { EventCover } from "@/components/ui/EventCover";
 import { cn } from "@/lib/cn";
 import { formatAttendance, formatEventDate, formatPrice } from "@/lib/format";
 import type { LiaEvent } from "@/lib/types";
-import Image from "next/image";
 import Link from "next/link";
 import type React from "react";
 import { Kicker } from "./Kicker";
@@ -32,17 +32,11 @@ export function EventCard({
         className,
       )}
     >
-      {event.coverUrl && (
-        <div className="relative aspect-[3/2] w-full overflow-hidden bg-fill">
-          <Image
-            src={event.coverUrl}
-            alt=""
-            fill
-            sizes="(max-width: 768px) 100vw, 360px"
-            className="object-cover transition duration-300 group-hover:scale-[1.02]"
-          />
-        </div>
-      )}
+      <EventCover
+        event={event}
+        aspect="aspect-[3/2]"
+        sizes="(max-width: 768px) 100vw, 360px"
+      />
       <div className="space-y-2 p-4">
         <div className="flex items-center justify-between gap-2">
           {event.categories.length > 0 ? (
@@ -59,6 +53,11 @@ export function EventCard({
           {formatEventDate(event.startsAt)}
           {event.venue ? ` · ${event.venue.name}` : ""}
         </p>
+        {event.organizer?.name ? (
+          <p className="text-[13px] text-label-secondary">
+            Организатор: {event.organizer.name}
+          </p>
+        ) : null}
         <div className="flex items-center justify-between pt-1">
           <span className="text-[15px] font-medium">{formatPrice(event)}</span>
           {attendance && (

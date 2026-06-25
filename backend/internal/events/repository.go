@@ -20,6 +20,9 @@ import (
 type ListFilter struct {
 	// Status, when non-empty, restricts to events in that publication state.
 	Status string
+	// OrganizerID, when non-zero, restricts to events created by that user
+	// (used by the "my events" listing). Any status is returned.
+	OrganizerID uuid.UUID
 	// Limit caps the number of rows returned (defaults to DefaultListLimit).
 	Limit int
 }
@@ -116,6 +119,10 @@ func (r *pgRepository) GetByID(id uuid.UUID) (*models.Event, error) {
 		return nil, err
 	}
 
+	if err := r.loadOrganizers([]*models.Event{event}); err != nil {
+		return nil, err
+	}
+
 	return event, nil
 }
 
@@ -132,6 +139,10 @@ func (r *pgRepository) List(filter ListFilter) ([]*models.Event, error) {
 		query = query.Where("status = ?", filter.Status)
 	}
 
+	if filter.OrganizerID != uuid.Nil {
+		query = query.Where("organizer_id = ?", filter.OrganizerID)
+	}
+
 	if err := query.Order("starts_at ASC").Limit(limit).Select(); err != nil {
 		return nil, fmt.Errorf("list events from db: %w", err)
 	}
@@ -145,6 +156,10 @@ func (r *pgRepository) List(filter ListFilter) ([]*models.Event, error) {
 	}
 
 	if err := r.loadCover(list); err != nil {
+		return nil, err
+	}
+
+	if err := r.loadOrganizers(list); err != nil {
 		return nil, err
 	}
 
@@ -317,6 +332,65 @@ func (r *pgRepository) loadCover(events []*models.Event) error {
 		if key, ok := byID[e.CoverFileID]; ok {
 			e.CoverURL = r.store.URL(key)
 		}
+	}
+	return nil
+}
+
+// loadOrganizers populates the public Organizer read-model on each event from
+// the users table in a single query (no N+1). It exposes display name + avatar
+// only — email and other private user fields are deliberately excluded, since
+// event responses are public. Avatar URL is resolved via storage when set.
+func (r *pgRepository) loadOrganizers(events []*models.Event) error {
+	if len(events) == 0 {
+		return nil
+	}
+	ids := make([]uuid.UUID, 0, len(events))
+	seen := make(map[uuid.UUID]struct{})
+	for _, e := range events {
+		if e.OrganizerID != uuid.Nil {
+			if _, ok := seen[e.OrganizerID]; !ok {
+				seen[e.OrganizerID] = struct{}{}
+				ids = append(ids, e.OrganizerID)
+			}
+		}
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+
+	var rows []struct {
+		UUID       uuid.UUID `pg:"uuid"`
+		Name       string    `pg:"name,use_zero"`
+		StorageKey string    `pg:"storage_key,use_zero"`
+	}
+	if _, err := r.db.Query(&rows,
+		`SELECT u.uuid, u.name, COALESCE(f.storage_key, '') AS storage_key
+		   FROM users u
+		   LEFT JOIN files f ON f.id = u.avatar_file_id
+		  WHERE u.uuid IN (?)`,
+		pg.In(ids),
+	); err != nil {
+		return fmt.Errorf("load organizers: %w", err)
+	}
+
+	type orgInfo struct {
+		name       string
+		storageKey string
+	}
+	byID := make(map[uuid.UUID]orgInfo, len(rows))
+	for _, row := range rows {
+		byID[row.UUID] = orgInfo{name: row.Name, storageKey: row.StorageKey}
+	}
+	for _, e := range events {
+		info, ok := byID[e.OrganizerID]
+		if !ok {
+			continue
+		}
+		org := &models.Organizer{UUID: e.OrganizerID, Name: info.name}
+		if info.storageKey != "" && r.store != nil {
+			org.AvatarURL = r.store.URL(info.storageKey)
+		}
+		e.Organizer = org
 	}
 	return nil
 }

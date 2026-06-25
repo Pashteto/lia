@@ -31,7 +31,15 @@ export function apiEventToLia(e: ApiEvent): LiaEvent {
     endsAt: e.ends_at,
     priceType: (e.price_type as PriceType) ?? "free",
     priceMin: e.price_min,
-    organizer: e.organizer_id ? { id: e.organizer_id, name: "" } : undefined,
+    organizer: e.organizer
+      ? {
+          id: e.organizer.uuid ?? e.organizer_id ?? "",
+          name: e.organizer.name ?? "",
+          avatarUrl: e.organizer.avatar_url,
+        }
+      : e.organizer_id
+        ? { id: e.organizer_id, name: "" }
+        : undefined,
     venue: e.venue
       ? {
           id: e.venue.id,
@@ -136,6 +144,25 @@ export async function fetchPublishedEvents(): Promise<LiaEvent[]> {
   });
   if (!res.ok) {
     throw new Error(`fetch events failed: ${res.status}`);
+  }
+  const data = (await res.json()) as ApiEvent[];
+  return data.map(apiEventToLia);
+}
+
+/**
+ * Fetches the authenticated user's own events (any status, incl. drafts) via
+ * `GET /events/mine`. Requires a session token. Client-side only (no cache) so
+ * a freshly created event shows up immediately.
+ */
+export async function fetchMyEvents(): Promise<LiaEvent[]> {
+  const token = getToken();
+  if (!token) throw new Error("not authenticated");
+  const res = await fetch(`${API_V1}/events/mine`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    throw new Error(`fetch my events failed: ${res.status}`);
   }
   const data = (await res.json()) as ApiEvent[];
   return data.map(apiEventToLia);

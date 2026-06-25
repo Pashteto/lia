@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/Button";
@@ -25,6 +26,12 @@ export function AuthButton() {
   if (isAuthed) {
     return (
       <div className="flex items-center gap-2">
+        <Link
+          href="/events/mine"
+          className="text-[14px] font-medium text-accent"
+        >
+          Мои события
+        </Link>
         <span
           className="hidden max-w-[12rem] truncate text-[14px] text-label-secondary sm:block"
           title={email ?? undefined}

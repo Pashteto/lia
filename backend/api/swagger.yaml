@@ -191,6 +191,33 @@ paths:
           schema:
             $ref: "#/definitions/Error"
 
+  /events/mine:
+    get:
+      summary: List my events
+      description: >-
+        Returns events created by the authenticated user, in any publication
+        state (including drafts), so owners can see their own unpublished events.
+      operationId: listMyEvents
+      tags:
+        - events
+      security:
+        - jwt: []
+      responses:
+        200:
+          description: List of the caller's events
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Event"
+        401:
+          description: Unauthorized
+          schema:
+            $ref: "#/definitions/Error"
+        503:
+          description: Service unavailable (database disabled)
+          schema:
+            $ref: "#/definitions/Error"
+
   /events/nearby:
     get:
       summary: Events nearby
@@ -502,6 +529,26 @@ definitions:
         readOnly: true
         x-nullable: true
       cover_url:
+        type: string
+        readOnly: true
+        x-nullable: true
+      organizer:
+        $ref: "#/definitions/Organizer"
+
+  Organizer:
+    type: object
+    description: >-
+      Public organizer (event creator) display data. Deliberately omits email and
+      other private fields — event responses are a public surface.
+    properties:
+      uuid:
+        type: string
+        format: uuid
+        readOnly: true
+      name:
+        type: string
+        readOnly: true
+      avatar_url:
         type: string
         readOnly: true
         x-nullable: true

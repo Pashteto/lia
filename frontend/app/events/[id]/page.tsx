@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/Button";
+import { EventCover } from "@/components/ui/EventCover";
 import { VenueMap } from "@/components/VenueMap";
 import { fetchEvent } from "@/lib/api";
 import {
@@ -8,7 +9,6 @@ import {
 } from "@/lib/format";
 import { MOCK_EVENTS } from "@/lib/mock-events";
 import type { LiaEvent } from "@/lib/types";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -52,17 +52,14 @@ export default async function EventDetailPage({
 
       <article className="mx-auto max-w-2xl px-5">
         {/* Cover */}
-        <div className="relative mt-4 aspect-[16/9] w-full overflow-hidden rounded-card bg-fill">
-          {event.coverUrl && (
-            <Image
-              src={event.coverUrl}
-              alt=""
-              fill
-              sizes="(max-width: 768px) 100vw, 640px"
-              className="object-cover"
-            />
-          )}
-        </div>
+        <EventCover
+          event={event}
+          aspect="aspect-[16/9]"
+          rounded="rounded-card"
+          sizes="(max-width: 768px) 100vw, 640px"
+          priority
+          className="mt-4"
+        />
 
         {/* Title */}
         <div className="mt-5">

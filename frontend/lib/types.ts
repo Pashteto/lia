@@ -67,6 +67,8 @@ export interface LiaEvent {
 export interface ApiEvent {
   id: string;
   organizer_id?: string;
+  /** Public organizer display data (creator). No email — public surface. */
+  organizer?: { uuid?: string; name?: string; avatar_url?: string };
   venue_id?: string;
   title: string;
   description?: string;

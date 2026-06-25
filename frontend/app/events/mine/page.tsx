@@ -1,0 +1,86 @@
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
+
+import { EventCard } from "@/components/ui/EventCard";
+import { fetchMyEvents } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
+
+const STATUS_LABEL: Record<string, string> = {
+  draft: "Черновик",
+  pending_review: "На модерации",
+  rejected: "Отклонено",
+  cancelled: "Отменено",
+};
+
+// "Мои события" — events created by the signed-in user, including drafts that
+// don't appear in the public discovery feed. Backed by GET /events/mine.
+export default function MyEventsPage() {
+  const { isAuthed, ready } = useAuth();
+
+  const {
+    data: events = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["my-events"],
+    queryFn: fetchMyEvents,
+    enabled: ready && isAuthed,
+  });
+
+  if (!ready) {
+    return <div className="min-h-screen bg-bg-grouped" />;
+  }
+
+  if (!isAuthed) {
+    return (
+      <main className="mx-auto max-w-3xl px-4 py-16 text-center">
+        <h1 className="text-[28px] font-bold tracking-[-0.022em]">Мои события</h1>
+        <p className="mt-3 text-label-secondary">
+          Войдите, чтобы увидеть созданные вами события.
+        </p>
+      </main>
+    );
+  }
+
+  return (
+    <main className="mx-auto max-w-5xl px-4 py-8">
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-[28px] font-bold tracking-[-0.022em]">Мои события</h1>
+        <Link
+          href="/events/new"
+          className="rounded-full bg-accent px-4 py-2 text-[15px] font-medium text-white"
+        >
+          Создать
+        </Link>
+      </div>
+
+      {isLoading ? (
+        <p className="mt-8 text-label-secondary">Загрузка…</p>
+      ) : isError ? (
+        <p className="mt-8 text-label-secondary">Не удалось загрузить события.</p>
+      ) : events.length === 0 ? (
+        <p className="mt-8 text-label-secondary">
+          Вы ещё не создали ни одного события.{" "}
+          <Link href="/events/new" className="text-accent">
+            Создать первое →
+          </Link>
+        </p>
+      ) : (
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {events.map((e) => (
+            <div key={e.id} className="relative">
+              {e.status !== "published" && (
+                <span className="absolute left-3 top-3 z-10 rounded-full bg-black/70 px-2 py-0.5 text-[12px] font-medium text-white">
+                  {STATUS_LABEL[e.status] ?? e.status}
+                </span>
+              )}
+              <EventCard event={e} />
+            </div>
+          ))}
+        </div>
+      )}
+    </main>
+  );
+}

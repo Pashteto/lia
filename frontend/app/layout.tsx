@@ -6,7 +6,7 @@ import "./globals.css";
 // (SF Pro on Apple devices, OS font elsewhere) — see ../../design/DESIGN.md.
 
 export const metadata: Metadata = {
-  title: "Lia — События",
+  title: "Presence.Tarski — События",
   description:
     "Discovery участливых культурных практик: медиации, мастер-классы, лекции, читательские группы.",
 };

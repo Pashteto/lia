@@ -1,10 +1,14 @@
 "use client";
 
+import { useState } from "react";
+
+import { LoginModal } from "@/components/AuthButton";
 import { Button } from "@/components/ui/Button";
 import { Segmented } from "@/components/ui/Segmented";
 import { Switch } from "@/components/ui/Switch";
 import { VenuePicker } from "@/components/VenuePicker";
 import { createEvent, getCategories, type CreateEventInput } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/cn";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -33,6 +37,7 @@ const inputCls =
 
 export function CreateEventForm() {
   const router = useRouter();
+  const { isAuthed, ready } = useAuth();
 
   const {
     register,
@@ -77,6 +82,15 @@ export function CreateEventForm() {
     };
     mutation.mutate(input);
   };
+
+  // Gate: creating an event requires a signed-in user (backend returns 401
+  // otherwise). Avoid flashing the form before the session is read.
+  if (!ready) {
+    return <div className="min-h-screen bg-bg-grouped" />;
+  }
+  if (!isAuthed) {
+    return <CreateEventGate />;
+  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="min-h-screen bg-bg-grouped pb-16">
@@ -247,6 +261,39 @@ export function CreateEventForm() {
         )}
       </div>
     </form>
+  );
+}
+
+// Shown when an unauthenticated user reaches /events/new. Prompts for demo-login
+// rather than rendering a form that would 401 on submit.
+function CreateEventGate() {
+  const [showLogin, setShowLogin] = useState(false);
+  return (
+    <div className="min-h-screen bg-bg-grouped">
+      <header className="glass sticky top-0 z-10 border-b border-separator">
+        <div className="mx-auto flex max-w-2xl items-center justify-between px-5 py-3">
+          <Link href="/" className="text-[17px] text-accent">
+            Отмена
+          </Link>
+          <span className="text-[17px] font-semibold">Новое событие</span>
+          <span className="w-16" />
+        </div>
+      </header>
+      <div className="mx-auto max-w-md px-5 pt-16 text-center">
+        <div className="mb-4 text-[40px]" aria-hidden>
+          🔐
+        </div>
+        <h1 className="mb-2 text-[22px] font-bold tracking-[-0.022em]">
+          Войдите, чтобы создать событие
+        </h1>
+        <p className="mb-6 text-[15px] text-label-secondary">
+          Создание событий доступно авторизованным пользователям. Демо-вход
+          занимает пару секунд — нужен только email.
+        </p>
+        <Button onClick={() => setShowLogin(true)}>Войти</Button>
+      </div>
+      {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
+    </div>
   );
 }
 

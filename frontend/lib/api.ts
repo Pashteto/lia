@@ -1,3 +1,4 @@
+import { getToken } from "./auth";
 import type {
   ApiEvent,
   EventFormat,
@@ -189,11 +190,19 @@ export interface CreateEventInput {
   ends_at?: string;
 }
 
-/** Creates an event via POST /events; returns the created event. */
+/**
+ * Creates an event via POST /events; returns the created event.
+ * Requires authentication — attaches the demo-login bearer token. The backend
+ * sets the organizer to the authenticated principal, so no organizer_id is sent.
+ */
 export async function createEvent(input: CreateEventInput): Promise<LiaEvent> {
+  const token = getToken();
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
   const res = await fetch(`${API_V1}/events`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(input),
   });
   if (!res.ok) {
@@ -201,4 +210,28 @@ export async function createEvent(input: CreateEventInput): Promise<LiaEvent> {
     throw new Error(`create event failed: ${res.status} ${detail}`);
   }
   return apiEventToLia((await res.json()) as ApiEvent);
+}
+
+/** Response from POST /auth/demo-login. */
+interface DemoLoginResponse {
+  token: string;
+}
+
+/**
+ * DEMO-ONLY login: mints a GateGuard session token for an email (no password).
+ * Returns the bearer token; callers persist it via lib/auth.setSession.
+ */
+export async function demoLogin(email: string, name?: string): Promise<string> {
+  const res = await fetch(`${API_V1}/auth/demo-login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, name: name || email.split("@")[0] }),
+  });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`login failed: ${res.status} ${detail}`);
+  }
+  const data = (await res.json()) as DemoLoginResponse;
+  if (!data.token) throw new Error("login failed: empty token");
+  return data.token;
 }

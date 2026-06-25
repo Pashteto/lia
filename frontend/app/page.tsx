@@ -1,3 +1,4 @@
+import { AuthButton } from "@/components/AuthButton";
 import { DiscoveryFeed } from "@/components/DiscoveryFeed";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/Button";
@@ -19,19 +20,14 @@ export default async function DiscoveryPage() {
   return (
     <>
       <GlassNav
-        title="Lia"
+        title="Presence.Tarski"
         actions={
           <>
             <ThemeToggle />
             <Link href="/events/new" className="hidden sm:block">
               <Button variant="tinted">Создать событие</Button>
             </Link>
-            {/* Auth isn't built yet (backend still runs HTTP_MOCK_AUTH; no auth
-                module). Render an honest disabled stub instead of a dead button
-                that looks broken when clicked. */}
-            <Button variant="plain" disabled title="Вход появится позже">
-              Войти
-            </Button>
+            <AuthButton />
           </>
         }
       />

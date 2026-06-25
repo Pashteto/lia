@@ -4,7 +4,6 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -28,15 +27,16 @@ interface AuthState {
 const AuthContext = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // Start signed-out on both server and first client render so hydration
-  // matches; read the persisted session in an effect afterwards.
-  const [email, setEmail] = useState<string | null>(null);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    if (getToken()) setEmail(getStoredEmail());
-    setReady(true);
-  }, []);
+  // Use lazy initialisers so localStorage is read once on the client without
+  // triggering a second render via setState-in-effect. getToken() / getStoredEmail()
+  // return null on the server (typeof window === "undefined"), so the initial
+  // server-render and client hydration both produce null/false — no mismatch.
+  const [email, setEmail] = useState<string | null>(() =>
+    getToken() ? getStoredEmail() : null,
+  );
+  // ready: false on the server; true immediately on the client so the UI never
+  // blocks behind an effect tick.
+  const [ready] = useState(() => typeof window !== "undefined");
 
   const login = useCallback(async (loginEmail: string, name?: string) => {
     const token = await demoLogin(loginEmail, name);

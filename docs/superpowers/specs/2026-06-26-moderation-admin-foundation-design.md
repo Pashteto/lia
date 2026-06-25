@@ -40,7 +40,7 @@ user-generated content). It must be documented for ISO 27001 / Vanta — see §9
   the caller's role.
 - Frontend `/admin` shell: gate, home/overview, event moderation queue; an
   «Админ» header link; take-down badge on the organizer's own event views.
-- Migration `000012`: `users.role`, `event_status_history`, `audit_log`.
+- Migration `000014`: `users.role`, `event_status_history`, `audit_log`.
 
 **Out of scope (later sub-projects, each its own spec)**
 - A `moderator` role distinct from `admin` (needs the GateGuard proto change).
@@ -68,7 +68,7 @@ user-generated content). It must be documented for ISO 27001 / Vanta — see §9
 - **`/events/mine`** already returns the organizer's events in all statuses — the
   natural place to surface a take-down badge.
 
-## 5. Data model — migration `000012`
+## 5. Data model — migration `000014`
 
 ```sql
 -- 1. Local cache of the GateGuard role (source of truth stays GateGuard).
@@ -223,6 +223,6 @@ rebuild/reship is required (Approach 1).
 - **Frontend:** `pnpm lint` + `pnpm build`. Playwright/manual: admin sees the
   queue; take-down removes the event from Discovery; reinstate restores it;
   non-admin is redirected from `/admin` and sees no «Админ» link.
-- **Live:** migration `000012` is the only schema delta; **no GateGuard reship**.
+- **Live:** migration `000014` is the only schema delta; **no GateGuard reship**.
   Seed one admin (§8) and smoke-test. Full live verification deferred per the
   flaky-box norm (build images on the Mac, `docker save|ssh|load`).

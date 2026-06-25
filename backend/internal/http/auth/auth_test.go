@@ -294,6 +294,42 @@ func TestAuthenticate_PropagatesAdminRole(t *testing.T) {
 	}
 }
 
+func TestAuthenticate_SyncsRoleOnExistingUser(t *testing.T) {
+	// Pre-seed fakeService with an existing user with Role = "common"
+	userID := uuid.Must(uuid.NewV4())
+	svc := newFakeService()
+	svc.users["drift@presence.test"] = &models.User{
+		UUID:   userID,
+		Email:  "drift@presence.test",
+		Name:   "Drift User",
+		Role:   "common",
+		Status: models.UserActive,
+	}
+
+	// Create Auth with validator that returns Role = "admin" for the same email
+	a := NewAuth(svc, false, nil, WithValidator(fakeValidator{
+		claims: &Claims{Subject: "s", Email: "drift@presence.test", Name: "Drift User", Role: "admin"},
+	}))
+
+	// Call Authenticate and verify role was synced to "admin"
+	u, err := a.Authenticate("Bearer tok")
+	if err != nil {
+		t.Fatalf("authenticate: %v", err)
+	}
+	if u.Role != "admin" {
+		t.Fatalf("returned user role = %q, want admin", u.Role)
+	}
+
+	// Verify the stored user's role was actually updated
+	storedUser, err := svc.GetUserByEmail(context.Background(), "drift@presence.test")
+	if err != nil {
+		t.Fatalf("GetUserByEmail: %v", err)
+	}
+	if storedUser.Role != "admin" {
+		t.Fatalf("stored user role = %q, want admin (role drift-sync failed)", storedUser.Role)
+	}
+}
+
 func TestNewAuth(t *testing.T) {
 	tests := []struct {
 		name        string

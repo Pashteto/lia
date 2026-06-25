@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /*
- * Lia design tokens — Apple HIG.
+ * Presence.Tarski design tokens — Apple HIG.
  * Source of truth: ../../design/DESIGN.md (and design/screens/*.html).
  * Light values are the defaults; dark overrides apply via `prefers-color-scheme`
  * and an explicit `.dark` class (so screens can be eyeballed in both themes).

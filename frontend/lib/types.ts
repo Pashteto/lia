@@ -1,4 +1,4 @@
-// Domain types for the Lia frontend. These mirror the backend domain model
+// Domain types for the Presence.Tarski frontend. These mirror the backend domain model
 // described in docs/event_discovery_mvp_technical_stack.md (§13). UI copy is
 // Russian; identifiers and types stay English.
 
@@ -63,7 +63,7 @@ export interface LiaEvent {
   distanceM?: number;
 }
 
-/** Shape returned by the backend `GET /api/v1/events` (Lia API Event model). */
+/** Shape returned by the backend `GET /api/v1/events` (Presence.Tarski API Event model). */
 export interface ApiEvent {
   id: string;
   organizer_id?: string;

@@ -4,6 +4,7 @@ package main
 import (
 	"os"
 
+	"github.com/Pashteto/lia/cmd/cleanup"
 	"github.com/Pashteto/lia/cmd/root"
 	"github.com/Pashteto/lia/cmd/serve"
 	"github.com/Pashteto/lia/internal"
@@ -28,6 +29,7 @@ func main() {
 
 	rootCmd := root.Cmd(app)
 	rootCmd.AddCommand(serve.Cmd(app))
+	rootCmd.AddCommand(cleanup.Cmd())
 
 	if err = rootCmd.Execute(); err != nil {
 		logger.Log().Infof("An error occurred: %s", err.Error())

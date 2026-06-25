@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/gofrs/uuid"
 
@@ -19,7 +20,21 @@ var (
 	ErrInvalidInput = errors.New("invalid input")
 	// ErrNotFound indicates no event matched the query.
 	ErrNotFound = errors.New("not found")
+	// ErrQuotaExceeded indicates the organizer has reached their monthly event limit.
+	ErrQuotaExceeded = errors.New("monthly event limit reached")
 )
+
+// startOfMonthMoscow returns midnight on the first day of t's calendar month
+// in the Europe/Moscow timezone.
+func startOfMonthMoscow(t time.Time) time.Time {
+	loc, err := time.LoadLocation("Europe/Moscow")
+	if err != nil {
+		// Fall back to UTC if timezone data is unavailable.
+		loc = time.UTC
+	}
+	moscow := t.In(loc)
+	return time.Date(moscow.Year(), moscow.Month(), 1, 0, 0, 0, 0, loc)
+}
 
 // Service is the events business-logic interface.
 type Service interface {
@@ -47,15 +62,17 @@ type VenueValidator interface {
 }
 
 type service struct {
-	repo       Repository
-	categories CategoryValidator
-	venues     VenueValidator
+	repo         Repository
+	categories   CategoryValidator
+	venues       VenueValidator
+	monthlyLimit int
 }
 
 // NewService creates an events service backed by the given repository, a
-// category validator, and a venue validator.
-func NewService(repo Repository, categories CategoryValidator, venues VenueValidator) Service {
-	return &service{repo: repo, categories: categories, venues: venues}
+// category validator, a venue validator, and a monthly creation limit per
+// organizer. monthlyLimit <= 0 means unlimited.
+func NewService(repo Repository, categories CategoryValidator, venues VenueValidator, monthlyLimit int) Service {
+	return &service{repo: repo, categories: categories, venues: venues, monthlyLimit: monthlyLimit}
 }
 
 func (s *service) Create(ctx context.Context, event *models.Event) error {
@@ -84,6 +101,19 @@ func (s *service) Create(ctx context.Context, event *models.Event) error {
 		return fmt.Errorf("validate venue: %w", err)
 	}
 	event.Venue = venue
+
+	// Quota check: if a monthly limit is configured, reject once the organizer
+	// has reached it for the current calendar month (Europe/Moscow).
+	if s.monthlyLimit > 0 && event.OrganizerID != uuid.Nil {
+		since := startOfMonthMoscow(time.Now())
+		n, err := s.repo.CountByOrganizerSince(event.OrganizerID, since)
+		if err != nil {
+			return fmt.Errorf("quota check: %w", err)
+		}
+		if n >= s.monthlyLimit {
+			return fmt.Errorf("%w: %d/%d this month", ErrQuotaExceeded, n, s.monthlyLimit)
+		}
+	}
 
 	if err := s.repo.Create(event); err != nil {
 		return fmt.Errorf("create event: %w", err)

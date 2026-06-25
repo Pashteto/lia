@@ -6,6 +6,7 @@ package events
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-pg/pg/v10"
 	"github.com/gofrs/uuid"
@@ -49,6 +50,9 @@ type Repository interface {
 	// Nearby returns published events whose venue has coordinates, ordered
 	// nearest-first, capped at 50 km from (lat, lon).
 	Nearby(lat, lon float64, limit int) ([]*NearbyResult, error)
+	// CountByOrganizerSince returns the number of events created by the given
+	// organizer at or after since (all statuses, draft + published).
+	CountByOrganizerSince(organizer uuid.UUID, since time.Time) (int, error)
 }
 
 // pgRepository is a go-pg backed Repository.
@@ -315,4 +319,17 @@ func (r *pgRepository) loadCover(events []*models.Event) error {
 		}
 	}
 	return nil
+}
+
+// CountByOrganizerSince returns the number of events (any status) created by
+// the given organizer at or after since.
+func (r *pgRepository) CountByOrganizerSince(organizer uuid.UUID, since time.Time) (int, error) {
+	count, err := r.db.Model((*models.Event)(nil)).
+		Where("organizer_id = ?", organizer).
+		Where("created_at >= ?", since).
+		Count()
+	if err != nil {
+		return 0, fmt.Errorf("count events for organizer %s since %s: %w", organizer, since.Format(time.RFC3339), err)
+	}
+	return count, nil
 }

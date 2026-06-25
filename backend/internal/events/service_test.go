@@ -15,11 +15,13 @@ import (
 
 // mockRepo is an in-memory Repository for tests.
 type mockRepo struct {
-	created      *models.Event
-	getErr       error
-	get          *models.Event
-	list         []*models.Event
-	nearbyResult []*NearbyResult
+	created          *models.Event
+	getErr           error
+	get              *models.Event
+	list             []*models.Event
+	nearbyResult     []*NearbyResult
+	countByOrganizer int
+	countErr         error
 }
 
 func (m *mockRepo) Create(event *models.Event) error {
@@ -40,6 +42,10 @@ func (m *mockRepo) List(ListFilter) ([]*models.Event, error) {
 
 func (m *mockRepo) Nearby(lat, lon float64, limit int) ([]*NearbyResult, error) {
 	return m.nearbyResult, nil
+}
+
+func (m *mockRepo) CountByOrganizerSince(uuid.UUID, time.Time) (int, error) {
+	return m.countByOrganizer, m.countErr
 }
 
 // mockValidator is an in-memory CategoryValidator.
@@ -64,7 +70,7 @@ func (m *mockVenueValidator) Validate(context.Context, uuid.UUID) (*models.Venue
 
 // newServiceWithMock is a convenience helper used by Nearby tests.
 func newServiceWithMock(repo *mockRepo) Service {
-	return NewService(repo, &mockValidator{}, &mockVenueValidator{})
+	return NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
 }
 
 func validEvent() *models.Event {
@@ -77,7 +83,7 @@ func validEvent() *models.Event {
 
 func TestService_Create(t *testing.T) {
 	repo := &mockRepo{}
-	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{})
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
 
 	if err := svc.Create(context.Background(), validEvent()); err != nil {
 		t.Fatalf("Create returned error: %v", err)
@@ -91,7 +97,7 @@ func TestService_Create_WithCategories(t *testing.T) {
 	id, _ := uuid.NewV4()
 	resolved := []*models.Category{{ID: id, Slug: "lecture", Label: "Лекции"}}
 	repo := &mockRepo{}
-	svc := NewService(repo, &mockValidator{resolved: resolved}, &mockVenueValidator{})
+	svc := NewService(repo, &mockValidator{resolved: resolved}, &mockVenueValidator{}, 0)
 
 	ev := validEvent()
 	ev.CategoryIDs = []uuid.UUID{id}
@@ -105,7 +111,7 @@ func TestService_Create_WithCategories(t *testing.T) {
 
 func TestService_Create_UnknownCategory(t *testing.T) {
 	repo := &mockRepo{}
-	svc := NewService(repo, &mockValidator{err: categories.ErrInvalidInput}, &mockVenueValidator{})
+	svc := NewService(repo, &mockValidator{err: categories.ErrInvalidInput}, &mockVenueValidator{}, 0)
 
 	ev := validEvent()
 	bad, _ := uuid.NewV4()
@@ -117,7 +123,7 @@ func TestService_Create_UnknownCategory(t *testing.T) {
 }
 
 func TestService_Create_InvalidInput(t *testing.T) {
-	svc := NewService(&mockRepo{}, &mockValidator{}, &mockVenueValidator{})
+	svc := NewService(&mockRepo{}, &mockValidator{}, &mockVenueValidator{}, 0)
 
 	err := svc.Create(context.Background(), &models.Event{}) // missing title/starts_at
 	if !errors.Is(err, ErrInvalidInput) {
@@ -126,7 +132,7 @@ func TestService_Create_InvalidInput(t *testing.T) {
 }
 
 func TestService_GetByID_InvalidUUID(t *testing.T) {
-	svc := NewService(&mockRepo{}, &mockValidator{}, &mockVenueValidator{})
+	svc := NewService(&mockRepo{}, &mockValidator{}, &mockVenueValidator{}, 0)
 
 	_, err := svc.GetByID(context.Background(), "not-a-uuid")
 	if !errors.Is(err, ErrInvalidInput) {
@@ -135,7 +141,7 @@ func TestService_GetByID_InvalidUUID(t *testing.T) {
 }
 
 func TestService_List_InvalidStatus(t *testing.T) {
-	svc := NewService(&mockRepo{}, &mockValidator{}, &mockVenueValidator{})
+	svc := NewService(&mockRepo{}, &mockValidator{}, &mockVenueValidator{}, 0)
 
 	_, err := svc.List(context.Background(), "bogus")
 	if !errors.Is(err, ErrInvalidInput) {
@@ -145,7 +151,7 @@ func TestService_List_InvalidStatus(t *testing.T) {
 
 func TestService_List_OK(t *testing.T) {
 	repo := &mockRepo{list: []*models.Event{validEvent()}}
-	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{})
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
 
 	got, err := svc.List(context.Background(), "published")
 	if err != nil {
@@ -160,7 +166,7 @@ func TestService_Create_WithVenue(t *testing.T) {
 	id, _ := uuid.NewV4()
 	resolved := &models.Venue{ID: id, Name: "Винзавод"}
 	repo := &mockRepo{}
-	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{resolved: resolved})
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{resolved: resolved}, 0)
 
 	ev := validEvent()
 	ev.VenueID = id
@@ -174,7 +180,7 @@ func TestService_Create_WithVenue(t *testing.T) {
 
 func TestService_Create_UnknownVenue(t *testing.T) {
 	repo := &mockRepo{}
-	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{err: venues.ErrInvalidInput})
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{err: venues.ErrInvalidInput}, 0)
 
 	ev := validEvent()
 	bad, _ := uuid.NewV4()
@@ -205,7 +211,7 @@ func TestService_Nearby_OK(t *testing.T) {
 func TestService_Create_WithCoverFileID(t *testing.T) {
 	coverID, _ := uuid.NewV4()
 	repo := &mockRepo{}
-	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{})
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
 
 	ev := validEvent()
 	ev.CoverFileID = coverID
@@ -217,5 +223,55 @@ func TestService_Create_WithCoverFileID(t *testing.T) {
 	}
 	if repo.created.CoverFileID != coverID {
 		t.Fatalf("expected CoverFileID %s on created event, got %s", coverID, repo.created.CoverFileID)
+	}
+}
+
+// validEventWithOrganizer returns a valid event with a non-nil OrganizerID.
+func validEventWithOrganizer() *models.Event {
+	ev := validEvent()
+	id, _ := uuid.NewV4()
+	ev.OrganizerID = id
+	return ev
+}
+
+func TestCreate_UnderLimit_OK(t *testing.T) {
+	// count=9, limit=10 → should succeed
+	repo := &mockRepo{countByOrganizer: 9}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 10)
+	if err := svc.Create(context.Background(), validEventWithOrganizer()); err != nil {
+		t.Fatalf("expected no error at count=9/limit=10, got: %v", err)
+	}
+}
+
+func TestCreate_AtLimit_ReturnsErrQuota(t *testing.T) {
+	// count=10, limit=10 → must return ErrQuotaExceeded
+	repo := &mockRepo{countByOrganizer: 10}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 10)
+	err := svc.Create(context.Background(), validEventWithOrganizer())
+	if !errors.Is(err, ErrQuotaExceeded) {
+		t.Fatalf("expected ErrQuotaExceeded at count=10/limit=10, got: %v", err)
+	}
+}
+
+func TestCreate_LimitZero_Unlimited(t *testing.T) {
+	// limit=0 → quota check is disabled, even if count is very high
+	repo := &mockRepo{countByOrganizer: 9999}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+	if err := svc.Create(context.Background(), validEventWithOrganizer()); err != nil {
+		t.Fatalf("expected no error when limit=0 (unlimited), got: %v", err)
+	}
+}
+
+func TestStartOfMonthMoscow_ReturnsFirstDayMidnight(t *testing.T) {
+	// 2026-06-25 15:42:00 UTC → 2026-06-01 00:00:00 Europe/Moscow
+	loc, err := time.LoadLocation("Europe/Moscow")
+	if err != nil {
+		t.Fatalf("load Moscow tz: %v", err)
+	}
+	input := time.Date(2026, 6, 25, 15, 42, 0, 0, time.UTC)
+	got := startOfMonthMoscow(input)
+	want := time.Date(2026, 6, 1, 0, 0, 0, 0, loc)
+	if !got.Equal(want) {
+		t.Errorf("startOfMonthMoscow(%v) = %v, want %v", input, got, want)
 	}
 }

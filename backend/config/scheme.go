@@ -135,6 +135,10 @@ type Scheme struct {
 
 	// Env is the application environment (e.g. prod, dev, local).
 	Env string `mapstructure:"env"`
+
+	// EventsMonthlyLimit caps how many events a single organizer may create in
+	// one calendar month (Europe/Moscow). 0 means unlimited.
+	EventsMonthlyLimit int `mapstructure:"events_monthly_limit"`
 }
 
 // DatabaseConfig holds database connection settings.

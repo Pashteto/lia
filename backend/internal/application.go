@@ -161,6 +161,7 @@ func (app *App) registerModules() error {
 				eventsdomain.NewRepository(repoModule.DB(), app.blobStore),
 				app.categoriesSvc,
 				app.venuesSvc,
+				app.config.EventsMonthlyLimit,
 			)
 			logger.Log().Info("events module wired to repository + storage")
 		}
@@ -174,6 +175,7 @@ func (app *App) registerModules() error {
 			eventsdomain.NewRepository(repoModule.DB(), nil),
 			app.categoriesSvc,
 			app.venuesSvc,
+			app.config.EventsMonthlyLimit,
 		)
 		logger.Log().Info("events module wired to repository (no storage)")
 	}

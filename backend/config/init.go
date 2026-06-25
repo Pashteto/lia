@@ -102,6 +102,9 @@ func setDefaults() {
 	viper.SetDefault("storage.s3.secret_key", "")
 	viper.SetDefault("storage.s3.use_ssl", true)
 
+	// Events quota
+	viper.SetDefault("events_monthly_limit", 10)
+
 	// S3 env overrides (secrets come from environment, not config files)
 	viper.BindEnv("storage.s3.endpoint", "S3_ENDPOINT")   //nolint:errcheck
 	viper.BindEnv("storage.s3.region", "S3_REGION")       //nolint:errcheck

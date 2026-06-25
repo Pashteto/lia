@@ -45,14 +45,17 @@ func (h *ListEvents) Handle(params eventsops.ListEventsParams) middleware.Respon
 	return eventsops.NewListEventsOK().WithPayload(payload)
 }
 
-// GetEventByID handler returns a single event by UUID.
+// GetEventByID handler returns a single event by UUID. Non-published events are
+// visible only to their owner; everyone else gets 404 (existence not leaked).
 type GetEventByID struct {
-	events eventsdomain.Service
+	events    eventsdomain.Service
+	checkAuth func(string) (*apimodels.User, error)
 }
 
-// NewGetEventByID creates a GetEventByID handler.
-func NewGetEventByID(svc eventsdomain.Service) *GetEventByID {
-	return &GetEventByID{events: svc}
+// NewGetEventByID creates a GetEventByID handler. checkAuth resolves the caller
+// from the Authorization header; it may be nil (treated as always-anonymous).
+func NewGetEventByID(svc eventsdomain.Service, checkAuth func(string) (*apimodels.User, error)) *GetEventByID {
+	return &GetEventByID{events: svc, checkAuth: checkAuth}
 }
 
 // Handle GET /events/{id}.
@@ -73,7 +76,26 @@ func (h *GetEventByID) Handle(params eventsops.GetEventByIDParams) middleware.Re
 		}
 	}
 
+	// Non-published events are visible only to the owner.
+	if event.Status.String() != "published" && !h.callerOwns(params, event.OrganizerID.String()) {
+		return eventsops.NewGetEventByIDNotFound().
+			WithPayload(DefaultError(http.StatusNotFound, errors.New("event not found"), nil))
+	}
+
 	return eventsops.NewGetEventByIDOK().WithPayload(formatter.EventToAPI(event))
+}
+
+// callerOwns reports whether the (optional) authenticated caller owns the event.
+// Any auth failure is treated as anonymous (not the owner).
+func (h *GetEventByID) callerOwns(params eventsops.GetEventByIDParams, organizerID string) bool {
+	if h.checkAuth == nil {
+		return false
+	}
+	u, err := h.checkAuth(params.HTTPRequest.Header.Get("Authorization"))
+	if err != nil || u == nil {
+		return false
+	}
+	return u.UUID.String() == organizerID
 }
 
 // CreateEvent handler creates a new event.

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"testing"
@@ -18,11 +19,13 @@ import (
 
 // mockEventsService captures the event passed to Create.
 type mockEventsService struct {
-	created     *domainmodels.Event
-	createErr   error
-	updated     *domainmodels.Event
-	updateErr   error
-	updateOwner uuid.UUID
+	created       *domainmodels.Event
+	createErr     error
+	updated       *domainmodels.Event
+	updateErr     error
+	updateOwner   uuid.UUID
+	getByID       *domainmodels.Event
+	listStatusArg string
 }
 
 func (m *mockEventsService) Create(_ context.Context, e *domainmodels.Event) error {
@@ -39,9 +42,10 @@ func (m *mockEventsService) Update(_ context.Context, id, ownerID uuid.UUID, _ e
 	return ev, nil
 }
 func (m *mockEventsService) GetByID(context.Context, string) (*domainmodels.Event, error) {
-	return nil, nil
+	return m.getByID, nil
 }
-func (m *mockEventsService) List(context.Context, string) ([]*domainmodels.Event, error) {
+func (m *mockEventsService) List(_ context.Context, status string) ([]*domainmodels.Event, error) {
+	m.listStatusArg = status
 	return nil, nil
 }
 func (m *mockEventsService) ListByOrganizer(context.Context, uuid.UUID) ([]*domainmodels.Event, error) {
@@ -187,5 +191,72 @@ func TestUpdateEvent_Success_Returns200(t *testing.T) {
 	resp := h.Handle(updateParams(t), testPrincipal())
 	if _, ok := resp.(*eventsops.UpdateEventOK); !ok {
 		t.Fatalf("expected *UpdateEventOK, got %T", resp)
+	}
+}
+
+func getByIDParams(t *testing.T, auth string) eventsops.GetEventByIDParams {
+	t.Helper()
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1/events/x", nil)
+	if auth != "" {
+		req.Header.Set("Authorization", auth)
+	}
+	return eventsops.GetEventByIDParams{
+		HTTPRequest: req,
+		ID:          strfmt.UUID(uuid.Must(uuid.NewV4()).String()),
+	}
+}
+
+func TestGetEventByID_AnonymousDraft_Returns404(t *testing.T) {
+	owner := uuid.Must(uuid.NewV4())
+	svc := &mockEventsService{getByID: &domainmodels.Event{
+		ID: uuid.Must(uuid.NewV4()), OrganizerID: owner,
+		Status: domainmodels.EventDraft, Title: "D", StartsAt: time.Now(),
+	}}
+	// checkAuth returns unauthorized for any token (anonymous caller).
+	h := NewGetEventByID(svc, func(string) (*models.User, error) { return nil, errors.New("no auth") })
+
+	resp := h.Handle(getByIDParams(t, ""))
+	if _, ok := resp.(*eventsops.GetEventByIDNotFound); !ok {
+		t.Fatalf("expected *GetEventByIDNotFound, got %T", resp)
+	}
+}
+
+func TestGetEventByID_OwnerDraft_Returns200(t *testing.T) {
+	owner := uuid.Must(uuid.NewV4())
+	svc := &mockEventsService{getByID: &domainmodels.Event{
+		ID: uuid.Must(uuid.NewV4()), OrganizerID: owner,
+		Status: domainmodels.EventDraft, Title: "D", StartsAt: time.Now(),
+	}}
+	ownerPrincipal := &models.User{}
+	pu := strfmt.UUID(owner.String())
+	ownerPrincipal.UUID = pu
+	h := NewGetEventByID(svc, func(string) (*models.User, error) { return ownerPrincipal, nil })
+
+	resp := h.Handle(getByIDParams(t, "Bearer tok"))
+	if _, ok := resp.(*eventsops.GetEventByIDOK); !ok {
+		t.Fatalf("expected *GetEventByIDOK, got %T", resp)
+	}
+}
+
+func TestGetEventByID_AnonymousPublished_Returns200(t *testing.T) {
+	svc := &mockEventsService{getByID: &domainmodels.Event{
+		ID: uuid.Must(uuid.NewV4()), OrganizerID: uuid.Must(uuid.NewV4()),
+		Status: domainmodels.EventPublished, Title: "P", StartsAt: time.Now(),
+	}}
+	h := NewGetEventByID(svc, func(string) (*models.User, error) { return nil, errors.New("no auth") })
+
+	resp := h.Handle(getByIDParams(t, ""))
+	if _, ok := resp.(*eventsops.GetEventByIDOK); !ok {
+		t.Fatalf("expected *GetEventByIDOK, got %T", resp)
+	}
+}
+
+func TestListEvents_ForcesPublished(t *testing.T) {
+	svc := &mockEventsService{}
+	h := NewListEvents(svc)
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1/events", nil)
+	h.Handle(eventsops.ListEventsParams{HTTPRequest: req})
+	if svc.listStatusArg != "published" {
+		t.Fatalf("expected list to force published, got %q", svc.listStatusArg)
 	}
 }

@@ -474,7 +474,7 @@ func (r *pgRepository) loadSeats(events []*models.Event) error {
 	}
 	if _, err := r.db.Query(&rows,
 		`SELECT event_id, COUNT(*) AS going FROM event_rsvps
-		 WHERE event_id IN (?) AND status = 'going' GROUP BY event_id`,
+		 WHERE event_id IN (?) AND status IN ('going','accepted') GROUP BY event_id`,
 		pg.In(ids),
 	); err != nil {
 		return fmt.Errorf("load seats: %w", err)

@@ -90,7 +90,7 @@ func (r *pgRepository) SignUpTx(eventID, userID uuid.UUID, decide SeatDecider, a
 		}
 
 		seats, err := tx.Model((*models.Rsvp)(nil)).
-			Where("event_id = ? AND status = ?", eventID, models.RsvpGoing).Count()
+			Where("event_id = ? AND status IN (?)", eventID, pg.In([]models.RsvpStatus{models.RsvpGoing, models.RsvpAccepted})).Count()
 		if err != nil {
 			return fmt.Errorf("count seats: %w", err)
 		}
@@ -202,7 +202,7 @@ func (r *pgRepository) DecideTx(eventID, rsvpID uuid.UUID, accept bool) (*models
 				return fmt.Errorf("lock event: %w", err)
 			}
 			seats, err := tx.Model((*models.Rsvp)(nil)).
-				Where("event_id = ? AND status = ?", row.EventID, models.RsvpGoing).Count()
+				Where("event_id = ? AND status IN (?)", row.EventID, pg.In([]models.RsvpStatus{models.RsvpGoing, models.RsvpAccepted})).Count()
 			if err != nil {
 				return fmt.Errorf("count seats: %w", err)
 			}

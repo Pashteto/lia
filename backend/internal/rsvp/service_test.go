@@ -273,6 +273,47 @@ func TestDecideAcceptWhenFullWaitlists(t *testing.T) {
 	}
 }
 
+// accepted application seats count toward capacity: a second applicant must be
+// waitlisted when the only seat is already consumed by an accepted row.
+func TestAcceptSecondApplicantWaitlistsWhenFirstAccepted(t *testing.T) {
+	cap1 := 1
+	e := &models.Event{
+		ID:          uuid.Must(uuid.NewV4()),
+		OrganizerID: uuid.Must(uuid.NewV4()),
+		SignupMode:  "application",
+		Capacity:    &cap1,
+	}
+	f := newFake(e)
+	svc := NewService(f)
+
+	// Applicant A applies and is accepted — consumes the only seat.
+	userA := uuid.Must(uuid.NewV4())
+	appA, err := svc.SignUp(context.Background(), e.ID, userA, "first")
+	if err != nil || appA.Status != models.RsvpApplied {
+		t.Fatalf("A: want applied, got %v err %v", appA, err)
+	}
+	acceptedA, err := svc.Decide(context.Background(), e.ID, e.OrganizerID, appA.ID, true)
+	if err != nil || acceptedA.Status != models.RsvpAccepted {
+		t.Fatalf("A: want accepted, got %v err %v", acceptedA, err)
+	}
+
+	// Applicant B applies.
+	userB := uuid.Must(uuid.NewV4())
+	appB, err := svc.SignUp(context.Background(), e.ID, userB, "second")
+	if err != nil || appB.Status != models.RsvpApplied {
+		t.Fatalf("B: want applied, got %v err %v", appB, err)
+	}
+
+	// Organizer accepts B — capacity is full (accepted A occupies it), so B must waitlist.
+	gotB, err := svc.Decide(context.Background(), e.ID, e.OrganizerID, appB.ID, true)
+	if err != nil {
+		t.Fatalf("B Decide returned error: %v", err)
+	}
+	if gotB.Status != models.RsvpWaitlist {
+		t.Fatalf("want RsvpWaitlist for B (accepted A fills capacity), got %s", gotB.Status)
+	}
+}
+
 // FIX B: cancelling an accepted seat must promote a waitlisted row to going.
 func TestCancelAcceptedPromotesWaitlist(t *testing.T) {
 	cap1 := 1

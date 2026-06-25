@@ -301,7 +301,9 @@ export function CreateEventForm() {
 
         {mutation.isError && (
           <p className="mt-4 text-[15px] text-red-500">
-            Не удалось сохранить событие. Проверьте, что бэкенд запущен.
+            {mutation.error instanceof Error && mutation.error.message.includes("429")
+              ? "Достигнут лимит: 10 событий в месяц. Лимит обновится 1-го числа."
+              : "Не удалось сохранить событие. Проверьте, что бэкенд запущен."}
           </p>
         )}
       </div>

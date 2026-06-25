@@ -21,6 +21,7 @@ export default function ModerationQueue() {
   const [tick, setTick] = useState(0); // bump to reload
   const [pending, setPending] = useState<AdminEvent | null>(null); // take-down target
   const [reason, setReason] = useState("");
+  const [actionError, setActionError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -37,15 +38,25 @@ export default function ModerationQueue() {
 
   async function confirmTakedown() {
     if (!pending || !reason.trim()) return;
-    await takedownEvent(pending.id, reason.trim());
-    setPending(null);
-    setReason("");
-    reload();
+    try {
+      await takedownEvent(pending.id, reason.trim());
+      setActionError("");
+      setPending(null);
+      setReason("");
+      reload();
+    } catch {
+      setActionError("Не удалось снять событие");
+    }
   }
 
   async function onReinstate(id: string) {
-    await reinstateEvent(id);
-    reload();
+    try {
+      await reinstateEvent(id);
+      setActionError("");
+      reload();
+    } catch {
+      setActionError("Не удалось вернуть событие");
+    }
   }
 
   return (
@@ -90,7 +101,7 @@ export default function ModerationQueue() {
                     .filter(Boolean)
                     .join(" · ")}
                 </div>
-                {e.reason ? (
+                {tab === "rejected" && e.reason ? (
                   <div className="text-[13px] text-red-500">
                     Причина: {e.reason}
                   </div>
@@ -123,6 +134,7 @@ export default function ModerationQueue() {
           onClick={() => {
             setPending(null);
             setReason("");
+            setActionError("");
           }}
         >
           <div
@@ -142,12 +154,16 @@ export default function ModerationQueue() {
               rows={3}
               className="mb-4 w-full resize-none rounded-control bg-fill px-3.5 py-2.5 text-[15px] text-label outline-none placeholder:text-label-secondary"
             />
+            {actionError && (
+              <div className="mb-4 text-[13px] text-red-500">{actionError}</div>
+            )}
             <div className="flex justify-end gap-2">
               <Button
                 variant="plain"
                 onClick={() => {
                   setPending(null);
                   setReason("");
+                  setActionError("");
                 }}
               >
                 Отмена

@@ -1,7 +1,11 @@
 // Package repository defines persistence interfaces and helpers.
 package repository
 
-import "github.com/Pashteto/lia/internal/models"
+import (
+	"github.com/gofrs/uuid"
+
+	"github.com/Pashteto/lia/internal/models"
+)
 
 // IRepository defines the storage interface for database operations.
 // This interface abstracts the underlying database implementation.
@@ -11,6 +15,9 @@ type IRepository interface {
 
 	// UserBy retrieves a user from database using the specified getter.
 	UserBy(user *models.User, getter UserGetter) error
+
+	// UpdateUserRole sets the role column for the given user UUID.
+	UpdateUserRole(userID uuid.UUID, role string) error
 
 	// TODO: Additional repository methods (uncomment and implement as needed):
 	//

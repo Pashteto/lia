@@ -127,7 +127,7 @@ type fakeValidator struct {
 	err    error
 }
 
-func (f *fakeValidator) Validate(_ context.Context, _ string) (*Claims, error) {
+func (f fakeValidator) Validate(_ context.Context, _ string) (*Claims, error) {
 	return f.claims, f.err
 }
 
@@ -221,8 +221,9 @@ func TestAuth_CheckAuth_NoValidatorConfigured(t *testing.T) {
 
 // mockService is a mock implementation of service.IService for testing.
 type mockService struct {
-	CreateUserFunc     func(ctx context.Context, user *models.User) error
-	GetUserByEmailFunc func(ctx context.Context, email string) (*models.User, error)
+	CreateUserFunc       func(ctx context.Context, user *models.User) error
+	GetUserByEmailFunc   func(ctx context.Context, email string) (*models.User, error)
+	UpdateUserRoleFunc   func(ctx context.Context, userID uuid.UUID, role string) error
 }
 
 func (m *mockService) CreateUser(_ context.Context, user *models.User) error {
@@ -237,6 +238,60 @@ func (m *mockService) GetUserByEmail(_ context.Context, email string) (*models.U
 		return m.GetUserByEmailFunc(context.Background(), email)
 	}
 	return nil, nil
+}
+
+func (m *mockService) UpdateUserRole(_ context.Context, userID uuid.UUID, role string) error {
+	if m.UpdateUserRoleFunc != nil {
+		return m.UpdateUserRoleFunc(context.Background(), userID, role)
+	}
+	return nil
+}
+
+// fakeService is an in-memory service.IService for use in Authenticate tests.
+type fakeService struct {
+	users map[string]*models.User
+}
+
+func newFakeService() *fakeService {
+	return &fakeService{users: make(map[string]*models.User)}
+}
+
+func (f *fakeService) GetUserByEmail(_ context.Context, email string) (*models.User, error) {
+	u, ok := f.users[email]
+	if !ok {
+		return nil, fmt.Errorf("%w: %s", service.ErrNotFound, email)
+	}
+	return u, nil
+}
+
+func (f *fakeService) CreateUser(_ context.Context, u *models.User) error {
+	f.users[u.Email] = u
+	return nil
+}
+
+func (f *fakeService) UpdateUserRole(_ context.Context, userID uuid.UUID, role string) error {
+	for _, u := range f.users {
+		if u.UUID == userID {
+			u.Role = role
+			return nil
+		}
+	}
+	return fmt.Errorf("user not found: %s", userID)
+}
+
+func TestAuthenticate_PropagatesAdminRole(t *testing.T) {
+	svc := newFakeService()
+	a := NewAuth(svc, false, nil, WithValidator(fakeValidator{
+		claims: &Claims{Subject: "s", Email: "mod@presence.test", Name: "Mod", Role: "admin"},
+	}))
+
+	u, err := a.Authenticate("Bearer tok")
+	if err != nil {
+		t.Fatalf("authenticate: %v", err)
+	}
+	if u.Role != "admin" {
+		t.Fatalf("role = %q, want admin", u.Role)
+	}
 }
 
 func TestNewAuth(t *testing.T) {

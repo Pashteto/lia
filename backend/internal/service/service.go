@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/Pashteto/lia/internal/models"
 	"github.com/Pashteto/lia/internal/repository"
 	"github.com/Pashteto/lia/pkg/logger"
@@ -18,6 +20,9 @@ type IService interface {
 
 	// GetUserByEmail retrieves a user by email address.
 	GetUserByEmail(ctx context.Context, email string) (*models.User, error)
+
+	// UpdateUserRole sets the cached role for a user (source of truth is GateGuard).
+	UpdateUserRole(ctx context.Context, userID uuid.UUID, role string) error
 }
 
 // Service implements IService interface.
@@ -73,6 +78,11 @@ func (s *Service) CreateUser(_ context.Context, user *models.User) error {
 	// TODO: Send welcome email (when notification system is added)
 
 	return nil
+}
+
+// UpdateUserRole sets the cached role for a user (source of truth is GateGuard).
+func (s *Service) UpdateUserRole(_ context.Context, userID uuid.UUID, role string) error {
+	return s.repository.UpdateUserRole(userID, role)
 }
 
 // GetUserByEmail retrieves a user by email address.

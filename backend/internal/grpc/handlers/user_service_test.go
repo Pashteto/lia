@@ -20,6 +20,7 @@ import (
 type mockService struct {
 	getUserByEmailFunc func(ctx context.Context, email string) (*models.User, error)
 	createUserFunc     func(ctx context.Context, user *models.User) error
+	updateUserRoleFunc func(ctx context.Context, userID uuid.UUID, role string) error
 }
 
 func (m *mockService) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
@@ -34,6 +35,13 @@ func (m *mockService) CreateUser(ctx context.Context, user *models.User) error {
 		return m.createUserFunc(ctx, user)
 	}
 	return errors.New("not implemented")
+}
+
+func (m *mockService) UpdateUserRole(_ context.Context, userID uuid.UUID, role string) error {
+	if m.updateUserRoleFunc != nil {
+		return m.updateUserRoleFunc(context.Background(), userID, role)
+	}
+	return nil
 }
 
 func TestNewUserServiceHandler(t *testing.T) {

@@ -5,14 +5,17 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/Pashteto/lia/config"
 	domainmodels "github.com/Pashteto/lia/internal/models"
 )
 
 // mockService is a mock implementation of service.IService for testing.
 type mockService struct {
-	createUserFunc     func(ctx context.Context, user *domainmodels.User) error
-	getUserByEmailFunc func(ctx context.Context, email string) (*domainmodels.User, error)
+	createUserFunc       func(ctx context.Context, user *domainmodels.User) error
+	getUserByEmailFunc   func(ctx context.Context, email string) (*domainmodels.User, error)
+	updateUserRoleFunc   func(ctx context.Context, userID uuid.UUID, role string) error
 }
 
 func (m *mockService) CreateUser(_ context.Context, user *domainmodels.User) error {
@@ -27,6 +30,13 @@ func (m *mockService) GetUserByEmail(_ context.Context, email string) (*domainmo
 		return m.getUserByEmailFunc(context.Background(), email)
 	}
 	return nil, nil
+}
+
+func (m *mockService) UpdateUserRole(_ context.Context, userID uuid.UUID, role string) error {
+	if m.updateUserRoleFunc != nil {
+		return m.updateUserRoleFunc(context.Background(), userID, role)
+	}
+	return nil
 }
 
 func TestNewModule(t *testing.T) {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/go-pg/pg/v10"
+	"github.com/gofrs/uuid"
 
 	"github.com/Pashteto/lia/internal/models"
 	"github.com/Pashteto/lia/pkg/logger"
@@ -31,6 +32,18 @@ func (r *PostgresRepository) CreateUser(user *models.User) error {
 	}
 
 	logger.Log().Infof("user created successfully: %s (UUID: %s)", user.Email, user.UUID)
+	return nil
+}
+
+// UpdateUserRole sets the role column for the given user UUID.
+func (r *PostgresRepository) UpdateUserRole(userID uuid.UUID, role string) error {
+	_, err := r.db.Model((*models.User)(nil)).
+		Set("role = ?", role).
+		Where("uuid = ?", userID).
+		Update()
+	if err != nil {
+		return fmt.Errorf("update user role for %s: %w", userID, err)
+	}
 	return nil
 }
 

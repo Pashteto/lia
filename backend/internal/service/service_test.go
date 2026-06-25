@@ -5,6 +5,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/Pashteto/lia/internal/models"
 	"github.com/Pashteto/lia/internal/repository"
 )
@@ -17,6 +19,10 @@ func (m *serviceMockRepository) CreateUser(_ *models.User) error {
 }
 
 func (m *serviceMockRepository) UserBy(_ *models.User, _ repository.UserGetter) error {
+	return nil
+}
+
+func (m *serviceMockRepository) UpdateUserRole(_ uuid.UUID, _ string) error {
 	return nil
 }
 

@@ -20,6 +20,7 @@ type User struct {
 	StatusSQL string     `pg:"status,use_zero"`
 	Email     string     `pg:"email,unique,notnull"`
 	Name      string     `pg:"name,notnull"`
+	Role      string     `pg:"role,use_zero"`
 	CreatedAt time.Time  `pg:"created_at,notnull,default:now()"`
 	UpdatedAt time.Time  `pg:"updated_at,notnull,default:now()"`
 }

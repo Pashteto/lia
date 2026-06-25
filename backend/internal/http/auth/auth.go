@@ -23,6 +23,7 @@ type Claims struct {
 	Subject   string
 	Email     string
 	Name      string
+	Role      string
 	ExpiresAt time.Time
 }
 
@@ -67,18 +68,19 @@ func NewAuth(svc service.IService, mocked bool, adminEmails []string, opts ...Op
 	return a
 }
 
-// CheckAuth validates the bearer token and returns the user principal.
-func (a *Auth) CheckAuth(token string) (*models.User, error) {
+// Authenticate validates the bearer token and returns the local domain user
+// principal, with its role synced from the token's claims (GateGuard is the
+// source of truth; users.role is a cache).
+func (a *Auth) Authenticate(token string) (*domain.User, error) {
 	if a.mocked {
 		logger.Log().Info("using mock authentication (bypassing gatekeeper)")
-		return a.mockUser(), nil
+		return a.mockDomainUser(), nil
 	}
 
 	token = strings.TrimPrefix(token, "Bearer ")
 	if token == "" {
 		return nil, apierr.New(401, "unauthorized access or invalid credentials")
 	}
-
 	if a.validator == nil {
 		logger.Log().Error("auth: no token validator configured (gatekeeper not wired)")
 		return nil, apierr.New(401, "unauthorized access or invalid credentials")
@@ -86,24 +88,32 @@ func (a *Auth) CheckAuth(token string) (*models.User, error) {
 
 	claims, err := a.validator.Validate(context.Background(), token)
 	if err != nil {
-		// Log the decision (deny) without the token or PII.
 		logger.Log().Infof("auth: token rejected: %v", err)
 		return nil, apierr.New(401, "unauthorized access or invalid credentials")
 	}
 
-	principal, err := a.ensureUser(context.Background(), claims.Email, claims.Name)
+	u, err := a.ensureUser(context.Background(), claims.Email, claims.Name, normalizeRole(claims.Role))
 	if err != nil {
 		logger.Log().Errorf("auth: user provisioning failed for subject %s: %v", claims.Subject, err)
 		return nil, apierr.New(401, "unauthorized access or invalid credentials")
 	}
-
 	logger.Log().Infof("auth: authenticated subject %s", claims.Subject)
-	return principal, nil
+	return u, nil
+}
+
+// CheckAuth keeps the swagger-facing principal contract (api models.User).
+func (a *Auth) CheckAuth(token string) (*models.User, error) {
+	u, err := a.Authenticate(token)
+	if err != nil {
+		return nil, err
+	}
+	return toPrincipal(u), nil
 }
 
 // ensureUser looks up a local user by email, provisioning one just-in-time on
 // first sight (keyed by the unique email column — no schema change needed).
-func (a *Auth) ensureUser(ctx context.Context, email, name string) (*models.User, error) {
+// The role is synced from the authoritative claim if it has drifted.
+func (a *Auth) ensureUser(ctx context.Context, email, name, role string) (*domain.User, error) {
 	u, err := a.service.GetUserByEmail(ctx, email)
 	if err != nil {
 		if !stderrors.Is(err, service.ErrNotFound) {
@@ -114,12 +124,32 @@ func (a *Auth) ensureUser(ctx context.Context, email, name string) (*models.User
 			Email:  email,
 			Name:   name,
 			Status: domain.UserActive,
+			Role:   role,
 		}
 		if err := a.service.CreateUser(ctx, u); err != nil {
 			return nil, fmt.Errorf("provision user: %w", err)
 		}
+		return u, nil
 	}
-	return toPrincipal(u), nil
+	// Existing user: sync the role from the authoritative claim if it drifted.
+	if u.Role != role {
+		if err := a.service.UpdateUserRole(ctx, u.UUID, role); err != nil {
+			return nil, fmt.Errorf("sync user role: %w", err)
+		}
+		u.Role = role
+	}
+	return u, nil
+}
+
+// normalizeRole maps GateGuard's enum string names to Lia's bare role tokens.
+// gg.UserRole.String() yields e.g. "UserRoleAdmin"; we store "admin".
+func normalizeRole(r string) string {
+	switch r {
+	case "UserRoleAdmin", "admin":
+		return "admin"
+	default:
+		return "common"
+	}
 }
 
 // toPrincipal maps a domain user to the swagger principal model.
@@ -141,16 +171,18 @@ func (a *Auth) IsAdmin(email string) bool {
 	return ok
 }
 
-// mockUser returns a mock user for testing without gatekeeper.
+// mockUser returns a mock swagger user for testing without gatekeeper.
 func (a *Auth) mockUser() *models.User {
-	email := strfmt.Email("test@example.com")
-	name := "Test User"
-	status := "active"
+	return toPrincipal(a.mockDomainUser())
+}
 
-	return &models.User{
-		UUID:   strfmt.UUID(uuid.Must(uuid.FromString("FA734DC4-22E6-41C5-A913-30C302C1CA68")).String()),
-		Email:  &email,
-		Name:   &name,
-		Status: &status,
+// mockDomainUser returns a mock domain user for testing without gatekeeper.
+func (a *Auth) mockDomainUser() *domain.User {
+	return &domain.User{
+		UUID:   uuid.Must(uuid.FromString("FA734DC4-22E6-41C5-A913-30C302C1CA68")),
+		Email:  "test@example.com",
+		Name:   "Test User",
+		Status: domain.UserActive,
+		Role:   "common",
 	}
 }

@@ -1,6 +1,6 @@
 # Lia — Handoff
 
-_Last updated: 2026-06-25. Merged to `main`: scaffold, deploy artifacts, category + venue normalization, venue geo, and the Option-A live deploy. **On branch `feat/presence-tarski-storage-quota` (PR to main pending):** product rename (Presence.Tarski), auth complete + LIVE, swappable blob storage, event cover images, per-user monthly quota, orphaned-file cleanup._
+_Last updated: 2026-06-25. Merged to `main`: scaffold, deploy artifacts, category + venue normalization, venue geo, Option-A live deploy. **Branch `feat/presence-tarski-storage-quota` (PR pending):** Presence.Tarski rename, GateGuard auth + LIVE, swappable blob storage, cover images, monthly quota, orphaned-file cleanup. **Branch `feat/passwords-gateguard-and-events-user-data` (PR pending, DEPLOYED LIVE 2026-06-25):** real password sign-up/sign-in end-to-end (GateGuard vendored into `/gateguard` + extended), event organizer data + `GET /events/mine`, default-published, cover-image host fix, password register/login UI. See `docs/superpowers/runbooks/2026-06-25-passwords-deploy.md`._
 
 Where the project stands after the frontend + backend scaffold and the first feature slices.
 
@@ -39,6 +39,14 @@ Live at **`https://lia.pashteto.com`** / **`https://api.lia.pashteto.com`** on *
 
 **Recently done:**
 
+- **Password auth + events-user-data + LIVE deploy** (branch `feat/passwords-gateguard-and-events-user-data`, 2026-06-25, verified live). Runbook: [`superpowers/runbooks/2026-06-25-passwords-deploy.md`](superpowers/runbooks/2026-06-25-passwords-deploy.md). Plan: [`superpowers/plans/2026-06-25-passwords-and-me-suite.md`](superpowers/plans/2026-06-25-passwords-and-me-suite.md).
+  - **GateGuard vendored** into the repo at `/gateguard` (own Go module) and extended: `password_hash` + email-verification columns (migration `000011`), bcrypt `internal/pkg/password`, `SignUpWithPassword`/`SignInWithPassword`/`RequestEmailVerification`/`VerifyEmail` RPCs + service + handlers. Email verification is a **STUB** (token persisted, send only logged — replace before real prod; wire GateGuard's SMTP notificator). Stack upgraded to latest: **grpc v1.81, protobuf v1.36, Go 1.26** (proto regen with protoc-gen-go-grpc v1.6.x).
+  - **Lia password endpoints**: `POST /auth/register` (409 on exists) + `POST /auth/login` (401 on bad creds) → `Signer.SignUpPassword`/`SignInPassword` → GateGuard over gRPC. Vendored Lia gateguard proto regenerated to match (force-committed pb.go).
+  - **Events user data**: event responses carry an `organizer` object (uuid, name, avatar_url — **never email**, public surface) via batched `loadOrganizers`; `GET /events/mine` (jwt, all statuses incl. drafts) via `ListByOrganizer`. New events default to `status=published` (formatter) so an omitted status can't create an invisible draft.
+  - **Frontend**: login modal gains password + register/login toggle; `/events/mine` "Мои события" page (drafts badged) + header nav link; organizer shown on cards; `next/image` allows the API host (cover fix).
+  - **Verified live** on `https://lia.pashteto.com`: register→200, login→200, wrong-pw→401, authed create→201 (published), `/events/mine` returns it with organizer name.
+  - **Deploy technique (important)**: the box can't pull `golang:1.25`/`1.26` over the AmneziaWG tunnel (large layers reset), so the `linux/amd64` images are **built on the Mac and shipped via `docker save|gzip|ssh|docker load`** + retagged to the compose names — not built on the box. `deploy/vpn-build-all.sh` (VPN-up→build-on-box→VPN-down, supersedes `vpn-install-deps.sh`) exists but is unreliable for GateGuard due to that pull.
+
 - **Presence.Tarski rename + storage/quota/cleanup/auth** (branch `feat/presence-tarski-storage-quota`, 26 commits, 2026-06-25, verified live). All items below deployed and working on vds-ru215:
   - **Product rename** to Presence.Tarski (display only — module/DB/domain unchanged).
   - **Auth complete.** GateGuard `SignInOAuth` panic (`index out of range [2]`) fixed with valid Status+Role in the demo-login signer. `POST /auth/demo-login`→200 JWT; anon `POST /events`→401; authed→201. Frontend demo-login modal + Bearer attach + create-event gate, hydration-safe.
@@ -73,6 +81,9 @@ Live at **`https://lia.pashteto.com`** / **`https://api.lia.pashteto.com`** on *
 - **Box IPv6 / github in Docker builds**: vds-ru215's IPv6 is broken → `curl: (28) SSL connection timeout` in Dockerfiles that curl github. Force IPv4: patch `curl -4 --retry 5`. `go mod download` is fine (proxy.golang.org, not github).
 - **Auth / GateGuard**: Lia validates tokens via GateGuard `CheckAuth` gRPC — token is opaque to Lia (no key sharing). The `gatekeeper.go` `TokenValidator` is the only seam. GateGuard reuses Lia's Postgres (`gateguard` DB). Vendored `*.pb.go` is force-committed (overrides gitignore) — CI proto-regen may need a lint exclusion for `protocols/gateguard`.
 - **FROM scratch + timezone**: the prod image is `FROM scratch`; the `time` package has no embedded tz data. The quota logic uses `Europe/Moscow` — must keep `_ "time/tzdata"` in the binary (currently in `cmd/lia.go` and `cmd/cleanup/cleanup.go`). **Do not remove it.**
+- **GateGuard grpc Unimplemented embed**: protoc-gen-go-grpc **v1.6+** generates a `testEmbeddedByValue` assertion — the gRPC handler (`GateguardHandlers`) MUST embed `UnimplementedGateguardServiceServer` **by value**, not pointer, or `RegisterGateguardServiceServer` nil-panics at startup. `go build` compiles either way; caught only at runtime.
+- **GateGuard Go toolchain pin**: after the grpc v1.81 upgrade the deps require **Go ≥ 1.25** (Dockerfile base `golang:1.26`). The box can't pull `golang:1.25/1.26` over the tunnel (large layers `connection reset`) — build the amd64 images on a well-connected machine and `docker save|ssh|docker load` to the box (see runbook). `protoc-gen-go-grpc` must be **v1.6.x** to match grpc v1.81 (the old v1.2.0/Version7 panics).
+- **genproto module split**: a `go get -u ./...` can leave an "ambiguous import … googleapis/rpc/status" (old monolith `google.golang.org/genproto` + new split `.../genproto/googleapis/rpc` both provide it). Fix: `go get google.golang.org/genproto@latest google.golang.org/genproto/googleapis/rpc@latest && go mod tidy`.
 - **minio-go version**: stay on **v7.0.77** — it is the highest version compatible with `go 1.24.0` in the current `go.mod`. Later minio-go releases require newer `go` directives; bumping would break the build.
 
 ## Verification done

@@ -5,7 +5,7 @@ import {
   useCallback,
   useContext,
   useMemo,
-  useState,
+  useSyncExternalStore,
 } from "react";
 
 import { demoLogin } from "./api";
@@ -26,27 +26,68 @@ interface AuthState {
 
 const AuthContext = createContext<AuthState | null>(null);
 
+// ---------------------------------------------------------------------------
+// useSyncExternalStore wiring — mirrors the ThemeToggle pattern so SSR markup
+// and the client's first render are identical (signed-out / not-ready).
+// ---------------------------------------------------------------------------
+
+const authListeners = new Set<() => void>();
+
+function notifyAuthListeners() {
+  authListeners.forEach((cb) => cb());
+}
+
+function subscribeAuth(callback: () => void) {
+  authListeners.add(callback);
+  return () => {
+    authListeners.delete(callback);
+  };
+}
+
+/** Client snapshot: read the live localStorage state. */
+function getAuthSnapshot(): string | null {
+  return getToken() ? getStoredEmail() : null;
+}
+
+/** Server snapshot: always signed-out so SSR markup matches first client render. */
+function getAuthServerSnapshot(): string | null {
+  return null;
+}
+
+/** Client snapshot: true after hydration (window exists). */
+function getReadySnapshot(): boolean {
+  return typeof window !== "undefined";
+}
+
+/** Server snapshot: false — not-ready matches the server render. */
+function getReadyServerSnapshot(): boolean {
+  return false;
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // Use lazy initialisers so localStorage is read once on the client without
-  // triggering a second render via setState-in-effect. getToken() / getStoredEmail()
-  // return null on the server (typeof window === "undefined"), so the initial
-  // server-render and client hydration both produce null/false — no mismatch.
-  const [email, setEmail] = useState<string | null>(() =>
-    getToken() ? getStoredEmail() : null,
+  // useSyncExternalStore guarantees SSR markup === first client render:
+  //   server / first-client: email=null, ready=false  (server snapshots)
+  //   after hydration:        email=<stored>, ready=true (client snapshots)
+  const email = useSyncExternalStore(
+    subscribeAuth,
+    getAuthSnapshot,
+    getAuthServerSnapshot,
   );
-  // ready: false on the server; true immediately on the client so the UI never
-  // blocks behind an effect tick.
-  const [ready] = useState(() => typeof window !== "undefined");
+  const ready = useSyncExternalStore(
+    subscribeAuth,
+    getReadySnapshot,
+    getReadyServerSnapshot,
+  );
 
   const login = useCallback(async (loginEmail: string, name?: string) => {
     const token = await demoLogin(loginEmail, name);
     setSession(token, loginEmail);
-    setEmail(loginEmail);
+    notifyAuthListeners();
   }, []);
 
   const logout = useCallback(() => {
     clearSession();
-    setEmail(null);
+    notifyAuthListeners();
   }, []);
 
   const value = useMemo<AuthState>(

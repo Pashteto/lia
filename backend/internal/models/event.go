@@ -47,6 +47,17 @@ type Event struct {
 	PriceMin    *int64      `pg:"price_min"`
 	PriceMax    *int64      `pg:"price_max"`
 	ExternalURL string      `pg:"external_ticket_url,use_zero"`
+
+	// Signup configuration (migration 000012).
+	SignupMode              string `pg:"signup_mode,use_zero"`               // open | application | external
+	Capacity                *int   `pg:"capacity"`                           // nil = unlimited
+	CuratorQuestion         string `pg:"curator_question,use_zero"`          // required when application
+	ExternalRegistrationURL string `pg:"external_registration_url,use_zero"` // required when external
+
+	// Transient (not columns): populated by the repository per request.
+	SeatsRemaining *int   `pg:"-"` // nil = unlimited; computed = capacity - going
+	MyRsvpStatus   string `pg:"-"` // caller's RsvpStatus on this event, "" if none
+
 	StartsAt    time.Time   `pg:"starts_at,notnull"`
 	EndsAt      *time.Time  `pg:"ends_at"`
 	PublishedAt *time.Time  `pg:"published_at"`
@@ -80,6 +91,24 @@ func (e *Event) Validate() error {
 
 	if e.Status < EventDraft || e.Status >= eventStatusUnsupported {
 		return newValidationError("status", "invalid value")
+	}
+
+	switch e.SignupMode {
+	case "", "open":
+		// ok; empty defaults to open at the DB layer
+	case "application":
+		if e.CuratorQuestion == "" {
+			return newValidationError("curator_question", "is required for application signup")
+		}
+	case "external":
+		if e.ExternalRegistrationURL == "" {
+			return newValidationError("external_registration_url", "is required for external signup")
+		}
+	default:
+		return newValidationError("signup_mode", "invalid value")
+	}
+	if e.Capacity != nil && *e.Capacity <= 0 {
+		return newValidationError("capacity", "must be positive")
 	}
 
 	return nil

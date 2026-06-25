@@ -438,3 +438,71 @@ export async function decideApplication(
 export function eventCalendarUrl(eventId: string): string {
   return `${API_V1}/events/${eventId}/calendar.ics`;
 }
+
+// ---------------------------------------------------------------------------
+// Admin / moderation API
+// ---------------------------------------------------------------------------
+
+export interface AdminEvent {
+  id: string;
+  title: string;
+  status: string;
+  starts_at: string;
+  cover_url?: string;
+  organizer_name?: string;
+  reason?: string;
+}
+
+function authHeaders(): HeadersInit {
+  const token = getToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+export async function getMe(): Promise<{
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+} | null> {
+  const res = await fetch(`${API_BASE}/auth/me`, { headers: authHeaders(), cache: "no-store" });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export async function getAdminOverview(): Promise<{
+  events_total: number;
+  events_published: number;
+  events_removed: number;
+}> {
+  const res = await fetch(`${API_V1}/admin/overview`, { headers: authHeaders(), cache: "no-store" });
+  if (!res.ok) throw new Error(`overview: ${res.status}`);
+  return res.json();
+}
+
+export async function listModerationEvents(
+  status: "published" | "rejected",
+): Promise<AdminEvent[]> {
+  const res = await fetch(`${API_V1}/admin/moderation/events?status=${status}`, {
+    headers: authHeaders(),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`moderation list: ${res.status}`);
+  return res.json();
+}
+
+export async function takedownEvent(id: string, reason: string): Promise<void> {
+  const res = await fetch(`${API_V1}/admin/moderation/events/${id}/takedown`, {
+    method: "POST",
+    headers: { ...authHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ reason }),
+  });
+  if (!res.ok) throw new Error(`takedown: ${res.status}`);
+}
+
+export async function reinstateEvent(id: string): Promise<void> {
+  const res = await fetch(`${API_V1}/admin/moderation/events/${id}/reinstate`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(`reinstate: ${res.status}`);
+}

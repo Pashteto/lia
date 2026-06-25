@@ -4,10 +4,15 @@ package main
 import (
 	"os"
 
+	"github.com/Pashteto/lia/cmd/cleanup"
 	"github.com/Pashteto/lia/cmd/root"
 	"github.com/Pashteto/lia/cmd/serve"
 	"github.com/Pashteto/lia/internal"
 	"github.com/Pashteto/lia/pkg/logger"
+
+	// Embed the IANA timezone database in the binary: the production image is
+	// FROM scratch (no OS tzdata), and event-quota boundaries use Europe/Moscow.
+	_ "time/tzdata"
 )
 
 // main is the entry point of the application.
@@ -24,6 +29,7 @@ func main() {
 
 	rootCmd := root.Cmd(app)
 	rootCmd.AddCommand(serve.Cmd(app))
+	rootCmd.AddCommand(cleanup.Cmd())
 
 	if err = rootCmd.Execute(); err != nil {
 		logger.Log().Infof("An error occurred: %s", err.Error())

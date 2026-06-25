@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/go-openapi/loads"
@@ -14,6 +15,7 @@ import (
 	"github.com/Pashteto/lia/config"
 	categoriesdomain "github.com/Pashteto/lia/internal/categories"
 	eventsdomain "github.com/Pashteto/lia/internal/events"
+	filesdomain "github.com/Pashteto/lia/internal/files"
 	venuesdomain "github.com/Pashteto/lia/internal/venues"
 	"github.com/Pashteto/lia/internal/grpcclient"
 	"github.com/Pashteto/lia/internal/http/auth"
@@ -21,7 +23,9 @@ import (
 	"github.com/Pashteto/lia/internal/http/middlewares"
 	httpserver "github.com/Pashteto/lia/internal/http/server"
 	"github.com/Pashteto/lia/internal/http/server/operations"
+	"github.com/Pashteto/lia/internal/http/uploads"
 	"github.com/Pashteto/lia/internal/service"
+	"github.com/Pashteto/lia/internal/storage"
 	"github.com/Pashteto/lia/pkg/logger"
 )
 
@@ -33,6 +37,8 @@ type Module struct {
 	events     eventsdomain.Service
 	categories categoriesdomain.Service
 	venues     venuesdomain.Service
+	files      filesdomain.Service
+	storage    storage.Storage
 	server     *httpserver.Server
 	api        *operations.LiaAPIAPI
 	handler    *http.Handler
@@ -65,6 +71,17 @@ func (m *Module) SetVenuesService(svc venuesdomain.Service) {
 	m.venues = svc
 }
 
+// SetFilesService injects the files domain service. Call before Init.
+// When nil, upload/serve endpoints return 404 (the swagger mux returns 404 for unregistered paths).
+func (m *Module) SetFilesService(svc filesdomain.Service) {
+	m.files = svc
+}
+
+// SetStorage injects the blob storage backend. Call before Init.
+func (m *Module) SetStorage(store storage.Storage) {
+	m.storage = store
+}
+
 // Name returns the module identifier.
 func (m *Module) Name() string {
 	return "http"
@@ -74,8 +91,24 @@ func (m *Module) Name() string {
 func (m *Module) Init(_ context.Context) error {
 	logger.Log().Infof("initializing %s module", m.Name())
 
-	// Initialize auth
-	m.auth = auth.NewAuth(m.service, m.config.MockAuth, m.config.AdminEmails)
+	// Initialize auth. In non-mock mode, wire the Gatekeeper token validator from
+	// config; if it's absent, CheckAuth safely denies (no silent open access).
+	var authOpts []auth.Option
+	if !m.config.MockAuth && m.config.Gatekeeper != nil {
+		timeout := 5 * time.Second
+		if d, err := time.ParseDuration(m.config.Gatekeeper.Timeout); err == nil && d > 0 {
+			timeout = d
+		}
+		validator, err := auth.NewGatekeeperValidator(auth.GatekeeperConfig{
+			Address: m.config.Gatekeeper.Address,
+			Timeout: timeout,
+		})
+		if err != nil {
+			return fmt.Errorf("init gatekeeper validator: %w", err)
+		}
+		authOpts = append(authOpts, auth.WithValidator(validator))
+	}
+	m.auth = auth.NewAuth(m.service, m.config.MockAuth, m.config.AdminEmails, authOpts...)
 
 	// Initialize API
 	if err := m.initAPI(); err != nil {
@@ -147,12 +180,29 @@ func (m *Module) initAPI() error {
 	api.UsersGetUserByEmailHandler = handlers.NewGetUserByEmail(m.service, m.grpcClient)
 	api.HealthGetHealthHandler = handlers.NewHealth()
 
+	// Demo-login (DEMO-ONLY): mints GateGuard tokens via SignInOAuth. The signer
+	// is wired only when gatekeeper is configured; otherwise the handler 503s.
+	var signer auth.Signer
+	if m.config.Gatekeeper != nil {
+		timeout := 5 * time.Second
+		if d, err := time.ParseDuration(m.config.Gatekeeper.Timeout); err == nil && d > 0 {
+			timeout = d
+		}
+		s, err := auth.NewSigner(auth.GatekeeperConfig{Address: m.config.Gatekeeper.Address, Timeout: timeout})
+		if err != nil {
+			return fmt.Errorf("init demo-login signer: %w", err)
+		}
+		signer = s
+	}
+	api.AuthDemoLoginHandler = handlers.NewDemoLogin(signer)
+
 	// Events domain handlers (registered only when the events service is wired,
 	// i.e. when the database module is enabled).
 	if m.events != nil {
 		api.EventsListEventsHandler = handlers.NewListEvents(m.events)
 		api.EventsGetEventByIDHandler = handlers.NewGetEventByID(m.events)
 		api.EventsCreateEventHandler = handlers.NewCreateEvent(m.events)
+		api.EventsNearbyEventsHandler = handlers.NewNearbyEvents(m.events)
 	}
 
 	if m.categories != nil {
@@ -162,6 +212,7 @@ func (m *Module) initAPI() error {
 	if m.venues != nil {
 		api.VenuesListVenuesHandler = handlers.NewListVenues(m.venues)
 		api.VenuesCreateVenueHandler = handlers.NewCreateVenue(m.venues)
+		api.VenuesUpdateVenueHandler = handlers.NewUpdateVenue(m.venues)
 	}
 
 	// TODO: Add more handlers as you expand the API
@@ -170,13 +221,33 @@ func (m *Module) initAPI() error {
 	// api.UsersDeleteUserHandler = handlers.NewDeleteUser(m.service)
 	// api.UsersListUsersHandler = handlers.NewListUsers(m.service)
 
+	// Build the base swagger handler.
+	base := api.Serve(nil)
+
+	// Mount the plain uploads/serve handler ahead of the swagger mux so that
+	// /api/v1/uploads and /api/v1/files/* are served without swagger validation.
+	var router http.Handler
+	if m.storage != nil && m.files != nil {
+		mounted := uploads.NewHandler(m.storage, m.files, m.auth.CheckAuth)
+		router = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			p := r.URL.Path
+			if strings.HasPrefix(p, "/api/v1/uploads") || strings.HasPrefix(p, "/api/v1/files/") {
+				mounted.ServeHTTP(w, r)
+				return
+			}
+			base.ServeHTTP(w, r)
+		})
+	} else {
+		router = base
+	}
+
 	// Build middleware chain
 	handler := alice.New(
 		middlewares.Recovery(),
 		middlewares.Logger(),
 		middlewares.Cors(m.config.CORS),
 		middlewares.RateLimit(m.config.RateLimit),
-	).Then(api.Serve(nil))
+	).Then(router)
 
 	m.api = api
 	m.handler = &handler

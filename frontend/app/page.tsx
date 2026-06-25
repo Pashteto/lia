@@ -1,3 +1,4 @@
+import { AuthButton } from "@/components/AuthButton";
 import { DiscoveryFeed } from "@/components/DiscoveryFeed";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/Button";
@@ -19,14 +20,14 @@ export default async function DiscoveryPage() {
   return (
     <>
       <GlassNav
-        title="Lia"
+        title="Presence.Tarski"
         actions={
           <>
             <ThemeToggle />
             <Link href="/events/new" className="hidden sm:block">
               <Button variant="tinted">Создать событие</Button>
             </Link>
-            <Button variant="plain">Войти</Button>
+            <AuthButton />
           </>
         }
       />

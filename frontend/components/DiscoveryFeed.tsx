@@ -3,7 +3,7 @@
 import { EventCard } from "@/components/ui/EventCard";
 import { FilterChip } from "@/components/ui/FilterChip";
 import { SearchField } from "@/components/ui/SearchField";
-import { fetchPublishedEvents } from "@/lib/api";
+import { fetchNearbyEvents, fetchPublishedEvents } from "@/lib/api";
 import { FILTERS } from "@/lib/mock-events";
 import type { LiaEvent } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
@@ -16,6 +16,11 @@ import { useMemo, useState } from "react";
  * component fetches the initial list (SSR) and passes it as `initialEvents`;
  * TanStack Query then owns client-side refetching. Filtering/search is applied
  * client-side over the fetched list.
+ *
+ * When the "рядом со мной" toggle is enabled, the normal filtered list is
+ * replaced with a distance-sorted list from `GET /events/nearby`. Each card
+ * shows a distance badge when `distanceM` is present. Geolocation errors are
+ * shown as a hint; the normal list stays visible on failure (graceful fallback).
  */
 export function DiscoveryFeed({
   initialEvents,
@@ -24,6 +29,11 @@ export function DiscoveryFeed({
 }) {
   const [active, setActive] = useState("all");
   const [query, setQuery] = useState("");
+
+  // Nearby state — null means "normal mode", array means "near-me mode".
+  const [nearby, setNearby] = useState<LiaEvent[] | null>(null);
+  const [geoError, setGeoError] = useState<string | null>(null);
+  const [geoLoading, setGeoLoading] = useState(false);
 
   const { data: allEvents = [], isError } = useQuery({
     queryKey: ["events", "published"],
@@ -43,6 +53,56 @@ export function DiscoveryFeed({
     });
   }, [allEvents, active, query]);
 
+  const enableNearby = () => {
+    if (!navigator.geolocation) {
+      setGeoError("Геолокация не поддерживается этим браузером");
+      return;
+    }
+    setGeoError(null);
+    setGeoLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          setNearby(
+            await fetchNearbyEvents(
+              pos.coords.latitude,
+              pos.coords.longitude,
+            ),
+          );
+          setGeoError(null);
+        } catch {
+          setGeoError("Не удалось загрузить события рядом");
+        } finally {
+          setGeoLoading(false);
+        }
+      },
+      (err) => {
+        // Distinguish the three GeolocationPositionError codes — collapsing them
+        // all to "доступ отклонён" mislabels a timeout / unavailable position
+        // (e.g. OS location services off) as a permission denial.
+        setGeoError(
+          err.code === err.PERMISSION_DENIED
+            ? "Доступ к геолокации отклонён. Разрешите его в настройках сайта."
+            : err.code === err.TIMEOUT
+              ? "Не удалось определить местоположение (тайм-аут). Попробуйте ещё раз."
+              : "Местоположение недоступно. Проверьте, включены ли службы геолокации.",
+        );
+        setGeoLoading(false);
+      },
+      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 60_000 },
+    );
+  };
+
+  const resetNearby = () => {
+    setNearby(null);
+    setGeoError(null);
+    setGeoLoading(false);
+  };
+
+  // Which list to render and whether to show a distance badge per card.
+  const displayEvents = nearby ?? events;
+  const isNearbyMode = nearby !== null;
+
   return (
     <main className="mx-auto max-w-3xl px-5 pb-28 pt-6">
       <h1 className="mb-4 text-[34px] font-bold tracking-[-0.022em]">События</h1>
@@ -54,7 +114,7 @@ export function DiscoveryFeed({
         className="mb-4"
       />
 
-      <div className="-mx-5 mb-6 flex gap-2 overflow-x-auto px-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="-mx-5 mb-4 flex gap-2 overflow-x-auto px-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {FILTERS.map((f) => (
           <FilterChip
             key={f.slug}
@@ -65,19 +125,56 @@ export function DiscoveryFeed({
         ))}
       </div>
 
+      {/* Near-me control row */}
+      <div className="mb-6 flex items-center gap-3">
+        {isNearbyMode ? (
+          <button
+            type="button"
+            onClick={resetNearby}
+            className="rounded-full bg-fill px-4 py-1.5 text-[14px] font-medium text-label-primary transition hover:bg-fill-secondary"
+          >
+            сбросить
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={enableNearby}
+            disabled={geoLoading}
+            className="rounded-full bg-fill px-4 py-1.5 text-[14px] font-medium text-label-primary transition hover:bg-fill-secondary disabled:opacity-60"
+          >
+            {geoLoading ? "Определяем…" : "рядом со мной"}
+          </button>
+        )}
+        {geoError && (
+          <span className="text-[13px] text-label-secondary">{geoError}</span>
+        )}
+      </div>
+
       {isError && allEvents.length === 0 ? (
         <p className="py-16 text-center text-[15px] text-label-secondary">
           Не удалось загрузить события. Проверьте, что бэкенд запущен.
         </p>
-      ) : events.length > 0 ? (
+      ) : displayEvents.length > 0 ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {events.map((event) => (
-            <EventCard key={event.id} event={event} />
+          {displayEvents.map((e) => (
+            <EventCard
+              key={e.id}
+              event={e}
+              distanceBadge={
+                isNearbyMode && e.distanceM != null ? (
+                  <span className="text-[12px] text-label-secondary">
+                    ≈ {(e.distanceM / 1000).toFixed(1)} км
+                  </span>
+                ) : undefined
+              }
+            />
           ))}
         </div>
       ) : (
         <p className="py-16 text-center text-[15px] text-label-secondary">
-          Ничего не нашлось. Попробуйте другой фильтр.
+          {isNearbyMode
+            ? "Событий рядом не найдено."
+            : "Ничего не нашлось. Попробуйте другой фильтр."}
         </p>
       )}
     </main>

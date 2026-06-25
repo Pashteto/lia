@@ -70,3 +70,35 @@ func TestEventFromAPIInput_CategoryIDs(t *testing.T) {
 		t.Fatalf("expected parsed category id, got %v", ev.CategoryIDs)
 	}
 }
+
+func TestEventToAPI_CoverURL(t *testing.T) {
+	ev := &domainModels.Event{
+		Title:    "x",
+		Status:   domainModels.EventPublished,
+		StartsAt: time.Now(),
+		CoverURL: "https://example.com/cover.jpg",
+	}
+	out := EventToAPI(ev)
+	if out.CoverURL == nil || *out.CoverURL != "https://example.com/cover.jpg" {
+		t.Fatalf("expected cover_url to be set, got %v", out.CoverURL)
+	}
+}
+
+func TestEventFromAPIInput_CoverFileID(t *testing.T) {
+	id, _ := uuid.NewV4()
+	title := "x"
+	starts := strfmt.DateTime(time.Now())
+	coverID := strfmt.UUID(id.String())
+	in := &apiModels.EventInput{
+		Title:       &title,
+		StartsAt:    &starts,
+		CoverFileID: &coverID,
+	}
+	ev, err := EventFromAPIInput(in)
+	if err != nil {
+		t.Fatalf("EventFromAPIInput error: %v", err)
+	}
+	if ev.CoverFileID != id {
+		t.Fatalf("expected CoverFileID %s, got %s", id, ev.CoverFileID)
+	}
+}

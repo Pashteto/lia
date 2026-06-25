@@ -3,18 +3,25 @@ import { formatAttendance, formatEventDate, formatPrice } from "@/lib/format";
 import type { LiaEvent } from "@/lib/types";
 import Image from "next/image";
 import Link from "next/link";
+import type React from "react";
 import { Kicker } from "./Kicker";
 
 /**
  * Event content card: 18px radius, subtle system shadow, no hairline border
  * (DESIGN.md). Content surface — no Liquid Glass.
+ *
+ * Pass `distanceBadge` to render an additional badge below the price row
+ * (used by the "near me" discovery feed to show "≈ X км").
  */
 export function EventCard({
   event,
   className,
+  distanceBadge,
 }: {
   event: LiaEvent;
   className?: string;
+  /** Optional badge rendered below the price row, e.g. "≈ 1.2 км". */
+  distanceBadge?: React.ReactNode;
 }) {
   const attendance = formatAttendance(event);
   return (
@@ -58,6 +65,7 @@ export function EventCard({
             <span className="text-[13px] text-label-secondary">{attendance}</span>
           )}
         </div>
+        {distanceBadge}
       </div>
     </Link>
   );

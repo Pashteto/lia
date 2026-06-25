@@ -1,0 +1,47 @@
+# GateGuard auth service for the demo. Self-hosted copy of gateway.fm's GateGuard
+# (gRPC token store). Shares Lia's Postgres (separate `gateguard` database) and
+# compose network; adds a small Redis. Apply alongside the base + prod files:
+#
+#   docker compose --env-file .env.prod \
+#     -f docker-compose.yml -f docker-compose.prod.yml -f docker-compose.gateguard.yml up -d
+#
+# Prereqs (one-time, see docs/superpowers/runbooks/2026-06-25-gateguard-deploy.md):
+#   - `gateguard:local` image built on the box from /opt/gateguard
+#   - `gateguard` database created in Lia's Postgres + migrations applied
+#   - GATEGUARD_AUTH_SECRET set in .env.prod (random; never the "prestopresto" default)
+#
+# DEMO scope: GateGuard reuses Lia's DB user (least-privilege deviation, documented
+# exception) and gRPC is internal-network only (no TLS on the loopback bridge).
+services:
+  gateguard-redis:
+    image: redis:7.2.4
+    restart: unless-stopped
+
+  gateguard:
+    image: gateguard:local
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      gateguard-redis:
+        condition: service_started
+    environment:
+      ENV: prod
+      GRPC_PORT: 9090
+      GRPC_TIMEOUT: 120s
+      DB_ADDRESS: "postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@postgres:5432/gateguard?sslmode=disable"
+      REDIS_ADDRESS: "redis://gateguard-redis:6379"
+      AUTH_SECRET: "${GATEGUARD_AUTH_SECRET}"
+      AUTH_EXPIRE: "72h"
+    # gRPC :9090 is reachable only inside the compose network (as `gateguard:9090`).
+    # No host port — Lia's app talks to it service-to-service.
+
+  app:
+    environment:
+      # Point Lia at GateGuard. The validator is only wired when mock auth is off.
+      HTTP_GATEKEEPER_ADDRESS: "gateguard:9090"
+      HTTP_GATEKEEPER_TIMEOUT: "5s"
+      # Real auth toggle. Default stays "true" (mock) so the committed state is
+      # safe; flip per-deploy by setting HTTP_MOCK_AUTH=false in .env.prod.
+      # NOTE: with false and no demo-login UI yet, POST /events (jwt) returns 401.
+      HTTP_MOCK_AUTH: "${HTTP_MOCK_AUTH:-true}"

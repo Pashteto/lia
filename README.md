@@ -1,4 +1,4 @@
-# Lia — Event Discovery MVP
+# Presence.Tarski — Event Discovery MVP
 
 A web-first discovery platform for **participatory cultural practices** in a single Russian city at launch (Moscow), with an iOS app to follow. It is deliberately *not* a generic city afisha and *not* a ticketing marketplace — it is a curated home for events where the visitor is a **participant**, not a spectator (mediations, workshops, open lectures, reading groups, artist talks, performative practices).
 

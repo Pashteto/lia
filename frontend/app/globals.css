@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /*
- * Lia design tokens — Apple HIG.
+ * Presence.Tarski design tokens — Apple HIG.
  * Source of truth: ../../design/DESIGN.md (and design/screens/*.html).
  * Light values are the defaults; dark overrides apply via `prefers-color-scheme`
  * and an explicit `.dark` class (so screens can be eyeballed in both themes).
@@ -35,8 +35,12 @@
   --glass: rgba(249, 249, 249, 0.72);
 }
 
+/* Follow the OS only when the user hasn't made an explicit choice. The
+ * `:not(.light)` guard lets the `.light` class force light on a dark-mode OS
+ * (without it the media query and `.dark` set identical values, so the toggle
+ * had no visible effect — see ThemeToggle). */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.light) {
     --bg: #000000;
     --bg-grouped: #000000; /* intentional per UIKit: grouped == base in dark */
     --bg-secondary: #1c1c1e;
@@ -118,7 +122,7 @@ html {
 }
 /* Dark omits saturate per DESIGN.md. */
 @media (prefers-color-scheme: dark) {
-  .glass {
+  :root:not(.light) .glass {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
   }

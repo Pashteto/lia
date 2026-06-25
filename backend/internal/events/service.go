@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/gofrs/uuid"
 
@@ -19,7 +20,21 @@ var (
 	ErrInvalidInput = errors.New("invalid input")
 	// ErrNotFound indicates no event matched the query.
 	ErrNotFound = errors.New("not found")
+	// ErrQuotaExceeded indicates the organizer has reached their monthly event limit.
+	ErrQuotaExceeded = errors.New("monthly event limit reached")
 )
+
+// startOfMonthMoscow returns midnight on the first day of t's calendar month
+// in the Europe/Moscow timezone.
+func startOfMonthMoscow(t time.Time) time.Time {
+	loc, err := time.LoadLocation("Europe/Moscow")
+	if err != nil {
+		// Fall back to UTC if timezone data is unavailable.
+		loc = time.UTC
+	}
+	moscow := t.In(loc)
+	return time.Date(moscow.Year(), moscow.Month(), 1, 0, 0, 0, 0, loc)
+}
 
 // Service is the events business-logic interface.
 type Service interface {
@@ -29,6 +44,9 @@ type Service interface {
 	GetByID(ctx context.Context, id string) (*models.Event, error)
 	// List returns events, optionally filtered by status.
 	List(ctx context.Context, status string) ([]*models.Event, error)
+	// Nearby returns published events nearest to (lat, lon), within 50 km,
+	// up to limit results. Both lat and lon are required.
+	Nearby(ctx context.Context, lat, lon *float64, limit int) ([]*NearbyResult, error)
 }
 
 // CategoryValidator resolves and validates category ids. Satisfied by
@@ -44,15 +62,17 @@ type VenueValidator interface {
 }
 
 type service struct {
-	repo       Repository
-	categories CategoryValidator
-	venues     VenueValidator
+	repo         Repository
+	categories   CategoryValidator
+	venues       VenueValidator
+	monthlyLimit int
 }
 
 // NewService creates an events service backed by the given repository, a
-// category validator, and a venue validator.
-func NewService(repo Repository, categories CategoryValidator, venues VenueValidator) Service {
-	return &service{repo: repo, categories: categories, venues: venues}
+// category validator, a venue validator, and a monthly creation limit per
+// organizer. monthlyLimit <= 0 means unlimited.
+func NewService(repo Repository, categories CategoryValidator, venues VenueValidator, monthlyLimit int) Service {
+	return &service{repo: repo, categories: categories, venues: venues, monthlyLimit: monthlyLimit}
 }
 
 func (s *service) Create(ctx context.Context, event *models.Event) error {
@@ -81,6 +101,19 @@ func (s *service) Create(ctx context.Context, event *models.Event) error {
 		return fmt.Errorf("validate venue: %w", err)
 	}
 	event.Venue = venue
+
+	// Quota check: if a monthly limit is configured, reject once the organizer
+	// has reached it for the current calendar month (Europe/Moscow).
+	if s.monthlyLimit > 0 && event.OrganizerID != uuid.Nil {
+		since := startOfMonthMoscow(time.Now())
+		n, err := s.repo.CountByOrganizerSince(event.OrganizerID, since)
+		if err != nil {
+			return fmt.Errorf("quota check: %w", err)
+		}
+		if n >= s.monthlyLimit {
+			return fmt.Errorf("%w: %d/%d this month", ErrQuotaExceeded, n, s.monthlyLimit)
+		}
+	}
 
 	if err := s.repo.Create(event); err != nil {
 		return fmt.Errorf("create event: %w", err)
@@ -121,4 +154,18 @@ func (s *service) List(_ context.Context, status string) ([]*models.Event, error
 	}
 
 	return list, nil
+}
+
+func (s *service) Nearby(_ context.Context, lat, lon *float64, limit int) ([]*NearbyResult, error) {
+	if lat == nil || lon == nil {
+		return nil, fmt.Errorf("%w: lat and lon are required", ErrInvalidInput)
+	}
+	if *lat < -90 || *lat > 90 || *lon < -180 || *lon > 180 {
+		return nil, fmt.Errorf("%w: coordinates out of range", ErrInvalidInput)
+	}
+	res, err := s.repo.Nearby(*lat, *lon, limit)
+	if err != nil {
+		return nil, fmt.Errorf("nearby events: %w", err)
+	}
+	return res, nil
 }

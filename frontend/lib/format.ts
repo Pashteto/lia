@@ -1,10 +1,14 @@
 import type { LiaEvent } from "./types";
 
+// Pin the timezone: without it, formatting uses the runtime zone, so the SSR
+// container (UTC) and the visitor's browser (local zone) produce different text
+// and React throws a hydration mismatch (#418). Moscow events → Europe/Moscow.
 const dateFmt = new Intl.DateTimeFormat("ru-RU", {
   day: "numeric",
   month: "long",
   hour: "2-digit",
   minute: "2-digit",
+  timeZone: "Europe/Moscow",
 });
 
 /** "13 июня, 19:00" */

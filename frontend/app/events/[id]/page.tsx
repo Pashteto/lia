@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/Button";
+import { VenueMap } from "@/components/VenueMap";
 import { fetchEvent } from "@/lib/api";
 import {
   formatAttendance,
@@ -124,6 +125,11 @@ export default async function EventDetailPage({
               <p className="text-[13px] text-label-secondary">
                 м. {event.venue.metro}
               </p>
+            )}
+            {event.venue.lat != null && event.venue.lon != null && (
+              <div className="mt-3">
+                <VenueMap lat={event.venue.lat} lon={event.venue.lon} />
+              </div>
             )}
           </Section>
         )}

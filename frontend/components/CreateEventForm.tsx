@@ -1,10 +1,14 @@
 "use client";
 
+import { useState } from "react";
+
+import { LoginModal } from "@/components/AuthButton";
 import { Button } from "@/components/ui/Button";
 import { Segmented } from "@/components/ui/Segmented";
 import { Switch } from "@/components/ui/Switch";
 import { VenuePicker } from "@/components/VenuePicker";
-import { createEvent, getCategories, type CreateEventInput } from "@/lib/api";
+import { createEvent, getCategories, type CreateEventInput, uploadFile } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/cn";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -33,6 +37,7 @@ const inputCls =
 
 export function CreateEventForm() {
   const router = useRouter();
+  const { isAuthed, ready } = useAuth();
 
   const {
     register,
@@ -52,6 +57,11 @@ export function CreateEventForm() {
 
   const isFree = useWatch({ control, name: "isFree" });
 
+  const [coverFileId, setCoverFileId] = useState<string | undefined>(undefined);
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | undefined>(undefined);
+  const [coverUploading, setCoverUploading] = useState(false);
+  const [coverError, setCoverError] = useState<string | undefined>(undefined);
+
   const { data: categories = [] } = useQuery({
     queryKey: ["categories"],
     queryFn: getCategories,
@@ -61,6 +71,22 @@ export function CreateEventForm() {
     mutationFn: (input: CreateEventInput) => createEvent(input),
     onSuccess: (event) => router.push(`/events/${event.id}`),
   });
+
+  const handleCoverChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCoverError(undefined);
+    setCoverUploading(true);
+    try {
+      const { id, url } = await uploadFile(file);
+      setCoverFileId(id);
+      setCoverPreviewUrl(url);
+    } catch (err) {
+      setCoverError(err instanceof Error ? err.message : "Ошибка загрузки");
+    } finally {
+      setCoverUploading(false);
+    }
+  };
 
   const onSubmit = (v: FormValues) => {
     const input: CreateEventInput = {
@@ -74,9 +100,19 @@ export function CreateEventForm() {
       price_min: v.isFree ? undefined : Number(v.priceMin) || 0,
       starts_at: new Date(v.startsAt).toISOString(),
       ends_at: v.endsAt ? new Date(v.endsAt).toISOString() : undefined,
+      cover_file_id: coverFileId,
     };
     mutation.mutate(input);
   };
+
+  // Gate: creating an event requires a signed-in user (backend returns 401
+  // otherwise). Avoid flashing the form before the session is read.
+  if (!ready) {
+    return <div className="min-h-screen bg-bg-grouped" />;
+  }
+  if (!isAuthed) {
+    return <CreateEventGate />;
+  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="min-h-screen bg-bg-grouped pb-16">
@@ -94,9 +130,35 @@ export function CreateEventForm() {
       </header>
 
       <div className="mx-auto max-w-2xl px-5 pt-5">
-        {/* Cover upload placeholder */}
-        <div className="mb-6 flex aspect-[16/9] w-full items-center justify-center rounded-card border border-dashed border-separator bg-bg-secondary text-[15px] text-label-secondary">
-          Обложка — загрузка появится позже
+        <div className="mb-6">
+          <label className="block">
+            <span className="mb-1.5 block text-[13px] text-label-secondary">Обложка</span>
+            <div className="rounded-card bg-bg-secondary p-4">
+              {coverPreviewUrl && (
+                <div className="relative mb-3 aspect-[3/2] w-full overflow-hidden rounded-[10px] bg-fill">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={coverPreviewUrl}
+                    alt="Предпросмотр обложки"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                disabled={coverUploading}
+                onChange={handleCoverChange}
+                className="block w-full text-[15px] text-label file:mr-3 file:rounded-full file:border-0 file:bg-fill file:px-4 file:py-1.5 file:text-[14px] file:font-medium file:text-label file:transition hover:file:bg-fill-secondary disabled:opacity-60"
+              />
+              {coverUploading && (
+                <p className="mt-2 text-[13px] text-label-secondary">Загрузка…</p>
+              )}
+              {coverError && (
+                <p className="mt-2 text-[13px] text-red-500">{coverError}</p>
+              )}
+            </div>
+          </label>
         </div>
 
         <Section title="Основное">
@@ -239,11 +301,46 @@ export function CreateEventForm() {
 
         {mutation.isError && (
           <p className="mt-4 text-[15px] text-red-500">
-            Не удалось сохранить событие. Проверьте, что бэкенд запущен.
+            {mutation.error instanceof Error && mutation.error.message.includes("429")
+              ? "Достигнут лимит: 10 событий в месяц. Лимит обновится 1-го числа."
+              : "Не удалось сохранить событие. Проверьте, что бэкенд запущен."}
           </p>
         )}
       </div>
     </form>
+  );
+}
+
+// Shown when an unauthenticated user reaches /events/new. Prompts for demo-login
+// rather than rendering a form that would 401 on submit.
+function CreateEventGate() {
+  const [showLogin, setShowLogin] = useState(false);
+  return (
+    <div className="min-h-screen bg-bg-grouped">
+      <header className="glass sticky top-0 z-10 border-b border-separator">
+        <div className="mx-auto flex max-w-2xl items-center justify-between px-5 py-3">
+          <Link href="/" className="text-[17px] text-accent">
+            Отмена
+          </Link>
+          <span className="text-[17px] font-semibold">Новое событие</span>
+          <span className="w-16" />
+        </div>
+      </header>
+      <div className="mx-auto max-w-md px-5 pt-16 text-center">
+        <div className="mb-4 text-[40px]" aria-hidden>
+          🔐
+        </div>
+        <h1 className="mb-2 text-[22px] font-bold tracking-[-0.022em]">
+          Войдите, чтобы создать событие
+        </h1>
+        <p className="mb-6 text-[15px] text-label-secondary">
+          Создание событий доступно авторизованным пользователям. Демо-вход
+          занимает пару секунд — нужен только email.
+        </p>
+        <Button onClick={() => setShowLogin(true)}>Войти</Button>
+      </div>
+      {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
+    </div>
   );
 }
 

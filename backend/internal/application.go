@@ -11,7 +11,9 @@ import (
 
 	"github.com/Pashteto/lia/config"
 	categoriesdomain "github.com/Pashteto/lia/internal/categories"
+	cleanupmod "github.com/Pashteto/lia/internal/cleanup"
 	eventsdomain "github.com/Pashteto/lia/internal/events"
+	filesdomain "github.com/Pashteto/lia/internal/files"
 	venuesdomain "github.com/Pashteto/lia/internal/venues"
 	grpcmod "github.com/Pashteto/lia/internal/grpc"
 	grpcclientmod "github.com/Pashteto/lia/internal/grpcclient"
@@ -19,6 +21,7 @@ import (
 	"github.com/Pashteto/lia/internal/module"
 	"github.com/Pashteto/lia/internal/repository"
 	"github.com/Pashteto/lia/internal/service"
+	"github.com/Pashteto/lia/internal/storage"
 	wsmod "github.com/Pashteto/lia/internal/websocket"
 	"github.com/Pashteto/lia/pkg/logger"
 	"github.com/Pashteto/lia/pkg/version"
@@ -42,6 +45,12 @@ type App struct {
 
 	// venuesSvc is the venues domain service. Nil when the DB is disabled.
 	venuesSvc venuesdomain.Service
+
+	// filesSvc is the files domain service. Nil when DB or storage is disabled.
+	filesSvc filesdomain.Service
+
+	// blobStore is the blob storage backend. Nil when storage is disabled.
+	blobStore storage.Storage
 }
 
 // NewApplication creates a new App instance.
@@ -135,12 +144,56 @@ func (app *App) registerModules() error {
 	if repoModule != nil {
 		app.categoriesSvc = categoriesdomain.NewService(categoriesdomain.NewRepository(repoModule.DB()))
 		app.venuesSvc = venuesdomain.NewService(venuesdomain.NewRepository(repoModule.DB()))
+		logger.Log().Info("categories + venues modules wired to repository")
+	}
+
+	// Wire storage + files service. Storage is independent of repoModule but the
+	// files repository requires a DB connection, so we only build filesSvc when
+	// repoModule is available.
+	var filesRepo filesdomain.Repository
+	if app.config.Storage != nil {
+		bs, err := storage.New(toStorageSettings(app.config.Storage))
+		if err != nil {
+			return fmt.Errorf("init storage: %w", err)
+		}
+		app.blobStore = bs
+		if repoModule != nil {
+			filesRepo = filesdomain.NewRepository(repoModule.DB())
+			app.filesSvc = filesdomain.NewService(filesRepo, bs)
+			app.eventsSvc = eventsdomain.NewService(
+				eventsdomain.NewRepository(repoModule.DB(), app.blobStore),
+				app.categoriesSvc,
+				app.venuesSvc,
+				app.config.EventsMonthlyLimit,
+			)
+			logger.Log().Info("events module wired to repository + storage")
+		}
+		logger.Log().Infof("storage backend %q wired", app.config.Storage.Backend)
+	}
+
+	// Register cleanup module when files + storage are wired and cleanup is enabled.
+	if app.config.Cleanup != nil && app.config.Cleanup.Enabled && filesRepo != nil && app.blobStore != nil {
+		graceDur := parseDurationDefault(app.config.Cleanup.Grace, 24*time.Hour)
+		intervalDur := parseDurationDefault(app.config.Cleanup.Interval, 24*time.Hour)
+		cleaner := filesdomain.NewCleaner(filesRepo, app.blobStore, graceDur)
+		cleanupModule := cleanupmod.NewModule(cleaner, intervalDur)
+		app.modules.Register(cleanupModule)
+		if err := cleanupModule.Init(ctx); err != nil {
+			return fmt.Errorf("init cleanup module: %w", err)
+		}
+		logger.Log().Infof("cleanup module registered (interval=%s grace=%s)", intervalDur, graceDur)
+	}
+
+	// Wire events after storage so it gets the blob store (may be nil if
+	// storage is disabled — loadCover no-ops safely).
+	if repoModule != nil && app.eventsSvc == nil {
 		app.eventsSvc = eventsdomain.NewService(
-			eventsdomain.NewRepository(repoModule.DB()),
+			eventsdomain.NewRepository(repoModule.DB(), nil),
 			app.categoriesSvc,
 			app.venuesSvc,
+			app.config.EventsMonthlyLimit,
 		)
-		logger.Log().Info("events + categories + venues modules wired to repository")
+		logger.Log().Info("events module wired to repository (no storage)")
 	}
 
 	logger.Log().Info("infrastructure modules initialized successfully")
@@ -156,6 +209,8 @@ func (app *App) registerModules() error {
 		httpModule.SetEventsService(app.eventsSvc)
 		httpModule.SetCategoriesService(app.categoriesSvc)
 		httpModule.SetVenuesService(app.venuesSvc)
+		httpModule.SetStorage(app.blobStore)
+		httpModule.SetFilesService(app.filesSvc)
 
 		app.modules.Register(httpModule)
 
@@ -249,4 +304,37 @@ func (app *App) Service() service.IService {
 // CreateAddr creates an address string from host and port.
 func CreateAddr(host string, port int) string {
 	return fmt.Sprintf("%s:%v", host, port)
+}
+
+// parseDurationDefault parses s as a duration; returns fallback on failure.
+func parseDurationDefault(s string, fallback time.Duration) time.Duration {
+	if d, err := time.ParseDuration(s); err == nil {
+		return d
+	}
+	logger.Log().Warnf("invalid duration %q, using default %s", s, fallback)
+	return fallback
+}
+
+// toStorageSettings maps a config.StorageConfig to storage.StorageSettings.
+// Keeping this helper in application.go avoids a config→storage import cycle.
+func toStorageSettings(cfg *config.StorageConfig) storage.StorageSettings {
+	if cfg == nil {
+		return storage.StorageSettings{}
+	}
+	ss := storage.StorageSettings{
+		Backend:    cfg.Backend,
+		LocalDir:   cfg.LocalDir,
+		PublicBase: cfg.PublicBase,
+	}
+	if cfg.S3 != nil {
+		ss.S3 = storage.S3Config{
+			Endpoint:  cfg.S3.Endpoint,
+			Region:    cfg.S3.Region,
+			Bucket:    cfg.S3.Bucket,
+			AccessKey: cfg.S3.AccessKey,
+			SecretKey: cfg.S3.SecretKey,
+			UseSSL:    cfg.S3.UseSSL,
+		}
+	}
+	return ss
 }

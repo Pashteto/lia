@@ -6,11 +6,13 @@ package events
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-pg/pg/v10"
 	"github.com/gofrs/uuid"
 
 	"github.com/Pashteto/lia/internal/models"
+	"github.com/Pashteto/lia/internal/storage"
 	"github.com/Pashteto/lia/pkg/logger"
 )
 
@@ -25,6 +27,18 @@ type ListFilter struct {
 // DefaultListLimit is applied when ListFilter.Limit is unset.
 const DefaultListLimit = 50
 
+// NearbyResult wraps an event with its distance from the query point.
+type NearbyResult struct {
+	Event     *models.Event
+	DistanceM float64
+}
+
+// nearbyRow is an internal scan target that embeds Event and adds DistanceM.
+type nearbyRow struct {
+	models.Event
+	DistanceM float64 `pg:"distance_m"`
+}
+
 // Repository defines event persistence operations.
 type Repository interface {
 	// Create inserts a new event (ID auto-generated via BeforeInsert).
@@ -33,16 +47,25 @@ type Repository interface {
 	GetByID(id uuid.UUID) (*models.Event, error)
 	// List returns events matching the filter, newest start first.
 	List(filter ListFilter) ([]*models.Event, error)
+	// Nearby returns published events whose venue has coordinates, ordered
+	// nearest-first, capped at 50 km from (lat, lon).
+	Nearby(lat, lon float64, limit int) ([]*NearbyResult, error)
+	// CountByOrganizerSince returns the number of events created by the given
+	// organizer at or after since (all statuses, draft + published).
+	CountByOrganizerSince(organizer uuid.UUID, since time.Time) (int, error)
 }
 
 // pgRepository is a go-pg backed Repository.
 type pgRepository struct {
-	db *pg.DB
+	db    *pg.DB
+	store storage.Storage // nil when storage is disabled
 }
 
 // NewRepository creates a PostgreSQL-backed event repository.
-func NewRepository(db *pg.DB) Repository {
-	return &pgRepository{db: db}
+// store may be nil when the storage backend is disabled — loadCover
+// will no-op safely in that case.
+func NewRepository(db *pg.DB, store storage.Storage) Repository {
+	return &pgRepository{db: db, store: store}
 }
 
 func (r *pgRepository) Create(event *models.Event) error {
@@ -89,6 +112,10 @@ func (r *pgRepository) GetByID(id uuid.UUID) (*models.Event, error) {
 		return nil, err
 	}
 
+	if err := r.loadCover([]*models.Event{event}); err != nil {
+		return nil, err
+	}
+
 	return event, nil
 }
 
@@ -114,6 +141,10 @@ func (r *pgRepository) List(filter ListFilter) ([]*models.Event, error) {
 	}
 
 	if err := r.loadVenues(list); err != nil {
+		return nil, err
+	}
+
+	if err := r.loadCover(list); err != nil {
 		return nil, err
 	}
 
@@ -161,6 +192,51 @@ func (r *pgRepository) loadCategories(events []*models.Event) error {
 	return nil
 }
 
+// Nearby returns published events whose venue has coordinates, ordered
+// nearest-first, within 50 km of the given point. limit defaults to
+// DefaultListLimit when <= 0.
+func (r *pgRepository) Nearby(lat, lon float64, limit int) ([]*NearbyResult, error) {
+	if limit <= 0 {
+		limit = DefaultListLimit
+	}
+	var rows []nearbyRow
+	_, err := r.db.Query(&rows, `
+		SELECT e.*, ST_Distance(v.geog, ST_SetSRID(ST_MakePoint(?0, ?1), 4326)::geography) AS distance_m
+		FROM events e
+		JOIN venues v ON v.id = e.venue_id
+		WHERE v.geog IS NOT NULL
+		  AND e.status = 'published'
+		  AND ST_DWithin(v.geog, ST_SetSRID(ST_MakePoint(?0, ?1), 4326)::geography, 50000)
+		ORDER BY v.geog <-> ST_SetSRID(ST_MakePoint(?0, ?1), 4326)::geography
+		LIMIT ?2`,
+		lon, lat, limit)
+	if err != nil {
+		return nil, fmt.Errorf("nearby events from db: %w", err)
+	}
+	events := make([]*models.Event, len(rows))
+	results := make([]*NearbyResult, len(rows))
+	for i := range rows {
+		e := rows[i].Event
+		// go-pg does not call AfterSelect for raw-SQL scans; invoke it manually
+		// so Event.Status (the Go enum) is populated from Event.StatusSQL.
+		if err := e.AfterSelect(context.Background()); err != nil {
+			return nil, fmt.Errorf("nearby events: scan row %d: %w", i, err)
+		}
+		events[i] = &e
+		results[i] = &NearbyResult{Event: &e, DistanceM: rows[i].DistanceM}
+	}
+	if err := r.loadCategories(events); err != nil {
+		return nil, err
+	}
+	if err := r.loadVenues(events); err != nil {
+		return nil, err
+	}
+	if err := r.loadCover(events); err != nil {
+		return nil, err
+	}
+	return results, nil
+}
+
 // loadVenues populates Venue on each event whose venue_id is set (non-zero),
 // in a single query (no N+1).
 func (r *pgRepository) loadVenues(events []*models.Event) error {
@@ -181,26 +257,14 @@ func (r *pgRepository) loadVenues(events []*models.Event) error {
 		return nil
 	}
 
-	var rows []struct {
-		Name     string    `pg:"name"`
-		Address  string    `pg:"address"`
-		Metro    string    `pg:"metro"`
-		District string    `pg:"district"`
-		ID       uuid.UUID `pg:"id"`
-	}
-	if _, err := r.db.Query(&rows,
-		`SELECT id, name, address, metro, district FROM venues WHERE id IN (?)`,
-		pg.In(ids),
-	); err != nil {
+	var venues []*models.Venue
+	if err := r.db.Model(&venues).Where("id IN (?)", pg.In(ids)).Select(); err != nil {
 		return fmt.Errorf("load event venues: %w", err)
 	}
 
-	byID := make(map[uuid.UUID]*models.Venue, len(rows))
-	for i := range rows {
-		byID[rows[i].ID] = &models.Venue{
-			ID: rows[i].ID, Name: rows[i].Name, Address: rows[i].Address,
-			Metro: rows[i].Metro, District: rows[i].District,
-		}
+	byID := make(map[uuid.UUID]*models.Venue, len(venues))
+	for _, v := range venues {
+		byID[v.ID] = v
 	}
 	// A venue_id with no matching row (e.g. a stale/dangling reference) is left
 	// as e.Venue == nil — intentional, since venue_id is a loose reference (no FK).
@@ -210,4 +274,62 @@ func (r *pgRepository) loadVenues(events []*models.Event) error {
 		}
 	}
 	return nil
+}
+
+// loadCover populates CoverURL on each event whose cover_file_id is set
+// (non-zero), in a single query (no N+1). No-ops when store is nil (storage
+// disabled) or when no event has a cover set.
+func (r *pgRepository) loadCover(events []*models.Event) error {
+	if r.store == nil || len(events) == 0 {
+		return nil
+	}
+	// Collect unique non-zero cover_file_ids.
+	ids := make([]uuid.UUID, 0, len(events))
+	seen := make(map[uuid.UUID]struct{})
+	for _, e := range events {
+		if e.CoverFileID != uuid.Nil {
+			if _, ok := seen[e.CoverFileID]; !ok {
+				seen[e.CoverFileID] = struct{}{}
+				ids = append(ids, e.CoverFileID)
+			}
+		}
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+
+	var rows []struct {
+		ID         uuid.UUID `pg:"id"`
+		StorageKey string    `pg:"storage_key"`
+	}
+	if _, err := r.db.Query(&rows,
+		`SELECT id, storage_key FROM files WHERE id IN (?)`,
+		pg.In(ids),
+	); err != nil {
+		return fmt.Errorf("load cover files: %w", err)
+	}
+
+	byID := make(map[uuid.UUID]string, len(rows))
+	for _, row := range rows {
+		byID[row.ID] = row.StorageKey
+	}
+	for _, e := range events {
+		if key, ok := byID[e.CoverFileID]; ok {
+			e.CoverURL = r.store.URL(key)
+		}
+	}
+	return nil
+}
+
+// CountByOrganizerSince returns the number of events (any status) created by
+// the given organizer at or after since.
+func (r *pgRepository) CountByOrganizerSince(organizer uuid.UUID, since time.Time) (int, error) {
+	count, err := r.db.Model((*models.Event)(nil)).
+		Where("organizer_id = ?", organizer).
+		Where("created_at >= ?", since).
+		Count()
+	if err != nil {
+		return 0, fmt.Errorf("count events for organizer %s since %s: %w", organizer, since.Format(time.RFC3339), err)
+	}
+	return count, nil
 }

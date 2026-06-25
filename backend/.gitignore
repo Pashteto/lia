@@ -37,6 +37,7 @@ internal/http/models/
 /data/
 
 .env
+.env.prod
 
 local
 

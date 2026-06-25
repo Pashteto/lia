@@ -2,6 +2,7 @@
 
 import { createVenue, searchVenues, type ApiVenue } from "@/lib/api";
 import { cn } from "@/lib/cn";
+import { VenueGeoModal } from "@/components/VenueGeoModal";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 
@@ -30,6 +31,7 @@ export function VenuePicker({
   const [debounced, setDebounced] = useState("");
   const [selected, setSelected] = useState<ApiVenue | null>(null);
   const [open, setOpen] = useState(false);
+  const [geoOpen, setGeoOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -134,6 +136,25 @@ export function VenuePicker({
             </div>
           )}
         </div>
+      )}
+      {selected && (
+        <button
+          type="button"
+          className="mt-1.5 text-[13px] text-accent"
+          onClick={() => setGeoOpen(true)}
+        >
+          Указать на карте
+        </button>
+      )}
+      {geoOpen && selected && (
+        <VenueGeoModal
+          venue={selected}
+          onSaved={(v) => {
+            setSelected(v);
+            setGeoOpen(false);
+          }}
+          onClose={() => setGeoOpen(false)}
+        />
       )}
     </div>
   );

@@ -70,6 +70,8 @@ func (h *CreateVenue) Handle(params venuesops.CreateVenueParams) middleware.Resp
 		domain.Address = in.Address
 		domain.Metro = in.Metro
 		domain.District = in.District
+		domain.Lat = in.Lat
+		domain.Lon = in.Lon
 	}
 
 	created, err := h.venues.Create(params.HTTPRequest.Context(), domain)

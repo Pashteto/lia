@@ -1,7 +1,7 @@
 import type { LiaEvent } from "./types";
 
-// A discovery filter chip. Special chips (all/today/weekend/nearby) are not
-// real categories, so this is its own shape rather than EventCategory.
+// A discovery filter chip. The "all" chip is special (shows everything); the
+// rest filter by category slug.
 export interface DiscoveryFilter {
   slug: string;
   label: string;
@@ -11,6 +11,11 @@ export interface DiscoveryFilter {
 // from the curatorial copy in design/screens/discovery.html. The deployed demo
 // (lia.pashteto.com) renders from this when the backend is unreachable.
 
+// The "Рядом" chip was removed — it duplicated the dedicated geolocation
+// "рядом со мной" button and filtered by a non-existent "nearby" category, so
+// it always showed nothing. NOTE: the date chips (today/weekend) are also not
+// wired yet — they filter by category slug, which no event matches; implement
+// real date filtering before relying on them.
 export const FILTERS: DiscoveryFilter[] = [
   { slug: "all", label: "Все" },
   { slug: "today", label: "Сегодня" },
@@ -18,7 +23,6 @@ export const FILTERS: DiscoveryFilter[] = [
   { slug: "mediation", label: "Медиации" },
   { slug: "workshop", label: "Мастер-классы" },
   { slug: "lecture", label: "Лекции" },
-  { slug: "nearby", label: "Рядом" },
 ];
 
 export const MOCK_EVENTS: LiaEvent[] = [

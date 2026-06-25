@@ -1,3 +1,4 @@
+import { getToken } from "./auth";
 import type {
   ApiEvent,
   EventFormat,
@@ -38,9 +39,12 @@ export function apiEventToLia(e: ApiEvent): LiaEvent {
           metro: e.venue.metro,
           address: e.venue.address,
           district: e.venue.district,
+          lat: e.venue.lat,
+          lon: e.venue.lon,
         }
       : undefined,
-    // cover image is not yet provided by the backend.
+    distanceM: e.distance_m,
+    coverUrl: e.cover_url,
   };
 }
 
@@ -51,6 +55,8 @@ export interface ApiVenue {
   address?: string;
   metro?: string;
   district?: string;
+  lat?: number;
+  lon?: number;
 }
 
 /** Searches venues by name substring. Throws on network/HTTP error. */
@@ -71,6 +77,8 @@ export async function createVenue(input: {
   address?: string;
   metro?: string;
   district?: string;
+  lat?: number;
+  lon?: number;
 }): Promise<ApiVenue> {
   const res = await fetch(`${API_V1}/venues`, {
     method: "POST",
@@ -80,6 +88,23 @@ export async function createVenue(input: {
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
     throw new Error(`create venue failed: ${res.status} ${detail}`);
+  }
+  return (await res.json()) as ApiVenue;
+}
+
+/** Updates a venue via PATCH /venues/{id}. Throws on network/HTTP error. */
+export async function updateVenue(
+  id: string,
+  input: { name?: string; address?: string; metro?: string; district?: string; lat?: number; lon?: number },
+): Promise<ApiVenue> {
+  const res = await fetch(`${API_V1}/venues/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`update venue failed: ${res.status} ${detail}`);
   }
   return (await res.json()) as ApiVenue;
 }
@@ -117,6 +142,27 @@ export async function fetchPublishedEvents(): Promise<LiaEvent[]> {
 }
 
 /**
+ * Fetches events near a given coordinate via `GET /events/nearby`.
+ * The backend returns events within 50 km, pre-sorted nearest-first, each with
+ * `distance_m`. Events without a venue / coordinates are excluded server-side.
+ */
+export async function fetchNearbyEvents(
+  lat: number,
+  lon: number,
+  limit = 50,
+): Promise<LiaEvent[]> {
+  const params = new URLSearchParams({
+    lat: String(lat),
+    lon: String(lon),
+    limit: String(limit),
+  });
+  const res = await fetch(`${API_V1}/events/nearby?${params.toString()}`);
+  if (!res.ok) throw new Error(`fetch nearby failed: ${res.status}`);
+  const data = (await res.json()) as ApiEvent[];
+  return data.map(apiEventToLia);
+}
+
+/**
  * Fetches a single event by id. Returns null on 404; throws on other errors.
  */
 export async function fetchEvent(id: string): Promise<LiaEvent | null> {
@@ -142,13 +188,22 @@ export interface CreateEventInput {
   price_min?: number;
   starts_at: string; // ISO 8601
   ends_at?: string;
+  cover_file_id?: string;
 }
 
-/** Creates an event via POST /events; returns the created event. */
+/**
+ * Creates an event via POST /events; returns the created event.
+ * Requires authentication — attaches the demo-login bearer token. The backend
+ * sets the organizer to the authenticated principal, so no organizer_id is sent.
+ */
 export async function createEvent(input: CreateEventInput): Promise<LiaEvent> {
+  const token = getToken();
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
   const res = await fetch(`${API_V1}/events`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(input),
   });
   if (!res.ok) {
@@ -156,4 +211,46 @@ export async function createEvent(input: CreateEventInput): Promise<LiaEvent> {
     throw new Error(`create event failed: ${res.status} ${detail}`);
   }
   return apiEventToLia((await res.json()) as ApiEvent);
+}
+
+/**
+ * Uploads a file via POST /api/v1/uploads.
+ * Returns the file id (uuid) and its publicly fetchable URL.
+ * Requires authentication — attaches the demo-login bearer token.
+ */
+export async function uploadFile(file: File): Promise<{ id: string; url: string }> {
+  const token = getToken();
+  const fd = new FormData();
+  fd.append("file", file);
+  const res = await fetch(`${API_V1}/uploads`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: fd,
+  });
+  if (!res.ok) throw new Error(`upload failed: ${res.status} ${await res.text().catch(() => "")}`);
+  return (await res.json()) as { id: string; url: string };
+}
+
+/** Response from POST /auth/demo-login. */
+interface DemoLoginResponse {
+  token: string;
+}
+
+/**
+ * DEMO-ONLY login: mints a GateGuard session token for an email (no password).
+ * Returns the bearer token; callers persist it via lib/auth.setSession.
+ */
+export async function demoLogin(email: string, name?: string): Promise<string> {
+  const res = await fetch(`${API_V1}/auth/demo-login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, name: name || email.split("@")[0] }),
+  });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`login failed: ${res.status} ${detail}`);
+  }
+  const data = (await res.json()) as DemoLoginResponse;
+  if (!data.token) throw new Error("login failed: empty token");
+  return data.token;
 }

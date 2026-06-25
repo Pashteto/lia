@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/gofrs/uuid"
 
 	eventsdomain "github.com/Pashteto/lia/internal/events"
 	"github.com/Pashteto/lia/internal/http/formatter"
@@ -91,21 +92,36 @@ func NewCreateEvent(svc eventsdomain.Service) *CreateEvent {
 }
 
 // Handle POST /events.
-func (h *CreateEvent) Handle(params eventsops.CreateEventParams) middleware.Responder {
+func (h *CreateEvent) Handle(params eventsops.CreateEventParams, principal *apimodels.User) middleware.Responder {
 	event, err := formatter.EventFromAPIInput(params.Body)
 	if err != nil {
 		return eventsops.NewCreateEventBadRequest().
 			WithPayload(DefaultError(http.StatusBadRequest, err, nil))
 	}
 
+	// The organizer is the authenticated user — never trust a client-supplied
+	// organizer_id from the request body.
+	if principal != nil {
+		if id, err := uuid.FromString(principal.UUID.String()); err == nil {
+			event.OrganizerID = id
+		}
+	}
+
 	if err := h.events.Create(params.HTTPRequest.Context(), event); err != nil {
 		logger.Log().Errorf("create event: %s", err.Error())
-		if errors.Is(err, eventsdomain.ErrInvalidInput) {
+		switch {
+		case errors.Is(err, eventsdomain.ErrInvalidInput):
 			return eventsops.NewCreateEventBadRequest().
 				WithPayload(DefaultError(http.StatusBadRequest, err, nil))
+		case errors.Is(err, eventsdomain.ErrQuotaExceeded):
+			// NOTE: "10 событий в месяц" is intentionally hardcoded per spec.
+			// Keep in sync with the EVENTS_MONTHLY_LIMIT config value.
+			return eventsops.NewCreateEventTooManyRequests().
+				WithPayload(DefaultError(http.StatusTooManyRequests, errors.New("Достигнут лимит: 10 событий в месяц. Лимит обновится 1-го числа."), nil))
+		default:
+			return eventsops.NewCreateEventServiceUnavailable().
+				WithPayload(DefaultError(http.StatusServiceUnavailable, err, nil))
 		}
-		return eventsops.NewCreateEventServiceUnavailable().
-			WithPayload(DefaultError(http.StatusServiceUnavailable, err, nil))
 	}
 
 	return eventsops.NewCreateEventCreated().WithPayload(formatter.EventToAPI(event))

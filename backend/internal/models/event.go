@@ -21,6 +21,10 @@ type Event struct {
 	// arrive with the organizers / venues modules.
 	OrganizerID uuid.UUID   `pg:"organizer_id,type:uuid,use_zero"`
 	VenueID     uuid.UUID   `pg:"venue_id,type:uuid,use_zero"`
+	CoverFileID uuid.UUID   `pg:"cover_file_id,type:uuid,use_zero"`
+	// CoverURL is a transient field (not a DB column) populated by the repository
+	// when cover_file_id is non-zero. It is the publicly fetchable URL of the cover image.
+	CoverURL    string      `pg:"-"`
 	Title       string      `pg:"title,notnull"`
 	Description string      `pg:"description,use_zero"`
 	// Venue is normalized into the venues entity (migration 000008). It is the

@@ -7,6 +7,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/gofrs/uuid"
 
+	eventsdomain "github.com/Pashteto/lia/internal/events"
 	apiModels "github.com/Pashteto/lia/internal/http/models"
 	domainModels "github.com/Pashteto/lia/internal/models"
 )
@@ -120,9 +121,9 @@ func EventToAPIWithDistance(e *domainModels.Event, distanceM float64) *apiModels
 }
 
 // EventFromAPIInput converts an API EventInput into a domain Event.
-// Applies sensible defaults (published / offline / free): a new event with no
-// explicit status is published so it is immediately visible in the discovery
-// feed (which lists status=published). Clients can pass "draft" to hide it.
+// Applies sensible defaults (draft / offline / free): a new event with no
+// explicit status defaults to draft so clients can review it before publishing.
+// Clients can explicitly pass "published" to make it immediately visible.
 func EventFromAPIInput(in *apiModels.EventInput) (*domainModels.Event, error) {
 	if in == nil {
 		return nil, fmt.Errorf("event input is required")
@@ -139,7 +140,7 @@ func EventFromAPIInput(in *apiModels.EventInput) (*domainModels.Event, error) {
 		event.Title = *in.Title
 	}
 
-	status := defaultStr(in.Status, "published")
+	status := defaultStr(in.Status, "draft")
 	parsedStatus, err := domainModels.EventStatusFromString(status)
 	if err != nil {
 		return nil, fmt.Errorf("parse status: %w", err)
@@ -200,4 +201,73 @@ func parseOptionalUUID(v strfmt.UUID) (uuid.UUID, bool) {
 		return uuid.Nil, false
 	}
 	return parsed, true
+}
+
+// EventPatchToUpdateParams converts an API EventPatch into the domain
+// UpdateParams. A zero/empty API value maps to a nil pointer ("preserve");
+// category_ids maps to nil when absent (preserve) and to a slice when present
+// (replace). Clearing a field to empty is not supported via PATCH.
+func EventPatchToUpdateParams(in *apiModels.EventPatch) eventsdomain.UpdateParams {
+	var p eventsdomain.UpdateParams
+	if in == nil {
+		return p
+	}
+	if in.Title != "" {
+		v := in.Title
+		p.Title = &v
+	}
+	if in.Description != "" {
+		v := in.Description
+		p.Description = &v
+	}
+	if in.Format != "" {
+		v := in.Format
+		p.Format = &v
+	}
+	if in.PriceType != "" {
+		v := in.PriceType
+		p.PriceType = &v
+	}
+	if in.PriceMin != 0 {
+		v := in.PriceMin
+		p.PriceMin = &v
+	}
+	if in.PriceMax != 0 {
+		v := in.PriceMax
+		p.PriceMax = &v
+	}
+	if in.ExternalTicketURL != "" {
+		v := in.ExternalTicketURL
+		p.ExternalURL = &v
+	}
+	if id, ok := parseOptionalUUID(in.VenueID); ok {
+		p.VenueID = &id
+	}
+	if in.CoverFileID != nil {
+		if id, ok := parseOptionalUUID(*in.CoverFileID); ok {
+			p.CoverFileID = &id
+		}
+	}
+	if !time.Time(in.StartsAt).IsZero() {
+		t := time.Time(in.StartsAt)
+		p.StartsAt = &t
+	}
+	if !time.Time(in.EndsAt).IsZero() {
+		t := time.Time(in.EndsAt)
+		p.EndsAt = &t
+	}
+	if in.Status != "" {
+		v := in.Status
+		p.Status = &v
+	}
+	if len(in.CategoryIds) > 0 {
+		ids := make([]uuid.UUID, 0, len(in.CategoryIds))
+		for _, raw := range in.CategoryIds {
+			if parsed, err := uuid.FromString(raw.String()); err == nil {
+				ids = append(ids, parsed)
+			}
+		}
+		p.CategoryIDs = ids
+	}
+	return p
 }

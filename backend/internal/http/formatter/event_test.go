@@ -102,3 +102,33 @@ func TestEventFromAPIInput_CoverFileID(t *testing.T) {
 		t.Fatalf("expected CoverFileID %s, got %s", id, ev.CoverFileID)
 	}
 }
+
+func TestEventFromAPIInput_DefaultsToDraft(t *testing.T) {
+	title := "X"
+	starts := strfmt.DateTime(time.Now())
+	in := &apiModels.EventInput{Title: &title, StartsAt: &starts}
+
+	ev, err := EventFromAPIInput(in)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if ev.Status != domainModels.EventDraft {
+		t.Fatalf("expected default status draft, got %v", ev.Status)
+	}
+}
+
+func TestEventPatchToUpdateParams_MapsProvidedFields(t *testing.T) {
+	title := "New"
+	in := &apiModels.EventPatch{Title: title, Status: "published"}
+
+	p := EventPatchToUpdateParams(in)
+	if p.Title == nil || *p.Title != "New" {
+		t.Fatalf("title not mapped: %+v", p.Title)
+	}
+	if p.Status == nil || *p.Status != "published" {
+		t.Fatalf("status not mapped: %+v", p.Status)
+	}
+	if p.Description != nil {
+		t.Fatalf("omitted field should be nil, got %+v", p.Description)
+	}
+}

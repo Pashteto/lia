@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 
 import { EventApplicationsPanel } from "@/components/EventApplicationsPanel";
+import { PublishEventButton } from "@/components/PublishEventButton";
 import { EventCard } from "@/components/ui/EventCard";
 import { fetchMyEvents } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
@@ -98,6 +99,7 @@ export default function MyEventsPage() {
                 </span>
               )}
               <EventCard event={e} />
+              {e.status === "draft" && <PublishEventButton eventId={e.id} />}
               {e.signupMode === "application" && (
                 <ApplicationsExpander event={e} />
               )}

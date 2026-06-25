@@ -27,7 +27,7 @@ const schema = z.object({
   endsAt: z.string().optional(),
   isFree: z.boolean(),
   priceMin: z.coerce.number().int().min(0).optional(),
-  status: z.enum(["draft", "pending_review", "published"]),
+  status: z.enum(["draft", "published"]),
 });
 
 type FormValues = z.input<typeof schema>;
@@ -291,7 +291,6 @@ export function CreateEventForm() {
                 <Segmented
                   options={[
                     { value: "draft", label: "Черновик" },
-                    { value: "pending_review", label: "На модерацию" },
                     { value: "published", label: "Опубликовать" },
                   ]}
                   value={field.value}

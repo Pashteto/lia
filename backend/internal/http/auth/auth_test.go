@@ -221,9 +221,9 @@ func TestAuth_CheckAuth_NoValidatorConfigured(t *testing.T) {
 
 // mockService is a mock implementation of service.IService for testing.
 type mockService struct {
-	CreateUserFunc       func(ctx context.Context, user *models.User) error
-	GetUserByEmailFunc   func(ctx context.Context, email string) (*models.User, error)
-	UpdateUserRoleFunc   func(ctx context.Context, userID uuid.UUID, role string) error
+	CreateUserFunc     func(ctx context.Context, user *models.User) error
+	GetUserByEmailFunc func(ctx context.Context, email string) (*models.User, error)
+	UpdateUserRoleFunc func(ctx context.Context, userID uuid.UUID, role string) error
 }
 
 func (m *mockService) CreateUser(_ context.Context, user *models.User) error {

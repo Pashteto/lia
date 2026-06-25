@@ -16,9 +16,9 @@ type moduleMockRepository struct{}
 // Ensure moduleMockRepository implements IRepository.
 var _ IRepository = (*moduleMockRepository)(nil)
 
-func (m *moduleMockRepository) CreateUser(_ *models.User) error                  { return nil }
-func (m *moduleMockRepository) UserBy(_ *models.User, _ UserGetter) error        { return nil }
-func (m *moduleMockRepository) UpdateUserRole(_ uuid.UUID, _ string) error       { return nil }
+func (m *moduleMockRepository) CreateUser(_ *models.User) error            { return nil }
+func (m *moduleMockRepository) UserBy(_ *models.User, _ UserGetter) error  { return nil }
+func (m *moduleMockRepository) UpdateUserRole(_ uuid.UUID, _ string) error { return nil }
 
 func TestRepositoryModule_Lifecycle(t *testing.T) {
 	t.Skip()

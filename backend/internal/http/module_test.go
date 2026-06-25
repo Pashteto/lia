@@ -13,9 +13,9 @@ import (
 
 // mockService is a mock implementation of service.IService for testing.
 type mockService struct {
-	createUserFunc       func(ctx context.Context, user *domainmodels.User) error
-	getUserByEmailFunc   func(ctx context.Context, email string) (*domainmodels.User, error)
-	updateUserRoleFunc   func(ctx context.Context, userID uuid.UUID, role string) error
+	createUserFunc     func(ctx context.Context, user *domainmodels.User) error
+	getUserByEmailFunc func(ctx context.Context, email string) (*domainmodels.User, error)
+	updateUserRoleFunc func(ctx context.Context, userID uuid.UUID, role string) error
 }
 
 func (m *mockService) CreateUser(_ context.Context, user *domainmodels.User) error {

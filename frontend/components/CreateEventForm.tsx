@@ -49,7 +49,10 @@ export function CreateEventForm() {
     defaultValues: {
       format: "offline",
       isFree: true,
-      status: "draft",
+      // Default to published so a created event is immediately visible in the
+      // discovery feed (which lists status=published). Users can still pick
+      // "Черновик" in the status control to keep it hidden.
+      status: "published",
       categoryIds: [],
       venueId: "",
     },

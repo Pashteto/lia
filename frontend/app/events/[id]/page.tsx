@@ -41,8 +41,8 @@ export default async function EventDetailPage({
 
   return (
     <div className="min-h-screen bg-bg pb-28">
-      {/* Glass nav */}
-      <header className="glass sticky top-0 z-10 border-b border-separator">
+      {/* Top nav — solid (opaque) bg, not translucent glass. */}
+      <header className="sticky top-0 z-10 border-b border-separator bg-bg">
         <div className="mx-auto flex max-w-2xl items-center gap-3 px-5 py-3">
           <Link href="/" className="text-[17px] text-accent">
             ‹ События
@@ -135,8 +135,8 @@ export default async function EventDetailPage({
         )}
       </article>
 
-      {/* Sticky registration bar */}
-      <div className="glass fixed inset-x-0 bottom-0 z-10 border-t border-separator">
+      {/* Sticky registration bar — solid (opaque) bg, not translucent glass. */}
+      <div className="fixed inset-x-0 bottom-0 z-10 border-t border-separator bg-bg">
         <div className="mx-auto flex max-w-2xl items-center justify-between gap-4 px-5 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
           <span className="text-[17px] font-semibold">{formatPrice(event)}</span>
           {/* TODO: wire RSVP (POST /events/{id}/rsvp) — needs auth + rsvp module */}

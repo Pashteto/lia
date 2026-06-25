@@ -53,14 +53,14 @@ requires `jwt` (organizer = principal). GateGuard runs as its own container
 
 ## Phase C — Demo-login + flip (PENDING ⏳)
 
-### Task 1: Backend demo-login entrypoint
-**Decision needed:** plain HTTP handler in Lia vs a swagger endpoint (codegen).
-- [ ] Expose a `GateguardService.SignInOAuth(User{email,name})` call that returns
-  the JWT. Clearly **demo-only** (anyone can mint a token for any email — a known
-  non-prod control, like `MockAuth`). Gate/label it; never enable in real prod.
-- [ ] Set the JWT as an **httpOnly, Secure, SameSite=Lax** cookie on the lia domain
-  (cross-domain note from the spec is moot — token is minted/served same-origin).
-- [ ] Tests: success returns a token + sets the cookie; GateGuard error → 502/401.
+### Task 1: Backend demo-login entrypoint — DONE (Lia side), BLOCKED on GateGuard bug
+- [x] Swagger `POST /auth/demo-login` (open) + `auth.Signer` wrapping GateGuard
+  `SignInOAuth` + `handlers.DemoLogin`. TDD'd, deployed. **Decided: swagger endpoint;
+  token returned in body (frontend stores it) — not an httpOnly cookie (demo scope).**
+- [ ] ⛔ **BLOCKED:** GateGuard's `SignInOAuth` panics (`index out of range [2]`),
+  so demo-login returns 503 and **create-event is currently broken on the live demo**
+  (auth is enforced but no token can be minted). Full triage + revert command +
+  next steps: **[`../runbooks/2026-06-25-gateguard-signin-panic-HANDOFF.md`](../runbooks/2026-06-25-gateguard-signin-panic-HANDOFF.md)**.
 
 ### Task 2: Frontend login flow
 - [ ] Replace the disabled "Войти" stub with a demo-login form (email[, name]).

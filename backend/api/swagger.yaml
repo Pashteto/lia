@@ -497,6 +497,10 @@ definitions:
         format: double
         readOnly: true
         x-nullable: true
+      cover_url:
+        type: string
+        readOnly: true
+        x-nullable: true
 
   EventInput:
     type: object
@@ -554,6 +558,10 @@ definitions:
       ends_at:
         type: string
         format: date-time
+      cover_file_id:
+        type: string
+        format: uuid
+        x-nullable: true
 
   Venue:
     type: object

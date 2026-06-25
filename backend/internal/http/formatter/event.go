@@ -92,6 +92,10 @@ func EventToAPI(event *domainModels.Event) *apiModels.Event {
 
 	out.Venue = VenueToAPI(event.Venue)
 
+	if event.CoverURL != "" {
+		out.CoverURL = &event.CoverURL
+	}
+
 	return out
 }
 
@@ -134,6 +138,11 @@ func EventFromAPIInput(in *apiModels.EventInput) (*domainModels.Event, error) {
 	}
 	if id, ok := parseOptionalUUID(in.VenueID); ok {
 		event.VenueID = id
+	}
+	if in.CoverFileID != nil {
+		if id, ok := parseOptionalUUID(*in.CoverFileID); ok {
+			event.CoverFileID = id
+		}
 	}
 
 	if in.PriceMin != 0 {

@@ -143,12 +143,7 @@ func (app *App) registerModules() error {
 	if repoModule != nil {
 		app.categoriesSvc = categoriesdomain.NewService(categoriesdomain.NewRepository(repoModule.DB()))
 		app.venuesSvc = venuesdomain.NewService(venuesdomain.NewRepository(repoModule.DB()))
-		app.eventsSvc = eventsdomain.NewService(
-			eventsdomain.NewRepository(repoModule.DB()),
-			app.categoriesSvc,
-			app.venuesSvc,
-		)
-		logger.Log().Info("events + categories + venues modules wired to repository")
+		logger.Log().Info("categories + venues modules wired to repository")
 	}
 
 	// Wire storage + files service. Storage is independent of repoModule but the
@@ -162,8 +157,25 @@ func (app *App) registerModules() error {
 		app.blobStore = bs
 		if repoModule != nil {
 			app.filesSvc = filesdomain.NewService(filesdomain.NewRepository(repoModule.DB()), bs)
+			app.eventsSvc = eventsdomain.NewService(
+				eventsdomain.NewRepository(repoModule.DB(), app.blobStore),
+				app.categoriesSvc,
+				app.venuesSvc,
+			)
+			logger.Log().Info("events module wired to repository + storage")
 		}
 		logger.Log().Infof("storage backend %q wired", app.config.Storage.Backend)
+	}
+
+	// Wire events after storage so it gets the blob store (may be nil if
+	// storage is disabled — loadCover no-ops safely).
+	if repoModule != nil && app.eventsSvc == nil {
+		app.eventsSvc = eventsdomain.NewService(
+			eventsdomain.NewRepository(repoModule.DB(), nil),
+			app.categoriesSvc,
+			app.venuesSvc,
+		)
+		logger.Log().Info("events module wired to repository (no storage)")
 	}
 
 	logger.Log().Info("infrastructure modules initialized successfully")

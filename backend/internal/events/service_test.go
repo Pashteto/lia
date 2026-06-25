@@ -201,3 +201,21 @@ func TestService_Nearby_OK(t *testing.T) {
 		t.Fatalf("unexpected: %v %v", got, err)
 	}
 }
+
+func TestService_Create_WithCoverFileID(t *testing.T) {
+	coverID, _ := uuid.NewV4()
+	repo := &mockRepo{}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{})
+
+	ev := validEvent()
+	ev.CoverFileID = coverID
+	if err := svc.Create(context.Background(), ev); err != nil {
+		t.Fatalf("Create returned error: %v", err)
+	}
+	if repo.created == nil {
+		t.Fatal("expected repository.Create to be called")
+	}
+	if repo.created.CoverFileID != coverID {
+		t.Fatalf("expected CoverFileID %s on created event, got %s", coverID, repo.created.CoverFileID)
+	}
+}

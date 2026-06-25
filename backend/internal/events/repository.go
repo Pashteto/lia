@@ -11,6 +11,7 @@ import (
 	"github.com/gofrs/uuid"
 
 	"github.com/Pashteto/lia/internal/models"
+	"github.com/Pashteto/lia/internal/storage"
 	"github.com/Pashteto/lia/pkg/logger"
 )
 
@@ -52,12 +53,15 @@ type Repository interface {
 
 // pgRepository is a go-pg backed Repository.
 type pgRepository struct {
-	db *pg.DB
+	db    *pg.DB
+	store storage.Storage // nil when storage is disabled
 }
 
 // NewRepository creates a PostgreSQL-backed event repository.
-func NewRepository(db *pg.DB) Repository {
-	return &pgRepository{db: db}
+// store may be nil when the storage backend is disabled — loadCover
+// will no-op safely in that case.
+func NewRepository(db *pg.DB, store storage.Storage) Repository {
+	return &pgRepository{db: db, store: store}
 }
 
 func (r *pgRepository) Create(event *models.Event) error {
@@ -104,6 +108,10 @@ func (r *pgRepository) GetByID(id uuid.UUID) (*models.Event, error) {
 		return nil, err
 	}
 
+	if err := r.loadCover([]*models.Event{event}); err != nil {
+		return nil, err
+	}
+
 	return event, nil
 }
 
@@ -129,6 +137,10 @@ func (r *pgRepository) List(filter ListFilter) ([]*models.Event, error) {
 	}
 
 	if err := r.loadVenues(list); err != nil {
+		return nil, err
+	}
+
+	if err := r.loadCover(list); err != nil {
 		return nil, err
 	}
 
@@ -215,6 +227,9 @@ func (r *pgRepository) Nearby(lat, lon float64, limit int) ([]*NearbyResult, err
 	if err := r.loadVenues(events); err != nil {
 		return nil, err
 	}
+	if err := r.loadCover(events); err != nil {
+		return nil, err
+	}
 	return results, nil
 }
 
@@ -252,6 +267,51 @@ func (r *pgRepository) loadVenues(events []*models.Event) error {
 	for _, e := range events {
 		if v, ok := byID[e.VenueID]; ok {
 			e.Venue = v
+		}
+	}
+	return nil
+}
+
+// loadCover populates CoverURL on each event whose cover_file_id is set
+// (non-zero), in a single query (no N+1). No-ops when store is nil (storage
+// disabled) or when no event has a cover set.
+func (r *pgRepository) loadCover(events []*models.Event) error {
+	if r.store == nil || len(events) == 0 {
+		return nil
+	}
+	// Collect unique non-zero cover_file_ids.
+	ids := make([]uuid.UUID, 0, len(events))
+	seen := make(map[uuid.UUID]struct{})
+	for _, e := range events {
+		if e.CoverFileID != uuid.Nil {
+			if _, ok := seen[e.CoverFileID]; !ok {
+				seen[e.CoverFileID] = struct{}{}
+				ids = append(ids, e.CoverFileID)
+			}
+		}
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+
+	var rows []struct {
+		ID         uuid.UUID `pg:"id"`
+		StorageKey string    `pg:"storage_key"`
+	}
+	if _, err := r.db.Query(&rows,
+		`SELECT id, storage_key FROM files WHERE id IN (?)`,
+		pg.In(ids),
+	); err != nil {
+		return fmt.Errorf("load cover files: %w", err)
+	}
+
+	byID := make(map[uuid.UUID]string, len(rows))
+	for _, row := range rows {
+		byID[row.ID] = row.StorageKey
+	}
+	for _, e := range events {
+		if key, ok := byID[e.CoverFileID]; ok {
+			e.CoverURL = r.store.URL(key)
 		}
 	}
 	return nil

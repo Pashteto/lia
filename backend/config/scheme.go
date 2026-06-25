@@ -87,6 +87,32 @@ type WSLimitsConfig struct {
 	MaxConnectionsPerRoom int `mapstructure:"max_connections_per_room"` // Per-room max connections (0 = unlimited)
 }
 
+// StorageConfig holds blob-storage settings.
+type StorageConfig struct {
+	// S3 holds S3-compatible backend settings (used when Backend == "s3").
+	S3 *S3StorageConfig `mapstructure:"s3"`
+
+	// Backend selects the storage implementation: "local" (default) or "s3".
+	Backend string `mapstructure:"backend"`
+
+	// LocalDir is the base directory for the local-disk backend.
+	LocalDir string `mapstructure:"local_dir"`
+
+	// PublicBase is the publicly-reachable URL prefix for uploaded objects.
+	// Example: "https://api.lia.pashteto.com/api/v1/files"
+	PublicBase string `mapstructure:"public_base"`
+}
+
+// S3StorageConfig holds S3-compatible backend connection settings.
+type S3StorageConfig struct {
+	Endpoint  string `mapstructure:"endpoint"`
+	Region    string `mapstructure:"region"`
+	Bucket    string `mapstructure:"bucket"`
+	AccessKey string `mapstructure:"access_key"`
+	SecretKey string `mapstructure:"secret_key"`
+	UseSSL    bool   `mapstructure:"use_ssl"`
+}
+
 // Scheme represents the application configuration scheme.
 type Scheme struct {
 	// Database configuration for repository module (optional; nil if disabled).
@@ -103,6 +129,9 @@ type Scheme struct {
 
 	// WebSocket configuration for WebSocket module (optional; nil if disabled).
 	WebSocket *WebSocketConfig `mapstructure:"websocket"`
+
+	// Storage configuration for blob storage (optional; nil if disabled).
+	Storage *StorageConfig `mapstructure:"storage"`
 
 	// Env is the application environment (e.g. prod, dev, local).
 	Env string `mapstructure:"env"`

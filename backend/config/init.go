@@ -88,4 +88,27 @@ func setDefaults() {
 	// WebSocket connection limits
 	viper.SetDefault("websocket.limits.max_connections", 0)          // 0 = unlimited
 	viper.SetDefault("websocket.limits.max_connections_per_room", 0) // 0 = unlimited
+
+	// Storage module defaults
+	viper.SetDefault("storage.backend", "local")
+	viper.SetDefault("storage.local_dir", "/data/uploads")
+	viper.SetDefault("storage.public_base", "")
+
+	// S3-compatible storage defaults (used when storage.backend == "s3")
+	viper.SetDefault("storage.s3.endpoint", "")
+	viper.SetDefault("storage.s3.region", "us-east-1")
+	viper.SetDefault("storage.s3.bucket", "")
+	viper.SetDefault("storage.s3.access_key", "")
+	viper.SetDefault("storage.s3.secret_key", "")
+	viper.SetDefault("storage.s3.use_ssl", true)
+
+	// S3 env overrides (secrets come from environment, not config files)
+	viper.BindEnv("storage.s3.endpoint", "S3_ENDPOINT")   //nolint:errcheck
+	viper.BindEnv("storage.s3.region", "S3_REGION")       //nolint:errcheck
+	viper.BindEnv("storage.s3.bucket", "S3_BUCKET")       //nolint:errcheck
+	viper.BindEnv("storage.s3.access_key", "S3_ACCESS_KEY") //nolint:errcheck
+	viper.BindEnv("storage.s3.secret_key", "S3_SECRET_KEY") //nolint:errcheck
+	viper.BindEnv("storage.backend", "STORAGE_BACKEND")   //nolint:errcheck
+	viper.BindEnv("storage.local_dir", "STORAGE_LOCAL_DIR") //nolint:errcheck
+	viper.BindEnv("storage.public_base", "STORAGE_PUBLIC_BASE") //nolint:errcheck
 }

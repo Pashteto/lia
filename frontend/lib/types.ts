@@ -13,6 +13,17 @@ export type EventStatus =
   | "rejected"
   | "cancelled";
 
+export type SignupMode = "open" | "application" | "external";
+
+export type RsvpStatus =
+  | "going"
+  | "waitlist"
+  | "applied"
+  | "accepted"
+  | "declined"
+  | "withdrawn"
+  | "cancelled";
+
 export interface Organizer {
   id: string;
   name: string;
@@ -61,6 +72,21 @@ export interface LiaEvent {
   venue?: Venue;
   /** Distance from the user's location in metres; set only for nearby results. */
   distanceM?: number;
+  signupMode?: SignupMode;
+  seatsRemaining?: number;
+  /** Empty string means no active RSVP. */
+  myRsvpStatus?: RsvpStatus | "";
+  curatorQuestion?: string;
+  externalRegistrationUrl?: string;
+}
+
+export interface Rsvp {
+  id: string;
+  eventId: string;
+  status: RsvpStatus;
+  applicationAnswer?: string;
+  createdAt: string;
+  event?: LiaEvent;
 }
 
 /** Shape returned by the backend `GET /api/v1/events` (Presence.Tarski API Event model). */
@@ -88,4 +114,9 @@ export interface ApiEvent {
   /** Present on `/events/nearby` responses; distance from requested coordinates. */
   distance_m?: number;
   cover_url?: string;
+  signup_mode?: SignupMode;
+  seats_remaining?: number;
+  my_rsvp_status?: RsvpStatus | "";
+  curator_question?: string;
+  external_registration_url?: string;
 }

@@ -5,6 +5,8 @@ import type {
   EventStatus,
   LiaEvent,
   PriceType,
+  Rsvp,
+  RsvpStatus,
 } from "./types";
 
 // Base URL of the Go backend. Overridable via env; defaults to local compose.
@@ -53,6 +55,11 @@ export function apiEventToLia(e: ApiEvent): LiaEvent {
       : undefined,
     distanceM: e.distance_m,
     coverUrl: e.cover_url,
+    signupMode: e.signup_mode,
+    seatsRemaining: e.seats_remaining,
+    myRsvpStatus: e.my_rsvp_status,
+    curatorQuestion: e.curator_question,
+    externalRegistrationUrl: e.external_registration_url,
   };
 }
 
@@ -320,4 +327,113 @@ export async function loginWithPassword(
   const data = (await res.json()) as DemoLoginResponse;
   if (!data.token) throw new Error("login failed: empty token");
   return data.token;
+}
+
+interface ApiRsvp {
+  id: string;
+  event_id: string;
+  status: RsvpStatus;
+  application_answer?: string;
+  created_at: string;
+  event?: ApiEvent;
+}
+
+/** Maps a backend RSVP object to the frontend Rsvp shape. */
+function apiRsvpToLia(r: ApiRsvp): Rsvp {
+  return {
+    id: r.id,
+    eventId: r.event_id,
+    status: r.status,
+    applicationAnswer: r.application_answer || undefined,
+    createdAt: r.created_at,
+    event: r.event ? apiEventToLia(r.event) : undefined,
+  };
+}
+
+/**
+ * Signs up the authenticated user for an event via POST /events/{id}/rsvp.
+ * For "application" signup mode, pass the curator's question answer.
+ * Throws `EXTERNAL:<url>` (status 422) when the event uses external registration.
+ */
+export async function signUp(eventId: string, applicationAnswer?: string): Promise<Rsvp> {
+  const token = getToken();
+  if (!token) throw new Error("not authenticated");
+  const res = await fetch(`${API_V1}/events/${eventId}/rsvp`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ application_answer: applicationAnswer ?? "" }),
+  });
+  if (res.status === 422) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(`EXTERNAL:${body?.message ?? body?.detail ?? ""}`); // caller opens organizer URL
+  }
+  if (!res.ok) throw new Error(`sign up failed: ${res.status}`);
+  return apiRsvpToLia(await res.json());
+}
+
+/** Cancels the authenticated user's RSVP for an event via DELETE /events/{id}/rsvp. */
+export async function cancelRsvp(eventId: string): Promise<void> {
+  const token = getToken();
+  if (!token) throw new Error("not authenticated");
+  const res = await fetch(`${API_V1}/events/${eventId}/rsvp`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok && res.status !== 204) throw new Error(`cancel failed: ${res.status}`);
+}
+
+/** Fetches the authenticated user's practices (confirmed RSVPs) for upcoming or past events. */
+export async function fetchMyPractices(tab: "upcoming" | "past" = "upcoming"): Promise<Rsvp[]> {
+  const token = getToken();
+  if (!token) throw new Error("not authenticated");
+  const res = await fetch(`${API_V1}/me/practices?tab=${tab}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`fetch practices failed: ${res.status}`);
+  return (await res.json()).map(apiRsvpToLia);
+}
+
+/** Fetches the authenticated user's pending applications, optionally filtered by status. */
+export async function fetchMyApplications(status?: string): Promise<Rsvp[]> {
+  const token = getToken();
+  if (!token) throw new Error("not authenticated");
+  const q = status ? `?status=${status}` : "";
+  const res = await fetch(`${API_V1}/me/applications${q}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`fetch applications failed: ${res.status}`);
+  return (await res.json()).map(apiRsvpToLia);
+}
+
+/** Fetches all pending applications for an event (curator/organizer only). */
+export async function fetchEventApplications(eventId: string): Promise<Rsvp[]> {
+  const token = getToken();
+  if (!token) throw new Error("not authenticated");
+  const res = await fetch(`${API_V1}/events/${eventId}/applications`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`fetch event applications failed: ${res.status}`);
+  return (await res.json()).map(apiRsvpToLia);
+}
+
+/** Accepts or declines an application for an event (curator/organizer only). */
+export async function decideApplication(
+  eventId: string,
+  rsvpId: string,
+  decision: "accept" | "decline",
+): Promise<Rsvp> {
+  const token = getToken();
+  if (!token) throw new Error("not authenticated");
+  const res = await fetch(`${API_V1}/events/${eventId}/applications/${rsvpId}/decision`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ decision }),
+  });
+  if (!res.ok) throw new Error(`decision failed: ${res.status}`);
+  return apiRsvpToLia(await res.json());
+}
+
+/** Returns the URL for downloading an event's iCal calendar file. */
+export function eventCalendarUrl(eventId: string): string {
+  return `${API_V1}/events/${eventId}/calendar.ics`;
 }

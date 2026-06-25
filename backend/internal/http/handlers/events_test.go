@@ -18,13 +18,25 @@ import (
 
 // mockEventsService captures the event passed to Create.
 type mockEventsService struct {
-	created    *domainmodels.Event
-	createErr  error
+	created     *domainmodels.Event
+	createErr   error
+	updated     *domainmodels.Event
+	updateErr   error
+	updateOwner uuid.UUID
 }
 
 func (m *mockEventsService) Create(_ context.Context, e *domainmodels.Event) error {
 	m.created = e
 	return m.createErr
+}
+func (m *mockEventsService) Update(_ context.Context, id, ownerID uuid.UUID, _ eventsdomain.UpdateParams) (*domainmodels.Event, error) {
+	m.updateOwner = ownerID
+	if m.updateErr != nil {
+		return nil, m.updateErr
+	}
+	ev := &domainmodels.Event{ID: id, OrganizerID: ownerID, Title: "T", Status: domainmodels.EventDraft, StartsAt: time.Now()}
+	m.updated = ev
+	return ev, nil
 }
 func (m *mockEventsService) GetByID(context.Context, string) (*domainmodels.Event, error) {
 	return nil, nil
@@ -114,5 +126,66 @@ func TestCreateEvent_SetsOrganizerFromPrincipal(t *testing.T) {
 	}
 	if svc.created.OrganizerID != principalUUID {
 		t.Errorf("expected organizer %s (from principal), got %s", principalUUID, svc.created.OrganizerID)
+	}
+}
+
+func updateParams(t *testing.T) eventsops.UpdateEventParams {
+	t.Helper()
+	req, _ := http.NewRequest(http.MethodPatch, "/api/v1/events/x", nil)
+	return eventsops.UpdateEventParams{
+		HTTPRequest: req,
+		ID:          strfmt.UUID(uuid.Must(uuid.NewV4()).String()),
+		Body:        &models.EventPatch{},
+	}
+}
+
+func testPrincipal() *models.User {
+	pu := strfmt.UUID(uuid.Must(uuid.NewV4()).String())
+	email := strfmt.Email("u@example.com")
+	name := "U"
+	status := "active"
+	return &models.User{UUID: pu, Email: &email, Name: &name, Status: &status}
+}
+
+func TestUpdateEvent_Unauthenticated_Returns401(t *testing.T) {
+	h := NewUpdateEvent(&mockEventsService{})
+	resp := h.Handle(updateParams(t), nil)
+	if _, ok := resp.(*eventsops.UpdateEventUnauthorized); !ok {
+		t.Fatalf("expected *UpdateEventUnauthorized, got %T", resp)
+	}
+}
+
+func TestUpdateEvent_NotFound_Returns404(t *testing.T) {
+	svc := &mockEventsService{updateErr: fmt.Errorf("%w: event x", eventsdomain.ErrNotFound)}
+	h := NewUpdateEvent(svc)
+	resp := h.Handle(updateParams(t), testPrincipal())
+	if _, ok := resp.(*eventsops.UpdateEventNotFound); !ok {
+		t.Fatalf("expected *UpdateEventNotFound, got %T", resp)
+	}
+}
+
+func TestUpdateEvent_Locked_Returns409(t *testing.T) {
+	svc := &mockEventsService{updateErr: fmt.Errorf("%w: event x is published", eventsdomain.ErrNotEditable)}
+	h := NewUpdateEvent(svc)
+	resp := h.Handle(updateParams(t), testPrincipal())
+	if _, ok := resp.(*eventsops.UpdateEventConflict); !ok {
+		t.Fatalf("expected *UpdateEventConflict, got %T", resp)
+	}
+}
+
+func TestUpdateEvent_Invalid_Returns400(t *testing.T) {
+	svc := &mockEventsService{updateErr: fmt.Errorf("%w: bad", eventsdomain.ErrInvalidInput)}
+	h := NewUpdateEvent(svc)
+	resp := h.Handle(updateParams(t), testPrincipal())
+	if _, ok := resp.(*eventsops.UpdateEventBadRequest); !ok {
+		t.Fatalf("expected *UpdateEventBadRequest, got %T", resp)
+	}
+}
+
+func TestUpdateEvent_Success_Returns200(t *testing.T) {
+	h := NewUpdateEvent(&mockEventsService{})
+	resp := h.Handle(updateParams(t), testPrincipal())
+	if _, ok := resp.(*eventsops.UpdateEventOK); !ok {
+		t.Fatalf("expected *UpdateEventOK, got %T", resp)
 	}
 }

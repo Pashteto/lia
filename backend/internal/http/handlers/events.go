@@ -26,12 +26,7 @@ func NewListEvents(svc eventsdomain.Service) *ListEvents {
 
 // Handle GET /events.
 func (h *ListEvents) Handle(params eventsops.ListEventsParams) middleware.Responder {
-	status := ""
-	if params.Status != nil {
-		status = *params.Status
-	}
-
-	list, err := h.events.List(params.HTTPRequest.Context(), status)
+	list, err := h.events.List(params.HTTPRequest.Context(), "published")
 	if err != nil {
 		logger.Log().Errorf("list events: %s", err.Error())
 		if errors.Is(err, eventsdomain.ErrInvalidInput) {

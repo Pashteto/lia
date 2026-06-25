@@ -16,7 +16,6 @@ import (
 	categoriesdomain "github.com/Pashteto/lia/internal/categories"
 	eventsdomain "github.com/Pashteto/lia/internal/events"
 	filesdomain "github.com/Pashteto/lia/internal/files"
-	venuesdomain "github.com/Pashteto/lia/internal/venues"
 	"github.com/Pashteto/lia/internal/grpcclient"
 	"github.com/Pashteto/lia/internal/http/auth"
 	"github.com/Pashteto/lia/internal/http/handlers"
@@ -26,6 +25,7 @@ import (
 	"github.com/Pashteto/lia/internal/http/uploads"
 	"github.com/Pashteto/lia/internal/service"
 	"github.com/Pashteto/lia/internal/storage"
+	venuesdomain "github.com/Pashteto/lia/internal/venues"
 	"github.com/Pashteto/lia/pkg/logger"
 )
 
@@ -206,6 +206,7 @@ func (m *Module) initAPI() error {
 		api.EventsGetEventByIDHandler = handlers.NewGetEventByID(m.events)
 		api.EventsCreateEventHandler = handlers.NewCreateEvent(m.events)
 		api.EventsNearbyEventsHandler = handlers.NewNearbyEvents(m.events)
+		api.EventsUpdateEventHandler = handlers.NewUpdateEvent(m.events)
 	}
 
 	if m.categories != nil {

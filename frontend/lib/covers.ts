@@ -24,27 +24,25 @@ const CATEGORY_GRADIENT: Record<string, { from: string; to: string }> = {
 const DEFAULT_GRADIENT = { from: "#3a3a40", to: "#5e5e66" };
 
 /**
- * Curated, license-checked Unsplash photos per category — used to fill the
- * seeded demo events so the live demo doesn't show empty covers. Restricted to
- * seed events on purpose: real / user-created events get the gradient instead of
- * a repeated stock photo. Hosts are allow-listed in next.config.ts.
+ * Curated, license-checked photos per category — used to fill the seeded demo
+ * events so the live demo doesn't show empty covers. Restricted to seed events
+ * on purpose: real / user-created events get the gradient instead of a repeated
+ * stock photo.
+ *
+ * Self-hosted under /public/covers (sourced from Unsplash, free license). The
+ * box has no outbound egress to images.unsplash.com, so next/image's
+ * server-side optimizer can't proxy remote covers there — local files are read
+ * from disk and served same-origin, which works regardless of network.
  */
 const CATEGORY_PHOTO: Record<string, string> = {
-  lecture:
-    "https://images.unsplash.com/photo-1747674148491-51f8a5c723db?w=1200&q=70&auto=format&fit=crop",
-  workshop:
-    "https://images.unsplash.com/photo-1753164725860-ffcd260b7b32?w=1200&q=70&auto=format&fit=crop",
-  mediation:
-    "https://images.unsplash.com/photo-1637578035851-c5b169722de1?w=1200&q=70&auto=format&fit=crop",
-  concert:
-    "https://images.unsplash.com/photo-1745328597533-3df3e5db2dec?w=1200&q=70&auto=format&fit=crop",
-  exhibition:
-    "https://images.unsplash.com/photo-1740598307395-3ccc0ec28a28?w=1200&q=70&auto=format&fit=crop",
-  performance:
-    "https://images.unsplash.com/photo-1576514129883-2f1d47a65da6?w=1200&q=70&auto=format&fit=crop",
-  film: "https://images.unsplash.com/photo-1717915604557-94283edbcc1b?w=1200&q=70&auto=format&fit=crop",
-  festival:
-    "https://images.unsplash.com/photo-1489100517551-92a468b736f0?w=1200&q=70&auto=format&fit=crop",
+  lecture: "/covers/lecture.jpg",
+  workshop: "/covers/workshop.jpg",
+  mediation: "/covers/mediation.jpg",
+  concert: "/covers/concert.jpg",
+  exhibition: "/covers/exhibition.jpg",
+  performance: "/covers/performance.jpg",
+  film: "/covers/film.jpg",
+  festival: "/covers/festival.jpg",
 };
 
 /** Seed events share the id prefix b0000000-…; only they get curated photos. */

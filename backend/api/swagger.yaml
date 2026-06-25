@@ -196,18 +196,6 @@ paths:
       tags:
         - events
       security: []
-      parameters:
-        - name: status
-          in: query
-          description: Filter by publication status
-          required: false
-          type: string
-          enum:
-            - draft
-            - pending_review
-            - published
-            - rejected
-            - cancelled
       responses:
         200:
           description: List of events
@@ -347,6 +335,54 @@ paths:
             $ref: "#/definitions/Error"
         404:
           description: Event not found
+          schema:
+            $ref: "#/definitions/Error"
+        503:
+          description: Service unavailable (database disabled)
+          schema:
+            $ref: "#/definitions/Error"
+    patch:
+      summary: Update an event
+      description: >-
+        Updates an event owned by the authenticated user. Only draft events are
+        editable; setting status to "published" publishes the event. Non-owners
+        receive 404 (existence is not leaked).
+      operationId: updateEvent
+      tags:
+        - events
+      security:
+        - jwt: []
+      parameters:
+        - name: id
+          in: path
+          description: Event UUID
+          required: true
+          type: string
+          format: uuid
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/EventPatch"
+      responses:
+        200:
+          description: Updated event
+          schema:
+            $ref: "#/definitions/Event"
+        400:
+          description: Invalid input
+          schema:
+            $ref: "#/definitions/Error"
+        401:
+          description: Unauthorized
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          description: Event not found or not owned by caller
+          schema:
+            $ref: "#/definitions/Error"
+        409:
+          description: Event is not in an editable status
           schema:
             $ref: "#/definitions/Error"
         503:
@@ -671,9 +707,7 @@ definitions:
         type: string
         enum:
           - draft
-          - pending_review
           - published
-          - rejected
           - cancelled
       format:
         type: string
@@ -700,6 +734,62 @@ definitions:
       ends_at:
         type: string
         format: date-time
+      cover_file_id:
+        type: string
+        format: uuid
+        x-nullable: true
+
+  EventPatch:
+    type: object
+    description: >-
+      Partial update for an event. Every field is optional; omitted fields are
+      preserved. Only draft events can be patched.
+    properties:
+      title:
+        type: string
+        minLength: 1
+        maxLength: 255
+      description:
+        type: string
+      category_ids:
+        type: array
+        items:
+          type: string
+          format: uuid
+      status:
+        type: string
+        enum:
+          - draft
+          - published
+          - cancelled
+      format:
+        type: string
+        enum:
+          - offline
+          - online
+      price_type:
+        type: string
+        enum:
+          - free
+          - fixed
+          - from
+      price_min:
+        type: integer
+        format: int64
+      price_max:
+        type: integer
+        format: int64
+      external_ticket_url:
+        type: string
+      starts_at:
+        type: string
+        format: date-time
+      ends_at:
+        type: string
+        format: date-time
+      venue_id:
+        type: string
+        format: uuid
       cover_file_id:
         type: string
         format: uuid

@@ -32,7 +32,7 @@ type Repository interface {
 	CountActiveSeats(eventID uuid.UUID) (int, error)
 	SignUpTx(eventID, userID uuid.UUID, decide SeatDecider, answer string) (*models.Rsvp, error)
 	CancelTx(eventID, userID uuid.UUID) error
-	DecideTx(rsvpID uuid.UUID, accept bool) (*models.Rsvp, error)
+	DecideTx(eventID, rsvpID uuid.UUID, accept bool) (*models.Rsvp, error)
 	ListByUser(userID uuid.UUID, statuses []models.RsvpStatus) ([]*models.Rsvp, error)
 	ListByEvent(eventID uuid.UUID, statuses []models.RsvpStatus) ([]*models.Rsvp, error)
 }
@@ -175,7 +175,9 @@ func (r *pgRepository) CancelTx(eventID, userID uuid.UUID) error {
 }
 
 // DecideTx accepts (or waitlists if full) / declines an applied row.
-func (r *pgRepository) DecideTx(rsvpID uuid.UUID, accept bool) (*models.Rsvp, error) {
+// The rsvp must belong to eventID; if not, pg.ErrNoRows is returned so the
+// service maps it to ErrNotFound (prevents cross-event mutation).
+func (r *pgRepository) DecideTx(eventID, rsvpID uuid.UUID, accept bool) (*models.Rsvp, error) {
 	var result *models.Rsvp
 	err := r.db.RunInTransaction(context.Background(), func(tx *pg.Tx) error {
 		row := &models.Rsvp{ID: rsvpID}
@@ -184,6 +186,9 @@ func (r *pgRepository) DecideTx(rsvpID uuid.UUID, accept bool) (*models.Rsvp, er
 				return pg.ErrNoRows
 			}
 			return fmt.Errorf("select rsvp %s: %w", rsvpID, err)
+		}
+		if row.EventID != eventID {
+			return pg.ErrNoRows // rsvp belongs to a different event
 		}
 		if row.Status != models.RsvpApplied {
 			return ErrConflict // already decided / not an application

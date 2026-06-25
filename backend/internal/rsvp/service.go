@@ -165,7 +165,7 @@ func (s *service) Decide(_ context.Context, eventID, organizerID, rsvpID uuid.UU
 	if event.OrganizerID != organizerID {
 		return nil, fmt.Errorf("%w: not the organizer", ErrForbidden)
 	}
-	row, err := s.repo.DecideTx(rsvpID, accept)
+	row, err := s.repo.DecideTx(eventID, rsvpID, accept)
 	if err != nil {
 		switch {
 		case isNoRows(err):
@@ -175,9 +175,6 @@ func (s *service) Decide(_ context.Context, eventID, organizerID, rsvpID uuid.UU
 		default:
 			return nil, fmt.Errorf("decide: %w", err)
 		}
-	}
-	if row.EventID != eventID {
-		return nil, fmt.Errorf("%w: rsvp does not belong to event", ErrInvalidInput)
 	}
 	logger.Log().Infof("rsvp %s decided accept=%v -> %s", rsvpID, accept, row.Status)
 	return row, nil

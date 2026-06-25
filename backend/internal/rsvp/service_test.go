@@ -60,7 +60,14 @@ func (f *fakeRepo) CancelTx(eventID, userID uuid.UUID) error {
 	if err != nil || !r.Status.IsActive() {
 		return pg.ErrNoRows
 	}
-	if r.Status == models.RsvpGoing {
+	// mirrors real repo: free a seat when going OR accepted
+	freedSeat := r.Status == models.RsvpGoing || r.Status == models.RsvpAccepted
+	newStatus := models.RsvpCancelled
+	if r.Status == models.RsvpApplied || r.Status == models.RsvpAccepted {
+		newStatus = models.RsvpWithdrawn
+	}
+	r.Status = newStatus
+	if freedSeat {
 		f.seats--
 		// promote oldest waitlist
 		for _, w := range f.rsvps {
@@ -71,12 +78,15 @@ func (f *fakeRepo) CancelTx(eventID, userID uuid.UUID) error {
 			}
 		}
 	}
-	r.Status = models.RsvpCancelled
 	return nil
 }
-func (f *fakeRepo) DecideTx(rsvpID uuid.UUID, accept bool) (*models.Rsvp, error) {
+func (f *fakeRepo) DecideTx(eventID, rsvpID uuid.UUID, accept bool) (*models.Rsvp, error) {
 	r, ok := f.rsvps[rsvpID]
 	if !ok {
+		return nil, pg.ErrNoRows
+	}
+	// mirrors real repo: reject rsvps belonging to a different event
+	if r.EventID != eventID {
 		return nil, pg.ErrNoRows
 	}
 	if r.Status != models.RsvpApplied {
@@ -86,6 +96,7 @@ func (f *fakeRepo) DecideTx(rsvpID uuid.UUID, accept bool) (*models.Rsvp, error)
 		r.Status = models.RsvpDeclined
 	} else if seatAvailable(f.seats, f.event.Capacity) {
 		r.Status = models.RsvpAccepted
+		f.seats++ // accepted row occupies a seat (mirrors real capacity accounting)
 	} else {
 		r.Status = models.RsvpWaitlist
 	}
@@ -193,5 +204,118 @@ func TestDecideByNonOrganizerForbidden(t *testing.T) {
 	_, err := svc.Decide(context.Background(), e.ID, uuid.Must(uuid.NewV4()), app.ID, true)
 	if !errors.Is(err, ErrForbidden) {
 		t.Fatalf("want ErrForbidden, got %v", err)
+	}
+}
+
+// FIX A: organizer of event A must not be able to mutate an rsvp on event B.
+func TestDecideForeignRsvpNotFound(t *testing.T) {
+	// Event A: the organizer controls this event.
+	eA := &models.Event{ID: uuid.Must(uuid.NewV4()), OrganizerID: uuid.Must(uuid.NewV4()), SignupMode: "application"}
+	fA := newFake(eA)
+	svcA := NewService(fA)
+
+	// Event B: different event, same fake store trick — we inject rsvpB directly.
+	eB := &models.Event{ID: uuid.Must(uuid.NewV4()), OrganizerID: uuid.Must(uuid.NewV4()), SignupMode: "application"}
+	rsvpB := &models.Rsvp{
+		ID:      uuid.Must(uuid.NewV4()),
+		EventID: eB.ID,
+		UserID:  uuid.Must(uuid.NewV4()),
+		Status:  models.RsvpApplied,
+	}
+	// Plant rsvpB into fA's map so fA.DecideTx sees it and can check event ownership.
+	fA.rsvps[rsvpB.ID] = rsvpB
+
+	// Decide on event A using rsvpB's ID — must return ErrNotFound, not mutate rsvpB.
+	_, err := svcA.Decide(context.Background(), eA.ID, eA.OrganizerID, rsvpB.ID, true)
+	if !errors.Is(err, ErrNotFound) {
+		t.Fatalf("want ErrNotFound for foreign rsvp, got %v", err)
+	}
+	if rsvpB.Status != models.RsvpApplied {
+		t.Fatalf("foreign rsvp must not be mutated, got status %s", rsvpB.Status)
+	}
+}
+
+// FIX B: accept when capacity full must put the applicant on the waitlist.
+func TestDecideAcceptWhenFullWaitlists(t *testing.T) {
+	cap1 := 1
+	e := &models.Event{
+		ID:          uuid.Must(uuid.NewV4()),
+		OrganizerID: uuid.Must(uuid.NewV4()),
+		SignupMode:  "application",
+		Capacity:    &cap1,
+	}
+	f := newFake(e)
+	svc := NewService(f)
+
+	// Fill the one seat directly.
+	goingRsvp := &models.Rsvp{
+		ID:      uuid.Must(uuid.NewV4()),
+		EventID: e.ID,
+		UserID:  uuid.Must(uuid.NewV4()),
+		Status:  models.RsvpGoing,
+	}
+	f.rsvps[goingRsvp.ID] = goingRsvp
+	f.seats = 1
+
+	// A second user applies.
+	app, err := svc.SignUp(context.Background(), e.ID, uuid.Must(uuid.NewV4()), "me please")
+	if err != nil || app.Status != models.RsvpApplied {
+		t.Fatalf("want applied, got %v err %v", app, err)
+	}
+
+	// Organizer accepts — capacity is full, so the result must be waitlist.
+	got, err := svc.Decide(context.Background(), e.ID, e.OrganizerID, app.ID, true)
+	if err != nil {
+		t.Fatalf("Decide returned error: %v", err)
+	}
+	if got.Status != models.RsvpWaitlist {
+		t.Fatalf("want RsvpWaitlist when full, got %s", got.Status)
+	}
+}
+
+// FIX B: cancelling an accepted seat must promote a waitlisted row to going.
+func TestCancelAcceptedPromotesWaitlist(t *testing.T) {
+	cap1 := 1
+	e := &models.Event{
+		ID:          uuid.Must(uuid.NewV4()),
+		OrganizerID: uuid.Must(uuid.NewV4()),
+		SignupMode:  "application",
+		Capacity:    &cap1,
+	}
+	f := newFake(e)
+
+	uAccepted := uuid.Must(uuid.NewV4())
+	acceptedRsvp := &models.Rsvp{
+		ID:      uuid.Must(uuid.NewV4()),
+		EventID: e.ID,
+		UserID:  uAccepted,
+		Status:  models.RsvpAccepted,
+	}
+	f.rsvps[acceptedRsvp.ID] = acceptedRsvp
+	f.seats = 1 // accepted occupies a seat
+
+	uWaitlist := uuid.Must(uuid.NewV4())
+	waitRsvp := &models.Rsvp{
+		ID:      uuid.Must(uuid.NewV4()),
+		EventID: e.ID,
+		UserID:  uWaitlist,
+		Status:  models.RsvpWaitlist,
+	}
+	f.rsvps[waitRsvp.ID] = waitRsvp
+
+	svc := NewService(f)
+	if err := svc.Cancel(context.Background(), e.ID, uAccepted); err != nil {
+		t.Fatalf("Cancel returned error: %v", err)
+	}
+
+	// The previously waitlisted user must now be going.
+	promoted, _ := f.GetUserRsvp(e.ID, uWaitlist)
+	if promoted.Status != models.RsvpGoing {
+		t.Fatalf("want waitlisted user promoted to going, got %s", promoted.Status)
+	}
+	// The cancelled user's rsvp should be withdrawn (was accepted).
+	cancelled, _ := f.GetUserRsvp(e.ID, uAccepted)
+	if cancelled.Status != models.RsvpWithdrawn {
+		t.Fatalf("want accepted->withdrawn on cancel, got %s", cancelled.Status)
 	}
 }

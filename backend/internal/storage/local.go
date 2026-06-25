@@ -43,6 +43,7 @@ func (l *local) resolve(key string) (string, error) {
 }
 
 func (l *local) Put(_ context.Context, key string, r io.Reader, _ int64, _ string) error {
+	// size and contentType are unused by the local backend (the S3 backend uses them).
 	p, err := l.resolve(key)
 	if err != nil {
 		return err

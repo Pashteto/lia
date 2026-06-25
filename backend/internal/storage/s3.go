@@ -70,17 +70,16 @@ func (s *s3store) Put(ctx context.Context, key string, r io.Reader, size int64, 
 }
 
 func (s *s3store) Get(ctx context.Context, key string) (io.ReadCloser, error) {
-	obj, err := s.client.GetObject(ctx, s.bucket, key, minio.GetObjectOptions{})
-	if err != nil {
-		return nil, fmt.Errorf("storage(s3): get %q: %w", key, err)
-	}
-	if _, err := obj.Stat(); err != nil {
-		obj.Close()
+	if _, err := s.client.StatObject(ctx, s.bucket, key, minio.StatObjectOptions{}); err != nil {
 		var e minio.ErrorResponse
 		if errors.As(err, &e) && e.Code == "NoSuchKey" {
 			return nil, ErrNotFound
 		}
 		return nil, fmt.Errorf("storage(s3): stat %q: %w", key, err)
+	}
+	obj, err := s.client.GetObject(ctx, s.bucket, key, minio.GetObjectOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("storage(s3): get %q: %w", key, err)
 	}
 	return obj, nil
 }

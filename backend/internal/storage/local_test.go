@@ -3,6 +3,7 @@ package storage
 import (
 	"bytes"
 	"context"
+	"errors"
 	"io"
 	"testing"
 )
@@ -44,8 +45,8 @@ func TestLocal_PutGetExistsDelete(t *testing.T) {
 
 func TestLocal_GetMissing_ReturnsErrNotFound(t *testing.T) {
 	s, _ := NewLocal(t.TempDir(), "https://x/f")
-	if _, err := s.Get(context.Background(), "nope.png"); err == nil {
-		t.Fatal("expected error for missing object")
+	if _, err := s.Get(context.Background(), "nope.png"); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("expected ErrNotFound, got %v", err)
 	}
 }
 

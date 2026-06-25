@@ -108,7 +108,8 @@ func setDefaults() {
 	viper.BindEnv("storage.s3.bucket", "S3_BUCKET")       //nolint:errcheck
 	viper.BindEnv("storage.s3.access_key", "S3_ACCESS_KEY") //nolint:errcheck
 	viper.BindEnv("storage.s3.secret_key", "S3_SECRET_KEY") //nolint:errcheck
-	viper.BindEnv("storage.backend", "STORAGE_BACKEND")   //nolint:errcheck
+	viper.BindEnv("storage.s3.use_ssl", "STORAGE_S3_USE_SSL") //nolint:errcheck
+	viper.BindEnv("storage.backend", "STORAGE_BACKEND")       //nolint:errcheck
 	viper.BindEnv("storage.local_dir", "STORAGE_LOCAL_DIR") //nolint:errcheck
 	viper.BindEnv("storage.public_base", "STORAGE_PUBLIC_BASE") //nolint:errcheck
 }

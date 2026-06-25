@@ -14,14 +14,15 @@ import (
 	cleanupmod "github.com/Pashteto/lia/internal/cleanup"
 	eventsdomain "github.com/Pashteto/lia/internal/events"
 	filesdomain "github.com/Pashteto/lia/internal/files"
-	venuesdomain "github.com/Pashteto/lia/internal/venues"
 	grpcmod "github.com/Pashteto/lia/internal/grpc"
 	grpcclientmod "github.com/Pashteto/lia/internal/grpcclient"
 	httpmod "github.com/Pashteto/lia/internal/http"
 	"github.com/Pashteto/lia/internal/module"
 	"github.com/Pashteto/lia/internal/repository"
+	rsvpdomain "github.com/Pashteto/lia/internal/rsvp"
 	"github.com/Pashteto/lia/internal/service"
 	"github.com/Pashteto/lia/internal/storage"
+	venuesdomain "github.com/Pashteto/lia/internal/venues"
 	wsmod "github.com/Pashteto/lia/internal/websocket"
 	"github.com/Pashteto/lia/pkg/logger"
 	"github.com/Pashteto/lia/pkg/version"
@@ -51,6 +52,9 @@ type App struct {
 
 	// blobStore is the blob storage backend. Nil when storage is disabled.
 	blobStore storage.Storage
+
+	// rsvpSvc is the RSVP domain service. Nil when the database is disabled.
+	rsvpSvc rsvpdomain.Service
 }
 
 // NewApplication creates a new App instance.
@@ -144,7 +148,8 @@ func (app *App) registerModules() error {
 	if repoModule != nil {
 		app.categoriesSvc = categoriesdomain.NewService(categoriesdomain.NewRepository(repoModule.DB()))
 		app.venuesSvc = venuesdomain.NewService(venuesdomain.NewRepository(repoModule.DB()))
-		logger.Log().Info("categories + venues modules wired to repository")
+		app.rsvpSvc = rsvpdomain.NewService(rsvpdomain.NewRepository(repoModule.DB()))
+		logger.Log().Info("categories + venues + rsvp modules wired to repository")
 	}
 
 	// Wire storage + files service. Storage is independent of repoModule but the
@@ -211,6 +216,7 @@ func (app *App) registerModules() error {
 		httpModule.SetVenuesService(app.venuesSvc)
 		httpModule.SetStorage(app.blobStore)
 		httpModule.SetFilesService(app.filesSvc)
+		httpModule.SetRsvpService(app.rsvpSvc)
 
 		app.modules.Register(httpModule)
 

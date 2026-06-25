@@ -23,6 +23,7 @@ import (
 	httpserver "github.com/Pashteto/lia/internal/http/server"
 	"github.com/Pashteto/lia/internal/http/server/operations"
 	"github.com/Pashteto/lia/internal/http/uploads"
+	rsvpdomain "github.com/Pashteto/lia/internal/rsvp"
 	"github.com/Pashteto/lia/internal/service"
 	"github.com/Pashteto/lia/internal/storage"
 	venuesdomain "github.com/Pashteto/lia/internal/venues"
@@ -39,6 +40,7 @@ type Module struct {
 	venues     venuesdomain.Service
 	files      filesdomain.Service
 	storage    storage.Storage
+	rsvp       rsvpdomain.Service
 	server     *httpserver.Server
 	api        *operations.LiaAPIAPI
 	handler    *http.Handler
@@ -80,6 +82,13 @@ func (m *Module) SetFilesService(svc filesdomain.Service) {
 // SetStorage injects the blob storage backend. Call before Init.
 func (m *Module) SetStorage(store storage.Storage) {
 	m.storage = store
+}
+
+// SetRsvpService injects the RSVP domain service. Call before Init.
+// When nil, the RSVP endpoints are left unregistered (the generated API
+// returns "not implemented" for them).
+func (m *Module) SetRsvpService(svc rsvpdomain.Service) {
+	m.rsvp = svc
 }
 
 // Name returns the module identifier.
@@ -207,6 +216,16 @@ func (m *Module) initAPI() error {
 		api.EventsCreateEventHandler = handlers.NewCreateEvent(m.events)
 		api.EventsNearbyEventsHandler = handlers.NewNearbyEvents(m.events)
 		api.EventsUpdateEventHandler = handlers.NewUpdateEvent(m.events)
+	}
+
+	if m.rsvp != nil {
+		api.RsvpSignUpHandler = handlers.NewSignUp(m.rsvp)
+		api.RsvpCancelRsvpHandler = handlers.NewCancelRsvp(m.rsvp)
+		api.RsvpMyPracticesHandler = handlers.NewMyPractices(m.rsvp)
+		api.RsvpMyApplicationsHandler = handlers.NewMyApplications(m.rsvp)
+		api.RsvpListEventApplicationsHandler = handlers.NewListEventApplications(m.rsvp)
+		api.RsvpDecideApplicationHandler = handlers.NewDecideApplication(m.rsvp)
+		api.RsvpEventCalendarHandler = handlers.NewEventCalendar(m.rsvp)
 	}
 
 	if m.categories != nil {

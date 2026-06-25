@@ -28,6 +28,14 @@ rsync -az --delete --exclude 'data' --exclude 'node_modules' \
 ```
 
 ## Step 2 — build the image (detached + poll; flaky box)
+> ⚠️ GOTCHA (hit 2026-06-25): the box's Docker build can't reach github.com over
+> IPv6 (broken on this box) — the Dockerfile's `curl -OL` of protoc/grpc-web hung
+> 5 min → `curl: (28) SSL connection timeout`. Fix: force IPv4 + retries on the
+> box's copy of the Dockerfile before building:
+> ```bash
+> ssh vdska2 'cd /opt/gateguard && sed -i "s#curl -OL#curl -4 --retry 5 --retry-delay 3 --connect-timeout 30 -OL#g" Dockerfile'
+> ```
+> (go mod download works — it goes via proxy.golang.org, not github directly.)
 ```bash
 ssh vdska2 'cd /opt/gateguard && rm -f /tmp/gg-build.done && setsid bash -c "docker build -t gateguard:local . > /tmp/gg-build.log 2>&1; echo \$? > /tmp/gg-build.done" </dev/null >/dev/null 2>&1 &'
 # poll /tmp/gg-build.done for rc=0

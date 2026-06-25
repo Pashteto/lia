@@ -85,4 +85,5 @@ export interface ApiEvent {
   updated_at?: string;
   /** Present on `/events/nearby` responses; distance from requested coordinates. */
   distance_m?: number;
+  cover_url?: string;
 }

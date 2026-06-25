@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Segmented } from "@/components/ui/Segmented";
 import { Switch } from "@/components/ui/Switch";
 import { VenuePicker } from "@/components/VenuePicker";
-import { createEvent, getCategories, type CreateEventInput } from "@/lib/api";
+import { createEvent, getCategories, type CreateEventInput, uploadFile } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/cn";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -57,6 +57,11 @@ export function CreateEventForm() {
 
   const isFree = useWatch({ control, name: "isFree" });
 
+  const [coverFileId, setCoverFileId] = useState<string | undefined>(undefined);
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | undefined>(undefined);
+  const [coverUploading, setCoverUploading] = useState(false);
+  const [coverError, setCoverError] = useState<string | undefined>(undefined);
+
   const { data: categories = [] } = useQuery({
     queryKey: ["categories"],
     queryFn: getCategories,
@@ -66,6 +71,22 @@ export function CreateEventForm() {
     mutationFn: (input: CreateEventInput) => createEvent(input),
     onSuccess: (event) => router.push(`/events/${event.id}`),
   });
+
+  const handleCoverChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCoverError(undefined);
+    setCoverUploading(true);
+    try {
+      const { id, url } = await uploadFile(file);
+      setCoverFileId(id);
+      setCoverPreviewUrl(url);
+    } catch (err) {
+      setCoverError(err instanceof Error ? err.message : "Ошибка загрузки");
+    } finally {
+      setCoverUploading(false);
+    }
+  };
 
   const onSubmit = (v: FormValues) => {
     const input: CreateEventInput = {
@@ -79,6 +100,7 @@ export function CreateEventForm() {
       price_min: v.isFree ? undefined : Number(v.priceMin) || 0,
       starts_at: new Date(v.startsAt).toISOString(),
       ends_at: v.endsAt ? new Date(v.endsAt).toISOString() : undefined,
+      cover_file_id: coverFileId,
     };
     mutation.mutate(input);
   };
@@ -108,12 +130,35 @@ export function CreateEventForm() {
       </header>
 
       <div className="mx-auto max-w-2xl px-5 pt-5">
-        {/* Cover upload is not built yet — it needs image storage (S3/MinIO) and
-            a cover field on the backend. Shown as a compact, intentional notice
-            rather than a large empty drop zone that reads as broken. */}
-        <div className="mb-6 flex items-center gap-3 rounded-card bg-bg-secondary px-4 py-3 text-[14px] text-label-secondary">
-          <span aria-hidden className="text-[18px]">🖼️</span>
-          <span>Загрузка обложки появится позже — пока событие сохраняется без изображения.</span>
+        <div className="mb-6">
+          <label className="block">
+            <span className="mb-1.5 block text-[13px] text-label-secondary">Обложка</span>
+            <div className="rounded-card bg-bg-secondary p-4">
+              {coverPreviewUrl && (
+                <div className="relative mb-3 aspect-[3/2] w-full overflow-hidden rounded-[10px] bg-fill">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={coverPreviewUrl}
+                    alt="Предпросмотр обложки"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                disabled={coverUploading}
+                onChange={handleCoverChange}
+                className="block w-full text-[15px] text-label file:mr-3 file:rounded-full file:border-0 file:bg-fill file:px-4 file:py-1.5 file:text-[14px] file:font-medium file:text-label file:transition hover:file:bg-fill-secondary disabled:opacity-60"
+              />
+              {coverUploading && (
+                <p className="mt-2 text-[13px] text-label-secondary">Загрузка…</p>
+              )}
+              {coverError && (
+                <p className="mt-2 text-[13px] text-red-500">{coverError}</p>
+              )}
+            </div>
+          </label>
         </div>
 
         <Section title="Основное">

@@ -44,7 +44,7 @@ export function apiEventToLia(e: ApiEvent): LiaEvent {
         }
       : undefined,
     distanceM: e.distance_m,
-    // cover image is not yet provided by the backend.
+    coverUrl: e.cover_url,
   };
 }
 
@@ -188,6 +188,7 @@ export interface CreateEventInput {
   price_min?: number;
   starts_at: string; // ISO 8601
   ends_at?: string;
+  cover_file_id?: string;
 }
 
 /**
@@ -210,6 +211,24 @@ export async function createEvent(input: CreateEventInput): Promise<LiaEvent> {
     throw new Error(`create event failed: ${res.status} ${detail}`);
   }
   return apiEventToLia((await res.json()) as ApiEvent);
+}
+
+/**
+ * Uploads a file via POST /api/v1/uploads.
+ * Returns the file id (uuid) and its publicly fetchable URL.
+ * Requires authentication — attaches the demo-login bearer token.
+ */
+export async function uploadFile(file: File): Promise<{ id: string; url: string }> {
+  const token = getToken();
+  const fd = new FormData();
+  fd.append("file", file);
+  const res = await fetch(`${API_V1}/uploads`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: fd,
+  });
+  if (!res.ok) throw new Error(`upload failed: ${res.status} ${await res.text().catch(() => "")}`);
+  return (await res.json()) as { id: string; url: string };
 }
 
 /** Response from POST /auth/demo-login. */

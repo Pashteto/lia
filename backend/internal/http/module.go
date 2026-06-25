@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/go-openapi/loads"
+	"github.com/gofrs/uuid"
 	"github.com/justinas/alice"
 
 	"github.com/Pashteto/lia/config"
@@ -17,12 +18,14 @@ import (
 	eventsdomain "github.com/Pashteto/lia/internal/events"
 	filesdomain "github.com/Pashteto/lia/internal/files"
 	"github.com/Pashteto/lia/internal/grpcclient"
+	"github.com/Pashteto/lia/internal/http/admin"
 	"github.com/Pashteto/lia/internal/http/auth"
 	"github.com/Pashteto/lia/internal/http/handlers"
 	"github.com/Pashteto/lia/internal/http/middlewares"
 	httpserver "github.com/Pashteto/lia/internal/http/server"
 	"github.com/Pashteto/lia/internal/http/server/operations"
 	"github.com/Pashteto/lia/internal/http/uploads"
+	"github.com/Pashteto/lia/internal/moderation"
 	rsvpdomain "github.com/Pashteto/lia/internal/rsvp"
 	"github.com/Pashteto/lia/internal/service"
 	"github.com/Pashteto/lia/internal/storage"
@@ -41,6 +44,8 @@ type Module struct {
 	files      filesdomain.Service
 	storage    storage.Storage
 	rsvp       rsvpdomain.Service
+	moderation moderation.Service
+	modReason  func(uuid.UUID) (string, error)
 	server     *httpserver.Server
 	api        *operations.LiaAPIAPI
 	handler    *http.Handler
@@ -89,6 +94,13 @@ func (m *Module) SetStorage(store storage.Storage) {
 // returns "not implemented" for them).
 func (m *Module) SetRsvpService(svc rsvpdomain.Service) {
 	m.rsvp = svc
+}
+
+// SetModeration injects the moderation service and the LatestReason lookup
+// function (bound to the moderation repository). Call before Init.
+func (m *Module) SetModeration(svc moderation.Service, reason func(uuid.UUID) (string, error)) {
+	m.moderation = svc
+	m.modReason = reason
 }
 
 // Name returns the module identifier.
@@ -247,22 +259,36 @@ func (m *Module) initAPI() error {
 	// Build the base swagger handler.
 	base := api.Serve(nil)
 
-	// Mount the plain uploads/serve handler ahead of the swagger mux so that
-	// /api/v1/uploads and /api/v1/files/* are served without swagger validation.
-	var router http.Handler
+	// Hoist the uploads handler (may be nil when storage/files are not configured).
+	var mounted http.Handler
 	if m.storage != nil && m.files != nil {
-		mounted := uploads.NewHandler(m.storage, m.files, m.auth.CheckAuth)
-		router = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			p := r.URL.Path
-			if strings.HasPrefix(p, "/api/v1/uploads") || strings.HasPrefix(p, "/api/v1/files/") {
-				mounted.ServeHTTP(w, r)
-				return
-			}
-			base.ServeHTTP(w, r)
-		})
-	} else {
-		router = base
+		mounted = uploads.NewHandler(m.storage, m.files, m.auth.CheckAuth)
 	}
+
+	// Build the admin handler (always present; gracefully degrades when moderation
+	// or events services are nil — e.g. in no-DB mode).
+	adminH := admin.NewHandler(admin.Deps{
+		Authenticate: m.auth.Authenticate,
+		Moderation:   m.moderation,
+		Events:       m.events,
+		LatestReason: m.modReason,
+	})
+
+	// Mount the admin handler ahead of the swagger mux, then uploads, then base.
+	// Admin/auth-me paths bypass swagger validation entirely.
+	router := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		p := r.URL.Path
+		if p == "/auth/me" || strings.HasPrefix(p, "/api/v1/admin/") {
+			adminH.ServeHTTP(w, r)
+			return
+		}
+		if mounted != nil &&
+			(strings.HasPrefix(p, "/api/v1/uploads") || strings.HasPrefix(p, "/api/v1/files/")) {
+			mounted.ServeHTTP(w, r)
+			return
+		}
+		base.ServeHTTP(w, r)
+	})
 
 	// Build middleware chain
 	handler := alice.New(

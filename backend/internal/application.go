@@ -9,6 +9,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/Pashteto/lia/config"
 	categoriesdomain "github.com/Pashteto/lia/internal/categories"
 	cleanupmod "github.com/Pashteto/lia/internal/cleanup"
@@ -17,6 +19,7 @@ import (
 	grpcmod "github.com/Pashteto/lia/internal/grpc"
 	grpcclientmod "github.com/Pashteto/lia/internal/grpcclient"
 	httpmod "github.com/Pashteto/lia/internal/http"
+	"github.com/Pashteto/lia/internal/moderation"
 	"github.com/Pashteto/lia/internal/module"
 	"github.com/Pashteto/lia/internal/repository"
 	rsvpdomain "github.com/Pashteto/lia/internal/rsvp"
@@ -217,6 +220,18 @@ func (app *App) registerModules() error {
 		httpModule.SetStorage(app.blobStore)
 		httpModule.SetFilesService(app.filesSvc)
 		httpModule.SetRsvpService(app.rsvpSvc)
+
+		// Wire moderation service (requires DB; reuse the same *pg.DB already used
+		// by the events and rsvp repositories — no second pool opened).
+		if repoModule != nil {
+			modRepo := moderation.NewRepository(repoModule.DB())
+			httpModule.SetModeration(
+				moderation.NewService(modRepo),
+				func(id uuid.UUID) (string, error) {
+					return modRepo.LatestReason(context.Background(), id)
+				},
+			)
+		}
 
 		app.modules.Register(httpModule)
 

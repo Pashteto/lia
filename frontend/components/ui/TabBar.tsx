@@ -17,12 +17,14 @@ const TABS: Tab[] = [
   { href: "/events/new", label: "Создать", icon: <GlyphPlus /> },
 ];
 
-/** Mobile glass tab bar (bottom chrome). */
+/** Mobile floating Liquid Glass tab bar — a detached capsule above the
+ * safe-area inset (iOS 26 chrome). The wrapper is click-through; only the
+ * capsule itself is interactive. */
 export function TabBar() {
   const pathname = usePathname();
   return (
-    <nav className="glass fixed inset-x-0 bottom-0 z-10 border-t border-separator">
-      <ul className="mx-auto flex max-w-md items-stretch justify-around px-2 pb-[env(safe-area-inset-bottom)]">
+    <nav className="pointer-events-none fixed inset-x-0 bottom-0 z-10 px-4 pb-[max(env(safe-area-inset-bottom),12px)] pt-2">
+      <ul className="glass pointer-events-auto mx-auto flex max-w-md items-stretch justify-around rounded-capsule px-2 ring-1 ring-inset ring-black/5 dark:ring-white/10">
         {TABS.map((tab) => {
           const active = pathname === tab.href;
           return (
@@ -30,7 +32,7 @@ export function TabBar() {
               <Link
                 href={tab.href}
                 className={cn(
-                  "flex flex-col items-center gap-1 py-2 text-[10px] font-medium",
+                  "flex flex-col items-center gap-1 py-2.5 text-[10px] font-medium transition-colors",
                   active ? "text-accent" : "text-label-secondary",
                 )}
               >

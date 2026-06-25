@@ -31,8 +31,9 @@
   --accent: #007aff;
   --success: #34c759;
 
-  /* Material */
-  --glass: rgba(249, 249, 249, 0.72);
+  /* Material (iOS 26 Liquid Glass — more translucent than .72 so the blur
+   * carries the surface, paired with an inset highlight in the glass utility). */
+  --glass: rgba(249, 249, 249, 0.6);
 }
 
 /* Follow the OS only when the user hasn't made an explicit choice. The
@@ -52,7 +53,7 @@
     --fill: rgba(118, 118, 128, 0.24);
     --accent: #0a84ff;
     --success: #30d158;
-    --glass: rgba(30, 30, 30, 0.72);
+    --glass: rgba(30, 30, 30, 0.6);
   }
 }
 
@@ -69,7 +70,7 @@
   --fill: rgba(118, 118, 128, 0.24);
   --accent: #0a84ff;
   --success: #30d158;
-  --glass: rgba(30, 30, 30, 0.72);
+  --glass: rgba(30, 30, 30, 0.6);
 }
 
 /* Expose tokens to Tailwind utilities (bg-bg, text-label, rounded-card, …). */
@@ -91,19 +92,22 @@
   --font-sans: -apple-system, "SF Pro Text", "SF Pro Display", system-ui,
     "Segoe UI", Roboto, sans-serif;
 
-  /* Continuous (squircle) radii. */
-  --radius-control: 12px;
-  --radius-card-sm: 16px;
-  --radius-card: 18px;
-  --radius-fact: 14px;
-  --radius-sheet: 20px;
+  /* Continuous (squircle) radii — iOS 26 leans on larger continuous corners. */
+  --radius-control: 14px;
+  --radius-card-sm: 18px;
+  --radius-card: 22px;
+  --radius-fact: 16px;
+  --radius-sheet: 24px;
   --radius-seg: 9px;
   --radius-capsule: 980px;
 
   /* System shadows (subtle — no heavy drop shadows). */
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08), 0 10px 30px rgba(0, 0, 0, 0.06);
   --shadow-card-subtle: 0 1px 3px rgba(0, 0, 0, 0.08);
   --shadow-phone: 0 20px 50px rgba(0, 0, 0, 0.25);
+
+  /* Elevation for floating Liquid Glass chrome (nav / tab capsule). */
+  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.12);
 }
 
 html {
@@ -114,20 +118,25 @@ html {
   text-rendering: optimizeLegibility;
 }
 
-/* Liquid Glass — chrome layers only (nav/tab/sheet bars), never content. */
+/* Liquid Glass — chrome layers only (nav/tab/sheet bars), never content.
+ * The inset top highlight + soft drop shadow make the surface read as a lit,
+ * floating translucent slab (iOS 26), not a flat tinted bar. */
 @utility glass {
   background: var(--glass);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(30px);
+  -webkit-backdrop-filter: saturate(180%) blur(30px);
+  box-shadow: var(--shadow-glass), inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
-/* Dark omits saturate per DESIGN.md. */
+/* Dark omits saturate per DESIGN.md and dims the highlight. */
 @media (prefers-color-scheme: dark) {
   :root:not(.light) .glass {
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    box-shadow: var(--shadow-glass), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   }
 }
 .dark .glass {
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  box-shadow: var(--shadow-glass), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }

@@ -1,9 +1,9 @@
 import { AuthButton } from "@/components/AuthButton";
 import { DiscoveryFeed } from "@/components/DiscoveryFeed";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/Button";
 import { GlassNav } from "@/components/ui/GlassNav";
 import { TabBar } from "@/components/ui/TabBar";
+import { ThemeSwitch } from "@/components/ui/ThemeSwitch";
 import { fetchPublishedEvents } from "@/lib/api";
 import { MOCK_EVENTS } from "@/lib/mock-events";
 import Link from "next/link";
@@ -23,7 +23,7 @@ export default async function DiscoveryPage() {
         title="Presence.Tarski"
         actions={
           <>
-            <ThemeToggle />
+            <ThemeSwitch />
             <Link href="/events/new" className="hidden sm:block">
               <Button variant="tinted">Создать событие</Button>
             </Link>

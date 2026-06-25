@@ -28,7 +28,7 @@ export function EventCard({
     <Link
       href={`/events/${event.id}`}
       className={cn(
-        "group block overflow-hidden rounded-card bg-bg-secondary shadow-card-subtle transition hover:shadow-card",
+        "group block overflow-hidden rounded-card bg-bg-secondary shadow-card-subtle transition duration-200 hover:-translate-y-0.5 hover:shadow-card active:scale-[0.99] motion-reduce:transform-none motion-reduce:transition-none",
         className,
       )}
     >

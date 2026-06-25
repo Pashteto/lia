@@ -1,0 +1,29 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/*
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Generated protobuf/grpc Go code (regenerated at build via `make generate-proto`).
+*.pb.go
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+.idea/
+
+__debug_bin
+
+gateguard
+
+data/
+
+.env

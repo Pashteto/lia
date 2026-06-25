@@ -1,0 +1,47 @@
+syntax = "proto3";
+package organizations.service;
+
+option go_package = "presto-protocols/organizations";
+
+import "models_organizations.proto";
+
+service OrganizationService {
+  // Method to create a new organization.
+  rpc CreateOrganization(models.CreateOrganizationRequest)       returns (models.CreateOrganizationResponse);
+
+  // Method to logically delete an organization.
+  rpc DeleteOrganization(models.DeleteOrganizationRequest)       returns (models.DeleteOrganizationResponse);
+
+  // Method to add a rollup to an organization.
+  rpc TransferRollupsToOrganization(models.TransferRollupsRequest) returns (models.TransferRollupsResponse);
+
+  // Method to remove a rollup from an organization.
+  rpc DeleteRollupFromOrganization(models.DeleteRollupsRequest)   returns (models.DeleteRollupsResponse);
+
+  // Method to add a user to an organization.
+  rpc AddUserToOrganization(models.AddUserRequest)               returns (models.AddUserResponse);
+
+  // Method to update a user's role within an organization.
+  rpc UpdateUserRoleInOrganization(models.UpdateUserRoleRequest) returns (models.UpdateUserRoleResponse);
+
+  // Method to remove a user from an organization.
+  rpc RemoveUserFromOrganization(models.RemoveUserRequest)       returns (models.RemoveUserResponse);
+
+  // Method to retrieve a specific organization by UUID.
+  rpc GetOrganization(models.GetOrganizationRequest)             returns (models.GetOrganizationResponse);
+
+  // Method to list organizations filtered by user UUID.
+  rpc ListOrganizations(models.ListOrganizationsRequest)         returns (models.ListOrganizationsResponse);
+
+  // Method to update the organization's details.
+  rpc UpdateOrganization(models.UpdateOrganizationRequest) returns (models.UpdateOrganizationResponse);
+
+  // Method to check if a rollup operation is available.
+  rpc IsRollupOperationAvailable(models.IsRollupOperationAvailableRequest) returns (models.IsRollupOperationAvailableResponse);
+
+  // Method to check if an organization operation is available.
+  rpc IsOrganizationOperationAvailable(models.IsOrganizationOperationAvailableRequest) returns (models.IsOrganizationOperationAvailableResponse);
+
+  // Method to check if an organization operation is available.
+  rpc IsOrganizationInvitationOperationAvailable(models.IsOrganizationInvitationOperationAvailableRequest) returns (models.IsOrganizationInvitationOperationAvailableResponse);
+}

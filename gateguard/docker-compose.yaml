@@ -1,0 +1,31 @@
+version: '3.7'
+
+services:
+  gateguard-db:
+    image: postgres:16.2
+    container_name: gateguard-db
+    restart: always
+    ports:
+      - "54322:5432"
+    volumes:
+      - ./data/db/volumes/gateguard-db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: presto
+      POSTGRES_USER: presto
+      POSTGRES_DB: presto
+
+  gateguard-migrate:
+    image: migrate/migrate:v4.17.1
+    container_name: gateguard-migrate
+    volumes:
+      - ./db:/db
+    depends_on:
+      - gateguard-db
+    command: ["-path=/db/", "-database", "postgresql://presto:presto@gateguard-db:5432/presto?sslmode=disable", "up"]
+
+  gateguard-redis:
+    image: redis:7.2.4
+    container_name: gateguard-redis
+    restart: always
+    ports:
+      - "6379:6379"

@@ -1,0 +1,286 @@
+syntax = "proto3";
+
+package organizations.models;
+
+option go_package = "presto-protocols/organizations";
+
+import "google/protobuf/empty.proto";
+
+message Organization {
+  bytes               uuid                  = 1;
+  string              name                  = 2;
+  repeated bytes      rollupsUuids          = 3;
+  map<string, Role>   userEmailsWithRoles   = 4;
+  int64               createdAt             = 5;
+  int64               modifiedAt            = 6;
+  Status              status                = 7;
+}
+
+enum Status {
+  StatusUnknown = 0;
+  StatusActive  = 1;
+  StatusDeleted = 2;
+}
+
+message Role {
+  bytes        userUuid = 1;
+  RoleType     role     = 2;
+  string       email    = 3;
+  UserStatus   status   = 4;
+}
+
+enum UserStatus {
+  UserStatusPending  = 0;
+  UserStatusActive   = 1;
+  UserStatusUnknown  = 2;
+}
+
+enum RoleType {
+  RoleUnknown  = 0;
+  RoleOwner    = 1;
+  RoleBilling  = 2;
+  RoleCreator  = 3;
+  RoleCommon   = 4;
+}
+
+message CreateOrganizationRequest {
+  string        name          = 1;
+  repeated Role initialRoles  = 2;
+}
+
+message CreateOrganizationResponse {
+  optional Organization            organization = 1;
+  optional CreateOrganizationError error        = 2;
+}
+
+enum CreateOrganizationError {
+  CoeInvalidArgument   = 0;
+  CoePermissionDenied  = 1;
+  CoeValidationError   = 2;
+  CoeAlreadyExistError = 3;
+}
+
+message GetOrganizationRequest {
+  bytes uuid = 1;
+}
+
+message GetOrganizationResponse {
+  optional Organization         organization = 1;
+  optional GetOrganizationError error        = 2;
+}
+
+enum GetOrganizationError {
+  GoeNotFound            = 0;
+  GoeMoreThanOneOrgFound = 1;
+  GoeValidationError     = 2;
+}
+
+message AddUserRequest {
+  bytes      organizationUuid = 1;
+  Role       role             = 2;
+}
+
+message AddUserResponse {
+  optional Organization organization = 1;
+  optional AddUserError error        = 2;
+}
+
+enum AddUserError {
+  AueNotFound         = 0;
+  AuePermissionDenied = 1;
+  AueValidationError  = 2;
+}
+
+message UpdateUserRoleRequest {
+  bytes                 organizationUuid = 1;
+  string                email            = 2;
+  optional RoleType     role             = 3;
+  optional bytes        userUuid         = 4;
+  optional UserStatus   status           = 5;
+}
+
+message UpdateUserRoleResponse {
+  optional Organization        organization = 1;
+  optional UpdateUserRoleError error        = 2;
+}
+
+enum UpdateUserRoleError {
+  UureOrganizationNotFound = 0;
+  UurePermissionDenied     = 1;
+  UureValidationError      = 2;
+  UureUserNotFound         = 3;
+}
+
+message RemoveUserRequest {
+  bytes  organizationUuid = 1;
+  string email            = 2;
+}
+
+message RemoveUserResponse {
+  optional google.protobuf.Empty success = 1;
+  optional RemoveUserError       error   = 2;
+}
+
+enum RemoveUserError {
+  RueNotFound         = 0;
+  RuePermissionDenied = 1;
+  RueValidationError  = 2;
+}
+
+message TransferRollupsRequest {
+  bytes          organizationUuid = 1;
+  repeated bytes rollupUuids      = 2;
+}
+
+message TransferRollupsResponse {
+  optional Organization        organization  = 1;
+  optional TransferRollupsError error        = 2;
+}
+
+enum TransferRollupsError {
+  TreNotFound         = 0;
+  TrePermissionDenied = 1;
+  TreValidationError  = 2;
+  TreAlreadyExists    = 3;
+}
+
+message DeleteOrganizationRequest {
+  bytes organizationUuid = 1;
+}
+
+message DeleteOrganizationResponse {
+  optional google.protobuf.Empty success = 1;
+  optional DeleteOrganizationError error = 2;
+}
+
+enum DeleteOrganizationError {
+  DoeNotFound                            = 0;
+  DoePermissionDenied                    = 1;
+  DoeValidationError                     = 2;
+  DoeCannotDeleteOrganizationWithRollups = 3;
+}
+
+message DeleteRollupsRequest {
+  repeated bytes rollupUuids = 1;
+}
+
+message DeleteRollupsResponse {
+  optional Organization           organization  = 1;
+  optional DeleteRollupsError     error         = 2;
+}
+
+enum DeleteRollupsError {
+  DreOrganizationNotFound = 0;
+  DreRollupNotFound       = 1;
+  DrePermissionDenied     = 2;
+  DreValidationError      = 3;
+}
+
+message ListOrganizationsRequest {
+  bytes           organizationUuid = 1;
+  repeated string userEmails       = 2;
+  repeated Status statuses         = 3;
+  uint64          limit            = 4;
+  uint64          offset           = 5;
+}
+
+message ListOrganizationsResponse {
+  repeated Organization           organizations = 1;
+  optional ListOrganizationsError error         = 2;
+  optional bool                   hasMore       = 3;
+}
+
+enum ListOrganizationsError {
+  LoeNotFound        = 0;
+  LoeInvalidQuery    = 1;
+  LoeValidationError = 2;
+}
+
+message UpdateOrganizationRequest {
+  bytes  organizationUuid = 1;
+  string name             = 2;
+}
+
+message UpdateOrganizationResponse {
+  optional Organization              organization = 1;
+  optional UpdateOrganizationError   error        = 2;
+}
+
+enum UpdateOrganizationError {
+  UoeNotFound         = 0;
+  UoePermissionDenied = 1;
+  UoeValidationError  = 2;
+  UoeAlreadyExists    = 3;
+}
+
+message IsRollupOperationAvailableRequest {
+  bytes               organizationUuid = 1;
+  string              email            = 2;
+  RollupOperationType operationType    = 3;
+}
+
+enum RollupOperationType {
+  RotView    = 0;
+  RotCreate  = 1;
+  RotUpdate  = 2;
+  RotDelete  = 3;
+  RotUnknown = 4;
+}
+
+message IsRollupOperationAvailableResponse {
+  optional bool                            isAvailable = 1;
+  optional IsRollupOperationAvailableError error       = 2;
+}
+
+enum IsRollupOperationAvailableError {
+  IroaErrorNotFound            = 0;
+  IroaErrorValidationError     = 1;
+  IroaErrorPermissionDenied    = 2;
+  IroaErrorOrganizationDeleted = 3;
+  IroaErrorMoreThanOneOrgFound = 4;
+}
+
+message IsOrganizationOperationAvailableRequest {
+  bytes                     organizationUuid = 1;
+  string                    email            = 2;
+  OrganizationOperationType operationType    = 3;
+}
+
+enum OrganizationOperationType {
+  OotView    = 0;
+  OotUpdate  = 1;
+  OotDelete  = 2;
+  OotUnknown = 3;
+}
+
+message IsOrganizationOperationAvailableResponse {
+  optional bool                                  isAvailable = 1;
+  optional IsOrganizationOperationAvailableError error       = 2;
+}
+
+enum IsOrganizationOperationAvailableError {
+  IooaErrorNotFound            = 0;
+  IooaErrorValidationError     = 1;
+  IooaErrorPermissionDenied    = 2;
+  IooaErrorOrganizationDeleted = 3;
+}
+
+message IsOrganizationInvitationOperationAvailableRequest {
+  bytes                     organizationUuid        = 1;
+  string                    inviterEmail            = 2;
+  RoleType                  inviteeRole             = 3;
+}
+
+
+message IsOrganizationInvitationOperationAvailableResponse {
+  optional bool                                            isAvailable = 1;
+  optional IsOrganizationInvitationOperationAvailableError error       = 2;
+}
+
+enum IsOrganizationInvitationOperationAvailableError {
+  IoioaErrorNotFound            = 0;
+  IoioaErrorValidationError     = 1;
+  IoioaErrorPermissionDenied    = 2;
+  IoioaErrorOrganizationDeleted = 3;
+  IoioaErrorInviteeRoleTooHigh  = 4;
+}

@@ -1,0 +1,13 @@
+BEGIN;
+
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS ip bigint;
+
+UPDATE users
+SET ip = 0
+WHERE ip IS NULL;
+
+ALTER TABLE users
+    ALTER COLUMN ip SET NOT NULL;
+
+COMMIT;

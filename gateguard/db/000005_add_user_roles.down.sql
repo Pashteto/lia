@@ -1,0 +1,3 @@
+DROP TYPE user_role;
+
+ALTER TABLE users DROP COLUMN IF EXISTS role;

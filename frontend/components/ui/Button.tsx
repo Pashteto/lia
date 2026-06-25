@@ -25,7 +25,7 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center gap-1.5 rounded-control px-4 py-2.5 text-[15px] font-semibold transition select-none disabled:opacity-40 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none",
+        "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-control px-4 py-2.5 text-[15px] font-semibold transition select-none disabled:opacity-40 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none",
         VARIANTS[variant],
         className,
       )}

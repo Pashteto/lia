@@ -104,7 +104,7 @@ export function DiscoveryFeed({
   const isNearbyMode = nearby !== null;
 
   return (
-    <main className="mx-auto max-w-3xl px-5 pb-28 pt-6">
+    <main className="mx-auto max-w-5xl px-5 pb-28 pt-6">
       <h1 className="mb-4 text-[34px] font-bold tracking-[-0.022em]">События</h1>
 
       <SearchField
@@ -155,7 +155,7 @@ export function DiscoveryFeed({
           Не удалось загрузить события. Проверьте, что бэкенд запущен.
         </p>
       ) : displayEvents.length > 0 ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {displayEvents.map((e) => (
             <EventCard
               key={e.id}

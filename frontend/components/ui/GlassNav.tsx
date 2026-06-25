@@ -16,8 +16,10 @@ export function GlassNav({
 }) {
   return (
     <header className={cn("sticky top-0 z-10 px-3 pt-3", className)}>
-      <div className="glass mx-auto flex max-w-3xl items-center justify-between rounded-card px-5 py-3 ring-1 ring-inset ring-black/5 dark:ring-white/10">
-        <span className="text-[20px] font-bold tracking-[-0.022em]">{title}</span>
+      <div className="glass mx-auto flex max-w-5xl items-center justify-between gap-4 rounded-card px-5 py-3 ring-1 ring-inset ring-black/5 dark:ring-white/10">
+        <span className="shrink-0 text-[20px] font-bold tracking-[-0.022em]">
+          {title}
+        </span>
         <div className="flex items-center gap-2">{actions}</div>
       </div>
     </header>

@@ -37,6 +37,22 @@ services:
       # Narrow CORS from the "*" default to the demo frontend origin only.
       HTTP_CORS_ALLOWED_ORIGINS: "https://lia.pashteto.com"
       GRPC_ENABLED: "false"
+      # Blob storage (local-disk backend; swap to S3 via STORAGE_BACKEND=s3 + S3_*).
+      # STORAGE_PUBLIC_BASE MUST be the absolute API origin + /api/v1/files so
+      # cover_url resolves cross-origin from the frontend (lia → api.lia).
+      STORAGE_BACKEND: "local"
+      STORAGE_LOCAL_DIR: "/data/uploads"
+      STORAGE_PUBLIC_BASE: "https://api.lia.pashteto.com/api/v1/files"
+      # Per-user event-creation quota (calendar month, Europe/Moscow).
+      EVENTS_MONTHLY_LIMIT: "10"
+      # Daily orphaned-upload cleanup (24h grace; in-process ticker).
+      FILE_CLEANUP_ENABLED: "true"
+    # Persist uploaded blobs across container restarts/redeploys. Without this
+    # the local backend writes into the ephemeral FROM-scratch container and
+    # every cover image is lost on redeploy.
+    volumes:
+      - lia_uploads:/data/uploads
 
 volumes:
   lia_pgdata:
+  lia_uploads:

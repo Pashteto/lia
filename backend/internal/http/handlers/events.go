@@ -114,6 +114,8 @@ func (h *CreateEvent) Handle(params eventsops.CreateEventParams, principal *apim
 			return eventsops.NewCreateEventBadRequest().
 				WithPayload(DefaultError(http.StatusBadRequest, err, nil))
 		case errors.Is(err, eventsdomain.ErrQuotaExceeded):
+			// NOTE: "10 событий в месяц" is intentionally hardcoded per spec.
+			// Keep in sync with the EVENTS_MONTHLY_LIMIT config value.
 			return eventsops.NewCreateEventTooManyRequests().
 				WithPayload(DefaultError(http.StatusTooManyRequests, errors.New("Достигнут лимит: 10 событий в месяц. Лимит обновится 1-го числа."), nil))
 		default:

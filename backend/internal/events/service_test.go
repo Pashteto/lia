@@ -22,6 +22,7 @@ type mockRepo struct {
 	nearbyResult     []*NearbyResult
 	countByOrganizer int
 	countErr         error
+	countSinceArg    time.Time // captured arg from CountByOrganizerSince
 }
 
 func (m *mockRepo) Create(event *models.Event) error {
@@ -44,7 +45,8 @@ func (m *mockRepo) Nearby(lat, lon float64, limit int) ([]*NearbyResult, error) 
 	return m.nearbyResult, nil
 }
 
-func (m *mockRepo) CountByOrganizerSince(uuid.UUID, time.Time) (int, error) {
+func (m *mockRepo) CountByOrganizerSince(_ uuid.UUID, since time.Time) (int, error) {
+	m.countSinceArg = since
 	return m.countByOrganizer, m.countErr
 }
 
@@ -273,5 +275,45 @@ func TestStartOfMonthMoscow_ReturnsFirstDayMidnight(t *testing.T) {
 	want := time.Date(2026, 6, 1, 0, 0, 0, 0, loc)
 	if !got.Equal(want) {
 		t.Errorf("startOfMonthMoscow(%v) = %v, want %v", input, got, want)
+	}
+}
+
+// TestCreate_PriorMonthEventNotCounted asserts that the since boundary passed to
+// CountByOrganizerSince is exactly startOfMonthMoscow(now) — i.e. the count
+// window starts at the first of the current calendar month in Moscow time, not
+// 30 days back.  It also verifies that when the repo returns 0, Create succeeds
+// even when the limit is 1 (simulating that a prior-month event is excluded).
+func TestCreate_PriorMonthEventNotCounted(t *testing.T) {
+	repo := &mockRepo{countByOrganizer: 0} // prior-month event excluded by since
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 1)
+
+	beforeCall := time.Now()
+	if err := svc.Create(context.Background(), validEventWithOrganizer()); err != nil {
+		t.Fatalf("expected success when count=0/limit=1 (prior month excluded), got: %v", err)
+	}
+	afterCall := time.Now()
+
+	// The since argument must equal startOfMonthMoscow of the moment Create ran.
+	// We bound the expected value between the two calls to tolerate clock ticks.
+	wantLow := startOfMonthMoscow(beforeCall)
+	wantHigh := startOfMonthMoscow(afterCall)
+
+	got := repo.countSinceArg
+	if got.IsZero() {
+		t.Fatal("CountByOrganizerSince was not called — quota check skipped unexpectedly")
+	}
+	// wantLow and wantHigh are always the same value unless the test straddles a
+	// month boundary (astronomically unlikely), so a simple Equal check suffices.
+	if !got.Equal(wantLow) && !got.Equal(wantHigh) {
+		t.Errorf("since = %v, want startOfMonthMoscow(now) = %v", got, wantLow)
+	}
+
+	loc, err := time.LoadLocation("Europe/Moscow")
+	if err != nil {
+		t.Fatalf("load Moscow tz: %v", err)
+	}
+	moscowSince := got.In(loc)
+	if moscowSince.Day() != 1 || moscowSince.Hour() != 0 || moscowSince.Minute() != 0 || moscowSince.Second() != 0 {
+		t.Errorf("since in Moscow time must be 1st at 00:00:00, got %v", moscowSince)
 	}
 }

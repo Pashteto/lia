@@ -8,6 +8,10 @@ import (
 	"github.com/Pashteto/lia/cmd/serve"
 	"github.com/Pashteto/lia/internal"
 	"github.com/Pashteto/lia/pkg/logger"
+
+	// Embed the IANA timezone database in the binary: the production image is
+	// FROM scratch (no OS tzdata), and event-quota boundaries use Europe/Moscow.
+	_ "time/tzdata"
 )
 
 // main is the entry point of the application.

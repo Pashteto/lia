@@ -71,6 +71,10 @@ func TestCreateEvent_QuotaExceeded_Returns429(t *testing.T) {
 	if tooMany.Payload.Code == nil || *tooMany.Payload.Code != 429 {
 		t.Errorf("expected payload code 429, got %v", tooMany.Payload.Code)
 	}
+	const wantMsg = "Достигнут лимит: 10 событий в месяц. Лимит обновится 1-го числа."
+	if tooMany.Payload.Message == nil || *tooMany.Payload.Message != wantMsg {
+		t.Errorf("expected payload message %q, got %v", wantMsg, tooMany.Payload.Message)
+	}
 }
 
 func TestCreateEvent_SetsOrganizerFromPrincipal(t *testing.T) {

@@ -72,7 +72,7 @@ func (m *Module) SetVenuesService(svc venuesdomain.Service) {
 }
 
 // SetFilesService injects the files domain service. Call before Init.
-// When nil, upload/serve endpoints return 503 (mux returns 404 for unregistered paths).
+// When nil, upload/serve endpoints return 404 (the swagger mux returns 404 for unregistered paths).
 func (m *Module) SetFilesService(svc filesdomain.Service) {
 	m.files = svc
 }

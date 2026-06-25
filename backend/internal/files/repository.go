@@ -82,8 +82,11 @@ func (r *pgRepository) ListOrphansOlderThan(d time.Duration) ([]*models.File, er
 }
 
 func (r *pgRepository) Delete(id uuid.UUID) error {
+	// go-pg returns 0 rows affected (not ErrNoRows) when a PK delete finds no
+	// matching row, so there is nothing special to filter here.  The operation
+	// is idempotent: deleting a non-existent row is not an error.
 	f := &models.File{ID: id}
-	if _, err := r.db.Model(f).WherePK().Delete(); err != nil && !errors.Is(err, pg.ErrNoRows) {
+	if _, err := r.db.Model(f).WherePK().Delete(); err != nil {
 		return fmt.Errorf("delete file %s: %w", id, err)
 	}
 	return nil

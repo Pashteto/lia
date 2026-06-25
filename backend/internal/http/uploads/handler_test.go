@@ -12,6 +12,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/gofrs/uuid"
 
+	filesdomain "github.com/Pashteto/lia/internal/files"
 	apimodels "github.com/Pashteto/lia/internal/http/models"
 	"github.com/Pashteto/lia/internal/models"
 	"github.com/Pashteto/lia/internal/storage"
@@ -86,7 +87,7 @@ func (f *fakeFiles) Get(_ context.Context, id uuid.UUID) (*models.File, error) {
 	if f.registered != nil && f.registered.ID == id {
 		return f.registered, nil
 	}
-	return nil, nil
+	return nil, filesdomain.ErrNotFound
 }
 
 // --- Tests ---
@@ -117,8 +118,9 @@ func TestUpload_RejectsNonImage(t *testing.T) {
 }
 
 func TestUpload_AcceptsImage_Returns201WithURL(t *testing.T) {
-	// Minimal 4-byte PNG magic bytes
-	body, ct := multipartFile(t, "file", "a.png", "image/png", []byte{0x89, 0x50, 0x4e, 0x47})
+	// Full 8-byte PNG signature — http.DetectContentType requires these 8 bytes
+	// to positively identify image/png.
+	body, ct := multipartFile(t, "file", "a.png", "image/png", []byte{0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a})
 	h := NewHandler(memStore(t), &fakeFiles{}, okAuth)
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/uploads", body)
 	req.Header.Set("Content-Type", ct)
@@ -148,5 +150,48 @@ func TestServe_Returns404ForMissingKey(t *testing.T) {
 	h.ServeHTTP(rec, req)
 	if rec.Code != http.StatusNotFound {
 		t.Fatalf("want 404, got %d", rec.Code)
+	}
+}
+
+func TestUpload_RejectsMissingAuthHeader(t *testing.T) {
+	h := NewHandler(memStore(t), &fakeFiles{}, func(string) (*apimodels.User, error) {
+		t.Fatal("authFn must not be called when Authorization header is absent")
+		return nil, nil
+	})
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/uploads", nil)
+	// No Authorization header set.
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("want 401, got %d", rec.Code)
+	}
+}
+
+func TestUpload_RejectsMalformedAuthHeader(t *testing.T) {
+	h := NewHandler(memStore(t), &fakeFiles{}, func(string) (*apimodels.User, error) {
+		t.Fatal("authFn must not be called when Authorization header lacks Bearer prefix")
+		return nil, nil
+	})
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/uploads", nil)
+	req.Header.Set("Authorization", "NotBearer xyz")
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("want 401, got %d", rec.Code)
+	}
+}
+
+func TestUpload_RejectsSpoofedImageContentType(t *testing.T) {
+	// Part declares image/png but body bytes are plain text — the sniffer must
+	// detect the mismatch and return 415.
+	body, ct := multipartFile(t, "file", "evil.png", "image/png", []byte("%PDF-1.4 fake pdf content"))
+	h := NewHandler(memStore(t), &fakeFiles{}, okAuth)
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/uploads", body)
+	req.Header.Set("Content-Type", ct)
+	req.Header.Set("Authorization", "Bearer t")
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	if rec.Code != http.StatusUnsupportedMediaType {
+		t.Fatalf("want 415 for spoofed content-type, got %d body=%s", rec.Code, rec.Body.String())
 	}
 }

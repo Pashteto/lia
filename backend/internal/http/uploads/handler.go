@@ -67,8 +67,12 @@ func (h *handler) upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Auth: require Bearer token.
+	// Auth: require Bearer token with explicit "Bearer " prefix.
 	authHeader := r.Header.Get("Authorization")
+	if !strings.HasPrefix(authHeader, "Bearer ") {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
 	token := strings.TrimPrefix(authHeader, "Bearer ")
 	principal, err := h.authFn(token)
 	if err != nil || principal == nil {
@@ -82,17 +86,22 @@ func (h *handler) upload(w http.ResponseWriter, r *http.Request) {
 		ownerID = uuid.Nil
 	}
 
+	// Hard cap: abort oversized requests at the network level before any disk spill.
+	r.Body = http.MaxBytesReader(w, r.Body, maxBytes+1)
+
 	// Parse multipart (cap at maxBytes + 1 to detect oversize).
 	if err := r.ParseMultipartForm(maxBytes); err != nil {
 		if errors.Is(err, http.ErrNotMultipart) {
 			http.Error(w, "multipart/form-data required", http.StatusBadRequest)
 			return
 		}
+		// MaxBytesReader signals an oversized body via a non-standard error value;
+		// treat any parse failure other than ErrNotMultipart as too large.
 		http.Error(w, "request too large", http.StatusRequestEntityTooLarge)
 		return
 	}
 
-	part, partHeader, err := r.FormFile("file")
+	part, _, err := r.FormFile("file")
 	if err != nil {
 		http.Error(w, "missing file field", http.StatusBadRequest)
 		return
@@ -113,15 +122,13 @@ func (h *handler) upload(w http.ResponseWriter, r *http.Request) {
 	size := n
 	data := buf.Bytes()
 
-	// Determine content type: prefer the part's declared Content-Type, then sniff.
-	ct := partHeader.Header.Get("Content-Type")
-	if ct == "" {
-		sniff := data
-		if len(sniff) > 512 {
-			sniff = sniff[:512]
-		}
-		ct = http.DetectContentType(sniff)
+	// Determine content type by sniffing the actual bytes — never trust the
+	// declared Content-Type header from the multipart part (MIME spoofing defence).
+	sniff := data
+	if len(sniff) > 512 {
+		sniff = sniff[:512]
 	}
+	ct := http.DetectContentType(sniff)
 	// Normalise (strip parameters like "; charset=utf-8").
 	if idx := strings.Index(ct, ";"); idx >= 0 {
 		ct = strings.TrimSpace(ct[:idx])

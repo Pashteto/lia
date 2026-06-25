@@ -11,7 +11,10 @@ type GateguardHandlers struct {
 	log *clog.CustomLogger
 	srv service.IUsersService
 
-	*proto.UnimplementedGateguardServiceServer
+	// Embedded BY VALUE (not pointer): protoc-gen-go-grpc v1.6+ generates a
+	// testEmbeddedByValue assertion that nil-pointer-panics at registration if
+	// this is a pointer embed.
+	proto.UnimplementedGateguardServiceServer
 }
 
 // NewGateguardHandlers creates a new GateguardHandlers instance

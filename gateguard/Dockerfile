@@ -1,5 +1,7 @@
-# Use the latest version of Go as the base image
-FROM golang:1.23 AS base
+# Use the latest version of Go as the base image. 1.25 matches the go.mod
+# directive (raised when adding the bcrypt dep); the box's older builder image
+# would fail `go mod download` with GOTOOLCHAIN=local.
+FROM golang:1.26 AS base
 
 # Install needed dependencies for base image and update certs
 RUN apt-get update \
@@ -8,7 +10,7 @@ RUN apt-get update \
 
 # Download proto zip
 ENV PROTOC_ZIP=protoc-24.0-linux-x86_64.zip
-RUN curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v24.0/${PROTOC_ZIP}
+RUN curl -4 --retry 5 --retry-connrefused -OL https://github.com/protocolbuffers/protobuf/releases/download/v24.0/${PROTOC_ZIP}
 RUN unzip -o ${PROTOC_ZIP} -d ./proto
 RUN chmod 755 -R ./proto/bin
 ENV BASE=/usr
@@ -19,14 +21,14 @@ RUN cp -R ./proto/include/* ${BASE}/include/
 # Download protoc-gen-grpc-web
 ENV GRPC_WEB=protoc-gen-grpc-web-1.5.0-linux-x86_64
 ENV GRPC_WEB_PATH=/usr/bin/protoc-gen-grpc-web
-RUN curl -OL https://github.com/grpc/grpc-web/releases/download/1.5.0/${GRPC_WEB}
+RUN curl -4 --retry 5 --retry-connrefused -OL https://github.com/grpc/grpc-web/releases/download/1.5.0/${GRPC_WEB}
 # Copy into path
 RUN mv ${GRPC_WEB} ${GRPC_WEB_PATH}
 RUN chmod +x ${GRPC_WEB_PATH}
 
 RUN go env -w GO111MODULE=on
-RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.0
-RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
+RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.11
+RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.6.2
 
 
 # create a build artifact

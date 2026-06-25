@@ -569,6 +569,170 @@ func (x *EmailRequest) GetEmail() string {
 	return ""
 }
 
+type SignUpRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Email         string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Password      string                 `protobuf:"bytes,3,opt,name=password,proto3" json:"password,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SignUpRequest) Reset() {
+	*x = SignUpRequest{}
+	mi := &file_service_gateguard_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SignUpRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SignUpRequest) ProtoMessage() {}
+
+func (x *SignUpRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_service_gateguard_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SignUpRequest.ProtoReflect.Descriptor instead.
+func (*SignUpRequest) Descriptor() ([]byte, []int) {
+	return file_service_gateguard_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *SignUpRequest) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *SignUpRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *SignUpRequest) GetPassword() string {
+	if x != nil {
+		return x.Password
+	}
+	return ""
+}
+
+type PasswordSignInRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Email         string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
+	Password      string                 `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PasswordSignInRequest) Reset() {
+	*x = PasswordSignInRequest{}
+	mi := &file_service_gateguard_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PasswordSignInRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PasswordSignInRequest) ProtoMessage() {}
+
+func (x *PasswordSignInRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_service_gateguard_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PasswordSignInRequest.ProtoReflect.Descriptor instead.
+func (*PasswordSignInRequest) Descriptor() ([]byte, []int) {
+	return file_service_gateguard_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *PasswordSignInRequest) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *PasswordSignInRequest) GetPassword() string {
+	if x != nil {
+		return x.Password
+	}
+	return ""
+}
+
+type VerifyEmailRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Email         string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
+	Token         string                 `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *VerifyEmailRequest) Reset() {
+	*x = VerifyEmailRequest{}
+	mi := &file_service_gateguard_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *VerifyEmailRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VerifyEmailRequest) ProtoMessage() {}
+
+func (x *VerifyEmailRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_service_gateguard_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VerifyEmailRequest.ProtoReflect.Descriptor instead.
+func (*VerifyEmailRequest) Descriptor() ([]byte, []int) {
+	return file_service_gateguard_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *VerifyEmailRequest) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *VerifyEmailRequest) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
 // AddOrganizationRequest is request message for adding an organization to a user
 type AddOrganizationRequest struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
@@ -580,7 +744,7 @@ type AddOrganizationRequest struct {
 
 func (x *AddOrganizationRequest) Reset() {
 	*x = AddOrganizationRequest{}
-	mi := &file_service_gateguard_proto_msgTypes[7]
+	mi := &file_service_gateguard_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -592,7 +756,7 @@ func (x *AddOrganizationRequest) String() string {
 func (*AddOrganizationRequest) ProtoMessage() {}
 
 func (x *AddOrganizationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_service_gateguard_proto_msgTypes[7]
+	mi := &file_service_gateguard_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -605,7 +769,7 @@ func (x *AddOrganizationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddOrganizationRequest.ProtoReflect.Descriptor instead.
 func (*AddOrganizationRequest) Descriptor() ([]byte, []int) {
-	return file_service_gateguard_proto_rawDescGZIP(), []int{7}
+	return file_service_gateguard_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *AddOrganizationRequest) GetUserUuid() []byte {
@@ -632,7 +796,7 @@ type RemoveOrganizationRequest struct {
 
 func (x *RemoveOrganizationRequest) Reset() {
 	*x = RemoveOrganizationRequest{}
-	mi := &file_service_gateguard_proto_msgTypes[8]
+	mi := &file_service_gateguard_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -644,7 +808,7 @@ func (x *RemoveOrganizationRequest) String() string {
 func (*RemoveOrganizationRequest) ProtoMessage() {}
 
 func (x *RemoveOrganizationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_service_gateguard_proto_msgTypes[8]
+	mi := &file_service_gateguard_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -657,7 +821,7 @@ func (x *RemoveOrganizationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveOrganizationRequest.ProtoReflect.Descriptor instead.
 func (*RemoveOrganizationRequest) Descriptor() ([]byte, []int) {
-	return file_service_gateguard_proto_rawDescGZIP(), []int{8}
+	return file_service_gateguard_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *RemoveOrganizationRequest) GetUserUuid() []byte {
@@ -684,7 +848,7 @@ type AddOrganizationResponse struct {
 
 func (x *AddOrganizationResponse) Reset() {
 	*x = AddOrganizationResponse{}
-	mi := &file_service_gateguard_proto_msgTypes[9]
+	mi := &file_service_gateguard_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -696,7 +860,7 @@ func (x *AddOrganizationResponse) String() string {
 func (*AddOrganizationResponse) ProtoMessage() {}
 
 func (x *AddOrganizationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_service_gateguard_proto_msgTypes[9]
+	mi := &file_service_gateguard_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -709,7 +873,7 @@ func (x *AddOrganizationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddOrganizationResponse.ProtoReflect.Descriptor instead.
 func (*AddOrganizationResponse) Descriptor() ([]byte, []int) {
-	return file_service_gateguard_proto_rawDescGZIP(), []int{9}
+	return file_service_gateguard_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *AddOrganizationResponse) GetSuccess() *Empty {
@@ -736,7 +900,7 @@ type RemoveOrganizationResponse struct {
 
 func (x *RemoveOrganizationResponse) Reset() {
 	*x = RemoveOrganizationResponse{}
-	mi := &file_service_gateguard_proto_msgTypes[10]
+	mi := &file_service_gateguard_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -748,7 +912,7 @@ func (x *RemoveOrganizationResponse) String() string {
 func (*RemoveOrganizationResponse) ProtoMessage() {}
 
 func (x *RemoveOrganizationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_service_gateguard_proto_msgTypes[10]
+	mi := &file_service_gateguard_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -761,7 +925,7 @@ func (x *RemoveOrganizationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveOrganizationResponse.ProtoReflect.Descriptor instead.
 func (*RemoveOrganizationResponse) Descriptor() ([]byte, []int) {
-	return file_service_gateguard_proto_rawDescGZIP(), []int{10}
+	return file_service_gateguard_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *RemoveOrganizationResponse) GetSuccess() *Empty {
@@ -791,7 +955,7 @@ type InviteUserByEmailRequest struct {
 
 func (x *InviteUserByEmailRequest) Reset() {
 	*x = InviteUserByEmailRequest{}
-	mi := &file_service_gateguard_proto_msgTypes[11]
+	mi := &file_service_gateguard_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -803,7 +967,7 @@ func (x *InviteUserByEmailRequest) String() string {
 func (*InviteUserByEmailRequest) ProtoMessage() {}
 
 func (x *InviteUserByEmailRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_service_gateguard_proto_msgTypes[11]
+	mi := &file_service_gateguard_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -816,7 +980,7 @@ func (x *InviteUserByEmailRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InviteUserByEmailRequest.ProtoReflect.Descriptor instead.
 func (*InviteUserByEmailRequest) Descriptor() ([]byte, []int) {
-	return file_service_gateguard_proto_rawDescGZIP(), []int{11}
+	return file_service_gateguard_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *InviteUserByEmailRequest) GetEmail() string {
@@ -864,7 +1028,7 @@ type InviteUserByEmailResponse struct {
 
 func (x *InviteUserByEmailResponse) Reset() {
 	*x = InviteUserByEmailResponse{}
-	mi := &file_service_gateguard_proto_msgTypes[12]
+	mi := &file_service_gateguard_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -876,7 +1040,7 @@ func (x *InviteUserByEmailResponse) String() string {
 func (*InviteUserByEmailResponse) ProtoMessage() {}
 
 func (x *InviteUserByEmailResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_service_gateguard_proto_msgTypes[12]
+	mi := &file_service_gateguard_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -889,7 +1053,7 @@ func (x *InviteUserByEmailResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InviteUserByEmailResponse.ProtoReflect.Descriptor instead.
 func (*InviteUserByEmailResponse) Descriptor() ([]byte, []int) {
-	return file_service_gateguard_proto_rawDescGZIP(), []int{12}
+	return file_service_gateguard_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *InviteUserByEmailResponse) GetSuccess() *Empty {
@@ -920,7 +1084,7 @@ type AllInvitationsRequest struct {
 
 func (x *AllInvitationsRequest) Reset() {
 	*x = AllInvitationsRequest{}
-	mi := &file_service_gateguard_proto_msgTypes[13]
+	mi := &file_service_gateguard_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -932,7 +1096,7 @@ func (x *AllInvitationsRequest) String() string {
 func (*AllInvitationsRequest) ProtoMessage() {}
 
 func (x *AllInvitationsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_service_gateguard_proto_msgTypes[13]
+	mi := &file_service_gateguard_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -945,7 +1109,7 @@ func (x *AllInvitationsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AllInvitationsRequest.ProtoReflect.Descriptor instead.
 func (*AllInvitationsRequest) Descriptor() ([]byte, []int) {
-	return file_service_gateguard_proto_rawDescGZIP(), []int{13}
+	return file_service_gateguard_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *AllInvitationsRequest) GetInviter() string {
@@ -1000,7 +1164,7 @@ type AllInvitationsResponse struct {
 
 func (x *AllInvitationsResponse) Reset() {
 	*x = AllInvitationsResponse{}
-	mi := &file_service_gateguard_proto_msgTypes[14]
+	mi := &file_service_gateguard_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1012,7 +1176,7 @@ func (x *AllInvitationsResponse) String() string {
 func (*AllInvitationsResponse) ProtoMessage() {}
 
 func (x *AllInvitationsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_service_gateguard_proto_msgTypes[14]
+	mi := &file_service_gateguard_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1025,7 +1189,7 @@ func (x *AllInvitationsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AllInvitationsResponse.ProtoReflect.Descriptor instead.
 func (*AllInvitationsResponse) Descriptor() ([]byte, []int) {
-	return file_service_gateguard_proto_rawDescGZIP(), []int{14}
+	return file_service_gateguard_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *AllInvitationsResponse) GetInvitations() []*Invitation {
@@ -1053,7 +1217,7 @@ type ReactToInvitationRequest struct {
 
 func (x *ReactToInvitationRequest) Reset() {
 	*x = ReactToInvitationRequest{}
-	mi := &file_service_gateguard_proto_msgTypes[15]
+	mi := &file_service_gateguard_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1065,7 +1229,7 @@ func (x *ReactToInvitationRequest) String() string {
 func (*ReactToInvitationRequest) ProtoMessage() {}
 
 func (x *ReactToInvitationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_service_gateguard_proto_msgTypes[15]
+	mi := &file_service_gateguard_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1078,7 +1242,7 @@ func (x *ReactToInvitationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReactToInvitationRequest.ProtoReflect.Descriptor instead.
 func (*ReactToInvitationRequest) Descriptor() ([]byte, []int) {
-	return file_service_gateguard_proto_rawDescGZIP(), []int{15}
+	return file_service_gateguard_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *ReactToInvitationRequest) GetInvitee() string {
@@ -1112,7 +1276,7 @@ type ReactToInvitationResponse struct {
 
 func (x *ReactToInvitationResponse) Reset() {
 	*x = ReactToInvitationResponse{}
-	mi := &file_service_gateguard_proto_msgTypes[16]
+	mi := &file_service_gateguard_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1124,7 +1288,7 @@ func (x *ReactToInvitationResponse) String() string {
 func (*ReactToInvitationResponse) ProtoMessage() {}
 
 func (x *ReactToInvitationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_service_gateguard_proto_msgTypes[16]
+	mi := &file_service_gateguard_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1137,7 +1301,7 @@ func (x *ReactToInvitationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReactToInvitationResponse.ProtoReflect.Descriptor instead.
 func (*ReactToInvitationResponse) Descriptor() ([]byte, []int) {
-	return file_service_gateguard_proto_rawDescGZIP(), []int{16}
+	return file_service_gateguard_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *ReactToInvitationResponse) GetSuccess() *Empty {
@@ -1163,7 +1327,7 @@ type Empty struct {
 
 func (x *Empty) Reset() {
 	*x = Empty{}
-	mi := &file_service_gateguard_proto_msgTypes[17]
+	mi := &file_service_gateguard_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1175,7 +1339,7 @@ func (x *Empty) String() string {
 func (*Empty) ProtoMessage() {}
 
 func (x *Empty) ProtoReflect() protoreflect.Message {
-	mi := &file_service_gateguard_proto_msgTypes[17]
+	mi := &file_service_gateguard_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1188,7 +1352,7 @@ func (x *Empty) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Empty.ProtoReflect.Descriptor instead.
 func (*Empty) Descriptor() ([]byte, []int) {
-	return file_service_gateguard_proto_rawDescGZIP(), []int{17}
+	return file_service_gateguard_proto_rawDescGZIP(), []int{20}
 }
 
 var File_service_gateguard_proto protoreflect.FileDescriptor
@@ -1214,7 +1378,17 @@ const file_service_gateguard_proto_rawDesc = "" +
 	"\vUUIDRequest\x12\x12\n" +
 	"\x04uuid\x18\x01 \x01(\fR\x04uuid\"$\n" +
 	"\fEmailRequest\x12\x14\n" +
-	"\x05email\x18\x01 \x01(\tR\x05email\"b\n" +
+	"\x05email\x18\x01 \x01(\tR\x05email\"U\n" +
+	"\rSignUpRequest\x12\x14\n" +
+	"\x05email\x18\x01 \x01(\tR\x05email\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1a\n" +
+	"\bpassword\x18\x03 \x01(\tR\bpassword\"I\n" +
+	"\x15PasswordSignInRequest\x12\x14\n" +
+	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
+	"\bpassword\x18\x02 \x01(\tR\bpassword\"@\n" +
+	"\x12VerifyEmailRequest\x12\x14\n" +
+	"\x05email\x18\x01 \x01(\tR\x05email\x12\x14\n" +
+	"\x05token\x18\x02 \x01(\tR\x05token\"b\n" +
 	"\x16AddOrganizationRequest\x12\x1b\n" +
 	"\tuser_uuid\x18\x01 \x01(\fR\buserUuid\x12+\n" +
 	"\x11organization_uuid\x18\x02 \x01(\fR\x10organizationUuid\"e\n" +
@@ -1292,12 +1466,15 @@ const file_service_gateguard_proto_rawDesc = "" +
 	"\x12RtiValidationError\x10\x00\x12\x1b\n" +
 	"\x17RtiOrganizationConflict\x10\x01\x12\x1b\n" +
 	"\x17RtiInviteStatusConflict\x10\x02\x12\x19\n" +
-	"\x15RtiInviteUserMismatch\x10\x032\xc2\n" +
-	"\n" +
+	"\x15RtiInviteUserMismatch\x10\x032\xa5\r\n" +
 	"\x10GateguardService\x12G\n" +
 	"\vSignInOAuth\x12\x16.gateguard.models.User\x1a .gateguard.service.TokenResponse\x12D\n" +
 	"\aSignOut\x12\x1f.gateguard.service.TokenRequest\x1a\x18.gateguard.service.Empty\x12D\n" +
-	"\tCheckAuth\x12\x1f.gateguard.service.TokenRequest\x1a\x16.gateguard.models.User\x12D\n" +
+	"\tCheckAuth\x12\x1f.gateguard.service.TokenRequest\x1a\x16.gateguard.models.User\x12X\n" +
+	"\x12SignUpWithPassword\x12 .gateguard.service.SignUpRequest\x1a .gateguard.service.TokenResponse\x12`\n" +
+	"\x12SignInWithPassword\x12(.gateguard.service.PasswordSignInRequest\x1a .gateguard.service.TokenResponse\x12U\n" +
+	"\x18RequestEmailVerification\x12\x1f.gateguard.service.EmailRequest\x1a\x18.gateguard.service.Empty\x12N\n" +
+	"\vVerifyEmail\x12%.gateguard.service.VerifyEmailRequest\x1a\x18.gateguard.service.Empty\x12D\n" +
 	"\n" +
 	"UserByUUID\x12\x1e.gateguard.service.UUIDRequest\x1a\x16.gateguard.models.User\x12F\n" +
 	"\vUserByEmail\x12\x1f.gateguard.service.EmailRequest\x1a\x16.gateguard.models.User\x12G\n" +
@@ -1326,7 +1503,7 @@ func file_service_gateguard_proto_rawDescGZIP() []byte {
 }
 
 var file_service_gateguard_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_service_gateguard_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
+var file_service_gateguard_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
 var file_service_gateguard_proto_goTypes = []any{
 	(AddOrganizationError)(0),             // 0: gateguard.service.AddOrganizationError
 	(RemoveOrganizationError)(0),          // 1: gateguard.service.RemoveOrganizationError
@@ -1339,68 +1516,79 @@ var file_service_gateguard_proto_goTypes = []any{
 	(*TokenResponse)(nil),                 // 8: gateguard.service.TokenResponse
 	(*UUIDRequest)(nil),                   // 9: gateguard.service.UUIDRequest
 	(*EmailRequest)(nil),                  // 10: gateguard.service.EmailRequest
-	(*AddOrganizationRequest)(nil),        // 11: gateguard.service.AddOrganizationRequest
-	(*RemoveOrganizationRequest)(nil),     // 12: gateguard.service.RemoveOrganizationRequest
-	(*AddOrganizationResponse)(nil),       // 13: gateguard.service.AddOrganizationResponse
-	(*RemoveOrganizationResponse)(nil),    // 14: gateguard.service.RemoveOrganizationResponse
-	(*InviteUserByEmailRequest)(nil),      // 15: gateguard.service.InviteUserByEmailRequest
-	(*InviteUserByEmailResponse)(nil),     // 16: gateguard.service.InviteUserByEmailResponse
-	(*AllInvitationsRequest)(nil),         // 17: gateguard.service.AllInvitationsRequest
-	(*AllInvitationsResponse)(nil),        // 18: gateguard.service.AllInvitationsResponse
-	(*ReactToInvitationRequest)(nil),      // 19: gateguard.service.ReactToInvitationRequest
-	(*ReactToInvitationResponse)(nil),     // 20: gateguard.service.ReactToInvitationResponse
-	(*Empty)(nil),                         // 21: gateguard.service.Empty
-	(UserRole)(0),                         // 22: gateguard.models.UserRole
-	(InvitationStatus)(0),                 // 23: gateguard.models.InvitationStatus
-	(*Invitation)(nil),                    // 24: gateguard.models.Invitation
-	(*User)(nil),                          // 25: gateguard.models.User
-	(*Users)(nil),                         // 26: gateguard.models.Users
+	(*SignUpRequest)(nil),                 // 11: gateguard.service.SignUpRequest
+	(*PasswordSignInRequest)(nil),         // 12: gateguard.service.PasswordSignInRequest
+	(*VerifyEmailRequest)(nil),            // 13: gateguard.service.VerifyEmailRequest
+	(*AddOrganizationRequest)(nil),        // 14: gateguard.service.AddOrganizationRequest
+	(*RemoveOrganizationRequest)(nil),     // 15: gateguard.service.RemoveOrganizationRequest
+	(*AddOrganizationResponse)(nil),       // 16: gateguard.service.AddOrganizationResponse
+	(*RemoveOrganizationResponse)(nil),    // 17: gateguard.service.RemoveOrganizationResponse
+	(*InviteUserByEmailRequest)(nil),      // 18: gateguard.service.InviteUserByEmailRequest
+	(*InviteUserByEmailResponse)(nil),     // 19: gateguard.service.InviteUserByEmailResponse
+	(*AllInvitationsRequest)(nil),         // 20: gateguard.service.AllInvitationsRequest
+	(*AllInvitationsResponse)(nil),        // 21: gateguard.service.AllInvitationsResponse
+	(*ReactToInvitationRequest)(nil),      // 22: gateguard.service.ReactToInvitationRequest
+	(*ReactToInvitationResponse)(nil),     // 23: gateguard.service.ReactToInvitationResponse
+	(*Empty)(nil),                         // 24: gateguard.service.Empty
+	(UserRole)(0),                         // 25: gateguard.models.UserRole
+	(InvitationStatus)(0),                 // 26: gateguard.models.InvitationStatus
+	(*Invitation)(nil),                    // 27: gateguard.models.Invitation
+	(*User)(nil),                          // 28: gateguard.models.User
+	(*Users)(nil),                         // 29: gateguard.models.Users
 }
 var file_service_gateguard_proto_depIdxs = []int32{
-	22, // 0: gateguard.service.UpdateUserRoleRequest.role:type_name -> gateguard.models.UserRole
-	21, // 1: gateguard.service.AddOrganizationResponse.success:type_name -> gateguard.service.Empty
+	25, // 0: gateguard.service.UpdateUserRoleRequest.role:type_name -> gateguard.models.UserRole
+	24, // 1: gateguard.service.AddOrganizationResponse.success:type_name -> gateguard.service.Empty
 	0,  // 2: gateguard.service.AddOrganizationResponse.error:type_name -> gateguard.service.AddOrganizationError
-	21, // 3: gateguard.service.RemoveOrganizationResponse.success:type_name -> gateguard.service.Empty
+	24, // 3: gateguard.service.RemoveOrganizationResponse.success:type_name -> gateguard.service.Empty
 	1,  // 4: gateguard.service.RemoveOrganizationResponse.error:type_name -> gateguard.service.RemoveOrganizationError
-	21, // 5: gateguard.service.InviteUserByEmailResponse.success:type_name -> gateguard.service.Empty
+	24, // 5: gateguard.service.InviteUserByEmailResponse.success:type_name -> gateguard.service.Empty
 	2,  // 6: gateguard.service.InviteUserByEmailResponse.error:type_name -> gateguard.service.InviteUserByEmailError
-	23, // 7: gateguard.service.AllInvitationsRequest.statuses:type_name -> gateguard.models.InvitationStatus
-	24, // 8: gateguard.service.AllInvitationsResponse.invitations:type_name -> gateguard.models.Invitation
-	23, // 9: gateguard.service.ReactToInvitationRequest.status:type_name -> gateguard.models.InvitationStatus
-	21, // 10: gateguard.service.ReactToInvitationResponse.success:type_name -> gateguard.service.Empty
+	26, // 7: gateguard.service.AllInvitationsRequest.statuses:type_name -> gateguard.models.InvitationStatus
+	27, // 8: gateguard.service.AllInvitationsResponse.invitations:type_name -> gateguard.models.Invitation
+	26, // 9: gateguard.service.ReactToInvitationRequest.status:type_name -> gateguard.models.InvitationStatus
+	24, // 10: gateguard.service.ReactToInvitationResponse.success:type_name -> gateguard.service.Empty
 	3,  // 11: gateguard.service.ReactToInvitationResponse.error:type_name -> gateguard.service.ReactToInvitationError
-	25, // 12: gateguard.service.GateguardService.SignInOAuth:input_type -> gateguard.models.User
+	28, // 12: gateguard.service.GateguardService.SignInOAuth:input_type -> gateguard.models.User
 	7,  // 13: gateguard.service.GateguardService.SignOut:input_type -> gateguard.service.TokenRequest
 	7,  // 14: gateguard.service.GateguardService.CheckAuth:input_type -> gateguard.service.TokenRequest
-	9,  // 15: gateguard.service.GateguardService.UserByUUID:input_type -> gateguard.service.UUIDRequest
-	10, // 16: gateguard.service.GateguardService.UserByEmail:input_type -> gateguard.service.EmailRequest
-	7,  // 17: gateguard.service.GateguardService.DeleteUser:input_type -> gateguard.service.TokenRequest
-	21, // 18: gateguard.service.GateguardService.Users:input_type -> gateguard.service.Empty
-	6,  // 19: gateguard.service.GateguardService.UpdateUserRole:input_type -> gateguard.service.UpdateUserRoleRequest
-	11, // 20: gateguard.service.GateguardService.AddOrganizationToUser:input_type -> gateguard.service.AddOrganizationRequest
-	12, // 21: gateguard.service.GateguardService.RemoveOrganizationFromUser:input_type -> gateguard.service.RemoveOrganizationRequest
-	15, // 22: gateguard.service.GateguardService.InviteUserByEmail:input_type -> gateguard.service.InviteUserByEmailRequest
-	17, // 23: gateguard.service.GateguardService.AllInvitations:input_type -> gateguard.service.AllInvitationsRequest
-	19, // 24: gateguard.service.GateguardService.ReactToInvitation:input_type -> gateguard.service.ReactToInvitationRequest
-	4,  // 25: gateguard.service.GateguardService.SetUserPreferredStacks:input_type -> gateguard.service.SetUserPreferredStacksRequest
-	5,  // 26: gateguard.service.GateguardService.SetUserTrialUsed:input_type -> gateguard.service.SetUserTrialUsedRequest
-	8,  // 27: gateguard.service.GateguardService.SignInOAuth:output_type -> gateguard.service.TokenResponse
-	21, // 28: gateguard.service.GateguardService.SignOut:output_type -> gateguard.service.Empty
-	25, // 29: gateguard.service.GateguardService.CheckAuth:output_type -> gateguard.models.User
-	25, // 30: gateguard.service.GateguardService.UserByUUID:output_type -> gateguard.models.User
-	25, // 31: gateguard.service.GateguardService.UserByEmail:output_type -> gateguard.models.User
-	21, // 32: gateguard.service.GateguardService.DeleteUser:output_type -> gateguard.service.Empty
-	26, // 33: gateguard.service.GateguardService.Users:output_type -> gateguard.models.Users
-	21, // 34: gateguard.service.GateguardService.UpdateUserRole:output_type -> gateguard.service.Empty
-	13, // 35: gateguard.service.GateguardService.AddOrganizationToUser:output_type -> gateguard.service.AddOrganizationResponse
-	14, // 36: gateguard.service.GateguardService.RemoveOrganizationFromUser:output_type -> gateguard.service.RemoveOrganizationResponse
-	16, // 37: gateguard.service.GateguardService.InviteUserByEmail:output_type -> gateguard.service.InviteUserByEmailResponse
-	18, // 38: gateguard.service.GateguardService.AllInvitations:output_type -> gateguard.service.AllInvitationsResponse
-	20, // 39: gateguard.service.GateguardService.ReactToInvitation:output_type -> gateguard.service.ReactToInvitationResponse
-	21, // 40: gateguard.service.GateguardService.SetUserPreferredStacks:output_type -> gateguard.service.Empty
-	21, // 41: gateguard.service.GateguardService.SetUserTrialUsed:output_type -> gateguard.service.Empty
-	27, // [27:42] is the sub-list for method output_type
-	12, // [12:27] is the sub-list for method input_type
+	11, // 15: gateguard.service.GateguardService.SignUpWithPassword:input_type -> gateguard.service.SignUpRequest
+	12, // 16: gateguard.service.GateguardService.SignInWithPassword:input_type -> gateguard.service.PasswordSignInRequest
+	10, // 17: gateguard.service.GateguardService.RequestEmailVerification:input_type -> gateguard.service.EmailRequest
+	13, // 18: gateguard.service.GateguardService.VerifyEmail:input_type -> gateguard.service.VerifyEmailRequest
+	9,  // 19: gateguard.service.GateguardService.UserByUUID:input_type -> gateguard.service.UUIDRequest
+	10, // 20: gateguard.service.GateguardService.UserByEmail:input_type -> gateguard.service.EmailRequest
+	7,  // 21: gateguard.service.GateguardService.DeleteUser:input_type -> gateguard.service.TokenRequest
+	24, // 22: gateguard.service.GateguardService.Users:input_type -> gateguard.service.Empty
+	6,  // 23: gateguard.service.GateguardService.UpdateUserRole:input_type -> gateguard.service.UpdateUserRoleRequest
+	14, // 24: gateguard.service.GateguardService.AddOrganizationToUser:input_type -> gateguard.service.AddOrganizationRequest
+	15, // 25: gateguard.service.GateguardService.RemoveOrganizationFromUser:input_type -> gateguard.service.RemoveOrganizationRequest
+	18, // 26: gateguard.service.GateguardService.InviteUserByEmail:input_type -> gateguard.service.InviteUserByEmailRequest
+	20, // 27: gateguard.service.GateguardService.AllInvitations:input_type -> gateguard.service.AllInvitationsRequest
+	22, // 28: gateguard.service.GateguardService.ReactToInvitation:input_type -> gateguard.service.ReactToInvitationRequest
+	4,  // 29: gateguard.service.GateguardService.SetUserPreferredStacks:input_type -> gateguard.service.SetUserPreferredStacksRequest
+	5,  // 30: gateguard.service.GateguardService.SetUserTrialUsed:input_type -> gateguard.service.SetUserTrialUsedRequest
+	8,  // 31: gateguard.service.GateguardService.SignInOAuth:output_type -> gateguard.service.TokenResponse
+	24, // 32: gateguard.service.GateguardService.SignOut:output_type -> gateguard.service.Empty
+	28, // 33: gateguard.service.GateguardService.CheckAuth:output_type -> gateguard.models.User
+	8,  // 34: gateguard.service.GateguardService.SignUpWithPassword:output_type -> gateguard.service.TokenResponse
+	8,  // 35: gateguard.service.GateguardService.SignInWithPassword:output_type -> gateguard.service.TokenResponse
+	24, // 36: gateguard.service.GateguardService.RequestEmailVerification:output_type -> gateguard.service.Empty
+	24, // 37: gateguard.service.GateguardService.VerifyEmail:output_type -> gateguard.service.Empty
+	28, // 38: gateguard.service.GateguardService.UserByUUID:output_type -> gateguard.models.User
+	28, // 39: gateguard.service.GateguardService.UserByEmail:output_type -> gateguard.models.User
+	24, // 40: gateguard.service.GateguardService.DeleteUser:output_type -> gateguard.service.Empty
+	29, // 41: gateguard.service.GateguardService.Users:output_type -> gateguard.models.Users
+	24, // 42: gateguard.service.GateguardService.UpdateUserRole:output_type -> gateguard.service.Empty
+	16, // 43: gateguard.service.GateguardService.AddOrganizationToUser:output_type -> gateguard.service.AddOrganizationResponse
+	17, // 44: gateguard.service.GateguardService.RemoveOrganizationFromUser:output_type -> gateguard.service.RemoveOrganizationResponse
+	19, // 45: gateguard.service.GateguardService.InviteUserByEmail:output_type -> gateguard.service.InviteUserByEmailResponse
+	21, // 46: gateguard.service.GateguardService.AllInvitations:output_type -> gateguard.service.AllInvitationsResponse
+	23, // 47: gateguard.service.GateguardService.ReactToInvitation:output_type -> gateguard.service.ReactToInvitationResponse
+	24, // 48: gateguard.service.GateguardService.SetUserPreferredStacks:output_type -> gateguard.service.Empty
+	24, // 49: gateguard.service.GateguardService.SetUserTrialUsed:output_type -> gateguard.service.Empty
+	31, // [31:50] is the sub-list for method output_type
+	12, // [12:31] is the sub-list for method input_type
 	12, // [12:12] is the sub-list for extension type_name
 	12, // [12:12] is the sub-list for extension extendee
 	0,  // [0:12] is the sub-list for field type_name
@@ -1412,19 +1600,19 @@ func file_service_gateguard_proto_init() {
 		return
 	}
 	file_models_gateguard_proto_init()
-	file_service_gateguard_proto_msgTypes[9].OneofWrappers = []any{}
-	file_service_gateguard_proto_msgTypes[10].OneofWrappers = []any{}
-	file_service_gateguard_proto_msgTypes[11].OneofWrappers = []any{}
 	file_service_gateguard_proto_msgTypes[12].OneofWrappers = []any{}
 	file_service_gateguard_proto_msgTypes[13].OneofWrappers = []any{}
+	file_service_gateguard_proto_msgTypes[14].OneofWrappers = []any{}
+	file_service_gateguard_proto_msgTypes[15].OneofWrappers = []any{}
 	file_service_gateguard_proto_msgTypes[16].OneofWrappers = []any{}
+	file_service_gateguard_proto_msgTypes[19].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_service_gateguard_proto_rawDesc), len(file_service_gateguard_proto_rawDesc)),
 			NumEnums:      4,
-			NumMessages:   18,
+			NumMessages:   21,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

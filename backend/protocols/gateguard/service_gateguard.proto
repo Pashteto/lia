@@ -17,6 +17,18 @@ service GateguardService {
   // CheckAuth is
   rpc CheckAuth(TokenRequest) returns(models.User);
 
+  // SignUpWithPassword creates a credentialed account and returns a session JWT.
+  rpc SignUpWithPassword(SignUpRequest) returns(TokenResponse);
+
+  // SignInWithPassword verifies a password and returns a session JWT.
+  rpc SignInWithPassword(PasswordSignInRequest) returns(TokenResponse);
+
+  // RequestEmailVerification (STUB) issues + persists a token; does not email yet.
+  rpc RequestEmailVerification(EmailRequest) returns(Empty);
+
+  // VerifyEmail (STUB) marks the account verified if the token matches.
+  rpc VerifyEmail(VerifyEmailRequest) returns(Empty);
+
   rpc UserByUUID(UUIDRequest) returns(models.User);
 
   rpc UserByEmail(EmailRequest) returns(models.User);
@@ -84,6 +96,22 @@ message UUIDRequest {
 
 message EmailRequest {
   string email = 1;
+}
+
+message SignUpRequest {
+  string email    = 1;
+  string name     = 2;
+  string password = 3;
+}
+
+message PasswordSignInRequest {
+  string email    = 1;
+  string password = 2;
+}
+
+message VerifyEmailRequest {
+  string email = 1;
+  string token = 2;
 }
 
 // AddOrganizationRequest is request message for adding an organization to a user

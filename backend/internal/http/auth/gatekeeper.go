@@ -23,6 +23,8 @@ type GatekeeperConfig struct {
 type ggClient interface {
 	CheckAuth(ctx context.Context, in *gg.TokenRequest, opts ...grpc.CallOption) (*gg.User, error)
 	SignInOAuth(ctx context.Context, in *gg.User, opts ...grpc.CallOption) (*gg.TokenResponse, error)
+	SignUpWithPassword(ctx context.Context, in *gg.SignUpRequest, opts ...grpc.CallOption) (*gg.TokenResponse, error)
+	SignInWithPassword(ctx context.Context, in *gg.PasswordSignInRequest, opts ...grpc.CallOption) (*gg.TokenResponse, error)
 }
 
 // gatekeeperValidator validates bearer tokens against GateGuard's CheckAuth RPC.

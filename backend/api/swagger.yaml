@@ -61,6 +61,70 @@ paths:
           description: Auth backend unavailable
           schema:
             $ref: "#/definitions/Error"
+  /auth/register:
+    post:
+      summary: Register with password
+      description: >-
+        Creates a credentialed account (or attaches a password to an existing
+        passwordless account) via GateGuard and returns a session JWT.
+      operationId: register
+      tags:
+        - auth
+      security: []
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/RegisterInput"
+      responses:
+        200:
+          description: Session token issued
+          schema:
+            $ref: "#/definitions/DemoLoginResponse"
+        400:
+          description: Invalid input
+          schema:
+            $ref: "#/definitions/Error"
+        409:
+          description: Email already registered
+          schema:
+            $ref: "#/definitions/Error"
+        503:
+          description: Auth backend unavailable
+          schema:
+            $ref: "#/definitions/Error"
+  /auth/login:
+    post:
+      summary: Log in with password
+      description: Verifies an email + password via GateGuard and returns a session JWT.
+      operationId: login
+      tags:
+        - auth
+      security: []
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/LoginInput"
+      responses:
+        200:
+          description: Session token issued
+          schema:
+            $ref: "#/definitions/DemoLoginResponse"
+        400:
+          description: Invalid input
+          schema:
+            $ref: "#/definitions/Error"
+        401:
+          description: Invalid credentials
+          schema:
+            $ref: "#/definitions/Error"
+        503:
+          description: Auth backend unavailable
+          schema:
+            $ref: "#/definitions/Error"
   /users:
     get:
       summary: Get user by email
@@ -448,6 +512,33 @@ definitions:
       token:
         type: string
         description: "GateGuard session JWT (send as Authorization: Bearer <token>)"
+  RegisterInput:
+    type: object
+    required:
+      - email
+      - password
+    properties:
+      email:
+        type: string
+        format: email
+      name:
+        type: string
+        description: Optional display name
+      password:
+        type: string
+        minLength: 8
+        description: Plaintext password (>= 8 chars); hashed by GateGuard (bcrypt)
+  LoginInput:
+    type: object
+    required:
+      - email
+      - password
+    properties:
+      email:
+        type: string
+        format: email
+      password:
+        type: string
   Event:
     type: object
     required:

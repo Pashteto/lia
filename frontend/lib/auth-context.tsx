@@ -8,7 +8,7 @@ import {
   useSyncExternalStore,
 } from "react";
 
-import { demoLogin } from "./api";
+import { demoLogin, loginWithPassword, registerWithPassword } from "./api";
 import { clearSession, getStoredEmail, getToken, setSession } from "./auth";
 
 interface AuthState {
@@ -20,6 +20,10 @@ interface AuthState {
   ready: boolean;
   /** Demo-login with an email; persists the session. Throws on failure. */
   login: (email: string, name?: string) => Promise<void>;
+  /** Register with email + password; persists the session. Throws on failure. */
+  register: (email: string, name: string, password: string) => Promise<void>;
+  /** Log in with email + password; persists the session. Throws on failure. */
+  loginPassword: (email: string, password: string) => Promise<void>;
   /** Clears the session. */
   logout: () => void;
 }
@@ -91,14 +95,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     notifyAuthListeners();
   }, []);
 
+  const register = useCallback(
+    async (regEmail: string, name: string, password: string) => {
+      const token = await registerWithPassword(regEmail, name, password);
+      setSession(token, regEmail);
+      notifyAuthListeners();
+    },
+    [],
+  );
+
+  const loginPassword = useCallback(
+    async (loginEmail: string, password: string) => {
+      const token = await loginWithPassword(loginEmail, password);
+      setSession(token, loginEmail);
+      notifyAuthListeners();
+    },
+    [],
+  );
+
   const logout = useCallback(() => {
     clearSession();
     notifyAuthListeners();
   }, []);
 
   const value = useMemo<AuthState>(
-    () => ({ email, isAuthed: email !== null, ready, login, logout }),
-    [email, ready, login, logout],
+    () => ({
+      email,
+      isAuthed: email !== null,
+      ready,
+      login,
+      register,
+      loginPassword,
+      logout,
+    }),
+    [email, ready, login, register, loginPassword, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

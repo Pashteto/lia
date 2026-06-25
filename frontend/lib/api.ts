@@ -281,3 +281,43 @@ export async function demoLogin(email: string, name?: string): Promise<string> {
   if (!data.token) throw new Error("login failed: empty token");
   return data.token;
 }
+
+/** Registers a credentialed account via POST /auth/register; returns a JWT. */
+export async function registerWithPassword(
+  email: string,
+  name: string,
+  password: string,
+): Promise<string> {
+  const res = await fetch(`${API_V1}/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, name: name || undefined, password }),
+  });
+  if (!res.ok) {
+    if (res.status === 409) throw new Error("Этот email уже зарегистрирован");
+    if (res.status === 400) throw new Error("Проверьте email и пароль (минимум 8 символов)");
+    throw new Error(`Не удалось зарегистрироваться (${res.status})`);
+  }
+  const data = (await res.json()) as DemoLoginResponse;
+  if (!data.token) throw new Error("registration failed: empty token");
+  return data.token;
+}
+
+/** Logs in with email + password via POST /auth/login; returns a JWT. */
+export async function loginWithPassword(
+  email: string,
+  password: string,
+): Promise<string> {
+  const res = await fetch(`${API_V1}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!res.ok) {
+    if (res.status === 401) throw new Error("Неверный email или пароль");
+    throw new Error(`Не удалось войти (${res.status})`);
+  }
+  const data = (await res.json()) as DemoLoginResponse;
+  if (!data.token) throw new Error("login failed: empty token");
+  return data.token;
+}

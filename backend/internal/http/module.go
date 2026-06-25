@@ -195,6 +195,8 @@ func (m *Module) initAPI() error {
 		signer = s
 	}
 	api.AuthDemoLoginHandler = handlers.NewDemoLogin(signer)
+	api.AuthRegisterHandler = handlers.NewRegister(signer)
+	api.AuthLoginHandler = handlers.NewLogin(signer)
 
 	// Events domain handlers (registered only when the events service is wired,
 	// i.e. when the database module is enabled).

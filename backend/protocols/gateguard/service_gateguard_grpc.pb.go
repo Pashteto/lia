@@ -22,6 +22,10 @@ const (
 	GateguardService_SignInOAuth_FullMethodName                = "/gateguard.service.GateguardService/SignInOAuth"
 	GateguardService_SignOut_FullMethodName                    = "/gateguard.service.GateguardService/SignOut"
 	GateguardService_CheckAuth_FullMethodName                  = "/gateguard.service.GateguardService/CheckAuth"
+	GateguardService_SignUpWithPassword_FullMethodName         = "/gateguard.service.GateguardService/SignUpWithPassword"
+	GateguardService_SignInWithPassword_FullMethodName         = "/gateguard.service.GateguardService/SignInWithPassword"
+	GateguardService_RequestEmailVerification_FullMethodName   = "/gateguard.service.GateguardService/RequestEmailVerification"
+	GateguardService_VerifyEmail_FullMethodName                = "/gateguard.service.GateguardService/VerifyEmail"
 	GateguardService_UserByUUID_FullMethodName                 = "/gateguard.service.GateguardService/UserByUUID"
 	GateguardService_UserByEmail_FullMethodName                = "/gateguard.service.GateguardService/UserByEmail"
 	GateguardService_DeleteUser_FullMethodName                 = "/gateguard.service.GateguardService/DeleteUser"
@@ -49,6 +53,14 @@ type GateguardServiceClient interface {
 	SignOut(ctx context.Context, in *TokenRequest, opts ...grpc.CallOption) (*Empty, error)
 	// CheckAuth is
 	CheckAuth(ctx context.Context, in *TokenRequest, opts ...grpc.CallOption) (*User, error)
+	// SignUpWithPassword creates a credentialed account and returns a session JWT.
+	SignUpWithPassword(ctx context.Context, in *SignUpRequest, opts ...grpc.CallOption) (*TokenResponse, error)
+	// SignInWithPassword verifies a password and returns a session JWT.
+	SignInWithPassword(ctx context.Context, in *PasswordSignInRequest, opts ...grpc.CallOption) (*TokenResponse, error)
+	// RequestEmailVerification (STUB) issues + persists a token; does not email yet.
+	RequestEmailVerification(ctx context.Context, in *EmailRequest, opts ...grpc.CallOption) (*Empty, error)
+	// VerifyEmail (STUB) marks the account verified if the token matches.
+	VerifyEmail(ctx context.Context, in *VerifyEmailRequest, opts ...grpc.CallOption) (*Empty, error)
 	UserByUUID(ctx context.Context, in *UUIDRequest, opts ...grpc.CallOption) (*User, error)
 	UserByEmail(ctx context.Context, in *EmailRequest, opts ...grpc.CallOption) (*User, error)
 	// DeleteUser is
@@ -104,6 +116,46 @@ func (c *gateguardServiceClient) CheckAuth(ctx context.Context, in *TokenRequest
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(User)
 	err := c.cc.Invoke(ctx, GateguardService_CheckAuth_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gateguardServiceClient) SignUpWithPassword(ctx context.Context, in *SignUpRequest, opts ...grpc.CallOption) (*TokenResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(TokenResponse)
+	err := c.cc.Invoke(ctx, GateguardService_SignUpWithPassword_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gateguardServiceClient) SignInWithPassword(ctx context.Context, in *PasswordSignInRequest, opts ...grpc.CallOption) (*TokenResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(TokenResponse)
+	err := c.cc.Invoke(ctx, GateguardService_SignInWithPassword_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gateguardServiceClient) RequestEmailVerification(ctx context.Context, in *EmailRequest, opts ...grpc.CallOption) (*Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, GateguardService_RequestEmailVerification_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gateguardServiceClient) VerifyEmail(ctx context.Context, in *VerifyEmailRequest, opts ...grpc.CallOption) (*Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, GateguardService_VerifyEmail_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -243,6 +295,14 @@ type GateguardServiceServer interface {
 	SignOut(context.Context, *TokenRequest) (*Empty, error)
 	// CheckAuth is
 	CheckAuth(context.Context, *TokenRequest) (*User, error)
+	// SignUpWithPassword creates a credentialed account and returns a session JWT.
+	SignUpWithPassword(context.Context, *SignUpRequest) (*TokenResponse, error)
+	// SignInWithPassword verifies a password and returns a session JWT.
+	SignInWithPassword(context.Context, *PasswordSignInRequest) (*TokenResponse, error)
+	// RequestEmailVerification (STUB) issues + persists a token; does not email yet.
+	RequestEmailVerification(context.Context, *EmailRequest) (*Empty, error)
+	// VerifyEmail (STUB) marks the account verified if the token matches.
+	VerifyEmail(context.Context, *VerifyEmailRequest) (*Empty, error)
 	UserByUUID(context.Context, *UUIDRequest) (*User, error)
 	UserByEmail(context.Context, *EmailRequest) (*User, error)
 	// DeleteUser is
@@ -282,6 +342,18 @@ func (UnimplementedGateguardServiceServer) SignOut(context.Context, *TokenReques
 }
 func (UnimplementedGateguardServiceServer) CheckAuth(context.Context, *TokenRequest) (*User, error) {
 	return nil, status.Error(codes.Unimplemented, "method CheckAuth not implemented")
+}
+func (UnimplementedGateguardServiceServer) SignUpWithPassword(context.Context, *SignUpRequest) (*TokenResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SignUpWithPassword not implemented")
+}
+func (UnimplementedGateguardServiceServer) SignInWithPassword(context.Context, *PasswordSignInRequest) (*TokenResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SignInWithPassword not implemented")
+}
+func (UnimplementedGateguardServiceServer) RequestEmailVerification(context.Context, *EmailRequest) (*Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method RequestEmailVerification not implemented")
+}
+func (UnimplementedGateguardServiceServer) VerifyEmail(context.Context, *VerifyEmailRequest) (*Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method VerifyEmail not implemented")
 }
 func (UnimplementedGateguardServiceServer) UserByUUID(context.Context, *UUIDRequest) (*User, error) {
 	return nil, status.Error(codes.Unimplemented, "method UserByUUID not implemented")
@@ -390,6 +462,78 @@ func _GateguardService_CheckAuth_Handler(srv interface{}, ctx context.Context, d
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GateguardServiceServer).CheckAuth(ctx, req.(*TokenRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GateguardService_SignUpWithPassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SignUpRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GateguardServiceServer).SignUpWithPassword(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GateguardService_SignUpWithPassword_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GateguardServiceServer).SignUpWithPassword(ctx, req.(*SignUpRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GateguardService_SignInWithPassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PasswordSignInRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GateguardServiceServer).SignInWithPassword(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GateguardService_SignInWithPassword_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GateguardServiceServer).SignInWithPassword(ctx, req.(*PasswordSignInRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GateguardService_RequestEmailVerification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EmailRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GateguardServiceServer).RequestEmailVerification(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GateguardService_RequestEmailVerification_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GateguardServiceServer).RequestEmailVerification(ctx, req.(*EmailRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GateguardService_VerifyEmail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VerifyEmailRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GateguardServiceServer).VerifyEmail(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GateguardService_VerifyEmail_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GateguardServiceServer).VerifyEmail(ctx, req.(*VerifyEmailRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -628,6 +772,22 @@ var GateguardService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CheckAuth",
 			Handler:    _GateguardService_CheckAuth_Handler,
+		},
+		{
+			MethodName: "SignUpWithPassword",
+			Handler:    _GateguardService_SignUpWithPassword_Handler,
+		},
+		{
+			MethodName: "SignInWithPassword",
+			Handler:    _GateguardService_SignInWithPassword_Handler,
+		},
+		{
+			MethodName: "RequestEmailVerification",
+			Handler:    _GateguardService_RequestEmailVerification_Handler,
+		},
+		{
+			MethodName: "VerifyEmail",
+			Handler:    _GateguardService_VerifyEmail_Handler,
 		},
 		{
 			MethodName: "UserByUUID",

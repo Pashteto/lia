@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -18,6 +19,30 @@ import (
 // known non-production control, like HTTP_MOCK_AUTH.
 type Signer interface {
 	SignIn(ctx context.Context, email, name string) (string, error)
+	// SignUpPassword registers a credentialed account and returns a session JWT.
+	SignUpPassword(ctx context.Context, email, name, password string) (string, error)
+	// SignInPassword verifies a password and returns a session JWT.
+	SignInPassword(ctx context.Context, email, password string) (string, error)
+}
+
+// ErrInvalidCredentials / ErrUserExists let handlers map password-auth failures
+// to the right HTTP status. GateGuard does not yet return typed gRPC status
+// codes, so they are classified from its error message.
+var (
+	ErrInvalidCredentials = fmt.Errorf("invalid credentials")
+	ErrUserExists         = fmt.Errorf("user already exists")
+)
+
+func classifyAuthErr(err error) error {
+	msg := strings.ToLower(err.Error())
+	switch {
+	case strings.Contains(msg, "already exists"):
+		return ErrUserExists
+	case strings.Contains(msg, "invalid credentials"):
+		return ErrInvalidCredentials
+	default:
+		return err
+	}
 }
 
 type gatekeeperSigner struct {
@@ -57,6 +82,45 @@ func (s *gatekeeperSigner) SignIn(ctx context.Context, email, name string) (stri
 	})
 	if err != nil {
 		return "", fmt.Errorf("gateguard signin: %w", err)
+	}
+	if resp == nil || len(resp.Token) == 0 {
+		return "", fmt.Errorf("gateguard returned an empty token")
+	}
+	return string(resp.Token), nil
+}
+
+func (s *gatekeeperSigner) SignUpPassword(ctx context.Context, email, name, password string) (string, error) {
+	if s.cfg.Timeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, s.cfg.Timeout)
+		defer cancel()
+	}
+	resp, err := s.client.SignUpWithPassword(ctx, &gg.SignUpRequest{
+		Email:    email,
+		Name:     name,
+		Password: password,
+	})
+	if err != nil {
+		return "", fmt.Errorf("gateguard signup: %w", classifyAuthErr(err))
+	}
+	if resp == nil || len(resp.Token) == 0 {
+		return "", fmt.Errorf("gateguard returned an empty token")
+	}
+	return string(resp.Token), nil
+}
+
+func (s *gatekeeperSigner) SignInPassword(ctx context.Context, email, password string) (string, error) {
+	if s.cfg.Timeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, s.cfg.Timeout)
+		defer cancel()
+	}
+	resp, err := s.client.SignInWithPassword(ctx, &gg.PasswordSignInRequest{
+		Email:    email,
+		Password: password,
+	})
+	if err != nil {
+		return "", fmt.Errorf("gateguard signin: %w", classifyAuthErr(err))
 	}
 	if resp == nil || len(resp.Token) == 0 {
 		return "", fmt.Errorf("gateguard returned an empty token")

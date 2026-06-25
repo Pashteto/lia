@@ -30,6 +30,12 @@ func (f *fakeGGClient) SignInOAuth(_ context.Context, in *gg.User, _ ...grpc.Cal
 	f.gotSignInUser = in
 	return f.tokenResp, f.signErr
 }
+func (f *fakeGGClient) SignUpWithPassword(_ context.Context, _ *gg.SignUpRequest, _ ...grpc.CallOption) (*gg.TokenResponse, error) {
+	return f.tokenResp, f.signErr
+}
+func (f *fakeGGClient) SignInWithPassword(_ context.Context, _ *gg.PasswordSignInRequest, _ ...grpc.CallOption) (*gg.TokenResponse, error) {
+	return f.tokenResp, f.signErr
+}
 
 // TestSigner_SignIn_SendsValidStatusAndRole guards against the demo-login 503:
 // GateGuard maps an unset (Unknown=0) proto status to its internal "unsupported"

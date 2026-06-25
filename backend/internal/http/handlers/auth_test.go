@@ -21,6 +21,12 @@ type fakeSigner struct {
 func (f *fakeSigner) SignIn(_ context.Context, _, _ string) (string, error) {
 	return f.token, f.err
 }
+func (f *fakeSigner) SignUpPassword(_ context.Context, _, _, _ string) (string, error) {
+	return f.token, f.err
+}
+func (f *fakeSigner) SignInPassword(_ context.Context, _, _ string) (string, error) {
+	return f.token, f.err
+}
 
 var _ authpkg.Signer = (*fakeSigner)(nil)
 

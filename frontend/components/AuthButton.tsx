@@ -56,26 +56,41 @@ export function AuthButton() {
 }
 
 export function LoginModal({ onClose }: { onClose: () => void }) {
-  const { login } = useAuth();
+  const { register, loginPassword } = useAuth();
+  const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const isRegister = mode === "register";
+  const canSubmit =
+    email.trim().length > 0 &&
+    password.length >= (isRegister ? 8 : 1) &&
+    !busy;
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) return;
+    if (!canSubmit) return;
     setBusy(true);
     setError(null);
     try {
-      await login(email.trim(), name.trim() || undefined);
+      if (isRegister) {
+        await register(email.trim(), name.trim(), password);
+      } else {
+        await loginPassword(email.trim(), password);
+      }
       onClose();
-    } catch {
-      setError("Не удалось войти. Попробуйте ещё раз.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Не удалось войти. Попробуйте ещё раз.");
     } finally {
       setBusy(false);
     }
   };
+
+  const inputClass =
+    "w-full rounded-control bg-fill px-3.5 py-2.5 text-[17px] text-label outline-none placeholder:text-label-secondary focus:ring-2 focus:ring-accent";
 
   return (
     <div
@@ -87,9 +102,13 @@ export function LoginModal({ onClose }: { onClose: () => void }) {
         onClick={(e) => e.stopPropagation()}
         onSubmit={submit}
       >
-        <h2 className="mb-1 text-[17px] font-semibold">Вход</h2>
+        <h2 className="mb-1 text-[17px] font-semibold">
+          {isRegister ? "Регистрация" : "Вход"}
+        </h2>
         <p className="mb-4 text-[13px] text-label-secondary">
-          Демо-вход: укажите email, чтобы создавать события. Пароль не нужен.
+          {isRegister
+            ? "Создайте аккаунт с email и паролем, чтобы публиковать события."
+            : "Войдите с email и паролем."}
         </p>
         <label className="mb-3 block">
           <span className="mb-1.5 block text-[13px] text-label-secondary">Email</span>
@@ -100,32 +119,66 @@ export function LoginModal({ onClose }: { onClose: () => void }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
-            className="w-full rounded-control bg-fill px-3.5 py-2.5 text-[17px] text-label outline-none placeholder:text-label-secondary focus:ring-2 focus:ring-accent"
+            className={inputClass}
           />
         </label>
+        {isRegister && (
+          <label className="mb-3 block">
+            <span className="mb-1.5 block text-[13px] text-label-secondary">
+              Имя (необязательно)
+            </span>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ваше имя"
+              className={inputClass}
+            />
+          </label>
+        )}
         <label className="mb-4 block">
           <span className="mb-1.5 block text-[13px] text-label-secondary">
-            Имя (необязательно)
+            Пароль{isRegister ? " (минимум 8 символов)" : ""}
           </span>
           <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Ваше имя"
-            className="w-full rounded-control bg-fill px-3.5 py-2.5 text-[17px] text-label outline-none placeholder:text-label-secondary focus:ring-2 focus:ring-accent"
+            type="password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+            minLength={isRegister ? 8 : undefined}
+            className={inputClass}
           />
         </label>
         {error && <p className="mb-3 text-[14px] text-red-500">{error}</p>}
-        <div className="flex justify-end gap-2">
+        <div className="flex items-center justify-between gap-2">
           <button
             type="button"
-            className="px-3 py-2 text-[15px] text-label"
-            onClick={onClose}
+            className="text-[13px] text-accent"
+            onClick={() => {
+              setMode(isRegister ? "login" : "register");
+              setError(null);
+            }}
           >
-            Отмена
+            {isRegister ? "Уже есть аккаунт? Войти" : "Нет аккаунта? Регистрация"}
           </button>
-          <Button type="submit" disabled={busy || !email.trim()}>
-            {busy ? "Вход…" : "Войти"}
-          </Button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className="px-3 py-2 text-[15px] text-label"
+              onClick={onClose}
+            >
+              Отмена
+            </button>
+            <Button type="submit" disabled={!canSubmit}>
+              {busy
+                ? isRegister
+                  ? "Создаём…"
+                  : "Вход…"
+                : isRegister
+                  ? "Создать"
+                  : "Войти"}
+            </Button>
+          </div>
         </div>
       </form>
     </div>

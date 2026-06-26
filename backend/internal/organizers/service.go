@@ -30,16 +30,18 @@ var (
 
 // Organizer is the domain entity for an organizer profile.
 type Organizer struct {
-	ID                 uuid.UUID
-	OwnerUserID        uuid.UUID
-	Name               string
-	Description        string
-	WebsiteURL         string
-	LogoFileID         uuid.UUID
-	VerificationStatus string
-	AutoVerify         bool
-	VerifiedAt         *time.Time
-	LatestReason       string // populated on reads when status == rejected
+	tableName struct{} `pg:"organizers,discard_unknown_columns"` //nolint:unused // go-pg table marker
+
+	ID                 uuid.UUID  `pg:"id,pk,type:uuid"`
+	OwnerUserID        uuid.UUID  `pg:"owner_user_id,type:uuid"`
+	Name               string     `pg:"name,use_zero"`
+	Description        string     `pg:"description,use_zero"`
+	WebsiteURL         string     `pg:"website_url,use_zero"`
+	LogoFileID         uuid.UUID  `pg:"logo_file_id,type:uuid,use_zero"`
+	VerificationStatus string     `pg:"verification_status,use_zero"`
+	AutoVerify         bool       `pg:"auto_verify,use_zero"`
+	VerifiedAt         *time.Time `pg:"verified_at"` // nullable; ORM scans NULL → nil
+	LatestReason       string     `pg:"-"`           // transient, not a column
 }
 
 // Input is the editable subset of an organizer profile.

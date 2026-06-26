@@ -67,3 +67,42 @@ func TestSubmitAutoVerifyShortCircuits(t *testing.T) {
 		t.Fatalf("submit auto = %q, %v; want verified", status, err)
 	}
 }
+
+// TestListMapsWebsiteURLAndVerifiedAt proves that List correctly maps the
+// website_url / logo_file_id / owner_user_id columns now that the Organizer
+// struct carries explicit pg tags. A draft org should have WebsiteURL populated
+// and VerifiedAt == nil (never verified).
+func TestListMapsWebsiteURLAndVerifiedAt(t *testing.T) {
+	db := testDB(t)
+	defer db.Close()
+	repo := NewRepository(db)
+	ctx := context.Background()
+	owner := uuid.Must(uuid.NewV4())
+
+	_, err := repo.Upsert(ctx, owner, Input{Name: "Acme List", WebsiteURL: "https://acme.test"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	orgs, err := repo.List(ctx, ListFilter{Status: "draft"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var found *Organizer
+	for i := range orgs {
+		if orgs[i].OwnerUserID == owner {
+			found = &orgs[i]
+			break
+		}
+	}
+	if found == nil {
+		t.Fatal("org not found in List result")
+	}
+	if found.WebsiteURL != "https://acme.test" {
+		t.Errorf("WebsiteURL = %q; want %q", found.WebsiteURL, "https://acme.test")
+	}
+	if found.VerifiedAt != nil {
+		t.Errorf("VerifiedAt = %v; want nil (draft, never verified)", found.VerifiedAt)
+	}
+}

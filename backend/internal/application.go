@@ -21,9 +21,11 @@ import (
 	httpmod "github.com/Pashteto/lia/internal/http"
 	"github.com/Pashteto/lia/internal/moderation"
 	"github.com/Pashteto/lia/internal/module"
+	organizersdomain "github.com/Pashteto/lia/internal/organizers"
 	"github.com/Pashteto/lia/internal/repository"
 	rsvpdomain "github.com/Pashteto/lia/internal/rsvp"
 	"github.com/Pashteto/lia/internal/service"
+	settingsdomain "github.com/Pashteto/lia/internal/settings"
 	"github.com/Pashteto/lia/internal/storage"
 	venuesdomain "github.com/Pashteto/lia/internal/venues"
 	wsmod "github.com/Pashteto/lia/internal/websocket"
@@ -58,6 +60,12 @@ type App struct {
 
 	// rsvpSvc is the RSVP domain service. Nil when the database is disabled.
 	rsvpSvc rsvpdomain.Service
+
+	// settingsSvc is the app-settings service. Nil when the database is disabled.
+	settingsSvc settingsdomain.Service
+
+	// organizersSvc is the organizers domain service. Nil when the database is disabled.
+	organizersSvc organizersdomain.Service
 }
 
 // NewApplication creates a new App instance.
@@ -152,7 +160,9 @@ func (app *App) registerModules() error {
 		app.categoriesSvc = categoriesdomain.NewService(categoriesdomain.NewRepository(repoModule.DB()))
 		app.venuesSvc = venuesdomain.NewService(venuesdomain.NewRepository(repoModule.DB()))
 		app.rsvpSvc = rsvpdomain.NewService(rsvpdomain.NewRepository(repoModule.DB()))
-		logger.Log().Info("categories + venues + rsvp modules wired to repository")
+		app.settingsSvc = settingsdomain.NewService(settingsdomain.NewRepository(repoModule.DB()))
+		app.organizersSvc = organizersdomain.NewService(organizersdomain.NewRepository(repoModule.DB()), app.settingsSvc)
+		logger.Log().Info("categories + venues + rsvp + settings + organizers modules wired to repository")
 	}
 
 	// Wire storage + files service. Storage is independent of repoModule but the
@@ -220,6 +230,8 @@ func (app *App) registerModules() error {
 		httpModule.SetStorage(app.blobStore)
 		httpModule.SetFilesService(app.filesSvc)
 		httpModule.SetRsvpService(app.rsvpSvc)
+		httpModule.SetSettings(app.settingsSvc)
+		httpModule.SetOrganizers(app.organizersSvc)
 
 		// Wire moderation service (requires DB; reuse the same *pg.DB already used
 		// by the events and rsvp repositories — no second pool opened).

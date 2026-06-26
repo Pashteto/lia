@@ -26,8 +26,10 @@ import (
 	"github.com/Pashteto/lia/internal/http/server/operations"
 	"github.com/Pashteto/lia/internal/http/uploads"
 	"github.com/Pashteto/lia/internal/moderation"
+	organizersdomain "github.com/Pashteto/lia/internal/organizers"
 	rsvpdomain "github.com/Pashteto/lia/internal/rsvp"
 	"github.com/Pashteto/lia/internal/service"
+	settingsdomain "github.com/Pashteto/lia/internal/settings"
 	"github.com/Pashteto/lia/internal/storage"
 	venuesdomain "github.com/Pashteto/lia/internal/venues"
 	"github.com/Pashteto/lia/pkg/logger"
@@ -46,6 +48,8 @@ type Module struct {
 	rsvp       rsvpdomain.Service
 	moderation moderation.Service
 	modReason  func(uuid.UUID) (string, error)
+	organizers organizersdomain.Service
+	settings   settingsdomain.Service
 	server     *httpserver.Server
 	api        *operations.LiaAPIAPI
 	handler    *http.Handler
@@ -102,6 +106,12 @@ func (m *Module) SetModeration(svc moderation.Service, reason func(uuid.UUID) (s
 	m.moderation = svc
 	m.modReason = reason
 }
+
+// SetOrganizers injects the organizers domain service. Call before Init.
+func (m *Module) SetOrganizers(svc organizersdomain.Service) { m.organizers = svc }
+
+// SetSettings injects the app-settings service. Call before Init.
+func (m *Module) SetSettings(svc settingsdomain.Service) { m.settings = svc }
 
 // Name returns the module identifier.
 func (m *Module) Name() string {

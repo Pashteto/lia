@@ -52,11 +52,11 @@ type Input struct {
 
 // HistoryEntry is one verification transition.
 type HistoryEntry struct {
-	FromStatus  string
-	ToStatus    string
-	Reason      string
-	ActorUserID uuid.UUID
-	CreatedAt   time.Time
+	FromStatus  string    `pg:"from_status"`
+	ToStatus    string    `pg:"to_status"`
+	Reason      string    `pg:"reason,use_zero"`
+	ActorUserID uuid.UUID `pg:"actor_user_id"`
+	CreatedAt   time.Time `pg:"created_at"`
 }
 
 // ListFilter selects organizers for the admin queue/search.

@@ -22,8 +22,16 @@ const TABS: Tab[] = [
  * capsule itself is interactive. */
 export function TabBar() {
   const pathname = usePathname();
+  // Hidden where the screen has its own bottom chrome or dedicated nav: the
+  // create form, an event detail page (own sticky signup CTA), and the admin
+  // section (own glass nav). Shown on all other top-level / list screens.
+  const seg = pathname.match(/^\/events\/([^/]+)$/)?.[1];
+  const isEventDetail = !!seg && seg !== "mine" && seg !== "new";
+  if (pathname === "/events/new" || isEventDetail || pathname.startsWith("/admin")) {
+    return null;
+  }
   return (
-    <nav className="pointer-events-none fixed inset-x-0 bottom-0 z-10 px-4 pb-[max(env(safe-area-inset-bottom),12px)] pt-2">
+    <nav className="pointer-events-none fixed inset-x-0 bottom-0 z-10 px-4 pb-[max(env(safe-area-inset-bottom),12px)] pt-2 sm:hidden">
       <ul className="glass pointer-events-auto mx-auto flex max-w-md items-stretch justify-around rounded-capsule px-2 ring-1 ring-inset ring-black/5 dark:ring-white/10">
         {TABS.map((tab) => {
           const active = pathname === tab.href;

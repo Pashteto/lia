@@ -131,7 +131,7 @@ export default function MyPracticesPage() {
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8">
+    <main className="mx-auto max-w-3xl px-4 py-8 max-sm:pb-28">
       <Link href="/" className="mb-4 inline-flex items-center text-[17px] text-accent">
         ‹ События
       </Link>

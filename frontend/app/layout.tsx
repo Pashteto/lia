@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Providers } from "./providers";
+import { TabBar } from "@/components/ui/TabBar";
 import "./globals.css";
 
 // No webfont import: the design system uses the system font stack only
@@ -29,6 +30,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full bg-bg-grouped text-label">
         <Providers>{children}</Providers>
+        <TabBar />
       </body>
     </html>
   );

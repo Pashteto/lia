@@ -2,7 +2,6 @@ import { AuthButton } from "@/components/AuthButton";
 import { DiscoveryFeed } from "@/components/DiscoveryFeed";
 import { Button } from "@/components/ui/Button";
 import { GlassNav } from "@/components/ui/GlassNav";
-import { TabBar } from "@/components/ui/TabBar";
 import { ThemeSwitch } from "@/components/ui/ThemeSwitch";
 import { fetchPublishedEvents } from "@/lib/api";
 import { MOCK_EVENTS } from "@/lib/mock-events";
@@ -32,9 +31,6 @@ export default async function DiscoveryPage() {
         }
       />
       <DiscoveryFeed initialEvents={initialEvents} />
-      <div className="sm:hidden">
-        <TabBar />
-      </div>
     </>
   );
 }

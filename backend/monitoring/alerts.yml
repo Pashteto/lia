@@ -1,0 +1,42 @@
+groups:
+  - name: lia
+    rules:
+      - alert: AppDown
+        expr: up{job="lia-app"} == 0
+        for: 2m
+        labels: { severity: critical }
+        annotations:
+          summary: "Lia app is down (scrape failing for 2m)"
+
+      - alert: High5xxRate
+        expr: |
+          sum(rate(http_requests_total{status=~"5.."}[5m]))
+            / clamp_min(sum(rate(http_requests_total[5m])), 1) > 0.05
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: "5xx error ratio above 5% over 5m"
+
+      - alert: HighRequestLatencyP99
+        expr: histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) > 1
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "p99 HTTP latency above 1s for 10m"
+
+      - alert: HostLowDisk
+        expr: |
+          node_filesystem_avail_bytes{mountpoint="/host",fstype!~"tmpfs|overlay"}
+            / node_filesystem_size_bytes{mountpoint="/host",fstype!~"tmpfs|overlay"} < 0.10
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: "Host root filesystem below 10% free"
+
+      - alert: HostHighMemory
+        expr: |
+          node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes < 0.10
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "Host available memory below 10% for 10m"

@@ -1,0 +1,45 @@
+# Additive monitoring overlay. Apply ALONGSIDE the 3-file app stack:
+#
+#   docker compose --env-file .env.prod \
+#     -f docker-compose.yml -f docker-compose.prod.yml \
+#     -f docker-compose.gateguard.yml -f docker-compose.monitoring.yml up -d
+#
+# Prometheus UI is loopback-only (127.0.0.1:9091); reach it via an SSH tunnel:
+#   ssh -L 9091:localhost:9091 vdska2   then open http://localhost:9091
+# node_exporter has NO host port — only Prometheus reaches it over the compose network.
+services:
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    restart: unless-stopped
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=15d"
+      - "--storage.tsdb.retention.size=512MB"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - lia_prometheus:/prometheus
+    ports:
+      - "127.0.0.1:9091:9090"
+    mem_limit: 256m
+    mem_reservation: 128m
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  node_exporter:
+    image: prom/node-exporter:v1.8.2
+    restart: unless-stopped
+    command:
+      - "--path.rootfs=/host"
+    pid: host
+    volumes:
+      - "/:/host:ro,rslave"
+    mem_limit: 64m
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+volumes:
+  lia_prometheus:

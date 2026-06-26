@@ -147,7 +147,7 @@ func EventFromAPIInput(in *apiModels.EventInput) (*domainModels.Event, error) {
 		Format:                  defaultStr(in.Format, "offline"),
 		PriceType:               defaultStr(in.PriceType, "free"),
 		ExternalURL:             in.ExternalTicketURL,
-		SignupMode:              in.SignupMode,
+		SignupMode:              defaultStr(in.SignupMode, "open"),
 		CuratorQuestion:         in.CuratorQuestion,
 		ExternalRegistrationURL: in.ExternalRegistrationURL,
 	}

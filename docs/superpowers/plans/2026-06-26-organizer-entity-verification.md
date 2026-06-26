@@ -12,7 +12,7 @@
 
 - Spec: `docs/superpowers/specs/2026-06-26-organizer-entity-verification-design.md`. Every task implicitly inherits it.
 - **go-pg + gofrs UUID cannot scan SQL `NULL` into a uuid field** — uuid columns are `NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000'` and zero-uuid means "unset". Nullable non-uuid columns (e.g. `verified_at timestamptz`) are fine as Go pointers.
-- **No go-swagger spec edits.** All new HTTP routes are plain `net/http`, mounted ahead of the swagger mux in `internal/http/module.go` (the `uploads`/`admin` precedent).
+- **New HTTP routes are plain `net/http`**, mounted ahead of the swagger mux in `internal/http/module.go` (the `uploads`/`admin` precedent) — this avoids regen churn on *routes*. **Additive swagger *model* changes ARE allowed**: Task 8 adds optional `verified`/`profile_id` to the `Organizer` definition and runs `make generate-all` (backward-compatible; the normal CI-supported path for an API field).
 - **Every state transition is atomic**: status change + one history row + one `audit_log` row inside a single `db.RunInTransaction`, guarded by `WHERE verification_status = <expected>` → `ErrInvalidTransition` (rows affected 0).
 - **Reuse the existing `audit_log` table** (`actor_user_id, action, target_type, target_id, metadata jsonb`). Actions: `organizer.submit|verify|reject|revoke|set_auto_verify`, `settings.update`. `target_type` = `'organizer'` or `'setting'`. Auto-verifications use `actor_user_id = '00000000-0000-0000-0000-000000000000'` and `metadata = {"auto":true,"source":"global"|"org"}`.
 - **RU user-facing copy** on all error messages and UI labels (match the existing admin handler / pages).

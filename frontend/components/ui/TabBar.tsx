@@ -13,6 +13,7 @@ interface Tab {
 const TABS: Tab[] = [
   { href: "/", label: "События", icon: <GlyphGrid /> },
   { href: "/search", label: "Подбор", icon: <GlyphSparkle /> },
+  { href: "/me/calendar", label: "Календарь", icon: <GlyphCalendar /> },
   { href: "/map", label: "Карта", icon: <GlyphMap /> },
   { href: "/events/new", label: "Создать", icon: <GlyphPlus /> },
 ];
@@ -81,6 +82,14 @@ function GlyphPlus() {
         strokeWidth="2.2"
         strokeLinecap="round"
       />
+    </svg>
+  );
+}
+function GlyphCalendar() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <rect x="3" y="4.5" width="18" height="16" rx="3" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M3 9h18M8 3v3M16 3v3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }

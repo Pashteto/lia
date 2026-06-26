@@ -11,6 +11,7 @@ import (
 
 	"github.com/gofrs/uuid"
 
+	followsdomain "github.com/Pashteto/lia/internal/follows"
 	domain "github.com/Pashteto/lia/internal/models"
 	orgdomain "github.com/Pashteto/lia/internal/organizers"
 	"github.com/Pashteto/lia/internal/storage"
@@ -20,7 +21,8 @@ import (
 type Deps struct {
 	Authenticate func(token string) (*domain.User, error)
 	Organizers   orgdomain.Service
-	Store        storage.Storage // may be nil; logo URLs omitted when nil
+	Follows      followsdomain.Service // may be nil; is_following omitted when nil
+	Store        storage.Storage       // may be nil; logo URLs omitted when nil
 }
 
 type handler struct {
@@ -152,6 +154,7 @@ type publicOrganizerJSON struct {
 	Description string `json:"description"`
 	WebsiteURL  string `json:"website_url"`
 	Verified    bool   `json:"verified"`
+	IsFollowing bool   `json:"is_following"`
 }
 
 func (h *handler) getPublic(w http.ResponseWriter, r *http.Request) {
@@ -166,9 +169,18 @@ func (h *handler) getPublic(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusNotFound, "not found")
 		return
 	}
+	// is_following is true only for an authenticated caller who follows this org.
+	isFollowing := false
+	if h.deps.Follows != nil {
+		if u := h.principal(r); u != nil {
+			if f, err := h.deps.Follows.IsFollowing(r.Context(), u.UUID, o.OwnerUserID); err == nil {
+				isFollowing = f
+			}
+		}
+	}
 	writeJSON(w, http.StatusOK, publicOrganizerJSON{
 		ID: o.ID.String(), Name: o.Name, Description: o.Description,
-		WebsiteURL: o.WebsiteURL, Verified: true,
+		WebsiteURL: o.WebsiteURL, Verified: true, IsFollowing: isFollowing,
 	})
 }
 

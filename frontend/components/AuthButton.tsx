@@ -27,6 +27,12 @@ export function AuthButton() {
     return (
       <div className="flex items-center gap-2">
         <Link
+          href="/me/calendar"
+          className="text-[14px] font-medium text-accent"
+        >
+          Календарь
+        </Link>
+        <Link
           href="/events/mine"
           className="text-[14px] font-medium text-accent"
         >

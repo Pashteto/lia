@@ -1,8 +1,10 @@
 import { getToken } from "./auth";
 import type {
   ApiEvent,
+  CalendarEvent,
   EventFormat,
   EventStatus,
+  FollowedOrganizer,
   LiaEvent,
   PriceType,
   Rsvp,
@@ -671,11 +673,71 @@ export async function getPublicOrganizer(id: string): Promise<{
   description: string;
   website_url: string;
   verified: boolean;
+  is_following: boolean;
 } | null> {
-  const res = await fetch(`${API_V1}/organizers/${id}`, { cache: "no-store" });
+  // Send the token when present so the backend can compute is_following for the
+  // current user; the endpoint stays public (no auth required).
+  const res = await fetch(`${API_V1}/organizers/${id}`, {
+    cache: "no-store",
+    headers: authHeaders(),
+  });
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`organizer: ${res.status}`);
   return res.json();
+}
+
+/** Subscribes the current user to an organizer profile. Returns the new state. */
+export async function followOrganizer(profileId: string): Promise<boolean> {
+  const token = getToken();
+  if (!token) throw new Error("not authenticated");
+  const res = await fetch(`${API_V1}/me/follows/${profileId}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`follow failed: ${res.status}`);
+  return true;
+}
+
+/** Unsubscribes the current user from an organizer profile. */
+export async function unfollowOrganizer(profileId: string): Promise<boolean> {
+  const token = getToken();
+  if (!token) throw new Error("not authenticated");
+  const res = await fetch(`${API_V1}/me/follows/${profileId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`unfollow failed: ${res.status}`);
+  return false;
+}
+
+/** Lists the organizers the current user follows. */
+export async function fetchFollowedOrganizers(): Promise<FollowedOrganizer[]> {
+  const token = getToken();
+  if (!token) throw new Error("not authenticated");
+  const res = await fetch(`${API_V1}/me/follows`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`fetch follows failed: ${res.status}`);
+  const rows: { profile_id: string; name: string; logo_url?: string }[] = await res.json();
+  return rows.map((r) => ({ profileId: r.profile_id, name: r.name, logoUrl: r.logo_url }));
+}
+
+/** Fetches the user's calendar events in [from, to) — events from followed
+ * organizers plus events they've agreed to participate in, each tagged. */
+export async function fetchCalendar(from: Date, to: Date): Promise<CalendarEvent[]> {
+  const token = getToken();
+  if (!token) throw new Error("not authenticated");
+  const params = new URLSearchParams({ from: from.toISOString(), to: to.toISOString() });
+  const res = await fetch(`${API_V1}/me/calendar?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`fetch calendar failed: ${res.status}`);
+  const rows: (ApiEvent & { attending?: boolean; from_followed?: boolean })[] = await res.json();
+  return rows.map((e) => ({
+    ...apiEventToLia(e),
+    attending: Boolean(e.attending),
+    fromFollowed: Boolean(e.from_followed),
+  }));
 }
 
 export async function listModerationOrganizers(

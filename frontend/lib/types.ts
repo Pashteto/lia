@@ -93,6 +93,22 @@ export interface Rsvp {
   event?: LiaEvent;
 }
 
+/** An event on the personal calendar, tagged by why it's there. An event can be
+ * both attending and from a followed organizer. */
+export interface CalendarEvent extends LiaEvent {
+  /** The user has an active RSVP (going/accepted/waitlist) to this event. */
+  attending: boolean;
+  /** This event is from an organizer the user follows. */
+  fromFollowed: boolean;
+}
+
+/** One organizer the user follows (from GET /me/follows). */
+export interface FollowedOrganizer {
+  profileId: string;
+  name: string;
+  logoUrl?: string;
+}
+
 /** Shape returned by the backend `GET /api/v1/events` (Presence.Tarski API Event model). */
 export interface ApiEvent {
   id: string;

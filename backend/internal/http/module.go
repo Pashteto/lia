@@ -18,10 +18,12 @@ import (
 	complaintsdomain "github.com/Pashteto/lia/internal/complaints"
 	eventsdomain "github.com/Pashteto/lia/internal/events"
 	filesdomain "github.com/Pashteto/lia/internal/files"
+	followsdomain "github.com/Pashteto/lia/internal/follows"
 	"github.com/Pashteto/lia/internal/grpcclient"
 	"github.com/Pashteto/lia/internal/http/admin"
 	"github.com/Pashteto/lia/internal/http/auth"
 	complaintshttp "github.com/Pashteto/lia/internal/http/complaints"
+	followshttp "github.com/Pashteto/lia/internal/http/follows"
 	"github.com/Pashteto/lia/internal/http/handlers"
 	"github.com/Pashteto/lia/internal/http/middlewares"
 	organizershttp "github.com/Pashteto/lia/internal/http/organizers"
@@ -52,6 +54,7 @@ type Module struct {
 	moderation moderation.Service
 	modReason  func(uuid.UUID) (string, error)
 	organizers organizersdomain.Service
+	follows    followsdomain.Service
 	complaints complaintsdomain.Service
 	settings   settingsdomain.Service
 	server     *httpserver.Server
@@ -113,6 +116,10 @@ func (m *Module) SetModeration(svc moderation.Service, reason func(uuid.UUID) (s
 
 // SetOrganizers injects the organizers domain service. Call before Init.
 func (m *Module) SetOrganizers(svc organizersdomain.Service) { m.organizers = svc }
+
+// SetFollows injects the follows domain service (organizer subscriptions +
+// personal calendar). Call before Init.
+func (m *Module) SetFollows(svc followsdomain.Service) { m.follows = svc }
 
 // SetSettings injects the app-settings service. Call before Init.
 func (m *Module) SetSettings(svc settingsdomain.Service) { m.settings = svc }
@@ -301,6 +308,20 @@ func (m *Module) initAPI() error {
 		orgH = organizershttp.NewHandler(organizershttp.Deps{
 			Authenticate: m.auth.Authenticate,
 			Organizers:   m.organizers,
+			Follows:      m.follows,
+			Store:        m.storage,
+		})
+	}
+
+	// Build the follows + calendar handler (user-facing /me/follows + /me/calendar);
+	// nil in no-DB mode, in which case those paths fall to base.
+	var followsH http.Handler
+	if m.follows != nil {
+		followsH = followshttp.NewHandler(followshttp.Deps{
+			Authenticate: m.auth.Authenticate,
+			Follows:      m.follows,
+			Rsvp:         m.rsvp,
+			Events:       m.events,
 			Store:        m.storage,
 		})
 	}
@@ -326,6 +347,12 @@ func (m *Module) initAPI() error {
 			(p == "/api/v1/me/organizer" || strings.HasPrefix(p, "/api/v1/me/organizer/") ||
 				strings.HasPrefix(p, "/api/v1/organizers/")) {
 			orgH.ServeHTTP(w, r)
+			return
+		}
+		if followsH != nil &&
+			(p == "/api/v1/me/follows" || strings.HasPrefix(p, "/api/v1/me/follows/") ||
+				p == "/api/v1/me/calendar") {
+			followsH.ServeHTTP(w, r)
 			return
 		}
 		if complaintsH != nil &&

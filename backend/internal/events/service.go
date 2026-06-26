@@ -55,7 +55,19 @@ type Service interface {
 	// Nearby returns published events nearest to (lat, lon), within 50 km,
 	// up to limit results. Both lat and lon are required.
 	Nearby(ctx context.Context, lat, lon *float64, limit int) ([]*NearbyResult, error)
+	// ListForCalendar returns published events in [from, to) created by any of
+	// the given organizer (owner) ids, fully enriched. Empty organizerIDs yields
+	// no rows. Used by the personal calendar's followed-organizers stream.
+	ListForCalendar(ctx context.Context, organizerIDs []uuid.UUID, from, to time.Time) ([]*models.Event, error)
+	// GetEnriched returns the events with the given ids, fully enriched
+	// (categories, venue, cover, organizer, seats). Used to re-enrich a merged
+	// set of calendar rows uniformly.
+	GetEnriched(ctx context.Context, ids []uuid.UUID) ([]*models.Event, error)
 }
+
+// calendarListLimit caps a single calendar range query. A personal calendar
+// window (≤ ~3 months across followed organizers) stays well under this.
+const calendarListLimit = 500
 
 // UpdateParams is a partial event update. A nil pointer field means "preserve
 // the current value"; a non-nil field overwrites it. CategoryIDs is nil to
@@ -347,4 +359,34 @@ func (s *service) Nearby(_ context.Context, lat, lon *float64, limit int) ([]*Ne
 		return nil, fmt.Errorf("nearby events: %w", err)
 	}
 	return res, nil
+}
+
+func (s *service) ListForCalendar(_ context.Context, organizerIDs []uuid.UUID, from, to time.Time) ([]*models.Event, error) {
+	if len(organizerIDs) == 0 {
+		return nil, nil
+	}
+	list, err := s.repo.List(ListFilter{
+		Status:       models.EventPublished.String(),
+		OrganizerIDs: organizerIDs,
+		From:         &from,
+		To:           &to,
+		Limit:        calendarListLimit,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("list events for calendar: %w", err)
+	}
+	return list, nil
+}
+
+func (s *service) GetEnriched(_ context.Context, ids []uuid.UUID) ([]*models.Event, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	// Limit must cover the exact id set so a merged calendar never silently
+	// truncates (the default list limit is far smaller than a busy window).
+	list, err := s.repo.List(ListFilter{IDs: ids, Limit: len(ids)})
+	if err != nil {
+		return nil, fmt.Errorf("get enriched events: %w", err)
+	}
+	return list, nil
 }

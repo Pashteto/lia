@@ -17,6 +17,7 @@ import (
 	"github.com/Pashteto/lia/internal/complaints"
 	eventsdomain "github.com/Pashteto/lia/internal/events"
 	filesdomain "github.com/Pashteto/lia/internal/files"
+	followsdomain "github.com/Pashteto/lia/internal/follows"
 	grpcmod "github.com/Pashteto/lia/internal/grpc"
 	grpcclientmod "github.com/Pashteto/lia/internal/grpcclient"
 	httpmod "github.com/Pashteto/lia/internal/http"
@@ -67,6 +68,10 @@ type App struct {
 
 	// organizersSvc is the organizers domain service. Nil when the database is disabled.
 	organizersSvc organizersdomain.Service
+
+	// followsSvc is the follows domain service (organizer subscriptions + personal
+	// calendar). Nil when the database is disabled.
+	followsSvc followsdomain.Service
 }
 
 // NewApplication creates a new App instance.
@@ -215,6 +220,17 @@ func (app *App) registerModules() error {
 		logger.Log().Info("events module wired to repository (no storage)")
 	}
 
+	// Wire follows after events + organizers (it depends on both): resolves
+	// followed-organizer calendar events and gates follows on verified profiles.
+	if repoModule != nil && app.eventsSvc != nil && app.organizersSvc != nil {
+		app.followsSvc = followsdomain.NewService(
+			followsdomain.NewRepository(repoModule.DB()),
+			app.organizersSvc,
+			app.eventsSvc,
+		)
+		logger.Log().Info("follows module wired to repository")
+	}
+
 	logger.Log().Info("infrastructure modules initialized successfully")
 
 	// 4. Transport: HTTP module (optional) - receives both service AND grpcClient
@@ -233,6 +249,7 @@ func (app *App) registerModules() error {
 		httpModule.SetRsvpService(app.rsvpSvc)
 		httpModule.SetSettings(app.settingsSvc)
 		httpModule.SetOrganizers(app.organizersSvc)
+		httpModule.SetFollows(app.followsSvc)
 
 		// Wire moderation + complaints services (require DB; reuse the same *pg.DB
 		// already used by the events and rsvp repositories — no second pool opened).

@@ -23,6 +23,15 @@ type ListFilter struct {
 	// OrganizerID, when non-zero, restricts to events created by that user
 	// (used by the "my events" listing). Any status is returned.
 	OrganizerID uuid.UUID
+	// OrganizerIDs, when non-empty, restricts to events created by any of the
+	// given users (used by the calendar's followed-organizers query).
+	OrganizerIDs []uuid.UUID
+	// IDs, when non-empty, restricts to events with one of these primary keys
+	// (used to re-enrich a known set, e.g. merged calendar rows).
+	IDs []uuid.UUID
+	// From / To, when set, restrict to events whose starts_at is in [From, To).
+	From *time.Time
+	To   *time.Time
 	// Limit caps the number of rows returned (defaults to DefaultListLimit).
 	Limit int
 }
@@ -194,6 +203,22 @@ func (r *pgRepository) List(filter ListFilter) ([]*models.Event, error) {
 
 	if filter.OrganizerID != uuid.Nil {
 		query = query.Where("organizer_id = ?", filter.OrganizerID)
+	}
+
+	if len(filter.OrganizerIDs) > 0 {
+		query = query.Where("organizer_id IN (?)", pg.In(filter.OrganizerIDs))
+	}
+
+	if len(filter.IDs) > 0 {
+		query = query.Where("id IN (?)", pg.In(filter.IDs))
+	}
+
+	if filter.From != nil {
+		query = query.Where("starts_at >= ?", *filter.From)
+	}
+
+	if filter.To != nil {
+		query = query.Where("starts_at < ?", *filter.To)
 	}
 
 	if err := query.Order("starts_at ASC").Limit(limit).Select(); err != nil {

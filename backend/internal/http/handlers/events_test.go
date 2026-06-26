@@ -54,6 +54,12 @@ func (m *mockEventsService) ListByOrganizer(context.Context, uuid.UUID) ([]*doma
 func (m *mockEventsService) Nearby(context.Context, *float64, *float64, int) ([]*eventsdomain.NearbyResult, error) {
 	return nil, nil
 }
+func (m *mockEventsService) ListForCalendar(context.Context, []uuid.UUID, time.Time, time.Time) ([]*domainmodels.Event, error) {
+	return nil, nil
+}
+func (m *mockEventsService) GetEnriched(context.Context, []uuid.UUID) ([]*domainmodels.Event, error) {
+	return nil, nil
+}
 
 func TestCreateEvent_QuotaExceeded_Returns429(t *testing.T) {
 	svc := &mockEventsService{createErr: fmt.Errorf("%w: 10/10 this month", eventsdomain.ErrQuotaExceeded)}

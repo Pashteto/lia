@@ -34,6 +34,10 @@ type Service interface {
 	Cancel(ctx context.Context, eventID, userID uuid.UUID) error
 	MyPractices(ctx context.Context, userID uuid.UUID, tab string) ([]*PracticeRow, error)
 	MyApplications(ctx context.Context, userID uuid.UUID, status string) ([]*models.Rsvp, error)
+	// ListActiveEventsInRange returns the events the user has an active RSVP to
+	// (going/waitlist/applied/accepted) whose start falls in [from, to). Used by
+	// the personal calendar's "agreed to participate" stream.
+	ListActiveEventsInRange(ctx context.Context, userID uuid.UUID, from, to time.Time) ([]*models.Event, error)
 	ListApplications(ctx context.Context, eventID, organizerID uuid.UUID) ([]*models.Rsvp, error)
 	Decide(ctx context.Context, eventID, organizerID, rsvpID uuid.UUID, accept bool) (*models.Rsvp, error)
 	CalendarICS(ctx context.Context, eventID uuid.UUID) ([]byte, error)
@@ -133,6 +137,30 @@ func (s *service) MyApplications(_ context.Context, userID uuid.UUID, status str
 		return nil, fmt.Errorf("my applications: %w", err)
 	}
 	return rows, nil
+}
+
+func (s *service) ListActiveEventsInRange(_ context.Context, userID uuid.UUID, from, to time.Time) ([]*models.Event, error) {
+	rows, err := s.repo.ListByUser(userID,
+		[]models.RsvpStatus{models.RsvpGoing, models.RsvpWaitlist, models.RsvpApplied, models.RsvpAccepted})
+	if err != nil {
+		return nil, fmt.Errorf("active events in range: %w", err)
+	}
+	seen := make(map[uuid.UUID]struct{}, len(rows))
+	out := make([]*models.Event, 0, len(rows))
+	for _, r := range rows {
+		if r.Event == nil {
+			continue
+		}
+		if r.Event.StartsAt.Before(from) || !r.Event.StartsAt.Before(to) {
+			continue
+		}
+		if _, dup := seen[r.Event.ID]; dup {
+			continue
+		}
+		seen[r.Event.ID] = struct{}{}
+		out = append(out, r.Event)
+	}
+	return out, nil
 }
 
 func (s *service) ListApplications(_ context.Context, eventID, organizerID uuid.UUID) ([]*models.Rsvp, error) {

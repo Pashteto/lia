@@ -473,6 +473,7 @@ export async function getAdminOverview(): Promise<{
   events_total: number;
   events_published: number;
   events_removed: number;
+  organizers_pending?: number;
 }> {
   const res = await fetch(`${API_V1}/admin/overview`, { headers: authHeaders(), cache: "no-store" });
   if (!res.ok) throw new Error(`overview: ${res.status}`);
@@ -505,4 +506,156 @@ export async function reinstateEvent(id: string): Promise<void> {
     headers: authHeaders(),
   });
   if (!res.ok) throw new Error(`reinstate: ${res.status}`);
+}
+
+// ---------------------------------------------------------------------------
+// Organizer profile + verification API
+// ---------------------------------------------------------------------------
+
+export type VerificationStatus = "draft" | "pending" | "verified" | "rejected";
+
+export interface Organizer {
+  id: string;
+  name: string;
+  description: string;
+  website_url: string;
+  logo_url?: string;
+  verification_status: VerificationStatus;
+  auto_verify: boolean;
+  latest_reason?: string;
+}
+
+export interface OrganizerHistory {
+  from_status: string;
+  to_status: string;
+  reason?: string;
+  actor_user_id: string;
+  created_at: string;
+}
+
+export interface AdminOrganizer extends Organizer {
+  history?: OrganizerHistory[];
+}
+
+export async function getMyOrganizer(): Promise<Organizer | null> {
+  const res = await fetch(`${API_V1}/me/organizer`, { headers: authHeaders(), cache: "no-store" });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`me/organizer: ${res.status}`);
+  return res.json();
+}
+
+export async function saveMyOrganizer(input: {
+  name: string;
+  description: string;
+  website_url: string;
+  logo_file_id?: string;
+}): Promise<Organizer> {
+  const res = await fetch(`${API_V1}/me/organizer`, {
+    method: "PUT",
+    headers: { ...authHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || `save organizer: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function submitMyOrganizer(): Promise<{ status: VerificationStatus }> {
+  const res = await fetch(`${API_V1}/me/organizer/submit`, { method: "POST", headers: authHeaders() });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || `submit organizer: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function getPublicOrganizer(id: string): Promise<{
+  id: string;
+  name: string;
+  description: string;
+  website_url: string;
+  verified: boolean;
+} | null> {
+  const res = await fetch(`${API_V1}/organizers/${id}`, { cache: "no-store" });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`organizer: ${res.status}`);
+  return res.json();
+}
+
+export async function listModerationOrganizers(
+  status: VerificationStatus,
+): Promise<AdminOrganizer[]> {
+  const res = await fetch(`${API_V1}/admin/moderation/organizers?status=${status}`, {
+    headers: authHeaders(),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`moderation organizers: ${res.status}`);
+  return res.json();
+}
+
+export async function searchOrganizers(q: string): Promise<AdminOrganizer[]> {
+  const res = await fetch(`${API_V1}/admin/organizers?q=${encodeURIComponent(q)}`, {
+    headers: authHeaders(),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`search organizers: ${res.status}`);
+  return res.json();
+}
+
+export async function getAdminOrganizer(id: string): Promise<AdminOrganizer> {
+  const res = await fetch(`${API_V1}/admin/organizers/${id}`, { headers: authHeaders(), cache: "no-store" });
+  if (!res.ok) throw new Error(`admin organizer: ${res.status}`);
+  return res.json();
+}
+
+export async function verifyOrganizer(id: string): Promise<void> {
+  const res = await fetch(`${API_V1}/admin/moderation/organizers/${id}/verify`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(`verify: ${res.status}`);
+}
+
+export async function rejectOrganizer(id: string, reason: string): Promise<void> {
+  const res = await fetch(`${API_V1}/admin/moderation/organizers/${id}/reject`, {
+    method: "POST",
+    headers: { ...authHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ reason }),
+  });
+  if (!res.ok) throw new Error(`reject: ${res.status}`);
+}
+
+export async function revokeOrganizer(id: string, reason: string): Promise<void> {
+  const res = await fetch(`${API_V1}/admin/moderation/organizers/${id}/revoke`, {
+    method: "POST",
+    headers: { ...authHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ reason }),
+  });
+  if (!res.ok) throw new Error(`revoke: ${res.status}`);
+}
+
+export async function setOrganizerAutoVerify(id: string, enabled: boolean): Promise<void> {
+  const res = await fetch(`${API_V1}/admin/organizers/${id}/auto-verify`, {
+    method: "POST",
+    headers: { ...authHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ enabled }),
+  });
+  if (!res.ok) throw new Error(`auto-verify: ${res.status}`);
+}
+
+export async function getAdminSettings(): Promise<Record<string, boolean>> {
+  const res = await fetch(`${API_V1}/admin/settings`, { headers: authHeaders(), cache: "no-store" });
+  if (!res.ok) throw new Error(`settings: ${res.status}`);
+  return res.json();
+}
+
+export async function setAdminSetting(key: string, enabled: boolean): Promise<void> {
+  const res = await fetch(`${API_V1}/admin/settings`, {
+    method: "PUT",
+    headers: { ...authHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ key, enabled }),
+  });
+  if (!res.ok) throw new Error(`set setting: ${res.status}`);
 }

@@ -289,6 +289,10 @@ type historyJSON struct {
 }
 
 func (h *handler) organizerDetail(w http.ResponseWriter, r *http.Request, _ *domain.User) {
+	if h.deps.Organizers == nil {
+		writeErr(w, http.StatusServiceUnavailable, "organizers service not available")
+		return
+	}
 	id, ok := pathID(w, r)
 	if !ok {
 		return
@@ -313,6 +317,10 @@ func (h *handler) organizerDetail(w http.ResponseWriter, r *http.Request, _ *dom
 }
 
 func (h *handler) verifyOrganizer(w http.ResponseWriter, r *http.Request, u *domain.User) {
+	if h.deps.Organizers == nil {
+		writeErr(w, http.StatusServiceUnavailable, "organizers service not available")
+		return
+	}
 	id, ok := pathID(w, r)
 	if !ok {
 		return
@@ -328,6 +336,10 @@ func (h *handler) verifyOrganizer(w http.ResponseWriter, r *http.Request, u *dom
 }
 
 func (h *handler) rejectOrganizer(w http.ResponseWriter, r *http.Request, u *domain.User) {
+	if h.deps.Organizers == nil {
+		writeErr(w, http.StatusServiceUnavailable, "organizers service not available")
+		return
+	}
 	id, ok := pathID(w, r)
 	if !ok {
 		return
@@ -349,6 +361,10 @@ func (h *handler) rejectOrganizer(w http.ResponseWriter, r *http.Request, u *dom
 }
 
 func (h *handler) revokeOrganizer(w http.ResponseWriter, r *http.Request, u *domain.User) {
+	if h.deps.Organizers == nil {
+		writeErr(w, http.StatusServiceUnavailable, "organizers service not available")
+		return
+	}
 	id, ok := pathID(w, r)
 	if !ok {
 		return
@@ -370,6 +386,10 @@ func (h *handler) revokeOrganizer(w http.ResponseWriter, r *http.Request, u *dom
 }
 
 func (h *handler) setAutoVerify(w http.ResponseWriter, r *http.Request, u *domain.User) {
+	if h.deps.Organizers == nil {
+		writeErr(w, http.StatusServiceUnavailable, "organizers service not available")
+		return
+	}
 	id, ok := pathID(w, r)
 	if !ok {
 		return

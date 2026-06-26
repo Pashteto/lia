@@ -102,3 +102,10 @@ Live at **`https://lia.pashteto.com`** / **`https://api.lia.pashteto.com`** on *
 
 - Frontend: `pnpm lint` + `pnpm build` clean; auth modal hydration-safe; create-event + cover upload flow verified live.
 - Backend: `go build/vet/test ./...` pass; `golangci-lint` (v1) exits 0; `docker compose up` + live API exercised: auth (demo-login→JWT, 401 anon, 201 authed), upload→201, serve→200 image/png, quota (10×201, 11th→429), cleanup job (ran on startup, 0 orphans).
+- Frontend nav follow-up (2026-06-26): every secondary page now has a way back —
+  `‹ События` back links on `/events/mine`, `/map`, `/admin`, `/me/practices`,
+  `/me/applications` (`/search` already had one), and the mobile `TabBar` was
+  lifted into `app/layout.tsx` (persistent, `sm:hidden`, hidden on create/detail/
+  admin, `max-sm:pb-28` clearance). `tsc`/`eslint`/`next build` clean.
+  **Deploy pending** (frontend-only, no migration) —
+  `docs/superpowers/runbooks/2026-06-26-nav-back-buttons-frontend-redeploy.md`.

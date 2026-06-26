@@ -1206,3 +1206,24 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 - **Non-goals (no moderation actor, no admin bypass, no cancel-of-published, no enum migration)** → respected; nothing in the plan adds them. ✅
 
 No placeholders; signatures are consistent across tasks (`Update(ctx, id, ownerID, UpdateParams)`, `EventPatchToUpdateParams`, `NewGetEventByID(svc, checkAuth)`, `NewUpdateEvent(svc)`).
+
+---
+
+## Deployment status (2026-06-26)
+
+- **Backend** (`PATCH /events/{id}` owner-edit, draft default, owner-only draft
+  visibility) and the **publish-draft** frontend button: **LIVE** on
+  `https://api.lia.pashteto.com` / `https://lia.pashteto.com` — shipped as part
+  of the full-stack cutover, see
+  `../runbooks/2026-06-26-rsvp-moderation-fullstack-deploy.md` (no migration was
+  needed for event-edit itself; that deploy's migrations 012–014 are RSVP /
+  moderation).
+- **Frontend navigation follow-up** (back links on secondary pages + persistent
+  mobile TabBar): committed (`aee829b`, `1be101a`, `0f3cd05`), production build
+  verified locally, **deploy pending** — frontend-only, procedure in
+  `../runbooks/2026-06-26-nav-back-buttons-frontend-redeploy.md`. The SSH cutover
+  to the prod box is interactive/gated, so it must be run by an operator with
+  box access; nothing in it touches the backend or DB.
+- All work sits on the shared branch `feat/event-edit-and-draft-visibility`,
+  intermixed with concurrent RSVP/moderation/liquid-glass commits — not a clean
+  feature branch; coordinate before any `main` merge.

@@ -455,6 +455,32 @@ export interface AdminEvent {
   reason?: string;
 }
 
+export type ComplaintCategory =
+  | "spam"
+  | "fraud"
+  | "inappropriate"
+  | "duplicate"
+  | "other";
+
+// Display labels (RU). Used by the report modal and the admin breakdown chips.
+export const COMPLAINT_CATEGORIES: { value: ComplaintCategory; label: string }[] = [
+  { value: "spam", label: "Спам" },
+  { value: "fraud", label: "Мошенничество" },
+  { value: "inappropriate", label: "Неуместный контент" },
+  { value: "duplicate", label: "Дубликат" },
+  { value: "other", label: "Другое" },
+];
+
+export interface ComplaintGroup {
+  event_id: string;
+  event_title: string;
+  event_status: string;
+  report_count: number;
+  categories: Record<string, number>;
+  latest_note: string;
+  latest_at: string;
+}
+
 function authHeaders(): HeadersInit {
   const token = getToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -476,6 +502,7 @@ export async function getAdminOverview(): Promise<{
   events_published: number;
   events_removed: number;
   organizers_pending?: number;
+  complaints_open?: number;
 }> {
   const res = await fetch(`${API_V1}/admin/overview`, { headers: authHeaders(), cache: "no-store" });
   if (!res.ok) throw new Error(`overview: ${res.status}`);
@@ -508,6 +535,44 @@ export async function reinstateEvent(id: string): Promise<void> {
     headers: authHeaders(),
   });
   if (!res.ok) throw new Error(`reinstate: ${res.status}`);
+}
+
+export async function submitComplaint(
+  eventId: string,
+  category: ComplaintCategory,
+  note: string,
+): Promise<void> {
+  const res = await fetch(`${API_V1}/events/${eventId}/complaints`, {
+    method: "POST",
+    headers: { ...authHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ category, note }),
+  });
+  if (!res.ok) {
+    if (res.status === 401) throw new Error("not authenticated");
+    throw new Error(`complaint: ${res.status}`);
+  }
+}
+
+export async function listComplaints(): Promise<ComplaintGroup[]> {
+  const res = await fetch(`${API_V1}/admin/complaints`, {
+    headers: authHeaders(),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`complaints: ${res.status}`);
+  return res.json();
+}
+
+export async function resolveComplaints(
+  eventId: string,
+  action: "takedown" | "dismiss",
+  resolution: string,
+): Promise<void> {
+  const res = await fetch(`${API_V1}/admin/complaints/events/${eventId}/resolve`, {
+    method: "POST",
+    headers: { ...authHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ action, resolution }),
+  });
+  if (!res.ok) throw new Error(`resolve: ${res.status}`);
 }
 
 // ---------------------------------------------------------------------------

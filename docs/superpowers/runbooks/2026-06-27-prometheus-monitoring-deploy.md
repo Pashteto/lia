@@ -52,9 +52,16 @@ curl -s localhost:9080/metrics | grep -c http_requests_total                    
 # Prometheus targets (tunnel from laptop):
 #   ssh -L 9091:localhost:9091 vdska2 ; open http://localhost:9091/targets
 # all three jobs (lia-app, node, prometheus) show state=up; /alerts lists 5 rules.
+
+# Assert HostLowDisk is not silently dead: this MUST return a non-empty result.
+# A missing series means the alert can never fire (worse than a noisy one).
+curl -s 'http://localhost:9091/api/v1/query?query=node_filesystem_avail_bytes%7Bmountpoint%3D%22%2Fhost%22%7D' \
+  | grep -q '"result":\[{' && echo "HostLowDisk series OK" || echo "HostLowDisk series MISSING — fix mountpoint below"
 ```
-If `HostLowDisk` never has data, check node_exporter's root mountpoint label
-(`node_filesystem_avail_bytes`) and adjust `alerts.yml` `mountpoint="/host"` to match.
+If the HostLowDisk series is MISSING (or the alert never has data), check
+node_exporter's actual root mountpoint label —
+`curl -s 'http://localhost:9091/api/v1/query?query=node_filesystem_avail_bytes' | tr ',' '\n' | grep mountpoint`
+— and adjust `alerts.yml` `mountpoint="/host"` (both HostLowDisk lines) to match, then reload Prometheus.
 
 ## 6. One-time: trim pre-rotation logs (if already large)
 The `logging:` caps only apply to logs written after recreate. If existing logs are big:

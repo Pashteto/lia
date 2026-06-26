@@ -110,5 +110,9 @@ Live at **`https://lia.pashteto.com`** / **`https://api.lia.pashteto.com`** on *
   **DEPLOYED live 2026-06-26** (frontend-only, no migration; verified 200 +
   back link in `/map` HTML) —
   `docs/superpowers/runbooks/2026-06-26-nav-back-buttons-frontend-redeploy.md`.
-  Backend NOT redeployed this round (working tree has an untracked migration
-  `000015_organizers` from concurrent work — left for when it's committed/ready).
+  Backend rebuild from this branch was attempted + rolled back: the branch tree
+  lacks `/admin/*` so the image regressed the moderation API → reverted to the
+  full-stack `backend-app:rollback`. DB did advance **14→16** (`015_organizers`,
+  `016_app_settings`; additive tables, no serving code in the running image yet —
+  harmless). **Deploy the backend from `main`, not this branch.** Pre-migration
+  dump: `/opt/lia/backup-pre-organizers-20260626-1425.sql.gz`.

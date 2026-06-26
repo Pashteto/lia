@@ -93,8 +93,18 @@ ssh vdska2 'docker tag lia-frontend:rollback lia-frontend:latest && \
   (untouched); `‹ События` back link present in server-rendered `/map` HTML
   (confirms the new build is live).
 - No DB migration, no backend image, no GateGuard change involved.
-- **Backend NOT redeployed** this round: the working tree carries an *untracked*
-  migration `000015_organizers.up.sql` (a concurrent organizers feature, not
-  committed); shipping the backend would apply an unreviewed migration + in-flight
-  code to prod. Backend left at its today-latest state (schema_migrations = 14:
-  event-edit + RSVP + moderation). Revisit once organizers is committed/ready.
+- **Backend: rebuild attempted, then ROLLED BACK.** On request, a backend image
+  was built from this branch's working tree and shipped, and migrations were run
+  (the box's migrations dir had `015_organizers` + `016_app_settings` from
+  concurrent work → DB went **14 → 16**, additive new tables only, applied
+  cleanly). But the branch tree is **behind `main`**: it has no `/admin/*`
+  moderation routes, so the new image **regressed** the live moderation API
+  (`/admin/moderation/events` 401 → 404). Rolled the `app` container back to
+  `backend-app:rollback` (the full-stack image — it already contains event-edit +
+  RSVP + moderation), which restored `/admin/moderation/events` → 401. The image
+  is unchanged from before; only the DB advanced to migration 16 (the new
+  `organizers` / `app_settings` tables have **no serving code** in the running
+  image yet — harmless until those features deploy). Pre-migration dump:
+  `/opt/lia/backup-pre-organizers-20260626-1425.sql.gz`.
+- **Lesson:** deploy the backend from `main` (or a branch that's current with it),
+  not from `feat/event-edit-and-draft-visibility` — the latter lacks moderation.

@@ -383,7 +383,7 @@ git commit -m "feat(settings): minimal app_settings key/value store with audited
   type HistoryEntry struct { FromStatus, ToStatus, Reason string; ActorUserID uuid.UUID; CreatedAt time.Time }
   type ListFilter struct { Status, Query string }
   type Counts struct { OrganizersPending int `json:"organizers_pending"` }
-  type VerifiedOrg struct { ID uuid.UUID; Name, LogoFileID string } // LogoFileID is the storage key, resolved by caller
+  type VerifiedOrg struct { ID uuid.UUID; Name, LogoKey string } // LogoKey is the files.storage_key, resolved to a URL by caller
 
   type Repository interface {
       GetByOwner(ctx, ownerID uuid.UUID) (*Organizer, error)

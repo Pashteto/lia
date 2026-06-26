@@ -63,6 +63,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             >
               Модерация событий
             </Link>
+            <Link
+              href="/admin/moderation/organizers"
+              className="text-label-secondary transition-opacity hover:opacity-70"
+            >
+              Модерация организаторов
+            </Link>
+            <Link
+              href="/admin/organizers"
+              className="text-label-secondary transition-opacity hover:opacity-70"
+            >
+              Организаторы
+            </Link>
+            <Link
+              href="/admin/settings"
+              className="text-label-secondary transition-opacity hover:opacity-70"
+            >
+              Настройки
+            </Link>
           </div>
         </nav>
       </header>

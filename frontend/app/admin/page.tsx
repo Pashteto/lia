@@ -11,6 +11,7 @@ export default function AdminHome() {
     events_total: number;
     events_published: number;
     events_removed: number;
+    organizers_pending?: number;
   } | null>(null);
 
   useEffect(() => {
@@ -24,10 +25,11 @@ export default function AdminHome() {
       </Link>
       <h1 className="mb-6 text-[28px] font-bold tracking-[-0.022em]">Админ</h1>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Всего событий" value={counts?.events_total} />
         <Stat label="Опубликовано" value={counts?.events_published} />
         <Stat label="Снято" value={counts?.events_removed} />
+        <Stat label="Организаторы на проверке" value={counts?.organizers_pending} />
       </div>
 
       <div className="mt-8">

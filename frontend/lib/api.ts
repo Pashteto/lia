@@ -213,6 +213,33 @@ export async function fetchEvent(id: string): Promise<LiaEvent | null> {
   return apiEventToLia((await res.json()) as ApiEvent);
 }
 
+/**
+ * Fetches a single event by id with the caller's session token attached, so the
+ * owner can see their own non-published (draft) events — which the backend hides
+ * from anonymous requests (GET /events/{id} returns 404 for non-owners).
+ *
+ * Client-side only (reads the localStorage token); `no-store` so a just-created
+ * draft is always fresh. Returns null on 404 / when signed out; throws on other
+ * errors. The anonymous `fetchEvent` above stays the SSR path for the common
+ * (published) case; this is the authenticated retry the detail page falls back
+ * to when the anonymous fetch misses.
+ */
+export async function fetchEventWithAuth(id: string): Promise<LiaEvent | null> {
+  const token = getToken();
+  if (!token) return null;
+  const res = await fetch(`${API_V1}/events/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  if (res.status === 404) {
+    return null;
+  }
+  if (!res.ok) {
+    throw new Error(`fetch event failed: ${res.status}`);
+  }
+  return apiEventToLia((await res.json()) as ApiEvent);
+}
+
 /** Payload for creating an event (mirrors the backend EventInput). */
 export interface CreateEventInput {
   title: string;

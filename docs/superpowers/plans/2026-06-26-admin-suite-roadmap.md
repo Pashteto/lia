@@ -2,6 +2,13 @@
 
 _Last updated: 2026-06-27. Status: **sub-projects 0, 1, 2, and 3 built, reviewed, and LIVE on prod.** Sub-projects 4, 5, R remain — this doc is the decomposition + handoff so the next session can pick up cold._
 
+> **Out-of-band (not admin suite):** a user-facing **personal calendar +
+> organizer follow/subscribe** shipped 2026-06-27 (merged `d254578`, LIVE; prod DB
+> →018). It added a net-new **follow** primitive (`organizer_follows`, `internal/follows`,
+> `GET /me/calendar`, `is_following` on the public org page) — relevant to **#4 Featured
+> curation** and any future notifications/digest work. Spec/plan:
+> `2026-06-27-calendar-and-follows*`; deploy `../runbooks/2026-06-27-calendar-follows-deploy.md`.
+
 This is the umbrella tracker for the moderator/admin capability. The full vision
 lives in `docs/design_agent_prompt.md` §4.3 (admin routes) and
 `docs/event_discovery_mvp_technical_stack.md` (modules, tables, roles). That vision

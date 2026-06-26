@@ -31,8 +31,8 @@ export default function ModerationOrganizersPage() {
   useEffect(() => {
     let cancelled = false;
     listModerationOrganizers(tab)
-      .then((data) => { if (!cancelled) { setItems(data); setLoading(false); } })
-      .catch(() => { if (!cancelled) { setItems([]); setLoading(false); } });
+      .then((data) => { if (!cancelled) { setItems(data); setLoading(false); setActionError(""); } })
+      .catch(() => { if (!cancelled) { setItems([]); setLoading(false); setActionError("Ошибка загрузки"); } });
     return () => { cancelled = true; };
   }, [tab, tick]);
 

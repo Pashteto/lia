@@ -1,3 +1,4 @@
+import { ReportButton } from "@/components/ReportButton";
 import { SignupCTA } from "@/components/SignupCTA";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { EventCover } from "@/components/ui/EventCover";
@@ -134,6 +135,10 @@ export default async function EventDetailPage({
             )}
           </Section>
         )}
+
+        <div className="mt-6">
+          <ReportButton eventId={event.id} />
+        </div>
       </article>
 
       {/* Sticky registration bar — solid (opaque) bg, not translucent glass. */}

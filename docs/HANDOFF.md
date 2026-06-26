@@ -107,5 +107,8 @@ Live at **`https://lia.pashteto.com`** / **`https://api.lia.pashteto.com`** on *
   `/me/applications` (`/search` already had one), and the mobile `TabBar` was
   lifted into `app/layout.tsx` (persistent, `sm:hidden`, hidden on create/detail/
   admin, `max-sm:pb-28` clearance). `tsc`/`eslint`/`next build` clean.
-  **Deploy pending** (frontend-only, no migration) —
+  **DEPLOYED live 2026-06-26** (frontend-only, no migration; verified 200 +
+  back link in `/map` HTML) —
   `docs/superpowers/runbooks/2026-06-26-nav-back-buttons-frontend-redeploy.md`.
+  Backend NOT redeployed this round (working tree has an untracked migration
+  `000015_organizers` from concurrent work — left for when it's committed/ready).

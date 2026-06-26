@@ -1219,11 +1219,12 @@ No placeholders; signatures are consistent across tasks (`Update(ctx, id, ownerI
   needed for event-edit itself; that deploy's migrations 012–014 are RSVP /
   moderation).
 - **Frontend navigation follow-up** (back links on secondary pages + persistent
-  mobile TabBar): committed (`aee829b`, `1be101a`, `0f3cd05`), production build
-  verified locally, **deploy pending** — frontend-only, procedure in
-  `../runbooks/2026-06-26-nav-back-buttons-frontend-redeploy.md`. The SSH cutover
-  to the prod box is interactive/gated, so it must be run by an operator with
-  box access; nothing in it touches the backend or DB.
+  mobile TabBar): committed (`aee829b`, `1be101a`, `0f3cd05`), **DEPLOYED live
+  2026-06-26** (frontend-only, no migration; verified 200 + back link in `/map`
+  HTML) — `../runbooks/2026-06-26-nav-back-buttons-frontend-redeploy.md`.
+  Backend was NOT redeployed this round: the working tree carries an untracked
+  `000015_organizers` migration from concurrent work, so a backend ship would
+  apply unreviewed migration/code to prod — deferred until that's committed.
 - All work sits on the shared branch `feat/event-edit-and-draft-visibility`,
   intermixed with concurrent RSVP/moderation/liquid-glass commits — not a clean
   feature branch; coordinate before any `main` merge.

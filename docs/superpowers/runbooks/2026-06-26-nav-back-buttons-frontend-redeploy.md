@@ -85,9 +85,16 @@ ssh vdska2 'docker tag lia-frontend:rollback lia-frontend:latest && \
   docker run -d --restart unless-stopped --name lia-frontend -p 127.0.0.1:3001:3001 lia-frontend:latest'
 ```
 
-## Status
+## Status — DEPLOYED + verified live (2026-06-26)
 
-- Code committed + production build verified locally. **NOT yet pushed live** —
-  the SSH cutover is gated (the prod box is password-interactive and the deploy
-  agent lacks/was denied prod-SSH). Run the procedure above to ship.
+- Frontend image rebuilt (amd64) and shipped (`docker save | ssh vdska2 | load`),
+  container recreated. Rollback tag `lia-frontend:rollback` captured first.
+- Verified: `https://lia.pashteto.com` → 200; `api…/events?status=published` → 200
+  (untouched); `‹ События` back link present in server-rendered `/map` HTML
+  (confirms the new build is live).
 - No DB migration, no backend image, no GateGuard change involved.
+- **Backend NOT redeployed** this round: the working tree carries an *untracked*
+  migration `000015_organizers.up.sql` (a concurrent organizers feature, not
+  committed); shipping the backend would apply an unreviewed migration + in-flight
+  code to prod. Backend left at its today-latest state (schema_migrations = 14:
+  event-edit + RSVP + moderation). Revisit once organizers is committed/ready.

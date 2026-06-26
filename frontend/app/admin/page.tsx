@@ -19,6 +19,9 @@ export default function AdminHome() {
 
   return (
     <div>
+      <Link href="/" className="mb-4 inline-flex items-center text-[17px] text-accent">
+        ‹ События
+      </Link>
       <h1 className="mb-6 text-[28px] font-bold tracking-[-0.022em]">Админ</h1>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

@@ -148,17 +148,25 @@ export default function MyApplicationsPage() {
 
   if (!isAuthed) {
     return (
-      <main className="mx-auto max-w-3xl px-4 py-16 text-center">
-        <h1 className="text-[28px] font-bold tracking-[-0.022em]">Мои заявки</h1>
-        <p className="mt-3 text-label-secondary">
-          Войдите, чтобы увидеть свои заявки на события.
-        </p>
+      <main className="mx-auto max-w-3xl px-4 py-16">
+        <Link href="/" className="inline-flex items-center text-[17px] text-accent">
+          ‹ События
+        </Link>
+        <div className="mt-8 text-center">
+          <h1 className="text-[28px] font-bold tracking-[-0.022em]">Мои заявки</h1>
+          <p className="mt-3 text-label-secondary">
+            Войдите, чтобы увидеть свои заявки на события.
+          </p>
+        </div>
       </main>
     );
   }
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
+      <Link href="/" className="mb-4 inline-flex items-center text-[17px] text-accent">
+        ‹ События
+      </Link>
       <h1 className="text-[28px] font-bold tracking-[-0.022em]">Мои заявки</h1>
 
       <div className="mt-4 flex gap-2 overflow-x-auto pb-1">

@@ -143,8 +143,9 @@ to avoid reshipping GateGuard. When you need a distinct, lower-privilege **moder
 #R when the moderator/admin distinction is actually needed.
 
 ## Operational state (as of 2026-06-27)
-- All of the above (RSVP + 0+1+2+3 + draft-visibility + hotfixes) is on **local `main`, UNPUSHED**
-  (`origin/main` 11 commits behind). Deployed to prod from locally-built images, not a pushed ref/PR.
+- All of the above (RSVP + 0+1+2+3 + draft-visibility + hotfixes) is on `main`; **`origin/main` now
+  has it** (a concurrent session pushed through the reconcile merge `8acb4c2`) — only trailing doc
+  commits may be local. Deployed to prod from locally-built images, not a pushed ref/PR.
 - **Prod DB is at migration 017.** Complaints deployed backend (build-on-Mac→`save|ssh|load`,
   migrate 16→17, 3-compose-file recreate) then frontend (build-on-Mac→ship, cutover on `127.0.0.1:3001`);
   rollback images `backend-app:rollback-precomplaints` + `lia-frontend:rollback-precomplaints` kept.

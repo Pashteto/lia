@@ -68,6 +68,37 @@ func TestSubmitAutoVerifyShortCircuits(t *testing.T) {
 	}
 }
 
+// TestUpsertPreservesLogoOnOmit proves that re-upserting with a zero LogoFileID
+// (i.e. the client omitted the logo on an edit-profile save) does NOT wipe the
+// previously stored logo_file_id. Mirrors the preserve-on-omit convention used
+// for venue coordinates in the events package.
+func TestUpsertPreservesLogoOnOmit(t *testing.T) {
+	db := testDB(t)
+	defer db.Close()
+	repo := NewRepository(db)
+	ctx := context.Background()
+	owner := uuid.Must(uuid.NewV4())
+	originalLogo := uuid.Must(uuid.NewV4())
+
+	// First upsert: create the organizer with a real logo file id.
+	org, err := repo.Upsert(ctx, owner, Input{Name: "Logo Test Org", LogoFileID: originalLogo})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if org.LogoFileID != originalLogo {
+		t.Fatalf("initial LogoFileID = %v; want %v", org.LogoFileID, originalLogo)
+	}
+
+	// Second upsert: edit the name but omit the logo (zero uuid = unchanged).
+	updated, err := repo.Upsert(ctx, owner, Input{Name: "Logo Test Org Renamed", LogoFileID: uuid.Nil})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if updated.LogoFileID != originalLogo {
+		t.Fatalf("after omit-logo upsert: LogoFileID = %v; want original %v (logo was wiped)", updated.LogoFileID, originalLogo)
+	}
+}
+
 // TestListMapsWebsiteURLAndVerifiedAt proves that List correctly maps the
 // website_url / logo_file_id / owner_user_id columns now that the Organizer
 // struct carries explicit pg tags. A draft org should have WebsiteURL populated

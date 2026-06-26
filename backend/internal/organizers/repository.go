@@ -75,7 +75,13 @@ func (r *pgRepository) Upsert(ctx context.Context, ownerID uuid.UUID, in Input) 
 		 VALUES (?, ?, ?, ?, ?)
 		 ON CONFLICT (owner_user_id) DO UPDATE
 		   SET name = EXCLUDED.name, description = EXCLUDED.description,
-		       website_url = EXCLUDED.website_url, logo_file_id = EXCLUDED.logo_file_id,
+		       website_url = EXCLUDED.website_url,
+		       -- preserve-on-omit: zero-uuid means "leave unchanged" (client omitted logo on edit)
+		       logo_file_id = CASE
+		           WHEN EXCLUDED.logo_file_id = '00000000-0000-0000-0000-000000000000'::uuid
+		           THEN organizers.logo_file_id
+		           ELSE EXCLUDED.logo_file_id
+		       END,
 		       updated_at = now()
 		 RETURNING `+orgCols,
 		ownerID, in.Name, in.Description, in.WebsiteURL, logo)

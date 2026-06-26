@@ -38,6 +38,8 @@ export function apiEventToLia(e: ApiEvent): LiaEvent {
           id: e.organizer.uuid ?? e.organizer_id ?? "",
           name: e.organizer.name ?? "",
           avatarUrl: e.organizer.avatar_url,
+          verified: e.organizer.verified,
+          profile_id: e.organizer.profile_id,
         }
       : e.organizer_id
         ? { id: e.organizer_id, name: "" }

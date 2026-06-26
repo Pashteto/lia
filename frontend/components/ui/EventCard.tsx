@@ -1,3 +1,4 @@
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { EventCover } from "@/components/ui/EventCover";
 import { cn } from "@/lib/cn";
 import { formatAttendance, formatEventDate, formatPrice } from "@/lib/format";
@@ -54,8 +55,11 @@ export function EventCard({
           {event.venue ? ` · ${event.venue.name}` : ""}
         </p>
         {event.organizer?.name ? (
-          <p className="text-[13px] text-label-secondary">
+          <p className="flex items-center gap-1.5 text-[13px] text-label-secondary">
             Организатор: {event.organizer.name}
+            {event.organizer.verified && (
+              <VerifiedBadge profileId={event.organizer.profile_id} />
+            )}
           </p>
         ) : null}
         <div className="flex items-center justify-between pt-1">

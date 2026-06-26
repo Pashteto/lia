@@ -1,4 +1,5 @@
 import { SignupCTA } from "@/components/SignupCTA";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { EventCover } from "@/components/ui/EventCover";
 import { VenueMap } from "@/components/VenueMap";
 import { fetchEvent } from "@/lib/api";
@@ -102,8 +103,11 @@ export default async function EventDetailPage({
             <div className="flex items-center gap-3">
               <div className="size-11 shrink-0 rounded-full bg-fill" aria-hidden />
               <div>
-                <p className="text-[17px] font-medium">
+                <p className="flex items-center gap-1.5 text-[17px] font-medium">
                   {event.organizer.name || "Организатор"}
+                  {event.organizer.verified && (
+                    <VerifiedBadge profileId={event.organizer.profile_id} />
+                  )}
                 </p>
                 {event.organizer.affiliation && (
                   <p className="text-[13px] text-label-secondary">

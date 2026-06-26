@@ -30,6 +30,10 @@ export interface Organizer {
   /** Short role/affiliation line, e.g. "Музей современного искусства". */
   affiliation?: string;
   avatarUrl?: string;
+  /** True when the organizer has been verified by an admin. */
+  verified?: boolean;
+  /** Organizer profile id for linking to /organizers/{profile_id}. */
+  profile_id?: string;
 }
 
 export interface Venue {
@@ -94,7 +98,7 @@ export interface ApiEvent {
   id: string;
   organizer_id?: string;
   /** Public organizer display data (creator). No email — public surface. */
-  organizer?: { uuid?: string; name?: string; avatar_url?: string };
+  organizer?: { uuid?: string; name?: string; avatar_url?: string; verified?: boolean; profile_id?: string };
   venue_id?: string;
   title: string;
   description?: string;

@@ -72,6 +72,10 @@ type Organizer struct {
 	UUID      uuid.UUID
 	Name      string
 	AvatarURL string
+	// Verified is true when the creator owns a verified organizer profile.
+	// ProfileID is that profile's id (zero when none) for linking to /organizers/{id}.
+	Verified  bool
+	ProfileID uuid.UUID
 }
 
 // Validate checks that the event has the required fields and valid data.

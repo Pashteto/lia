@@ -416,14 +416,24 @@ func (r *pgRepository) loadOrganizers(events []*models.Event) error {
 	}
 
 	var rows []struct {
-		UUID       uuid.UUID `pg:"uuid"`
-		Name       string    `pg:"name,use_zero"`
-		StorageKey string    `pg:"storage_key,use_zero"`
+		UUID        uuid.UUID `pg:"uuid"`
+		Name        string    `pg:"name,use_zero"`
+		StorageKey  string    `pg:"storage_key,use_zero"`
+		OrgID       uuid.UUID `pg:"org_id,use_zero"`
+		OrgName     string    `pg:"org_name,use_zero"`
+		OrgVerified bool      `pg:"org_verified,use_zero"`
+		OrgLogoKey  string    `pg:"org_logo_key,use_zero"`
 	}
 	if _, err := r.db.Query(&rows,
-		`SELECT u.uuid, u.name, COALESCE(f.storage_key, '') AS storage_key
+		`SELECT u.uuid, u.name, COALESCE(f.storage_key, '') AS storage_key,
+		        COALESCE(o.id, '00000000-0000-0000-0000-000000000000') AS org_id,
+		        COALESCE(o.name, '') AS org_name,
+		        COALESCE(o.verification_status = 'verified', false) AS org_verified,
+		        COALESCE(of.storage_key, '') AS org_logo_key
 		   FROM users u
 		   LEFT JOIN files f ON f.id = u.avatar_file_id
+		   LEFT JOIN organizers o ON o.owner_user_id = u.uuid
+		   LEFT JOIN files of ON of.id = o.logo_file_id
 		  WHERE u.uuid IN (?)`,
 		pg.In(ids),
 	); err != nil {
@@ -433,18 +443,35 @@ func (r *pgRepository) loadOrganizers(events []*models.Event) error {
 	type orgInfo struct {
 		name       string
 		storageKey string
+		orgID      uuid.UUID
+		orgName    string
+		verified   bool
+		orgLogoKey string
 	}
 	byID := make(map[uuid.UUID]orgInfo, len(rows))
 	for _, row := range rows {
-		byID[row.UUID] = orgInfo{name: row.Name, storageKey: row.StorageKey}
+		byID[row.UUID] = orgInfo{
+			name: row.Name, storageKey: row.StorageKey,
+			orgID: row.OrgID, orgName: row.OrgName, verified: row.OrgVerified, orgLogoKey: row.OrgLogoKey,
+		}
 	}
 	for _, e := range events {
 		info, ok := byID[e.OrganizerID]
 		if !ok {
 			continue
 		}
-		org := &models.Organizer{UUID: e.OrganizerID, Name: info.name}
-		if info.storageKey != "" && r.store != nil {
+		org := &models.Organizer{UUID: e.OrganizerID, Name: info.name, Verified: info.verified, ProfileID: info.orgID}
+		// Prefer the verified org brand (name + logo) over the user's.
+		if info.verified {
+			if info.orgName != "" {
+				org.Name = info.orgName
+			}
+			if info.orgLogoKey != "" && r.store != nil {
+				org.AvatarURL = r.store.URL(info.orgLogoKey)
+			} else if info.storageKey != "" && r.store != nil {
+				org.AvatarURL = r.store.URL(info.storageKey)
+			}
+		} else if info.storageKey != "" && r.store != nil {
 			org.AvatarURL = r.store.URL(info.storageKey)
 		}
 		e.Organizer = org

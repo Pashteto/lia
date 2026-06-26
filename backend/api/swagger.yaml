@@ -943,6 +943,13 @@ definitions:
         type: string
         readOnly: true
         x-nullable: true
+      verified:
+        type: boolean
+        readOnly: true
+      profile_id:
+        type: string
+        x-nullable: true
+        readOnly: true
 
   EventInput:
     type: object

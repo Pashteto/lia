@@ -105,8 +105,12 @@ func EventToAPI(event *domainModels.Event) *apiModels.Event {
 		if event.Organizer.AvatarURL != "" {
 			org.AvatarURL = &event.Organizer.AvatarURL
 		}
-		verified := event.Organizer.Verified
-		org.Verified = &verified
+		// Only emit `verified` when true so omitempty keeps non-verified
+		// organizer payloads byte-identical to before (presence ⇒ verified).
+		if event.Organizer.Verified {
+			v := true
+			org.Verified = &v
+		}
 		if event.Organizer.ProfileID != uuid.Nil {
 			pid := event.Organizer.ProfileID.String()
 			org.ProfileID = &pid

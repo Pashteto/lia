@@ -1,6 +1,6 @@
 # Admin Suite — Roadmap & Handoff
 
-_Last updated: 2026-06-26. Status: **foundation (sub-projects 0 + 1) built, reviewed, and LIVE on prod.** The rest of the admin suite is unbuilt — this doc is the decomposition + handoff so the next session can pick up cold._
+_Last updated: 2026-06-26. Status: **sub-projects 0, 1, and 2 built, reviewed, and LIVE on prod.** Sub-projects 3, 4, 5, R remain — this doc is the decomposition + handoff so the next session can pick up cold._
 
 This is the umbrella tracker for the moderator/admin capability. The full vision
 lives in `docs/design_agent_prompt.md` §4.3 (admin routes) and
@@ -14,7 +14,7 @@ implementation cycle (do NOT try to build the rest in one pass).
 |---|---|---|---|
 | **0** | RBAC + admin shell foundation | ✅ **DONE + LIVE** (merged into 0+1) | — |
 | **1** | Event moderation (take-down/reinstate) | ✅ **DONE + LIVE** | 0 |
-| **2** | Organizer entity + verification | ⬜ TODO (heaviest — new domain) | 0 |
+| **2** | Organizer entity + verification | ✅ **DONE + LIVE** (verification-only slice; spec/plan `2026-06-26-organizer-entity-verification-*`) | 0 |
 | **3** | Complaints / reports | ⬜ TODO | 0, 1 |
 | **4** | Featured curation | ⬜ TODO | 0, 1 |
 | **5** | Taxonomy admin (categories/interests CRUD) | ⬜ TODO | 0 |
@@ -66,7 +66,21 @@ Deploy: [`../runbooks/2026-06-26-rsvp-moderation-fullstack-deploy.md`](../runboo
 
 ## Remaining sub-projects (each needs its own brainstorm → spec → plan)
 
-### #2 Organizer entity + verification  — heaviest, do first if continuing
+### #2 Organizer entity + verification — ✅ DONE + LIVE (2026-06-26)
+Built as the **verification-only slice**: a 1:1 `organizers` profile per user (keyed by
+`owner_user_id`), `draft→pending→verified/rejected` lifecycle + admin revoke, two-layer
+auto-approve (global `app_settings` toggle + per-org flag, both audited), user/admin/public
+HTTP surfaces, a derived `verified`/`profile_id` badge on event payloads, and the full
+frontend (`/me/organizer`, `/admin/moderation/organizers`, `/admin/organizers`,
+`/admin/settings`, public `/organizers/[id]`). Spec/plan: `../specs/2026-06-26-organizer-entity-verification-design.md`,
+`2026-06-26-organizer-entity-verification.md`; deploy `../runbooks/2026-06-26-organizer-verification-deploy.md`.
+**Deliberately deferred** (not in this slice, pick up later): `organizer_members`/teams,
+event→organizer FK re-attribution (events still carry `organizer_id` = creator user id),
+org switcher, the `/o/*` organizer dashboard, slugs (routed by id), the public page's
+published-events list (spec §7.3), and `logo_url` resolution.
+
+<details><summary>Original (pre-build) scoping notes</summary>
+
 Today "organizer" is just the user who created an event (events carry a derived
 `organizer` read-model; there is NO `organizers` table). Real org verification needs:
 - `organizers` + `organizer_members` tables (membership model — one org, many staff),
@@ -75,6 +89,7 @@ Today "organizer" is just the user who created an event (events carry a derived
 - `/admin/moderation/organizers` (verification queue) + `/admin/organizers` (search/detail).
 - Ripples into event attribution (events → organizer FK instead of bare user).
 **This is a domain-modelling project, not a thin slice — scope it carefully.**
+</details>
 
 ### #3 Complaints / reports
 - `complaints` table (target_type/target_id, reporter, reason, status, resolution).
@@ -102,7 +117,7 @@ to avoid reshipping GateGuard. When you need a distinct, lower-privilege **moder
   `admin` (everything). The single seam is `Authenticate`/`normalizeRole` + the gate.
 
 ## Recommended build order
-0+1 (done) → **#2** (unblocks real organizer concept that #3/#4 lean on) → #3 →
+0+1+2 (done+live) → **#3** (complaints — can reuse moderation `Takedown`) →
 #4 / #5 (independent, any order) → #R when the moderator/admin distinction is actually needed.
 
 ## Operational state (as of 2026-06-26)

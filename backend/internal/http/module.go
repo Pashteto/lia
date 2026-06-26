@@ -22,6 +22,7 @@ import (
 	"github.com/Pashteto/lia/internal/http/auth"
 	"github.com/Pashteto/lia/internal/http/handlers"
 	"github.com/Pashteto/lia/internal/http/middlewares"
+	organizershttp "github.com/Pashteto/lia/internal/http/organizers"
 	httpserver "github.com/Pashteto/lia/internal/http/server"
 	"github.com/Pashteto/lia/internal/http/server/operations"
 	"github.com/Pashteto/lia/internal/http/uploads"
@@ -284,12 +285,30 @@ func (m *Module) initAPI() error {
 		LatestReason: m.modReason,
 	})
 
-	// Mount the admin handler ahead of the swagger mux, then uploads, then base.
-	// Admin/auth-me paths bypass swagger validation entirely.
+	// Build the organizers handler (user-facing /me/organizer + public
+	// /organizers/{id}); nil in no-DB mode, in which case those paths fall to base.
+	var orgH http.Handler
+	if m.organizers != nil {
+		orgH = organizershttp.NewHandler(organizershttp.Deps{
+			Authenticate: m.auth.Authenticate,
+			Organizers:   m.organizers,
+			Events:       m.events,
+			Store:        m.storage,
+		})
+	}
+
+	// Mount the admin handler ahead of the swagger mux, then organizers, then
+	// uploads, then base. These paths bypass swagger validation entirely.
 	router := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		p := r.URL.Path
 		if p == "/auth/me" || strings.HasPrefix(p, "/api/v1/admin/") {
 			adminH.ServeHTTP(w, r)
+			return
+		}
+		if orgH != nil &&
+			(p == "/api/v1/me/organizer" || strings.HasPrefix(p, "/api/v1/me/organizer/") ||
+				strings.HasPrefix(p, "/api/v1/organizers/")) {
+			orgH.ServeHTTP(w, r)
 			return
 		}
 		if mounted != nil &&

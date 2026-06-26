@@ -15,11 +15,13 @@ import (
 
 	"github.com/Pashteto/lia/config"
 	categoriesdomain "github.com/Pashteto/lia/internal/categories"
+	complaintsdomain "github.com/Pashteto/lia/internal/complaints"
 	eventsdomain "github.com/Pashteto/lia/internal/events"
 	filesdomain "github.com/Pashteto/lia/internal/files"
 	"github.com/Pashteto/lia/internal/grpcclient"
 	"github.com/Pashteto/lia/internal/http/admin"
 	"github.com/Pashteto/lia/internal/http/auth"
+	complaintshttp "github.com/Pashteto/lia/internal/http/complaints"
 	"github.com/Pashteto/lia/internal/http/handlers"
 	"github.com/Pashteto/lia/internal/http/middlewares"
 	organizershttp "github.com/Pashteto/lia/internal/http/organizers"
@@ -50,6 +52,7 @@ type Module struct {
 	moderation moderation.Service
 	modReason  func(uuid.UUID) (string, error)
 	organizers organizersdomain.Service
+	complaints complaintsdomain.Service
 	settings   settingsdomain.Service
 	server     *httpserver.Server
 	api        *operations.LiaAPIAPI
@@ -113,6 +116,9 @@ func (m *Module) SetOrganizers(svc organizersdomain.Service) { m.organizers = sv
 
 // SetSettings injects the app-settings service. Call before Init.
 func (m *Module) SetSettings(svc settingsdomain.Service) { m.settings = svc }
+
+// SetComplaints injects the complaints domain service. Call before Init.
+func (m *Module) SetComplaints(svc complaintsdomain.Service) { m.complaints = svc }
 
 // Name returns the module identifier.
 func (m *Module) Name() string {
@@ -298,6 +304,15 @@ func (m *Module) initAPI() error {
 		})
 	}
 
+	// Build the public complaints handler; nil in no-DB mode.
+	var complaintsH http.Handler
+	if m.complaints != nil {
+		complaintsH = complaintshttp.NewHandler(complaintshttp.Deps{
+			Authenticate: m.auth.Authenticate,
+			Complaints:   m.complaints,
+		})
+	}
+
 	// Mount the admin handler ahead of the swagger mux, then organizers, then
 	// uploads, then base. These paths bypass swagger validation entirely.
 	router := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -310,6 +325,11 @@ func (m *Module) initAPI() error {
 			(p == "/api/v1/me/organizer" || strings.HasPrefix(p, "/api/v1/me/organizer/") ||
 				strings.HasPrefix(p, "/api/v1/organizers/")) {
 			orgH.ServeHTTP(w, r)
+			return
+		}
+		if complaintsH != nil &&
+			strings.HasPrefix(p, "/api/v1/events/") && strings.HasSuffix(p, "/complaints") {
+			complaintsH.ServeHTTP(w, r)
 			return
 		}
 		if mounted != nil &&

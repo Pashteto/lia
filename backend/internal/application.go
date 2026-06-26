@@ -14,6 +14,7 @@ import (
 	"github.com/Pashteto/lia/config"
 	categoriesdomain "github.com/Pashteto/lia/internal/categories"
 	cleanupmod "github.com/Pashteto/lia/internal/cleanup"
+	"github.com/Pashteto/lia/internal/complaints"
 	eventsdomain "github.com/Pashteto/lia/internal/events"
 	filesdomain "github.com/Pashteto/lia/internal/files"
 	grpcmod "github.com/Pashteto/lia/internal/grpc"
@@ -233,15 +234,19 @@ func (app *App) registerModules() error {
 		httpModule.SetSettings(app.settingsSvc)
 		httpModule.SetOrganizers(app.organizersSvc)
 
-		// Wire moderation service (requires DB; reuse the same *pg.DB already used
-		// by the events and rsvp repositories — no second pool opened).
+		// Wire moderation + complaints services (require DB; reuse the same *pg.DB
+		// already used by the events and rsvp repositories — no second pool opened).
 		if repoModule != nil {
 			modRepo := moderation.NewRepository(repoModule.DB())
+			modSvc := moderation.NewService(modRepo)
 			httpModule.SetModeration(
-				moderation.NewService(modRepo),
+				modSvc,
 				func(id uuid.UUID) (string, error) {
 					return modRepo.LatestReason(context.Background(), id)
 				},
+			)
+			httpModule.SetComplaints(
+				complaints.NewService(complaints.NewRepository(repoModule.DB()), modSvc),
 			)
 		}
 

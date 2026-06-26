@@ -34,7 +34,9 @@ type service struct{ repo Repository }
 // NewService returns a settings Service backed by repo.
 func NewService(repo Repository) Service { return &service{repo: repo} }
 
-func (s *service) Bool(ctx context.Context, key string) (bool, error) { return s.repo.GetBool(ctx, key) }
+func (s *service) Bool(ctx context.Context, key string) (bool, error) {
+	return s.repo.GetBool(ctx, key)
+}
 func (s *service) SetBool(ctx context.Context, key string, actorID uuid.UUID, val bool) error {
 	return s.repo.SetBool(ctx, key, actorID, val)
 }

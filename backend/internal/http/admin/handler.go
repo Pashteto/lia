@@ -5,11 +5,13 @@ package admin
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 
 	"github.com/gofrs/uuid"
 
+	complaints "github.com/Pashteto/lia/internal/complaints"
 	eventsdomain "github.com/Pashteto/lia/internal/events"
 	domain "github.com/Pashteto/lia/internal/models"
 	"github.com/Pashteto/lia/internal/moderation"
@@ -25,6 +27,7 @@ type Deps struct {
 	LatestReason func(eventID uuid.UUID) (string, error) // moderation.Repository.LatestReason bound
 	Organizers   organizers.Service
 	Settings     settings.Service
+	Complaints   complaints.Service
 }
 
 type handler struct {
@@ -49,6 +52,9 @@ func NewHandler(deps Deps) http.Handler {
 	h.mux.HandleFunc("POST /api/v1/admin/organizers/{id}/auto-verify", h.staff(h.setAutoVerify))
 	h.mux.HandleFunc("GET /api/v1/admin/settings", h.staff(h.getSettings))
 	h.mux.HandleFunc("PUT /api/v1/admin/settings", h.staff(h.putSettings))
+	h.mux.HandleFunc("GET /api/v1/admin/complaints", h.staff(h.listComplaints))
+	h.mux.HandleFunc("GET /api/v1/admin/complaints/events/{id}", h.staff(h.complaintDetail))
+	h.mux.HandleFunc("POST /api/v1/admin/complaints/events/{id}/resolve", h.staff(h.resolveComplaints))
 	return h
 }
 
@@ -112,6 +118,11 @@ func (h *handler) overview(w http.ResponseWriter, r *http.Request, _ *domain.Use
 	if h.deps.Organizers != nil {
 		if oc, oerr := h.deps.Organizers.Overview(r.Context()); oerr == nil {
 			resp["organizers_pending"] = oc.OrganizersPending
+		}
+	}
+	if h.deps.Complaints != nil {
+		if n, cerr := h.deps.Complaints.OpenEventCount(r.Context()); cerr == nil {
+			resp["complaints_open"] = n
 		}
 	}
 	writeJSON(w, http.StatusOK, resp)
@@ -405,6 +416,86 @@ func (h *handler) setAutoVerify(w http.ResponseWriter, r *http.Request, u *domai
 		writeErr(w, http.StatusNotFound, "not found")
 	default:
 		writeErr(w, http.StatusInternalServerError, "set auto-verify failed")
+	}
+}
+
+func (h *handler) listComplaints(w http.ResponseWriter, r *http.Request, _ *domain.User) {
+	if h.deps.Complaints == nil {
+		writeErr(w, http.StatusServiceUnavailable, "complaints service not available")
+		return
+	}
+	groups, err := h.deps.Complaints.ListInbox(r.Context())
+	if err != nil {
+		writeErr(w, http.StatusInternalServerError, "list failed")
+		return
+	}
+	if groups == nil {
+		groups = []complaints.EventReportGroup{}
+	}
+	writeJSON(w, http.StatusOK, groups)
+}
+
+type complaintJSON struct {
+	ID         string `json:"id"`
+	Category   string `json:"category"`
+	Note       string `json:"note,omitempty"`
+	Status     string `json:"status"`
+	Resolution string `json:"resolution,omitempty"`
+	Reporter   string `json:"reporter_user_id"`
+	CreatedAt  string `json:"created_at"`
+}
+
+func (h *handler) complaintDetail(w http.ResponseWriter, r *http.Request, _ *domain.User) {
+	if h.deps.Complaints == nil {
+		writeErr(w, http.StatusServiceUnavailable, "complaints service not available")
+		return
+	}
+	id, ok := pathID(w, r)
+	if !ok {
+		return
+	}
+	items, err := h.deps.Complaints.TargetDetail(r.Context(), "event", id)
+	if err != nil {
+		writeErr(w, http.StatusInternalServerError, "detail failed")
+		return
+	}
+	out := make([]complaintJSON, 0, len(items))
+	for _, c := range items {
+		out = append(out, complaintJSON{
+			ID: c.ID.String(), Category: c.Category, Note: c.Note, Status: c.Status,
+			Resolution: c.Resolution, Reporter: c.ReporterUserID.String(),
+			CreatedAt: c.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+		})
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+func (h *handler) resolveComplaints(w http.ResponseWriter, r *http.Request, u *domain.User) {
+	if h.deps.Complaints == nil {
+		writeErr(w, http.StatusServiceUnavailable, "complaints service not available")
+		return
+	}
+	id, ok := pathID(w, r)
+	if !ok {
+		return
+	}
+	var body struct {
+		Action     string `json:"action"`
+		Resolution string `json:"resolution"`
+	}
+	_ = json.NewDecoder(r.Body).Decode(&body)
+	err := h.deps.Complaints.Resolve(r.Context(), "event", id, u.UUID, body.Action, body.Resolution)
+	switch {
+	case err == nil:
+		writeJSON(w, http.StatusOK, map[string]string{"status": "resolved"})
+	case errors.Is(err, complaints.ErrResolutionRequired):
+		writeErr(w, http.StatusBadRequest, "Укажите причину")
+	case errors.Is(err, complaints.ErrInvalidAction):
+		writeErr(w, http.StatusBadRequest, "Некорректное действие")
+	case errors.Is(err, moderation.ErrInvalidTransition):
+		writeErr(w, http.StatusConflict, "Событие нельзя снять из текущего статуса")
+	default:
+		writeErr(w, http.StatusInternalServerError, "resolve failed")
 	}
 }
 

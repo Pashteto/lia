@@ -291,6 +291,7 @@ func (m *Module) initAPI() error {
 		LatestReason: m.modReason,
 		Organizers:   m.organizers,
 		Settings:     m.settings,
+		Complaints:   m.complaints,
 	})
 
 	// Build the organizers handler (user-facing /me/organizer + public

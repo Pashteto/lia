@@ -1,8 +1,10 @@
-# Complaints / Reports — Backend Deploy (admin-suite #3)
+# Complaints / Reports — Deploy (admin-suite #3)
 
-_2026-06-27. **Backend-only** deploy of the complaints feature to the live demo
-(`api.lia.pashteto.com` on vds-ru215). Frontend deliberately NOT deployed — see
-"Why backend only". Feature branch `worktree-feat-complaints` @ `8044adf` (UNMERGED)._
+_2026-06-27. Full deploy of the complaints feature to the live demo
+(`lia.pashteto.com` / `api.lia.pashteto.com` on vds-ru215). **Backend shipped first**
+(this doc's main body), then the **frontend** (see "Frontend deploy" at the end) once
+the feature was merged to `main` (`8acb4c2`) and reconciled with the concurrent
+draft-visibility refactor._
 
 ## What shipped
 
@@ -75,6 +77,37 @@ and `complaints_open` on `/admin/overview`. The routes are confirmed mounted + g
 - One smoke-test complaint row remains on prod (event `b0000000-…0005`, reporter
   `complaint-smoke-<ts>@presence.test`, note "smoke test", status `open`). The automated
   cleanup `DELETE` was correctly blocked (prod DB write not covered by deploy approval).
-  Dismiss it via the admin UI once the frontend ships (doubles as a real resolve test),
-  or authorize a one-row delete.
-- Frontend deploy is pending the branch merge + `page.tsx`/`EventDetailView` reconciliation.
+  Dismiss it via the admin UI (now live — doubles as a real resolve test), or authorize
+  a one-row delete.
+
+## Frontend deploy (2026-06-27, after merge + reconciliation)
+
+Shipped from `main` @ `8acb4c2` (complaints frontend reconciled with the concurrent
+draft-visibility refactor: `page.tsx` thin server shell → `EventDetailView` which now
+renders `<ReportButton>`, + `OwnerDraftFallback`; `api.ts` carries both
+`fetchEventWithAuth` and the complaints client fns). The new image is a **superset** of
+the live `amd64-draftfix` image (it already contained the draft-visibility work), so it
+adds the report modal + `/admin/complaints` without regressing it.
+
+Procedure (build-on-Mac + ship, per the Liquid Glass runbook):
+
+```bash
+# 0. preserve current live image for rollback
+ssh vdska2 'docker tag $(docker images lia-frontend:latest -q) lia-frontend:rollback-precomplaints'  # = ae034d56a1bd (amd64-draftfix)
+# 1. build from the MAIN checkout frontend (NOT the worktree — it predates the reconciliation)
+cd frontend && docker build --platform linux/amd64 \
+  --build-arg NEXT_PUBLIC_API_URL=https://api.lia.pashteto.com -t lia-frontend:amd64-complaints .
+# 2. ship
+docker save lia-frontend:amd64-complaints | gzip | ssh vdska2 'gunzip | docker load'
+# 3. cutover
+ssh vdska2 'docker tag lia-frontend:amd64-complaints lia-frontend:latest && \
+  docker rm -f lia-frontend && \
+  docker run -d --restart unless-stopped --name lia-frontend -p 127.0.0.1:3001:3001 lia-frontend:latest'
+```
+
+Verified live: `lia.pashteto.com` → 200; API → 200 (untouched); `/admin/complaints` → 200;
+event-detail SSR HTML contains «Пожаловаться» (report button renders through the
+`page.tsx → EventDetailView → ReportButton` chain). Container `Up`, `127.0.0.1:3001` → 200,
+Next.js "Ready in 631ms".
+
+Rollback: `docker tag lia-frontend:rollback-precomplaints lia-frontend:latest && docker rm -f lia-frontend && docker run -d --restart unless-stopped --name lia-frontend -p 127.0.0.1:3001:3001 lia-frontend:latest`.

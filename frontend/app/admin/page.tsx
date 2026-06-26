@@ -12,6 +12,7 @@ export default function AdminHome() {
     events_published: number;
     events_removed: number;
     organizers_pending?: number;
+    complaints_open?: number;
   } | null>(null);
 
   useEffect(() => {
@@ -30,6 +31,7 @@ export default function AdminHome() {
         <Stat label="Опубликовано" value={counts?.events_published} />
         <Stat label="Снято" value={counts?.events_removed} />
         <Stat label="Организаторы на проверке" value={counts?.organizers_pending} />
+        <Stat label="Открытые жалобы" value={counts?.complaints_open} />
       </div>
 
       <div className="mt-8">
@@ -42,6 +44,16 @@ export default function AdminHome() {
           )}
         >
           Открыть очередь модерации →
+        </Link>
+        <Link
+          href="/admin/complaints"
+          className={cn(
+            "ml-0 mt-3 inline-flex items-center gap-1.5 rounded-control px-4 py-2.5 sm:ml-3 sm:mt-0",
+            "bg-accent/12 text-accent text-[15px] font-semibold",
+            "transition hover:bg-accent/20 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none",
+          )}
+        >
+          Открыть жалобы →
         </Link>
       </div>
     </div>

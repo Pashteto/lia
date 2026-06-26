@@ -15,7 +15,7 @@ export function ReportButton({ eventId }: { eventId: string }) {
   const { isAuthed } = useAuth();
   const [open, setOpen] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
-  const [category, setCategory] = useState<ComplaintCategory>("spam");
+  const [category, setCategory] = useState<ComplaintCategory>(COMPLAINT_CATEGORIES[0].value);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
@@ -34,8 +34,8 @@ export function ReportButton({ eventId }: { eventId: string }) {
     setError(null);
     try {
       await submitComplaint(eventId, category, note.trim());
-      setDone(true);
       setOpen(false);
+      setDone(true);
       setNote("");
     } catch (err) {
       if (err instanceof Error && err.message === "not authenticated") {

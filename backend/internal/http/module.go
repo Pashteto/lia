@@ -12,6 +12,7 @@ import (
 	"github.com/go-openapi/loads"
 	"github.com/gofrs/uuid"
 	"github.com/justinas/alice"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/Pashteto/lia/config"
 	categoriesdomain "github.com/Pashteto/lia/internal/categories"
@@ -365,6 +366,10 @@ func (m *Module) initAPI() error {
 			mounted.ServeHTTP(w, r)
 			return
 		}
+		if p == "/metrics" {
+			promhttp.Handler().ServeHTTP(w, r)
+			return
+		}
 		base.ServeHTTP(w, r)
 	})
 
@@ -372,6 +377,7 @@ func (m *Module) initAPI() error {
 	handler := alice.New(
 		middlewares.Recovery(),
 		middlewares.Logger(),
+		middlewares.Metrics(),
 		middlewares.Cors(m.config.CORS),
 		middlewares.RateLimit(m.config.RateLimit),
 	).Then(router)

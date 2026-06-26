@@ -42,12 +42,18 @@ user-generated content). It must be documented for ISO 27001 / Vanta — see §9
   «Админ» header link; take-down badge on the organizer's own event views.
 - Migration `000014`: `users.role`, `event_status_history`, `audit_log`.
 
-**Out of scope (later sub-projects, each its own spec)**
+**Out of scope (later sub-projects, each its own spec)** — tracked in the
+[admin-suite roadmap](../plans/2026-06-26-admin-suite-roadmap.md):
 - A `moderator` role distinct from `admin` (needs the GateGuard proto change).
 - Organizer entity + verification queue (`/admin/moderation/organizers`).
 - Complaints inbox, featured curation, categories/interests admin, user/org search.
 - An in-app role-promotion UI — bootstrap is manual (§8).
 - Pre-moderation / a `pending_review` gate.
+
+> **Status (2026-06-26): built, reviewed (READY TO MERGE), and LIVE on prod.**
+> Deployed in the RSVP + moderation full-stack deploy; `poulissimo@gmail.com` is the
+> seeded live admin. Two deploy-time hotfixes (GateGuard compose wiring; event
+> `signup_mode` default) and all remaining admin work are tracked in the roadmap above.
 
 ## 4. Background — what already exists
 

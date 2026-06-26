@@ -283,6 +283,8 @@ func (m *Module) initAPI() error {
 		Moderation:   m.moderation,
 		Events:       m.events,
 		LatestReason: m.modReason,
+		Organizers:   m.organizers,
+		Settings:     m.settings,
 	})
 
 	// Build the organizers handler (user-facing /me/organizer + public

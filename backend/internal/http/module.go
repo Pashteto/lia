@@ -294,7 +294,6 @@ func (m *Module) initAPI() error {
 		orgH = organizershttp.NewHandler(organizershttp.Deps{
 			Authenticate: m.auth.Authenticate,
 			Organizers:   m.organizers,
-			Events:       m.events,
 			Store:        m.storage,
 		})
 	}

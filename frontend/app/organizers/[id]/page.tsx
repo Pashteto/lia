@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getPublicOrganizer } from "@/lib/api";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 
 export default function PublicOrganizerPage() {
   const params = useParams<{ id: string }>();
@@ -33,11 +34,7 @@ export default function PublicOrganizerPage() {
     <main className="mx-auto max-w-3xl px-4 py-12 space-y-4">
       <div className="flex items-center gap-2">
         <h1 className="text-3xl font-bold tracking-[-0.022em]">{org.name}</h1>
-        {org.verified && (
-          <span className="rounded-full bg-accent/10 px-2 py-0.5 text-sm font-medium text-accent">
-            ✓ Проверен
-          </span>
-        )}
+        {org.verified && <VerifiedBadge />}
       </div>
       {org.description && (
         <p className="text-label-secondary">{org.description}</p>

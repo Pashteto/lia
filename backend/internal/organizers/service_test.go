@@ -36,9 +36,6 @@ func (f *fakeRepo) SetAutoVerify(context.Context, uuid.UUID, uuid.UUID, bool) er
 func (f *fakeRepo) List(context.Context, ListFilter) ([]Organizer, error)           { return nil, nil }
 func (f *fakeRepo) History(context.Context, uuid.UUID) ([]HistoryEntry, error)      { return nil, nil }
 func (f *fakeRepo) Counts(context.Context) (Counts, error)                          { return Counts{}, nil }
-func (f *fakeRepo) VerifiedByOwners(context.Context, []uuid.UUID) (map[uuid.UUID]VerifiedOrg, error) {
-	return nil, nil
-}
 
 type fakeSettings struct{ autoAll bool }
 

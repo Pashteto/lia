@@ -11,7 +11,6 @@ import (
 
 	"github.com/gofrs/uuid"
 
-	eventsdomain "github.com/Pashteto/lia/internal/events"
 	domain "github.com/Pashteto/lia/internal/models"
 	orgdomain "github.com/Pashteto/lia/internal/organizers"
 	"github.com/Pashteto/lia/internal/storage"
@@ -21,7 +20,6 @@ import (
 type Deps struct {
 	Authenticate func(token string) (*domain.User, error)
 	Organizers   orgdomain.Service
-	Events       eventsdomain.Service
 	Store        storage.Storage // may be nil; logo URLs omitted when nil
 }
 

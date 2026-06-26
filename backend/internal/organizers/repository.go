@@ -260,28 +260,3 @@ func (r *pgRepository) Counts(ctx context.Context) (Counts, error) {
 	}
 	return c, nil
 }
-
-func (r *pgRepository) VerifiedByOwners(ctx context.Context, ownerIDs []uuid.UUID) (map[uuid.UUID]VerifiedOrg, error) {
-	out := make(map[uuid.UUID]VerifiedOrg)
-	if len(ownerIDs) == 0 {
-		return out, nil
-	}
-	var rows []struct {
-		OwnerUserID uuid.UUID `pg:"owner_user_id"`
-		ID          uuid.UUID `pg:"id"`
-		Name        string    `pg:"name,use_zero"`
-		LogoKey     string    `pg:"logo_key,use_zero"`
-	}
-	if _, err := r.db.QueryContext(ctx, &rows,
-		`SELECT o.owner_user_id, o.id, o.name, COALESCE(f.storage_key, '') AS logo_key
-		   FROM organizers o
-		   LEFT JOIN files f ON f.id = o.logo_file_id
-		  WHERE o.verification_status = 'verified' AND o.owner_user_id IN (?)`,
-		pg.In(ownerIDs)); err != nil {
-		return nil, fmt.Errorf("verified by owners: %w", err)
-	}
-	for _, row := range rows {
-		out[row.OwnerUserID] = VerifiedOrg{ID: row.ID, Name: row.Name, LogoKey: row.LogoKey}
-	}
-	return out, nil
-}

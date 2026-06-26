@@ -72,13 +72,6 @@ type Counts struct {
 	OrganizersPending int `json:"organizers_pending"`
 }
 
-// VerifiedOrg is the minimal verified-org read-model for the event badge.
-type VerifiedOrg struct {
-	ID      uuid.UUID
-	Name    string
-	LogoKey string // files.storage_key; resolved to a URL by the caller
-}
-
 // Repository persists organizers + verification transitions.
 type Repository interface {
 	GetByOwner(ctx context.Context, ownerID uuid.UUID) (*Organizer, error)
@@ -92,7 +85,6 @@ type Repository interface {
 	List(ctx context.Context, f ListFilter) ([]Organizer, error)
 	History(ctx context.Context, id uuid.UUID) ([]HistoryEntry, error)
 	Counts(ctx context.Context) (Counts, error)
-	VerifiedByOwners(ctx context.Context, ownerIDs []uuid.UUID) (map[uuid.UUID]VerifiedOrg, error)
 }
 
 // Service is the organizers use-case layer.
@@ -108,7 +100,6 @@ type Service interface {
 	List(ctx context.Context, f ListFilter) ([]Organizer, error)
 	GetWithHistory(ctx context.Context, id uuid.UUID) (*Organizer, []HistoryEntry, error)
 	Overview(ctx context.Context) (Counts, error)
-	VerifiedByOwners(ctx context.Context, ownerIDs []uuid.UUID) (map[uuid.UUID]VerifiedOrg, error)
 }
 
 type service struct {
@@ -191,7 +182,3 @@ func (s *service) GetWithHistory(ctx context.Context, id uuid.UUID) (*Organizer,
 }
 
 func (s *service) Overview(ctx context.Context) (Counts, error) { return s.repo.Counts(ctx) }
-
-func (s *service) VerifiedByOwners(ctx context.Context, ownerIDs []uuid.UUID) (map[uuid.UUID]VerifiedOrg, error) {
-	return s.repo.VerifiedByOwners(ctx, ownerIDs)
-}

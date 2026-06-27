@@ -422,8 +422,8 @@ groups:
 
       - alert: HostLowDisk
         expr: |
-          node_filesystem_avail_bytes{mountpoint="/host",fstype!~"tmpfs|overlay"}
-            / node_filesystem_size_bytes{mountpoint="/host",fstype!~"tmpfs|overlay"} < 0.10
+          node_filesystem_avail_bytes{mountpoint="/",fstype!~"tmpfs|overlay"}
+            / node_filesystem_size_bytes{mountpoint="/",fstype!~"tmpfs|overlay"} < 0.10
         for: 5m
         labels: { severity: critical }
         annotations:
@@ -438,7 +438,7 @@ groups:
           summary: "Host available memory below 10% for 10m"
 ```
 
-> Note: `mountpoint="/host"` matches node_exporter's `--path.rootfs=/host` mount from Step 3. If the root fs shows under a different mountpoint at verify time, adjust the label in Task 6's verification.
+> Note: node_exporter runs with `--path.rootfs=/host`, which **strips** the `/host` prefix — so the host root fs is reported as `mountpoint="/"` (NOT `/host`). Confirmed on vds-ru215 at deploy time (2026-06-27): root is `/` ext4. The Task 6 verify step asserts this series is non-empty.
 
 - [ ] **Step 3: Create the monitoring compose overlay**
 
@@ -638,7 +638,9 @@ curl -s localhost:9080/metrics | grep -c http_requests_total                    
 # all three jobs (lia-app, node, prometheus) show state=up; /alerts lists 5 rules.
 ```
 If `HostLowDisk` never has data, check node_exporter's root mountpoint label
-(`node_filesystem_avail_bytes`) and adjust `alerts.yml` `mountpoint="/host"` to match.
+(`node_filesystem_avail_bytes`) and adjust `alerts.yml` to match. On vds-ru215 the
+root fs is `mountpoint="/"` (ext4) because `--path.rootfs=/host` strips the prefix —
+the shipped `alerts.yml` uses `/` accordingly.
 
 ## 6. One-time: trim pre-rotation logs (if already large)
 The `logging:` caps only apply to logs written after recreate. If existing logs are big:

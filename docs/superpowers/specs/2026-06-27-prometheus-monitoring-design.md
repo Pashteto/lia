@@ -1,6 +1,8 @@
 # Simple Prometheus Monitoring — Design
 
-_Date: 2026-06-27. Status: **design, awaiting review**. Scope: instrument the Lia backend with Prometheus metrics, scrape it (plus host metrics) from a lightweight Prometheus running on the same VDS, with bounded disk + bounded logs so nothing grows unboundedly on the RAM-constrained box._
+_Date: 2026-06-27. Status: **BUILT + DEPLOYED LIVE on vds-ru215 (2026-06-27)**, on local `main` `4e19a1b` (unpushed). Scope: instrument the Lia backend with Prometheus metrics, scrape it (plus host metrics) from a lightweight Prometheus running on the same VDS, with bounded disk + bounded logs so nothing grows unboundedly on the RAM-constrained box._
+
+> **As-built deltas (2026-06-27):** (1) `HostLowDisk` uses `mountpoint="/"`, not `/host` — `node_exporter --path.rootfs=/host` strips the prefix, so the host root reports as `/`. (2) The middleware's health skip-guard matches bare `/health`, but the live health endpoint is `/api/v1/health`; health pings are therefore counted under one bounded route label (harmless; fold `/api/v1/health` into the guard on the next rebuild). The `/metrics` self-skip works as intended. See the deploy runbook's "As executed" section.
 
 ## Goal
 

@@ -71,8 +71,56 @@ docker ps --format '{{.Names}}' | xargs -I{} sh -c 'truncate -s 0 $(docker inspe
 
 ## Rollback
 ```bash
-docker compose ... -f docker-compose.monitoring.yml down            # stop monitoring only
-# revert app image:
-docker tag lia-backend:rollback-premonitoring <app-image-ref> && docker compose ... up -d app
-# remove nginx block + reload.
+cd /opt/lia/backend
+# stop monitoring only (app/db/gateguard keep running):
+docker compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml \
+  -f docker-compose.gateguard.yml -f docker-compose.monitoring.yml stop prometheus node_exporter
+# revert the app image to the pre-monitoring build, then recreate app:
+docker tag backend-app:rollback-premonitoring backend-app:latest
+docker compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml -f docker-compose.gateguard.yml up -d
+# remove the nginx /metrics deny: restore the backup + reload
+cp /etc/nginx/sites-available/lia.bak-premonitoring-20260627 /etc/nginx/sites-available/lia && nginx -t && systemctl reload nginx
 ```
+
+---
+
+## As executed — 2026-06-27 (LIVE on vds-ru215)
+
+Deployed from local `main` `4e19a1b`. No DB migration (prod stayed at **018**); a
+pre-deploy backup was taken anyway: `/opt/lia/backup-pre-monitoring-20260627.sql.gz`.
+
+- **Image:** built `backend-app:amd64-monitoring` (`c1e68320e552`, linux/amd64, 8.7 MB
+  compressed) on the Mac → `docker save | ssh | docker load`. Retagged on box:
+  `backend-app:rollback-premonitoring` = `7428be5f9def` (prior calendar build);
+  `backend-app:latest` = `c1e68320e552`.
+- **Monitoring images:** `prom/prometheus:v2.54.1` + `prom/node-exporter:v1.8.2`
+  **pulled directly on the box** (it pulls Hub fine — only the ~1 GB golang build base is
+  the tunnel problem; local `docker save` of these multi-arch images failed with a
+  containerd manifest error, so pull-on-box was used).
+- **Configs shipped:** `docker-compose.{yml,gateguard.yml}` (log-rotation blocks only —
+  diffed against the box copies first, additions-only), new `docker-compose.monitoring.yml`,
+  and `monitoring/{prometheus.yml,alerts.yml}`.
+- **Recreate:** `up -d` with all 4 compose files recreated app/postgres/gateguard/redis
+  (log-rotation config change) + started prometheus + node_exporter; `migrate` no-op
+  (already 018). Brief blip; postgres returned healthy.
+- **nginx:** added `location = /metrics { deny all; return 403; }` to the
+  `api.lia.pashteto.com` block (backup `lia.bak-premonitoring-20260627`), `nginx -t` + reload.
+
+**Verified live:** all 6 backend containers + frontend Up; `up{job=...}==1` for lia-app /
+node / prometheus; 5 alert rules `health: ok`; loopback `/metrics` serves with normalized
+route labels; public `https://api.lia.pashteto.com/metrics` → **403**; public API → 200;
+log rotation (`json-file 10m×3`) confirmed on all recreated containers; prometheus
+`mem_limit`=256 MB, retention `15d`+`512MB`, bound to `127.0.0.1:9091` only.
+
+**Fixed at deploy time:** `HostLowDisk` used `mountpoint="/host"`, but `--path.rootfs=/host`
+**strips** the prefix → root fs is `mountpoint="/"` (ext4). Series was empty (0) until
+`alerts.yml` was corrected to `/` and Prometheus reloaded (`docker kill -s HUP
+backend-prometheus-1`); now returns ~2.05 GB free. The repo `alerts.yml` carries `/`.
+
+**Known follow-up (not blocking):** the middleware skips bare `/health`, but the live
+health endpoint is `/api/v1/health`, so uptime pings accrue under
+`http_requests_total{route="/api/v1/health"}` (one bounded series — harmless). The
+important `/metrics` self-skip works. Fold `/api/v1/health` into the skip-guard on the next
+backend rebuild.
+
+**Access:** `ssh -L 9091:localhost:9091 vdska2` → open `http://localhost:9091`.

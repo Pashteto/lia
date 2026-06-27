@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/gofrs/uuid"
@@ -26,7 +27,18 @@ func NewListEvents(svc eventsdomain.Service) *ListEvents {
 
 // Handle GET /events.
 func (h *ListEvents) Handle(params eventsops.ListEventsParams) middleware.Responder {
-	list, err := h.events.List(params.HTTPRequest.Context(), "published")
+	// from / to narrow the result to a [from, to) start-time window (used by the
+	// today/weekend discovery filters). strfmt.DateTime is just a time.Time.
+	var from, to *time.Time
+	if params.From != nil {
+		t := time.Time(*params.From)
+		from = &t
+	}
+	if params.To != nil {
+		t := time.Time(*params.To)
+		to = &t
+	}
+	list, err := h.events.List(params.HTTPRequest.Context(), "published", from, to)
 	if err != nil {
 		logger.Log().Errorf("list events: %s", err.Error())
 		if errors.Is(err, eventsdomain.ErrInvalidInput) {

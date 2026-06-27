@@ -48,8 +48,9 @@ type Service interface {
 	Update(ctx context.Context, id, ownerID uuid.UUID, p UpdateParams) (*models.Event, error)
 	// GetByID returns a single event by its string UUID.
 	GetByID(ctx context.Context, id string) (*models.Event, error)
-	// List returns events, optionally filtered by status.
-	List(ctx context.Context, status string) ([]*models.Event, error)
+	// List returns events filtered by status, optionally restricted to a
+	// [from, to) start-time window (nil bounds mean "unbounded" on that side).
+	List(ctx context.Context, status string, from, to *time.Time) ([]*models.Event, error)
 	// ListByOrganizer returns all events (any status) created by the given user.
 	ListByOrganizer(ctx context.Context, organizerID uuid.UUID) ([]*models.Event, error)
 	// Nearby returns published events nearest to (lat, lon), within 50 km,
@@ -323,14 +324,14 @@ func (s *service) Update(ctx context.Context, id, ownerID uuid.UUID, p UpdatePar
 	return reloaded, nil
 }
 
-func (s *service) List(_ context.Context, status string) ([]*models.Event, error) {
+func (s *service) List(_ context.Context, status string, from, to *time.Time) ([]*models.Event, error) {
 	if status != "" {
 		if _, err := models.EventStatusFromString(status); err != nil {
 			return nil, fmt.Errorf("%w: %s", ErrInvalidInput, err.Error())
 		}
 	}
 
-	list, err := s.repo.List(ListFilter{Status: status})
+	list, err := s.repo.List(ListFilter{Status: status, From: from, To: to})
 	if err != nil {
 		return nil, fmt.Errorf("list events: %w", err)
 	}

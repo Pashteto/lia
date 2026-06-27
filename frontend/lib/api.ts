@@ -148,9 +148,19 @@ export async function getCategories(): Promise<ApiCategory[]> {
 /**
  * Fetches published events from the backend. Works on both server (SSR) and
  * client. Throws on network/HTTP error so callers can decide how to degrade.
+ *
+ * When `from` / `to` are given, the backend restricts to events whose start
+ * time is in [from, to) — used by the today/weekend date chips so the filter
+ * sees the whole dataset, not just the first page the list endpoint returns.
  */
-export async function fetchPublishedEvents(): Promise<LiaEvent[]> {
-  const res = await fetch(`${API_V1}/events?status=published`, {
+export async function fetchPublishedEvents(
+  from?: Date,
+  to?: Date,
+): Promise<LiaEvent[]> {
+  const params = new URLSearchParams({ status: "published" });
+  if (from) params.set("from", from.toISOString());
+  if (to) params.set("to", to.toISOString());
+  const res = await fetch(`${API_V1}/events?${params.toString()}`, {
     // Revalidate every 30s on the server; always fresh enough for discovery.
     next: { revalidate: 30 },
   });

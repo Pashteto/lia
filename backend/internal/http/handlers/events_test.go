@@ -26,6 +26,8 @@ type mockEventsService struct {
 	updateOwner   uuid.UUID
 	getByID       *domainmodels.Event
 	listStatusArg string
+	listFromArg   *time.Time
+	listToArg     *time.Time
 }
 
 func (m *mockEventsService) Create(_ context.Context, e *domainmodels.Event) error {
@@ -44,8 +46,10 @@ func (m *mockEventsService) Update(_ context.Context, id, ownerID uuid.UUID, _ e
 func (m *mockEventsService) GetByID(context.Context, string) (*domainmodels.Event, error) {
 	return m.getByID, nil
 }
-func (m *mockEventsService) List(_ context.Context, status string) ([]*domainmodels.Event, error) {
+func (m *mockEventsService) List(_ context.Context, status string, from, to *time.Time) ([]*domainmodels.Event, error) {
 	m.listStatusArg = status
+	m.listFromArg = from
+	m.listToArg = to
 	return nil, nil
 }
 func (m *mockEventsService) ListByOrganizer(context.Context, uuid.UUID) ([]*domainmodels.Event, error) {
@@ -264,5 +268,23 @@ func TestListEvents_ForcesPublished(t *testing.T) {
 	h.Handle(eventsops.ListEventsParams{HTTPRequest: req})
 	if svc.listStatusArg != "published" {
 		t.Fatalf("expected list to force published, got %q", svc.listStatusArg)
+	}
+	if svc.listFromArg != nil || svc.listToArg != nil {
+		t.Fatalf("expected nil from/to without query params, got %v / %v", svc.listFromArg, svc.listToArg)
+	}
+}
+
+func TestListEvents_PassesDateWindow(t *testing.T) {
+	svc := &mockEventsService{}
+	h := NewListEvents(svc)
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1/events", nil)
+	from := strfmt.DateTime(time.Date(2026, 6, 27, 0, 0, 0, 0, time.UTC))
+	to := strfmt.DateTime(time.Date(2026, 6, 28, 0, 0, 0, 0, time.UTC))
+	h.Handle(eventsops.ListEventsParams{HTTPRequest: req, From: &from, To: &to})
+	if svc.listFromArg == nil || !svc.listFromArg.Equal(time.Time(from)) {
+		t.Fatalf("expected from=%v threaded through, got %v", time.Time(from), svc.listFromArg)
+	}
+	if svc.listToArg == nil || !svc.listToArg.Equal(time.Time(to)) {
+		t.Fatalf("expected to=%v threaded through, got %v", time.Time(to), svc.listToArg)
 	}
 }

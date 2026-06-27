@@ -35,23 +35,46 @@ export function DiscoveryFeed({
   const [geoError, setGeoError] = useState<string | null>(null);
   const [geoLoading, setGeoLoading] = useState(false);
 
+  // Date chips (today/weekend) resolve to a [from, to) window, computed once per
+  // active-chip change so the server query and the client filter agree on it.
+  const dateRange = useMemo(() => {
+    const f = FILTERS.find((x) => x.slug === active);
+    return f?.dateRange?.(new Date());
+  }, [active]);
+
   const { data: allEvents = [], isError } = useQuery({
-    queryKey: ["events", "published"],
-    queryFn: fetchPublishedEvents,
-    initialData: initialEvents,
+    // Each window is its own cache entry; the unfiltered list keeps its SSR seed.
+    queryKey: [
+      "events",
+      "published",
+      dateRange?.from.toISOString() ?? null,
+      dateRange?.to.toISOString() ?? null,
+    ],
+    queryFn: () => fetchPublishedEvents(dateRange?.from, dateRange?.to),
+    initialData: dateRange ? undefined : initialEvents,
   });
 
   const events = useMemo(() => {
     return allEvents.filter((e) => {
-      const matchesFilter =
-        active === "all" || e.categories.some((c) => c.slug === active);
+      let matchesFilter: boolean;
+      if (active === "all") {
+        matchesFilter = true;
+      } else if (dateRange) {
+        // The backend already narrowed to the window; re-check client-side so
+        // the offline mock fallback narrows too (same range → consistent).
+        const t = new Date(e.startsAt).getTime();
+        matchesFilter =
+          t >= dateRange.from.getTime() && t < dateRange.to.getTime();
+      } else {
+        matchesFilter = e.categories.some((c) => c.slug === active);
+      }
       const matchesQuery =
         query.trim() === "" ||
         e.title.toLowerCase().includes(query.toLowerCase()) ||
         (e.organizer?.name ?? "").toLowerCase().includes(query.toLowerCase());
       return matchesFilter && matchesQuery;
     });
-  }, [allEvents, active, query]);
+  }, [allEvents, active, dateRange, query]);
 
   const enableNearby = () => {
     if (!navigator.geolocation) {

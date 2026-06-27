@@ -191,11 +191,26 @@ paths:
   /events:
     get:
       summary: List events
-      description: Returns events, optionally filtered by publication status.
+      description: >-
+        Returns published events, optionally restricted to a start-time window
+        via from / to (used by the today / weekend discovery filters).
       operationId: listEvents
       tags:
         - events
       security: []
+      parameters:
+        - name: from
+          in: query
+          description: Only return events whose start time is at or after this instant (RFC 3339).
+          required: false
+          type: string
+          format: date-time
+        - name: to
+          in: query
+          description: Only return events whose start time is strictly before this instant (RFC 3339).
+          required: false
+          type: string
+          format: date-time
       responses:
         200:
           description: List of events

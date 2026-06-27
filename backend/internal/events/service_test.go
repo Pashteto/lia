@@ -154,7 +154,7 @@ func TestService_GetByID_InvalidUUID(t *testing.T) {
 func TestService_List_InvalidStatus(t *testing.T) {
 	svc := NewService(&mockRepo{}, &mockValidator{}, &mockVenueValidator{}, 0)
 
-	_, err := svc.List(context.Background(), "bogus")
+	_, err := svc.List(context.Background(), "bogus", nil, nil)
 	if !errors.Is(err, ErrInvalidInput) {
 		t.Fatalf("expected ErrInvalidInput, got %v", err)
 	}
@@ -164,7 +164,7 @@ func TestService_List_OK(t *testing.T) {
 	repo := &mockRepo{list: []*models.Event{validEvent()}}
 	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
 
-	got, err := svc.List(context.Background(), "published")
+	got, err := svc.List(context.Background(), "published", nil, nil)
 	if err != nil {
 		t.Fatalf("List returned error: %v", err)
 	}

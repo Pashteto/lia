@@ -1,10 +1,43 @@
 import type { LiaEvent } from "./types";
 
-// A discovery filter chip. The "all" chip is special (shows everything); the
-// rest filter by category slug.
+// A discovery filter chip. The "all" chip is special (shows everything). A chip
+// with `dateRange` filters by the event's start time over a half-open window
+// (today / weekend); the rest filter by category slug.
 export interface DiscoveryFilter {
   slug: string;
   label: string;
+  // When present, the chip filters by start time over [from, to) instead of by
+  // category slug. The SAME range is sent to the backend (so events beyond the
+  // list cap are still found) and applied client-side (so the offline mock
+  // fallback narrows too). Returns the window for the given "now".
+  dateRange?: (now: Date) => { from: Date; to: Date };
+}
+
+// [start of today, start of tomorrow) in local time.
+export function todayRange(now: Date): { from: Date; to: Date } {
+  const from = new Date(now);
+  from.setHours(0, 0, 0, 0);
+  const to = new Date(from);
+  to.setDate(from.getDate() + 1);
+  return { from, to };
+}
+
+// The current week's weekend: [Sat 00:00, Mon 00:00) in local time. On Mon–Fri
+// this is the upcoming weekend; on Sat/Sun it is the weekend in progress.
+export function weekendRange(now: Date): { from: Date; to: Date } {
+  const day = now.getDay(); // 0=Sun … 6=Sat
+  const from = new Date(now);
+  from.setHours(0, 0, 0, 0);
+  if (day === 0) {
+    // Sunday: the weekend's Saturday was yesterday.
+    from.setDate(from.getDate() - 1);
+  } else {
+    // 0 days when today is Saturday, otherwise the coming Saturday.
+    from.setDate(from.getDate() + ((6 - day + 7) % 7));
+  }
+  const to = new Date(from);
+  to.setDate(from.getDate() + 2); // Monday 00:00, exclusive
+  return { from, to };
 }
 
 // Mock data for the Discovery scaffold. Content (titles, organizers) is drawn
@@ -13,13 +46,13 @@ export interface DiscoveryFilter {
 
 // The "Рядом" chip was removed — it duplicated the dedicated geolocation
 // "рядом со мной" button and filtered by a non-existent "nearby" category, so
-// it always showed nothing. NOTE: the date chips (today/weekend) are also not
-// wired yet — they filter by category slug, which no event matches; implement
-// real date filtering before relying on them.
+// it always showed nothing. The date chips (today/weekend) filter by the
+// event's start time via `dateRange` (applied server-side AND client-side);
+// everything else filters by category slug.
 export const FILTERS: DiscoveryFilter[] = [
   { slug: "all", label: "Все" },
-  { slug: "today", label: "Сегодня" },
-  { slug: "weekend", label: "Выходные" },
+  { slug: "today", label: "Сегодня", dateRange: todayRange },
+  { slug: "weekend", label: "Выходные", dateRange: weekendRange },
   { slug: "mediation", label: "Медиации" },
   { slug: "workshop", label: "Мастер-классы" },
   { slug: "lecture", label: "Лекции" },

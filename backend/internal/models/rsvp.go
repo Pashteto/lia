@@ -62,6 +62,10 @@ type Rsvp struct {
 
 	// Event is a transient read-model populated by joins (e.g. MyPractices).
 	Event *Event `pg:"-"`
+
+	// ApplicantName is a transient display-name read-model populated only for
+	// the organizer-facing applications list. Name only — never email.
+	ApplicantName string `pg:"-"`
 }
 
 // Validate checks required fields and a known status.

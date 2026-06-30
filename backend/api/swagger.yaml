@@ -1275,6 +1275,15 @@ definitions:
         readOnly: true
       application_answer:
         type: string
+      applicant:
+        type: object
+        readOnly: true
+        properties:
+          uuid:
+            type: string
+            format: uuid
+          name:
+            type: string
       created_at:
         type: string
         format: date-time

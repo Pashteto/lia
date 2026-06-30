@@ -1,8 +1,11 @@
 -- Lia demo seed (Option A). Idempotent: safe to re-run. NOT wired as a compose
 -- service — run manually once after the stack is healthy. Public venue data
 -- only: no PII, no secrets. Coordinates are real; geog is a generated column
--- (never inserted). organizer_id left as the zero UUID (loose ref, scaffold
--- convention). Titles are deliberately distinct from frontend/lib/mock-events.ts
+-- (never inserted). Each event is assigned an institutional organizer user (see
+-- the Organizers + "Assign organizers" blocks); a subset get verified profiles
+-- so both the verified-badge and plain-name UI states are exercised. The assign
+-- step is an UPDATE (not via the events INSERT) so it also backfills DBs seeded
+-- before organizers existed. Titles are deliberately distinct from frontend/lib/mock-events.ts
 -- so a successful render proves real data, not the mock fallback.
 
 -- ── Venues ──────────────────────────────────────────────────────────────────
@@ -16,6 +19,30 @@ INSERT INTO venues (id, name, address, metro, district, lat, lon) VALUES
   ('a0000000-0000-0000-0000-000000000007', 'Электротеатр «Станиславский»', 'ул. Тверская, 23',              'Тверская',        'ЦАО',  55.766100, 37.601900),
   ('a0000000-0000-0000-0000-000000000008', 'Еврейский музей',              'ул. Образцова, 11, стр. 1А',    'Марьина Роща',    'СВАО', 55.792200, 37.604800)
 ON CONFLICT (id) DO NOTHING;
+
+-- ── Organizer users ──────────────────────────────────────────────────────────
+-- Institutional accounts so every seeded event has a "Ведущий"/organizer. No PII:
+-- email left NULL (these never log in; real users arrive via demo-login / JIT).
+INSERT INTO users (uuid, name, status) VALUES
+  ('c0000000-0000-0000-0000-000000000001', 'Музей «Гараж»',               'active'),
+  ('c0000000-0000-0000-0000-000000000002', 'Дом культуры «ГЭС-2»',         'active'),
+  ('c0000000-0000-0000-0000-000000000003', 'Новая Третьяковка',            'active'),
+  ('c0000000-0000-0000-0000-000000000004', 'ГМИИ им. Пушкина',             'active'),
+  ('c0000000-0000-0000-0000-000000000005', 'Центр «Зотов»',                'active'),
+  ('c0000000-0000-0000-0000-000000000006', 'Центр «Винзавод»',             'active'),
+  ('c0000000-0000-0000-0000-000000000007', 'Электротеатр «Станиславский»', 'active'),
+  ('c0000000-0000-0000-0000-000000000008', 'Еврейский музей',              'active')
+ON CONFLICT (uuid) DO NOTHING;
+
+-- ── Verified organizer profiles (subset) ─────────────────────────────────────
+-- These four get the verified badge; the rest render as a plain organizer name
+-- (unverified state). owner_user_id is UNIQUE → one profile per user.
+INSERT INTO organizers (owner_user_id, name, verification_status, verified_at) VALUES
+  ('c0000000-0000-0000-0000-000000000001', 'Музей «Гараж»',        'verified', '2026-06-21 10:00:00+03'),
+  ('c0000000-0000-0000-0000-000000000002', 'Дом культуры «ГЭС-2»',  'verified', '2026-06-21 10:00:00+03'),
+  ('c0000000-0000-0000-0000-000000000003', 'Новая Третьяковка',     'verified', '2026-06-21 10:00:00+03'),
+  ('c0000000-0000-0000-0000-000000000004', 'ГМИИ им. Пушкина',      'verified', '2026-06-21 10:00:00+03')
+ON CONFLICT (owner_user_id) DO NOTHING;
 
 -- ── Events ──────────────────────────────────────────────────────────────────
 -- starts_at/published_at are absolute (no now()) so re-runs are deterministic.
@@ -67,6 +94,25 @@ INSERT INTO events
    'published', 'offline', 'free', NULL, NULL,
    '2026-07-25 12:00:00+03', '2026-07-26 22:00:00+03', '2026-06-21 10:00:00+03')
 ON CONFLICT (id) DO NOTHING;
+
+-- ── Assign organizers to seeded events ───────────────────────────────────────
+-- Done as an UPDATE (not in the INSERT above) so it also backfills DBs that were
+-- seeded before this block existed — the events INSERT is ON CONFLICT DO NOTHING
+-- and would skip existing rows. Each event maps to its venue's institution.
+UPDATE events e
+SET organizer_id = m.organizer_id
+FROM (VALUES
+  ('b0000000-0000-0000-0000-000000000001'::uuid, 'c0000000-0000-0000-0000-000000000001'::uuid),
+  ('b0000000-0000-0000-0000-000000000002'::uuid, 'c0000000-0000-0000-0000-000000000002'::uuid),
+  ('b0000000-0000-0000-0000-000000000003'::uuid, 'c0000000-0000-0000-0000-000000000003'::uuid),
+  ('b0000000-0000-0000-0000-000000000004'::uuid, 'c0000000-0000-0000-0000-000000000004'::uuid),
+  ('b0000000-0000-0000-0000-000000000005'::uuid, 'c0000000-0000-0000-0000-000000000005'::uuid),
+  ('b0000000-0000-0000-0000-000000000006'::uuid, 'c0000000-0000-0000-0000-000000000006'::uuid),
+  ('b0000000-0000-0000-0000-000000000007'::uuid, 'c0000000-0000-0000-0000-000000000007'::uuid),
+  ('b0000000-0000-0000-0000-000000000008'::uuid, 'c0000000-0000-0000-0000-000000000008'::uuid),
+  ('b0000000-0000-0000-0000-000000000009'::uuid, 'c0000000-0000-0000-0000-000000000001'::uuid)
+) AS m(event_id, organizer_id)
+WHERE e.id = m.event_id;
 
 -- ── Event ↔ category (resolve category UUID by slug) ─────────────────────────
 INSERT INTO event_categories (event_id, category_id)

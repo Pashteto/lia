@@ -179,6 +179,9 @@ func (s *service) ListApplications(_ context.Context, eventID, organizerID uuid.
 	if err != nil {
 		return nil, fmt.Errorf("list applications: %w", err)
 	}
+	if err := s.repo.LoadApplicantNames(rows); err != nil {
+		return nil, fmt.Errorf("load applicant names: %w", err)
+	}
 	return rows, nil
 }
 

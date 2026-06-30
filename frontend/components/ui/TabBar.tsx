@@ -15,7 +15,7 @@ const TABS: Tab[] = [
   { href: "/search", label: "Подбор", icon: <GlyphSparkle /> },
   { href: "/me/calendar", label: "Календарь", icon: <GlyphCalendar /> },
   { href: "/map", label: "Карта", icon: <GlyphMap /> },
-  { href: "/events/new", label: "Создать", icon: <GlyphPlus /> },
+  { href: "/organizer", label: "Организаторам", icon: <GlyphOrganizer /> },
 ];
 
 /** Mobile floating Liquid Glass tab bar — a detached capsule above the
@@ -73,15 +73,12 @@ function GlyphSparkle() {
     </svg>
   );
 }
-function GlyphPlus() {
+function GlyphOrganizer() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M12 5v14M5 12h14"
-        stroke="currentColor"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-      />
+      <rect x="3" y="5" width="18" height="14" rx="3" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="8.5" cy="11" r="2" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M13 9h5M13 12.5h5M5.5 15.5c.6-1.4 4-1.4 4.6 0" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
     </svg>
   );
 }

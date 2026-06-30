@@ -9,6 +9,8 @@ import (
 
 // RsvpToAPI converts a domain Rsvp to its API representation.
 // When r.Event is non-nil the nested event is mapped via EventToAPI.
+// When r.ApplicantName is non-empty (organizer endpoint only), the applicant
+// sub-object is populated with the user UUID and display name (no email).
 func RsvpToAPI(r *domainModels.Rsvp) *apiModels.Rsvp {
 	if r == nil {
 		return nil
@@ -20,6 +22,12 @@ func RsvpToAPI(r *domainModels.Rsvp) *apiModels.Rsvp {
 		Status:            string(r.Status),
 		ApplicationAnswer: r.ApplicationAnswer,
 		CreatedAt:         strfmt.DateTime(r.CreatedAt),
+	}
+	if r.ApplicantName != "" {
+		out.Applicant = &apiModels.RsvpApplicant{
+			UUID: strfmt.UUID(r.UserID.String()),
+			Name: r.ApplicantName,
+		}
 	}
 	if r.Event != nil {
 		out.Event = EventToAPI(r.Event)

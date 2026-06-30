@@ -12,6 +12,9 @@ import (
 	"github.com/Pashteto/lia/pkg/logger"
 )
 
+// Ensure pgRepository satisfies Repository at compile time.
+var _ Repository = (*pgRepository)(nil)
+
 // SeatDecider returns the status to assign given seats taken and capacity.
 type SeatDecider func(seatsTaken int, capacity *int) models.RsvpStatus
 
@@ -35,6 +38,9 @@ type Repository interface {
 	DecideTx(eventID, rsvpID uuid.UUID, accept bool) (*models.Rsvp, error)
 	ListByUser(userID uuid.UUID, statuses []models.RsvpStatus) ([]*models.Rsvp, error)
 	ListByEvent(eventID uuid.UUID, statuses []models.RsvpStatus) ([]*models.Rsvp, error)
+	// LoadApplicantNames populates ApplicantName on each row from the users
+	// table in a single query (no N+1). Name only — email is excluded.
+	LoadApplicantNames(rows []*models.Rsvp) error
 }
 
 type pgRepository struct{ db *pg.DB }
@@ -273,4 +279,40 @@ func (r *pgRepository) attachEvents(rows []*models.Rsvp) ([]*models.Rsvp, error)
 		row.Event = byID[row.EventID]
 	}
 	return rows, nil
+}
+
+func (r *pgRepository) LoadApplicantNames(rows []*models.Rsvp) error {
+	if len(rows) == 0 {
+		return nil
+	}
+	ids := make([]uuid.UUID, 0, len(rows))
+	seen := make(map[uuid.UUID]struct{})
+	for _, row := range rows {
+		if row.UserID != uuid.Nil {
+			if _, ok := seen[row.UserID]; !ok {
+				seen[row.UserID] = struct{}{}
+				ids = append(ids, row.UserID)
+			}
+		}
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	var users []struct {
+		UUID uuid.UUID `pg:"uuid"`
+		Name string    `pg:"name,use_zero"`
+	}
+	if _, err := r.db.Query(&users,
+		`SELECT uuid, name FROM users WHERE uuid IN (?)`, pg.In(ids),
+	); err != nil {
+		return fmt.Errorf("load applicant names: %w", err)
+	}
+	names := make(map[uuid.UUID]string, len(users))
+	for _, u := range users {
+		names[u.UUID] = u.Name
+	}
+	for _, row := range rows {
+		row.ApplicantName = names[row.UserID]
+	}
+	return nil
 }

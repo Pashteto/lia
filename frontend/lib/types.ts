@@ -89,6 +89,7 @@ export interface Rsvp {
   eventId: string;
   status: RsvpStatus;
   applicationAnswer?: string;
+  applicant?: { id: string; name: string };
   createdAt: string;
   event?: LiaEvent;
 }

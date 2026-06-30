@@ -120,6 +120,7 @@ func (f *fakeRepo) ListByEvent(eventID uuid.UUID, st []models.RsvpStatus) ([]*mo
 	}
 	return out, nil
 }
+func (f *fakeRepo) LoadApplicantNames(_ []*models.Rsvp) error { return nil }
 
 func openEvent(cap *int) *models.Event {
 	return &models.Event{ID: uuid.Must(uuid.NewV4()), OrganizerID: uuid.Must(uuid.NewV4()), SignupMode: "open", Capacity: cap}

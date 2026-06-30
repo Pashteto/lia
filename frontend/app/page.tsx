@@ -1,11 +1,9 @@
 import { AuthButton } from "@/components/AuthButton";
 import { DiscoveryFeed } from "@/components/DiscoveryFeed";
-import { Button } from "@/components/ui/Button";
 import { GlassNav } from "@/components/ui/GlassNav";
 import { ThemeSwitch } from "@/components/ui/ThemeSwitch";
 import { fetchPublishedEvents } from "@/lib/api";
 import { MOCK_EVENTS } from "@/lib/mock-events";
-import Link from "next/link";
 
 // Discovery screen — the worked example for the frontend scaffold.
 // Built from design/screens/discovery.html on the Apple-HIG token system.
@@ -23,9 +21,6 @@ export default async function DiscoveryPage() {
         actions={
           <>
             <ThemeSwitch />
-            <Link href="/events/new" className="hidden sm:block">
-              <Button variant="tinted">Создать событие</Button>
-            </Link>
             <AuthButton />
           </>
         }

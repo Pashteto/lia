@@ -92,11 +92,19 @@ export function EventApplicationsPanel({ eventId, eventTitle }: Props) {
     );
   }
 
+  const total = applications.length;
+  const pendingCount = applications.filter((a) => a.status === "applied").length;
+
   return (
     <div className="mt-3 space-y-2">
       {eventTitle && (
         <p className="text-[13px] font-medium text-label-secondary">{eventTitle}</p>
       )}
+      <p className="text-[12px] text-label-secondary">
+        {pendingCount > 0
+          ? `Заявок: ${total} · ожидают: ${pendingCount}`
+          : `Заявок: ${total}`}
+      </p>
       {applications.map((rsvp) => {
         const isPending = rsvp.status === "applied";
         const isActing = deciding[rsvp.id] != null;
@@ -109,6 +117,9 @@ export function EventApplicationsPanel({ eventId, eventTitle }: Props) {
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1 space-y-1">
+                <p className="text-[14px] font-medium text-label">
+                  {rsvp.applicant?.name || "Участник"}
+                </p>
                 {rsvp.applicationAnswer ? (
                   <p className="text-[14px] leading-snug">{rsvp.applicationAnswer}</p>
                 ) : (

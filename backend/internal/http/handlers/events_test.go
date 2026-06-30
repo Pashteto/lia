@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -15,19 +16,21 @@ import (
 	"github.com/Pashteto/lia/internal/http/models"
 	eventsops "github.com/Pashteto/lia/internal/http/server/operations/events"
 	domainmodels "github.com/Pashteto/lia/internal/models"
+	organizersdomain "github.com/Pashteto/lia/internal/organizers"
 )
 
 // mockEventsService captures the event passed to Create.
 type mockEventsService struct {
-	created       *domainmodels.Event
-	createErr     error
-	updated       *domainmodels.Event
-	updateErr     error
-	updateOwner   uuid.UUID
-	getByID       *domainmodels.Event
-	listStatusArg string
-	listFromArg   *time.Time
-	listToArg     *time.Time
+	created          *domainmodels.Event
+	createErr        error
+	updated          *domainmodels.Event
+	updateErr        error
+	updateOwner      uuid.UUID
+	getByID          *domainmodels.Event
+	listStatusArg    string
+	listFromArg      *time.Time
+	listToArg        *time.Time
+	listOrganizerArg *uuid.UUID
 }
 
 func (m *mockEventsService) Create(_ context.Context, e *domainmodels.Event) error {
@@ -46,10 +49,11 @@ func (m *mockEventsService) Update(_ context.Context, id, ownerID uuid.UUID, _ e
 func (m *mockEventsService) GetByID(context.Context, string) (*domainmodels.Event, error) {
 	return m.getByID, nil
 }
-func (m *mockEventsService) List(_ context.Context, status string, from, to *time.Time) ([]*domainmodels.Event, error) {
+func (m *mockEventsService) List(_ context.Context, status string, from, to *time.Time, organizerOwnerID *uuid.UUID) ([]*domainmodels.Event, error) {
 	m.listStatusArg = status
 	m.listFromArg = from
 	m.listToArg = to
+	m.listOrganizerArg = organizerOwnerID
 	return nil, nil
 }
 func (m *mockEventsService) ListByOrganizer(context.Context, uuid.UUID) ([]*domainmodels.Event, error) {
@@ -263,7 +267,7 @@ func TestGetEventByID_AnonymousPublished_Returns200(t *testing.T) {
 
 func TestListEvents_ForcesPublished(t *testing.T) {
 	svc := &mockEventsService{}
-	h := NewListEvents(svc)
+	h := NewListEvents(svc, nil)
 	req, _ := http.NewRequest(http.MethodGet, "/api/v1/events", nil)
 	h.Handle(eventsops.ListEventsParams{HTTPRequest: req})
 	if svc.listStatusArg != "published" {
@@ -276,7 +280,7 @@ func TestListEvents_ForcesPublished(t *testing.T) {
 
 func TestListEvents_PassesDateWindow(t *testing.T) {
 	svc := &mockEventsService{}
-	h := NewListEvents(svc)
+	h := NewListEvents(svc, nil)
 	req, _ := http.NewRequest(http.MethodGet, "/api/v1/events", nil)
 	from := strfmt.DateTime(time.Date(2026, 6, 27, 0, 0, 0, 0, time.UTC))
 	to := strfmt.DateTime(time.Date(2026, 6, 28, 0, 0, 0, 0, time.UTC))
@@ -286,5 +290,65 @@ func TestListEvents_PassesDateWindow(t *testing.T) {
 	}
 	if svc.listToArg == nil || !svc.listToArg.Equal(time.Time(to)) {
 		t.Fatalf("expected to=%v threaded through, got %v", time.Time(to), svc.listToArg)
+	}
+}
+
+type fakeOrganizers struct {
+	org *organizersdomain.Organizer
+	err error
+}
+
+func (f *fakeOrganizers) GetByID(_ context.Context, _ uuid.UUID) (*organizersdomain.Organizer, error) {
+	return f.org, f.err
+}
+func (f *fakeOrganizers) GetByOwner(_ context.Context, _ uuid.UUID) (*organizersdomain.Organizer, error) {
+	return nil, nil
+}
+func (f *fakeOrganizers) Upsert(_ context.Context, _ uuid.UUID, _ organizersdomain.Input) (*organizersdomain.Organizer, error) {
+	return nil, nil
+}
+func (f *fakeOrganizers) Submit(_ context.Context, _ uuid.UUID) (string, error) { return "", nil }
+func (f *fakeOrganizers) Verify(_ context.Context, _, _ uuid.UUID) error        { return nil }
+func (f *fakeOrganizers) Reject(_ context.Context, _, _ uuid.UUID, _ string) error {
+	return nil
+}
+func (f *fakeOrganizers) Revoke(_ context.Context, _, _ uuid.UUID, _ string) error {
+	return nil
+}
+func (f *fakeOrganizers) SetAutoVerify(_ context.Context, _, _ uuid.UUID, _ bool) error {
+	return nil
+}
+func (f *fakeOrganizers) List(_ context.Context, _ organizersdomain.ListFilter) ([]organizersdomain.Organizer, error) {
+	return nil, nil
+}
+func (f *fakeOrganizers) GetWithHistory(_ context.Context, _ uuid.UUID) (*organizersdomain.Organizer, []organizersdomain.HistoryEntry, error) {
+	return nil, nil, nil
+}
+func (f *fakeOrganizers) Overview(_ context.Context) (organizersdomain.Counts, error) {
+	return organizersdomain.Counts{}, nil
+}
+
+func TestListEvents_OrganizerResolvesToVerifiedOwner(t *testing.T) {
+	owner := uuid.Must(uuid.NewV4())
+	profile := uuid.Must(uuid.NewV4())
+	evSvc := &mockEventsService{}
+	orgSvc := &fakeOrganizers{org: &organizersdomain.Organizer{OwnerUserID: owner, VerificationStatus: "verified"}}
+	h := NewListEvents(evSvc, orgSvc)
+	pid := strfmt.UUID(profile.String())
+	resp := h.Handle(eventsops.ListEventsParams{HTTPRequest: httptest.NewRequest("GET", "/events", nil), OrganizerID: &pid})
+	_ = resp
+	if evSvc.listOrganizerArg == nil || *evSvc.listOrganizerArg != owner {
+		t.Fatalf("expected owner %s passed to List, got %v", owner, evSvc.listOrganizerArg)
+	}
+}
+
+func TestListEvents_UnverifiedOrganizerReturnsEmpty(t *testing.T) {
+	evSvc := &mockEventsService{}
+	orgSvc := &fakeOrganizers{org: &organizersdomain.Organizer{VerificationStatus: "pending"}}
+	h := NewListEvents(evSvc, orgSvc)
+	pid := strfmt.UUID(uuid.Must(uuid.NewV4()).String())
+	h.Handle(eventsops.ListEventsParams{HTTPRequest: httptest.NewRequest("GET", "/events", nil), OrganizerID: &pid})
+	if evSvc.listOrganizerArg != nil {
+		t.Fatalf("expected List not to receive an organizer filter for unverified org")
 	}
 }

@@ -147,7 +147,7 @@ func (h *handler) listEvents(w http.ResponseWriter, r *http.Request, _ *domain.U
 	if status != "published" && status != "rejected" {
 		status = "published"
 	}
-	events, err := h.deps.Events.List(r.Context(), status, nil, nil)
+	events, err := h.deps.Events.List(r.Context(), status, nil, nil, nil)
 	if err != nil {
 		writeErr(w, http.StatusInternalServerError, "list failed")
 		return

@@ -12,23 +12,23 @@ import (
 	"github.com/Pashteto/lia/internal/http/formatter"
 	apimodels "github.com/Pashteto/lia/internal/http/models"
 	eventsops "github.com/Pashteto/lia/internal/http/server/operations/events"
+	organizersdomain "github.com/Pashteto/lia/internal/organizers"
 	"github.com/Pashteto/lia/pkg/logger"
 )
 
-// ListEvents handler returns events, optionally filtered by status.
+// ListEvents handler returns events, optionally filtered by status / organizer.
 type ListEvents struct {
-	events eventsdomain.Service
+	events     eventsdomain.Service
+	organizers organizersdomain.Service
 }
 
 // NewListEvents creates a ListEvents handler.
-func NewListEvents(svc eventsdomain.Service) *ListEvents {
-	return &ListEvents{events: svc}
+func NewListEvents(svc eventsdomain.Service, orgs organizersdomain.Service) *ListEvents {
+	return &ListEvents{events: svc, organizers: orgs}
 }
 
 // Handle GET /events.
 func (h *ListEvents) Handle(params eventsops.ListEventsParams) middleware.Responder {
-	// from / to narrow the result to a [from, to) start-time window (used by the
-	// today/weekend discovery filters). strfmt.DateTime is just a time.Time.
 	var from, to *time.Time
 	if params.From != nil {
 		t := time.Time(*params.From)
@@ -38,7 +38,27 @@ func (h *ListEvents) Handle(params eventsops.ListEventsParams) middleware.Respon
 		t := time.Time(*params.To)
 		to = &t
 	}
-	list, err := h.events.List(params.HTTPRequest.Context(), "published", from, to)
+
+	// organizer_id (a public organizers.id profile id) restricts to that
+	// verified organizer's events. Unknown / unverified / malformed id, or no
+	// organizers service (no-DB mode) → empty list, no error, no leak.
+	var organizerOwner *uuid.UUID
+	if params.OrganizerID != nil {
+		if h.organizers == nil {
+			return eventsops.NewListEventsOK().WithPayload([]*apimodels.Event{})
+		}
+		profileID, perr := uuid.FromString(params.OrganizerID.String())
+		if perr != nil {
+			return eventsops.NewListEventsOK().WithPayload([]*apimodels.Event{})
+		}
+		org, oerr := h.organizers.GetByID(params.HTTPRequest.Context(), profileID)
+		if oerr != nil || org == nil || org.VerificationStatus != "verified" {
+			return eventsops.NewListEventsOK().WithPayload([]*apimodels.Event{})
+		}
+		organizerOwner = &org.OwnerUserID
+	}
+
+	list, err := h.events.List(params.HTTPRequest.Context(), "published", from, to, organizerOwner)
 	if err != nil {
 		logger.Log().Errorf("list events: %s", err.Error())
 		if errors.Is(err, eventsdomain.ErrInvalidInput) {

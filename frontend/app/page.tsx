@@ -1,5 +1,6 @@
 import { AuthButton } from "@/components/AuthButton";
 import { DiscoveryFeed } from "@/components/DiscoveryFeed";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { GlassNav } from "@/components/ui/GlassNav";
 import { ThemeSwitch } from "@/components/ui/ThemeSwitch";
 import { fetchPublishedEvents } from "@/lib/api";
@@ -17,7 +18,7 @@ export default async function DiscoveryPage() {
   return (
     <>
       <GlassNav
-        title="Presence.Tarski"
+        title={<BrandLogo />}
         actions={
           <>
             <ThemeSwitch />

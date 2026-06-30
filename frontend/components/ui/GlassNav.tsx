@@ -10,7 +10,7 @@ export function GlassNav({
   actions,
   className,
 }: {
-  title: string;
+  title: React.ReactNode;
   actions?: React.ReactNode;
   className?: string;
 }) {

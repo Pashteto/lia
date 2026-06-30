@@ -171,6 +171,16 @@ export async function fetchPublishedEvents(
   return data.map(apiEventToLia);
 }
 
+/** Fetches a verified organizer's published events via GET /events?organizer_id=. */
+export async function fetchEventsByOrganizer(organizerId: string): Promise<LiaEvent[]> {
+  const res = await fetch(`${API_V1}/events?organizer_id=${encodeURIComponent(organizerId)}`);
+  if (!res.ok) {
+    throw new Error(`fetch organizer events failed: ${res.status}`);
+  }
+  const data = (await res.json()) as ApiEvent[];
+  return data.map(apiEventToLia);
+}
+
 /**
  * Fetches the authenticated user's own events (any status, incl. drafts) via
  * `GET /events/mine`. Requires a session token. Client-side only (no cache) so

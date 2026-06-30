@@ -52,7 +52,18 @@ func (h *ListEvents) Handle(params eventsops.ListEventsParams) middleware.Respon
 			return eventsops.NewListEventsOK().WithPayload([]*apimodels.Event{})
 		}
 		org, oerr := h.organizers.GetByID(params.HTTPRequest.Context(), profileID)
-		if oerr != nil || org == nil || org.VerificationStatus != "verified" {
+		if oerr != nil {
+			if errors.Is(oerr, organizersdomain.ErrNotFound) {
+				// Unknown profile id — no leak, just an empty list.
+				return eventsops.NewListEventsOK().WithPayload([]*apimodels.Event{})
+			}
+			// A real lookup failure (DB down, timeout) must not masquerade as "no events".
+			logger.Log().Errorf("resolve organizer %s: %s", profileID, oerr.Error())
+			return eventsops.NewListEventsServiceUnavailable().
+				WithPayload(DefaultError(http.StatusServiceUnavailable, oerr, nil))
+		}
+		if org == nil || org.VerificationStatus != "verified" {
+			// Exists-but-unverified or nil → empty list (no leak of non-verified profiles).
 			return eventsops.NewListEventsOK().WithPayload([]*apimodels.Event{})
 		}
 		organizerOwner = &org.OwnerUserID

@@ -336,7 +336,9 @@ func TestListEvents_OrganizerResolvesToVerifiedOwner(t *testing.T) {
 	h := NewListEvents(evSvc, orgSvc)
 	pid := strfmt.UUID(profile.String())
 	resp := h.Handle(eventsops.ListEventsParams{HTTPRequest: httptest.NewRequest("GET", "/events", nil), OrganizerID: &pid})
-	_ = resp
+	if _, ok := resp.(*eventsops.ListEventsOK); !ok {
+		t.Fatalf("expected *ListEventsOK, got %T", resp)
+	}
 	if evSvc.listOrganizerArg == nil || *evSvc.listOrganizerArg != owner {
 		t.Fatalf("expected owner %s passed to List, got %v", owner, evSvc.listOrganizerArg)
 	}
@@ -347,8 +349,44 @@ func TestListEvents_UnverifiedOrganizerReturnsEmpty(t *testing.T) {
 	orgSvc := &fakeOrganizers{org: &organizersdomain.Organizer{VerificationStatus: "pending"}}
 	h := NewListEvents(evSvc, orgSvc)
 	pid := strfmt.UUID(uuid.Must(uuid.NewV4()).String())
-	h.Handle(eventsops.ListEventsParams{HTTPRequest: httptest.NewRequest("GET", "/events", nil), OrganizerID: &pid})
+	resp := h.Handle(eventsops.ListEventsParams{HTTPRequest: httptest.NewRequest("GET", "/events", nil), OrganizerID: &pid})
+	ok200, ok := resp.(*eventsops.ListEventsOK)
+	if !ok {
+		t.Fatalf("expected *ListEventsOK, got %T", resp)
+	}
+	if len(ok200.Payload) != 0 {
+		t.Fatalf("expected empty payload, got %d items", len(ok200.Payload))
+	}
 	if evSvc.listOrganizerArg != nil {
 		t.Fatalf("expected List not to receive an organizer filter for unverified org")
+	}
+}
+
+func TestListEvents_UnknownOrganizerReturnsEmpty(t *testing.T) {
+	evSvc := &mockEventsService{}
+	orgSvc := &fakeOrganizers{err: organizersdomain.ErrNotFound}
+	h := NewListEvents(evSvc, orgSvc)
+	pid := strfmt.UUID(uuid.Must(uuid.NewV4()).String())
+	resp := h.Handle(eventsops.ListEventsParams{HTTPRequest: httptest.NewRequest("GET", "/events", nil), OrganizerID: &pid})
+	ok200, ok := resp.(*eventsops.ListEventsOK)
+	if !ok {
+		t.Fatalf("expected *ListEventsOK, got %T", resp)
+	}
+	if len(ok200.Payload) != 0 {
+		t.Fatalf("expected empty payload, got %d items", len(ok200.Payload))
+	}
+	if evSvc.listOrganizerArg != nil {
+		t.Fatalf("expected List not to be called for unknown organizer")
+	}
+}
+
+func TestListEvents_OrganizerLookupErrorReturns503(t *testing.T) {
+	evSvc := &mockEventsService{}
+	orgSvc := &fakeOrganizers{err: errors.New("db down")}
+	h := NewListEvents(evSvc, orgSvc)
+	pid := strfmt.UUID(uuid.Must(uuid.NewV4()).String())
+	resp := h.Handle(eventsops.ListEventsParams{HTTPRequest: httptest.NewRequest("GET", "/events", nil), OrganizerID: &pid})
+	if _, ok := resp.(*eventsops.ListEventsServiceUnavailable); !ok {
+		t.Fatalf("expected *ListEventsServiceUnavailable, got %T", resp)
 	}
 }

@@ -33,10 +33,10 @@ export function AuthButton() {
           Календарь
         </Link>
         <Link
-          href="/events/mine"
+          href="/organizer"
           className="text-[14px] font-medium text-accent"
         >
-          Мои события
+          Организаторам
         </Link>
         {role === "admin" && (
           <Link

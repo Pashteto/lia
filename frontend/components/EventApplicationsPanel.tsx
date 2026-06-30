@@ -109,6 +109,9 @@ export function EventApplicationsPanel({ eventId, eventTitle }: Props) {
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1 space-y-1">
+                <p className="text-[14px] font-medium text-label">
+                  {rsvp.applicant?.name || "Участник"}
+                </p>
                 {rsvp.applicationAnswer ? (
                   <p className="text-[14px] leading-snug">{rsvp.applicationAnswer}</p>
                 ) : (

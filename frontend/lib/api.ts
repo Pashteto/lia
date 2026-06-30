@@ -376,6 +376,7 @@ interface ApiRsvp {
   event_id: string;
   status: RsvpStatus;
   application_answer?: string;
+  applicant?: { uuid: string; name: string };
   created_at: string;
   event?: ApiEvent;
 }
@@ -387,6 +388,9 @@ function apiRsvpToLia(r: ApiRsvp): Rsvp {
     eventId: r.event_id,
     status: r.status,
     applicationAnswer: r.application_answer || undefined,
+    applicant: r.applicant
+      ? { id: r.applicant.uuid, name: r.applicant.name }
+      : undefined,
     createdAt: r.created_at,
     event: r.event ? apiEventToLia(r.event) : undefined,
   };

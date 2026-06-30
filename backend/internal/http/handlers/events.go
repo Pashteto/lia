@@ -47,9 +47,14 @@ func (h *ListEvents) Handle(params eventsops.ListEventsParams) middleware.Respon
 		if h.organizers == nil {
 			return eventsops.NewListEventsOK().WithPayload([]*apimodels.Event{})
 		}
+		// params.OrganizerID is already validated as a uuid by the go-swagger
+		// binding layer (a malformed value is rejected with 400 before this
+		// handler runs), so this parse effectively never fails. Be honest about
+		// the contract anyway: a bad uuid is a 400, not an empty list.
 		profileID, perr := uuid.FromString(params.OrganizerID.String())
 		if perr != nil {
-			return eventsops.NewListEventsOK().WithPayload([]*apimodels.Event{})
+			return eventsops.NewListEventsBadRequest().
+				WithPayload(DefaultError(http.StatusBadRequest, perr, nil))
 		}
 		org, oerr := h.organizers.GetByID(params.HTTPRequest.Context(), profileID)
 		if oerr != nil {

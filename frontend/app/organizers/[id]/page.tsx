@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams } from "next/navigation";
-import { followOrganizer, getPublicOrganizer, unfollowOrganizer } from "@/lib/api";
+import { followOrganizer, getPublicOrganizer, unfollowOrganizer, fetchEventsByOrganizer } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/Button";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { EventCard } from "@/components/ui/EventCard";
+import type { LiaEvent } from "@/lib/types";
 
 export default function PublicOrganizerPage() {
   const params = useParams<{ id: string }>();
@@ -21,6 +23,7 @@ export default function PublicOrganizerPage() {
   const [notFound, setNotFound] = useState(false);
   const [following, setFollowing] = useState(false);
   const [pending, setPending] = useState(false);
+  const [events, setEvents] = useState<LiaEvent[]>([]);
 
   useEffect(() => {
     getPublicOrganizer(params.id)
@@ -34,6 +37,24 @@ export default function PublicOrganizerPage() {
       })
       .catch(() => setNotFound(true));
   }, [params.id]);
+
+  useEffect(() => {
+    fetchEventsByOrganizer(params.id)
+      .then(setEvents)
+      .catch(() => setEvents([]));
+  }, [params.id]);
+
+  const { upcoming, past } = useMemo(() => {
+    const now = new Date().getTime();
+    const upcoming = events
+      .filter((e) => new Date(e.startsAt).getTime() >= now)
+      .sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime());
+    const past = events
+      .filter((e) => new Date(e.startsAt).getTime() < now)
+      .sort((a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime())
+      .slice(0, 10);
+    return { upcoming, past };
+  }, [events]);
 
   async function toggleFollow() {
     if (!org || pending) return;
@@ -87,9 +108,29 @@ export default function PublicOrganizerPage() {
           {org.website_url}
         </a>
       )}
-      {/* Published events for this organizer are listed via the existing events
-          list filtered to this organizer; wire once the event-list-by-organizer
-          public filter is confirmed (spec §7.3). */}
+      <section className="space-y-3 pt-4">
+        <h2 className="text-xl font-semibold tracking-[-0.022em]">Предстоящие мероприятия</h2>
+        {upcoming.length === 0 ? (
+          <p className="text-label-secondary">Пока нет предстоящих мероприятий.</p>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {upcoming.map((e) => (
+              <EventCard key={e.id} event={e} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {past.length > 0 && (
+        <section className="space-y-3 pt-4">
+          <h2 className="text-xl font-semibold tracking-[-0.022em]">Прошедшие мероприятия</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {past.map((e) => (
+              <EventCard key={e.id} event={e} />
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }

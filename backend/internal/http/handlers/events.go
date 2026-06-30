@@ -12,23 +12,23 @@ import (
 	"github.com/Pashteto/lia/internal/http/formatter"
 	apimodels "github.com/Pashteto/lia/internal/http/models"
 	eventsops "github.com/Pashteto/lia/internal/http/server/operations/events"
+	organizersdomain "github.com/Pashteto/lia/internal/organizers"
 	"github.com/Pashteto/lia/pkg/logger"
 )
 
-// ListEvents handler returns events, optionally filtered by status.
+// ListEvents handler returns events, optionally filtered by status / organizer.
 type ListEvents struct {
-	events eventsdomain.Service
+	events     eventsdomain.Service
+	organizers organizersdomain.Service
 }
 
 // NewListEvents creates a ListEvents handler.
-func NewListEvents(svc eventsdomain.Service) *ListEvents {
-	return &ListEvents{events: svc}
+func NewListEvents(svc eventsdomain.Service, orgs organizersdomain.Service) *ListEvents {
+	return &ListEvents{events: svc, organizers: orgs}
 }
 
 // Handle GET /events.
 func (h *ListEvents) Handle(params eventsops.ListEventsParams) middleware.Responder {
-	// from / to narrow the result to a [from, to) start-time window (used by the
-	// today/weekend discovery filters). strfmt.DateTime is just a time.Time.
 	var from, to *time.Time
 	if params.From != nil {
 		t := time.Time(*params.From)
@@ -38,7 +38,43 @@ func (h *ListEvents) Handle(params eventsops.ListEventsParams) middleware.Respon
 		t := time.Time(*params.To)
 		to = &t
 	}
-	list, err := h.events.List(params.HTTPRequest.Context(), "published", from, to)
+
+	// organizer_id (a public organizers.id profile id) restricts to that
+	// verified organizer's events. Unknown / unverified / malformed id, or no
+	// organizers service (no-DB mode) → empty list, no error, no leak.
+	var organizerOwner *uuid.UUID
+	if params.OrganizerID != nil {
+		if h.organizers == nil {
+			return eventsops.NewListEventsOK().WithPayload([]*apimodels.Event{})
+		}
+		// params.OrganizerID is already validated as a uuid by the go-swagger
+		// binding layer (a malformed value is rejected with 400 before this
+		// handler runs), so this parse effectively never fails. Be honest about
+		// the contract anyway: a bad uuid is a 400, not an empty list.
+		profileID, perr := uuid.FromString(params.OrganizerID.String())
+		if perr != nil {
+			return eventsops.NewListEventsBadRequest().
+				WithPayload(DefaultError(http.StatusBadRequest, perr, nil))
+		}
+		org, oerr := h.organizers.GetByID(params.HTTPRequest.Context(), profileID)
+		if oerr != nil {
+			if errors.Is(oerr, organizersdomain.ErrNotFound) {
+				// Unknown profile id — no leak, just an empty list.
+				return eventsops.NewListEventsOK().WithPayload([]*apimodels.Event{})
+			}
+			// A real lookup failure (DB down, timeout) must not masquerade as "no events".
+			logger.Log().Errorf("resolve organizer %s: %s", profileID, oerr.Error())
+			return eventsops.NewListEventsServiceUnavailable().
+				WithPayload(DefaultError(http.StatusServiceUnavailable, oerr, nil))
+		}
+		if org == nil || org.VerificationStatus != "verified" {
+			// Exists-but-unverified or nil → empty list (no leak of non-verified profiles).
+			return eventsops.NewListEventsOK().WithPayload([]*apimodels.Event{})
+		}
+		organizerOwner = &org.OwnerUserID
+	}
+
+	list, err := h.events.List(params.HTTPRequest.Context(), "published", from, to, organizerOwner)
 	if err != nil {
 		logger.Log().Errorf("list events: %s", err.Error())
 		if errors.Is(err, eventsdomain.ErrInvalidInput) {

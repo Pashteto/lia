@@ -154,7 +154,7 @@ func TestService_GetByID_InvalidUUID(t *testing.T) {
 func TestService_List_InvalidStatus(t *testing.T) {
 	svc := NewService(&mockRepo{}, &mockValidator{}, &mockVenueValidator{}, 0)
 
-	_, err := svc.List(context.Background(), "bogus", nil, nil)
+	_, err := svc.List(context.Background(), "bogus", nil, nil, nil)
 	if !errors.Is(err, ErrInvalidInput) {
 		t.Fatalf("expected ErrInvalidInput, got %v", err)
 	}
@@ -164,7 +164,7 @@ func TestService_List_OK(t *testing.T) {
 	repo := &mockRepo{list: []*models.Event{validEvent()}}
 	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
 
-	got, err := svc.List(context.Background(), "published", nil, nil)
+	got, err := svc.List(context.Background(), "published", nil, nil, nil)
 	if err != nil {
 		t.Fatalf("List returned error: %v", err)
 	}
@@ -410,5 +410,15 @@ func TestService_Update_RejectsNonSettableStatus(t *testing.T) {
 	_, err := svc.Update(context.Background(), ev.ID, owner, UpdateParams{Status: &pending})
 	if !errors.Is(err, ErrInvalidInput) {
 		t.Fatalf("expected ErrInvalidInput, got %v", err)
+	}
+}
+
+func TestList_PassesOrganizerOwnerIDIntoFilter(t *testing.T) {
+	repo := &mockRepo{}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+	owner := uuid.Must(uuid.NewV4())
+	_, _ = svc.List(context.Background(), "published", nil, nil, &owner)
+	if len(repo.listFilter.OrganizerIDs) != 1 || repo.listFilter.OrganizerIDs[0] != owner {
+		t.Fatalf("expected OrganizerIDs=[%s], got %v", owner, repo.listFilter.OrganizerIDs)
 	}
 }

@@ -80,22 +80,40 @@ export function EventDetailView({ event }: { event: LiaEvent }) {
 
         {event.organizer && (
           <Section title="Ведущий">
-            <div className="flex items-center gap-3">
-              <div className="size-11 shrink-0 rounded-full bg-fill" aria-hidden />
-              <div>
-                <p className="flex items-center gap-1.5 text-[17px] font-medium">
-                  {event.organizer.name || "Организатор"}
-                  {event.organizer.verified && (
-                    <VerifiedBadge profileId={event.organizer.profile_id} />
-                  )}
-                </p>
-                {event.organizer.affiliation && (
-                  <p className="text-[13px] text-label-secondary">
-                    {event.organizer.affiliation}
+            {event.organizer.profile_id ? (
+              <Link
+                href={`/organizers/${event.organizer.profile_id}`}
+                className="flex items-center gap-3 transition hover:opacity-70"
+              >
+                <div className="size-11 shrink-0 rounded-full bg-fill" aria-hidden />
+                <div>
+                  <p className="flex items-center gap-1.5 text-[17px] font-medium">
+                    {event.organizer.name || "Организатор"}
+                    {event.organizer.verified && <VerifiedBadge />}
                   </p>
-                )}
+                  {event.organizer.affiliation && (
+                    <p className="text-[13px] text-label-secondary">
+                      {event.organizer.affiliation}
+                    </p>
+                  )}
+                </div>
+              </Link>
+            ) : (
+              <div className="flex items-center gap-3">
+                <div className="size-11 shrink-0 rounded-full bg-fill" aria-hidden />
+                <div>
+                  <p className="flex items-center gap-1.5 text-[17px] font-medium">
+                    {event.organizer.name || "Организатор"}
+                    {event.organizer.verified && <VerifiedBadge />}
+                  </p>
+                  {event.organizer.affiliation && (
+                    <p className="text-[13px] text-label-secondary">
+                      {event.organizer.affiliation}
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </Section>
         )}
 

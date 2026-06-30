@@ -52,7 +52,7 @@ This is presentation-only; no data or API change.
 Expose published events for a given organizer on the existing public list endpoint.
 
 - **Swagger** (`backend/api/swagger.yaml`, `GET /events`): add an optional `organizer_id` query param (`type: string, format: uuid`). Additive; regenerate with **`make generate-api`** only (never `make generate-all`). Generated artifacts stay gitignored/uncommitted.
-- **Handler** (`backend/internal/http/handlers/events.go`, the `listEvents` path that already maps `from`/`to` into the events `ListFilter`): when `organizer_id` is present, resolve it from a **profile id** (`organizers.id`) to the organizer's **owner user id**, gating on **verified** status (reuse the resolution the follows feature already does: `organizers.id` → `owner_user_id` where `verification_status = 'verified'`). If the id doesn't resolve to a verified organizer, return an **empty list** (no leak, no error). Set `ListFilter.OrganizerIDs = [ownerUserID]`.
+- **Handler** (`backend/internal/http/handlers/events.go`, the `listEvents` path that already maps `from`/`to` into the events `ListFilter`): when `organizer_id` is present, resolve it from a **profile id** (`organizers.id`) to the organizer's **owner user id**, gating on **verified** status (reuse the resolution the follows feature already does: `organizers.id` → `owner_user_id` where `verification_status = 'verified'`). If the id is **unknown or not verified**, return an **empty list** (no leak, no error). A **genuine lookup error** (DB down/timeout) returns **503** (must not masquerade as "no events"). A **malformed `organizer_id`** is rejected as **400 by the go-swagger binding layer** (the param is `format: uuid`) before the handler runs — so the contract for a malformed id is **400**, not empty-200 (the frontend tolerates either: `fetchEventsByOrganizer` throws on non-2xx and the page catches → `[]`). Set `ListFilter.OrganizerIDs = [ownerUserID]`.
 - The endpoint stays `security: []` and **published-only** (existing behavior). `from`/`to` continue to work and compose with `organizer_id` (not used by the organizer page in this iteration, but the combination must remain valid).
 - Resolution lookup must select only what it needs (no email / private fields).
 
@@ -86,7 +86,7 @@ Expose published events for a given organizer on the existing public list endpoi
 
 ## Risks & edge cases
 
-- **Profile→owner resolution**: if `organizer_id` is malformed or not a verified organizer, return `[]` (not 404/500) — the page simply shows no events. Mirrors the no-leak posture of the public organizer endpoint.
+- **Profile→owner resolution**: an unknown or non-verified `organizer_id` returns `[]` (not 404/500) — the page simply shows no events, mirroring the no-leak posture of the public organizer endpoint. A malformed (non-uuid) id is a **400** at the binding layer; a real lookup failure is a **503**. The frontend degrades all of these to an empty list.
 - **`<Link>` nesting**: the badge must not remain a `Link` once the row is a `Link`. Render the badge as a plain span on event detail.
 - **Past-list size**: capped in the UI only; a prolific organizer's full published history is still returned by the single query. Acceptable at demo scale; note as a follow-up if histories grow (then add server-side `to=now` + limit).
 - **Swagger regen**: `make generate-api` only (the `generate-all` proto step is known-broken here); generated models remain gitignored and must not be committed.

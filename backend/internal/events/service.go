@@ -90,6 +90,7 @@ type UpdateParams struct {
 	SignupMode              *string
 	CuratorQuestion         *string
 	ExternalRegistrationURL *string
+	Capacity                *int
 }
 
 // ownerSettableStatus reports whether an owner may set the given status via the

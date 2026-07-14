@@ -103,6 +103,18 @@ func TestEventFromAPIInput_CoverFileID(t *testing.T) {
 	}
 }
 
+func TestEventPatchToUpdateParams_Capacity(t *testing.T) {
+	cap := int64(10)
+	p := EventPatchToUpdateParams(&apiModels.EventPatch{Capacity: &cap})
+	if p.Capacity == nil || *p.Capacity != 10 {
+		t.Fatalf("want capacity 10, got %v", p.Capacity)
+	}
+	p2 := EventPatchToUpdateParams(&apiModels.EventPatch{})
+	if p2.Capacity != nil {
+		t.Fatalf("want nil capacity when omitted, got %v", *p2.Capacity)
+	}
+}
+
 func TestEventFromAPIInput_DefaultsToDraft(t *testing.T) {
 	title := "X"
 	starts := strfmt.DateTime(time.Now())

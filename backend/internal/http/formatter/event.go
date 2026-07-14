@@ -311,6 +311,9 @@ func EventPatchToUpdateParams(in *apiModels.EventPatch) eventsdomain.UpdateParam
 		v := in.ExternalRegistrationURL
 		p.ExternalRegistrationURL = &v
 	}
-	// capacity is set at create; PATCH support deferred
+	if in.Capacity != nil {
+		c := int(*in.Capacity)
+		p.Capacity = &c
+	}
 	return p
 }

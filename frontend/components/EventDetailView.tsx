@@ -1,8 +1,10 @@
+import { FeedbackForm } from "@/components/FeedbackForm";
 import { ReportButton } from "@/components/ReportButton";
 import { SignupCTA } from "@/components/SignupCTA";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { EventCover } from "@/components/ui/EventCover";
 import { VenueMap } from "@/components/VenueMap";
+import { useAuth } from "@/lib/auth-context";
 import {
   formatAttendance,
   formatEventDate,
@@ -16,9 +18,11 @@ import Link from "next/link";
 // SSR fetch, common published case) and the client-side owner-draft fallback.
 // Uses only client-safe children, so it works in either context.
 export function EventDetailView({ event }: { event: LiaEvent }) {
+  const { isAuthed } = useAuth();
   const attendance = formatAttendance(event);
   const where =
     event.venue?.name ?? (event.format === "online" ? "Онлайн" : "—");
+  const ended = new Date(event.endsAt ?? event.startsAt) < new Date();
 
   return (
     <div className="min-h-screen bg-bg pb-28">
@@ -133,18 +137,28 @@ export function EventDetailView({ event }: { event: LiaEvent }) {
           </Section>
         )}
 
+        {ended && isAuthed && (
+          <Section title="Отзыв">
+            <FeedbackForm eventId={event.id} />
+          </Section>
+        )}
+
         <div className="mt-6">
           <ReportButton eventId={event.id} />
         </div>
       </article>
 
-      {/* Sticky registration bar — solid (opaque) bg, not translucent glass. */}
-      <div className="fixed inset-x-0 bottom-0 z-10 border-t border-separator bg-bg">
-        <div className="mx-auto flex max-w-2xl items-center justify-between gap-4 px-5 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
-          <span className="text-[17px] font-semibold">{formatPrice(event)}</span>
-          <SignupCTA event={event} />
+      {/* Sticky registration bar — solid (opaque) bg, not translucent glass.
+          Once the event has ended, the RSVP CTA is replaced by the feedback
+          block above, so the bar is dropped entirely. */}
+      {!ended && (
+        <div className="fixed inset-x-0 bottom-0 z-10 border-t border-separator bg-bg">
+          <div className="mx-auto flex max-w-2xl items-center justify-between gap-4 px-5 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+            <span className="text-[17px] font-semibold">{formatPrice(event)}</span>
+            <SignupCTA event={event} />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 
+import { FeedbackForm } from "@/components/FeedbackForm";
 import { Button } from "@/components/ui/Button";
 import { FilterChip } from "@/components/ui/FilterChip";
 import { cancelRsvp, fetchMyPractices } from "@/lib/api";
@@ -39,6 +40,7 @@ function StatusChip({ status }: { status: RsvpStatus }) {
 function PracticeRow({ rsvp, tab }: { rsvp: Rsvp; tab: Tab }) {
   const queryClient = useQueryClient();
   const [cancelling, setCancelling] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   const event = rsvp.event;
   const canCancel = tab === "upcoming" && (rsvp.status === "going" || rsvp.status === "waitlist");
@@ -55,43 +57,57 @@ function PracticeRow({ rsvp, tab }: { rsvp: Rsvp; tab: Tab }) {
   }
 
   return (
-    <div className="flex flex-col gap-2 rounded-card bg-bg-secondary p-4 shadow-card-subtle sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex flex-col gap-1 min-w-0">
-        <div className="flex flex-wrap items-center gap-2">
-          <StatusChip status={rsvp.status} />
-          {event && (
-            <span className="text-[13px] text-label-secondary">
-              {formatEventDate(event.startsAt)}
+    <div className="flex flex-col gap-2 rounded-card bg-bg-secondary p-4 shadow-card-subtle">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusChip status={rsvp.status} />
+            {event && (
+              <span className="text-[13px] text-label-secondary">
+                {formatEventDate(event.startsAt)}
+              </span>
+            )}
+          </div>
+          {event ? (
+            <Link
+              href={`/events/${rsvp.eventId}`}
+              className="text-[17px] font-semibold leading-snug hover:text-accent transition-colors line-clamp-2"
+            >
+              {event.title}
+            </Link>
+          ) : (
+            <span className="text-[17px] font-semibold leading-snug text-label-secondary">
+              Событие #{rsvp.eventId.slice(0, 8)}
             </span>
           )}
+          {event?.venue?.name && (
+            <p className="text-[13px] text-label-secondary">{event.venue.name}</p>
+          )}
         </div>
-        {event ? (
-          <Link
-            href={`/events/${rsvp.eventId}`}
-            className="text-[17px] font-semibold leading-snug hover:text-accent transition-colors line-clamp-2"
+
+        {canCancel && (
+          <Button
+            variant="tinted"
+            onClick={handleCancel}
+            disabled={cancelling}
+            className="shrink-0 self-start sm:self-center"
           >
-            {event.title}
-          </Link>
-        ) : (
-          <span className="text-[17px] font-semibold leading-snug text-label-secondary">
-            Событие #{rsvp.eventId.slice(0, 8)}
-          </span>
+            {cancelling ? "…" : cancelLabel}
+          </Button>
         )}
-        {event?.venue?.name && (
-          <p className="text-[13px] text-label-secondary">{event.venue.name}</p>
+
+        {tab === "past" && (
+          <Button
+            variant="tinted"
+            onClick={() => setShowFeedback((v) => !v)}
+            className="shrink-0 self-start sm:self-center"
+          >
+            {showFeedback ? "Свернуть" : "Оставить отзыв"}
+          </Button>
         )}
       </div>
 
-      {canCancel && (
-        <Button
-          variant="tinted"
-          onClick={handleCancel}
-          disabled={cancelling}
-          className="shrink-0 self-start sm:self-center"
-        >
-          {cancelling ? "…" : cancelLabel}
-        </Button>
-      )}
+      {tab === "past" && showFeedback && <FeedbackForm eventId={rsvp.eventId} />}
     </div>
   );
 }

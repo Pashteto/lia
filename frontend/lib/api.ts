@@ -870,3 +870,55 @@ export async function setAdminSetting(key: string, enabled: boolean): Promise<vo
   });
   if (!res.ok) throw new Error(`set setting: ${res.status}`);
 }
+
+// ---------------------------------------------------------------------------
+// Post-event feedback API
+// ---------------------------------------------------------------------------
+
+export interface FeedbackItem {
+  rating: number;
+  comment?: string;
+  author_name: string;
+  created_at: string;
+}
+
+export interface FeedbackSummary {
+  average: number;
+  count: number;
+  items: FeedbackItem[];
+}
+
+export async function submitFeedback(
+  eventId: string,
+  rating: number,
+  comment?: string,
+): Promise<void> {
+  const token = getToken();
+  const res = await fetch(`${API_V1}/events/${eventId}/feedback`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    body: JSON.stringify({ rating, comment: comment ?? "" }),
+  });
+  if (!res.ok) {
+    const detail = await res.json().catch(() => ({}));
+    throw new Error((detail as { error?: string }).error ?? `feedback failed: ${res.status}`);
+  }
+}
+
+export async function getEventFeedback(eventId: string): Promise<FeedbackSummary> {
+  const token = getToken();
+  const res = await fetch(`${API_V1}/events/${eventId}/feedback`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) throw new Error(`feedback fetch failed: ${res.status}`);
+  return (await res.json()) as FeedbackSummary;
+}
+
+export async function getMyFeedback(eventId: string): Promise<boolean> {
+  const token = getToken();
+  const res = await fetch(`${API_V1}/me/feedback?event_id=${eventId}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) return false;
+  return ((await res.json()) as { submitted: boolean }).submitted;
+}

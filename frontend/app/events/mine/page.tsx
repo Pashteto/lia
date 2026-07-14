@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 
 import { EventApplicationsPanel } from "@/components/EventApplicationsPanel";
+import { OrganizerFeedback } from "@/components/OrganizerFeedback";
 import { PublishEventButton } from "@/components/PublishEventButton";
 import { EventCard } from "@/components/ui/EventCard";
 import { fetchMyEvents } from "@/lib/api";
@@ -32,6 +33,25 @@ function ApplicationsExpander({ event }: { event: LiaEvent }) {
         <span>Заявки</span>
       </button>
       {open && <EventApplicationsPanel eventId={event.id} />}
+    </div>
+  );
+}
+
+/** Collapsible "Отзывы" expander shown on every event — the backend gates
+ * the data to the owner, so it renders nothing for anyone else. */
+function FeedbackExpander({ event }: { event: LiaEvent }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-1">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center gap-1 rounded-control px-2 py-1.5 text-[13px] font-medium text-accent hover:bg-accent/8 transition"
+      >
+        <span>{open ? "▾" : "▸"}</span>
+        <span>Отзывы</span>
+      </button>
+      {open && <OrganizerFeedback eventId={event.id} />}
     </div>
   );
 }
@@ -119,6 +139,7 @@ export default function MyEventsPage() {
               {e.signupMode === "application" && (
                 <ApplicationsExpander event={e} />
               )}
+              {e.status === "published" && <FeedbackExpander event={e} />}
             </div>
           ))}
         </div>

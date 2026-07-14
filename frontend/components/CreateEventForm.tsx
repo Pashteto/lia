@@ -486,7 +486,9 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
         {mode === "edit" && editMutation.isError && (
           <p className="mt-4 text-[15px] text-red-500">
             {editMutation.error instanceof Error && editMutation.error.message.includes("409")
-              ? "Нельзя уменьшить лимит мест ниже числа уже записавшихся"
+              ? /occupied|capacity/i.test(editMutation.error.message)
+                ? "Нельзя уменьшить лимит мест ниже числа уже записавшихся"
+                : "Это событие нельзя редактировать в текущем статусе"
               : "Не удалось сохранить изменения. Проверьте, что бэкенд запущен."}
           </p>
         )}

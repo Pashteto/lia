@@ -26,6 +26,13 @@ type mockRepo struct {
 	updated          *models.Event
 	updateErr        error
 	listFilter       ListFilter
+
+	// R2 task 3: capacity reconciliation + audit recording.
+	capacitySetTo     *int
+	capacityCallCount int
+	capacityErr       error
+	editAuditWritten  bool
+	editAuditErr      error
 }
 
 func (m *mockRepo) Create(event *models.Event) error {
@@ -59,12 +66,18 @@ func (m *mockRepo) CountByOrganizerSince(_ uuid.UUID, since time.Time) (int, err
 	return m.countByOrganizer, m.countErr
 }
 
-func (m *mockRepo) SetCapacityTx(uuid.UUID, *int) (int, error) {
+func (m *mockRepo) SetCapacityTx(_ uuid.UUID, newCapacity *int) (int, error) {
+	m.capacityCallCount++
+	m.capacitySetTo = newCapacity
+	if m.capacityErr != nil {
+		return 0, m.capacityErr
+	}
 	return 0, nil
 }
 
 func (m *mockRepo) WriteEditAudit(context.Context, uuid.UUID, uuid.UUID) error {
-	return nil
+	m.editAuditWritten = true
+	return m.editAuditErr
 }
 
 // mockValidator is an in-memory CategoryValidator.
@@ -358,16 +371,59 @@ func TestService_Update_NonOwner_ReturnsNotFound(t *testing.T) {
 	}
 }
 
-func TestService_Update_PublishedIsLocked(t *testing.T) {
-	owner := uuid.Must(uuid.NewV4())
+// publishedEvent returns a valid published event owned by owner.
+func publishedEvent(owner uuid.UUID) *models.Event {
 	ev := ownedDraft(owner)
 	ev.Status = models.EventPublished
+	return ev
+}
+
+// eventWithStatus returns a valid event owned by owner with the given status.
+func eventWithStatus(owner uuid.UUID, status models.EventStatus) *models.Event {
+	ev := ownedDraft(owner)
+	ev.Status = status
+	return ev
+}
+
+func TestUpdate_AllowsPublished(t *testing.T) {
+	owner := uuid.Must(uuid.NewV4())
+	ev := publishedEvent(owner)
 	repo := &mockRepo{get: ev}
 	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
 
-	_, err := svc.Update(context.Background(), ev.ID, owner, UpdateParams{})
+	title := "Новое название"
+	_, err := svc.Update(context.Background(), ev.ID, owner, UpdateParams{Title: &title})
+	if err != nil {
+		t.Fatalf("published edit should succeed, got %v", err)
+	}
+	if !repo.editAuditWritten {
+		t.Fatal("expected audit on published edit")
+	}
+}
+
+func TestUpdate_RejectsSignupModeChangeOnPublished(t *testing.T) {
+	owner := uuid.Must(uuid.NewV4())
+	ev := publishedEvent(owner)
+	repo := &mockRepo{get: ev}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+
+	mode := "application"
+	_, err := svc.Update(context.Background(), ev.ID, owner, UpdateParams{SignupMode: &mode})
+	if !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("want ErrInvalidInput, got %v", err)
+	}
+}
+
+func TestUpdate_RejectsEditOfCancelled(t *testing.T) {
+	owner := uuid.Must(uuid.NewV4())
+	ev := eventWithStatus(owner, models.EventCancelled)
+	repo := &mockRepo{get: ev}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+
+	title := "x"
+	_, err := svc.Update(context.Background(), ev.ID, owner, UpdateParams{Title: &title})
 	if !errors.Is(err, ErrNotEditable) {
-		t.Fatalf("expected ErrNotEditable, got %v", err)
+		t.Fatalf("want ErrNotEditable, got %v", err)
 	}
 }
 

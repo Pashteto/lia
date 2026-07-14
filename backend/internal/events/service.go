@@ -227,9 +227,15 @@ func (s *service) Update(ctx context.Context, id, ownerID uuid.UUID, p UpdatePar
 		return nil, fmt.Errorf("%w: event %s", ErrNotFound, id)
 	}
 
-	// Only drafts are editable.
-	if event.Status != models.EventDraft {
+	// Draft and published events are editable. Moderation/terminal statuses are not.
+	if event.Status != models.EventDraft && event.Status != models.EventPublished {
 		return nil, fmt.Errorf("%w: event %s is %s", ErrNotEditable, id, event.Status)
+	}
+	wasPublished := event.Status == models.EventPublished
+
+	// Signup mode is locked once published (would strip meaning from existing RSVPs).
+	if wasPublished && p.SignupMode != nil && *p.SignupMode != event.SignupMode {
+		return nil, fmt.Errorf("%w: режим записи нельзя изменить после публикации", ErrInvalidInput)
 	}
 
 	if p.Title != nil {
@@ -319,6 +325,23 @@ func (s *service) Update(ctx context.Context, id, ownerID uuid.UUID, p UpdatePar
 
 	if err := s.repo.Update(event); err != nil {
 		return nil, fmt.Errorf("update event: %w", err)
+	}
+
+	// Capacity change: guarded, atomic, promotes the waitlist.
+	if p.Capacity != nil {
+		if _, err := s.repo.SetCapacityTx(id, p.Capacity); err != nil {
+			if errors.Is(err, ErrCapacityBelowOccupied) {
+				return nil, err // handler maps to 409
+			}
+			return nil, fmt.Errorf("reconcile capacity: %w", err)
+		}
+	}
+
+	// Audit published edits (draft edits are not audited, matching create/publish).
+	if wasPublished {
+		if err := s.repo.WriteEditAudit(ctx, id, ownerID); err != nil {
+			return nil, fmt.Errorf("write edit audit: %w", err)
+		}
 	}
 
 	reloaded, err := s.repo.GetByID(id)

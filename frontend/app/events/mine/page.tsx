@@ -107,6 +107,12 @@ export default function MyEventsPage() {
                 </span>
               )}
               <EventCard event={e} />
+              <Link
+                href={`/events/${e.id}/edit`}
+                className="mt-1 flex w-full items-center justify-center gap-1 rounded-control px-2 py-1.5 text-[13px] font-medium text-accent hover:bg-accent/8 transition"
+              >
+                Редактировать
+              </Link>
               {e.status === "draft" && <PublishEventButton eventId={e.id} />}
               {e.signupMode === "application" && (
                 <ApplicationsExpander event={e} />

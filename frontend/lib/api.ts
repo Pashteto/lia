@@ -305,6 +305,32 @@ export async function createEvent(input: CreateEventInput): Promise<LiaEvent> {
 }
 
 /**
+ * Edits an event via PATCH /events/{id}; returns the updated event.
+ * Requires authentication (owner-only; the backend enforces the auth check).
+ * Callers omit `signup_mode` from `patch` when the event is already published
+ * (the backend locks signup mode after publication) — this function sends
+ * whatever the caller passes through unmodified.
+ */
+export async function patchEvent(
+  id: string,
+  patch: Partial<CreateEventInput>,
+): Promise<LiaEvent> {
+  const token = getToken();
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  const res = await fetch(`${API_V1}/events/${id}`, {
+    method: "PATCH",
+    headers,
+    body: JSON.stringify(patch),
+  });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`patch event failed: ${res.status} ${detail}`);
+  }
+  return apiEventToLia((await res.json()) as ApiEvent);
+}
+
+/**
  * Uploads a file via POST /api/v1/uploads.
  * Returns the file id (uuid) and its publicly fetchable URL.
  * Requires authentication — attaches the demo-login bearer token.

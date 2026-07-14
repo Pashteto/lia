@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Segmented } from "@/components/ui/Segmented";
 import { Switch } from "@/components/ui/Switch";
 import { VenuePicker } from "@/components/VenuePicker";
-import { createEvent, getCategories, type CreateEventInput, uploadFile } from "@/lib/api";
+import { createEvent, getCategories, patchEvent, type CreateEventInput, uploadFile } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/cn";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -55,14 +55,39 @@ export const eventFormSchema = z
     }
   });
 
-type FormValues = z.input<typeof eventFormSchema>;
+export type FormValues = z.input<typeof eventFormSchema>;
+
+/**
+ * Converts an ISO instant to the `datetime-local` input value ("YYYY-MM-DDTHH:mm")
+ * in the browser's local timezone — the inverse of `new Date(v.startsAt)` used on
+ * submit below. No date library: the repo deliberately sticks to native Date +
+ * Intl (see lib/calendar.ts), and this is a small enough conversion to inline.
+ */
+export function toDatetimeLocalValue(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
 
 const inputCls =
   "w-full rounded-control bg-fill px-3.5 py-2.5 text-[17px] text-label outline-none placeholder:text-label-secondary focus:ring-2 focus:ring-accent";
 
-export function CreateEventForm() {
+export interface CreateEventFormProps {
+  /** Default "create". "edit" reuses this form to PATCH an existing event. */
+  mode?: "create" | "edit";
+  /** Required in edit mode: the event being edited. */
+  eventId?: string;
+  /** Seed values in edit mode, mapped from the fetched event (incl. the cover). */
+  initial?: Partial<FormValues> & { coverFileId?: string; coverPreviewUrl?: string };
+}
+
+export function CreateEventForm({ mode = "create", eventId, initial }: CreateEventFormProps) {
   const router = useRouter();
   const { isAuthed, ready } = useAuth();
+
+  // Once an event is published, the backend locks its signup mode (422 on
+  // change) — lock the control client-side too so submits don't fail.
+  const isPublishedEdit = mode === "edit" && initial?.status === "published";
 
   const {
     register,
@@ -72,23 +97,35 @@ export function CreateEventForm() {
   } = useForm<FormValues>({
     resolver: zodResolver(eventFormSchema),
     defaultValues: {
-      format: "offline",
-      isFree: true,
+      format: initial?.format ?? "offline",
+      isFree: initial?.isFree ?? true,
       // Default to published so a created event is immediately visible in the
       // discovery feed (which lists status=published). Users can still pick
       // "Черновик" in the status control to keep it hidden.
-      status: "published",
-      categoryIds: [],
-      venueId: "",
-      signupMode: "open",
+      status: initial?.status ?? "published",
+      categoryIds: initial?.categoryIds ?? [],
+      venueId: initial?.venueId ?? "",
+      signupMode: initial?.signupMode ?? "open",
+      title: initial?.title,
+      description: initial?.description,
+      startsAt: initial?.startsAt,
+      endsAt: initial?.endsAt,
+      priceMin: initial?.priceMin,
+      capacity: initial?.capacity,
+      curatorQuestion: initial?.curatorQuestion,
+      externalRegistrationUrl: initial?.externalRegistrationUrl,
     },
   });
 
   const isFree = useWatch({ control, name: "isFree" });
   const signupMode = useWatch({ control, name: "signupMode" });
+  const startsAt = useWatch({ control, name: "startsAt" });
+  const venueId = useWatch({ control, name: "venueId" });
 
-  const [coverFileId, setCoverFileId] = useState<string | undefined>(undefined);
-  const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | undefined>(undefined);
+  const [coverFileId, setCoverFileId] = useState<string | undefined>(initial?.coverFileId);
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | undefined>(
+    initial?.coverPreviewUrl,
+  );
   const [coverUploading, setCoverUploading] = useState(false);
   const [coverError, setCoverError] = useState<string | undefined>(undefined);
 
@@ -101,6 +138,19 @@ export function CreateEventForm() {
     mutationFn: (input: CreateEventInput) => createEvent(input),
     onSuccess: (event) => router.push(`/events/${event.id}`),
   });
+
+  const editMutation = useMutation({
+    mutationFn: (patch: Partial<CreateEventInput>) => patchEvent(eventId as string, patch),
+    onSuccess: (event) => router.push(`/events/${event.id}`),
+  });
+
+  // Non-blocking heads-up: changing the start time or venue on an already-
+  // published event doesn't notify anyone automatically (no re-moderation,
+  // no participant email) — the organizer has to do that themselves.
+  const showChangeNotice =
+    isPublishedEdit &&
+    ((initial?.startsAt != null && startsAt !== initial.startsAt) ||
+      (initial?.venueId != null && venueId !== initial.venueId));
 
   const handleCoverChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -141,6 +191,19 @@ export function CreateEventForm() {
       external_registration_url:
         v.signupMode === "external" ? v.externalRegistrationUrl?.trim() || undefined : undefined,
     };
+
+    if (mode === "edit") {
+      // Once published, signup_mode is locked server-side (422 to change it) —
+      // omit it from the patch entirely rather than resend the same value, so
+      // we never trip that guard from a stale/disabled control.
+      const patch: Partial<CreateEventInput> = { ...input };
+      if (isPublishedEdit) {
+        delete patch.signup_mode;
+      }
+      editMutation.mutate(patch);
+      return;
+    }
+
     mutation.mutate(input);
   };
 
@@ -158,12 +221,23 @@ export function CreateEventForm() {
       {/* Glass nav with Cancel / Save */}
       <header className="glass sticky top-0 z-10 border-b border-separator">
         <div className="mx-auto flex max-w-2xl items-center justify-between px-5 py-3">
-          <Link href="/" className="text-[17px] text-accent">
+          <Link
+            href={mode === "edit" && eventId ? `/events/${eventId}` : "/"}
+            className="text-[17px] text-accent"
+          >
             Отмена
           </Link>
-          <span className="text-[17px] font-semibold">Новое событие</span>
-          <Button type="submit" variant="plain" disabled={mutation.isPending}>
-            {mutation.isPending ? "Сохранение…" : "Сохранить"}
+          <span className="text-[17px] font-semibold">
+            {mode === "edit" ? "Редактирование события" : "Новое событие"}
+          </span>
+          <Button
+            type="submit"
+            variant="plain"
+            disabled={mode === "edit" ? editMutation.isPending : mutation.isPending}
+          >
+            {(mode === "edit" ? editMutation.isPending : mutation.isPending)
+              ? "Сохранение…"
+              : "Сохранить"}
           </Button>
         </div>
       </header>
@@ -292,6 +366,11 @@ export function CreateEventForm() {
           <Field label="Окончание">
             <input type="datetime-local" className={inputCls} {...register("endsAt")} />
           </Field>
+          {showChangeNotice && (
+            <p className="text-[13px] text-label-secondary">
+              Участники уже записаны — предупредите их об изменении самостоятельно.
+            </p>
+          )}
         </Section>
 
         <Section title="Запись">
@@ -308,9 +387,15 @@ export function CreateEventForm() {
                   ]}
                   value={field.value}
                   onChange={field.onChange}
+                  disabled={isPublishedEdit}
                 />
               )}
             />
+            {isPublishedEdit && (
+              <span className="mt-1.5 block text-[13px] text-label-secondary">
+                Режим записи зафиксирован после публикации
+              </span>
+            )}
           </Field>
 
           {signupMode !== "external" && (
@@ -390,11 +475,19 @@ export function CreateEventForm() {
           </Field>
         </Section>
 
-        {mutation.isError && (
+        {mode === "create" && mutation.isError && (
           <p className="mt-4 text-[15px] text-red-500">
             {mutation.error instanceof Error && mutation.error.message.includes("429")
               ? "Достигнут лимит: 10 событий в месяц. Лимит обновится 1-го числа."
               : "Не удалось сохранить событие. Проверьте, что бэкенд запущен."}
+          </p>
+        )}
+
+        {mode === "edit" && editMutation.isError && (
+          <p className="mt-4 text-[15px] text-red-500">
+            {editMutation.error instanceof Error && editMutation.error.message.includes("409")
+              ? "Нельзя уменьшить лимит мест ниже числа уже записавшихся"
+              : "Не удалось сохранить изменения. Проверьте, что бэкенд запущен."}
           </p>
         )}
       </div>

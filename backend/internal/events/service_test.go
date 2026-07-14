@@ -59,6 +59,14 @@ func (m *mockRepo) CountByOrganizerSince(_ uuid.UUID, since time.Time) (int, err
 	return m.countByOrganizer, m.countErr
 }
 
+func (m *mockRepo) SetCapacityTx(uuid.UUID, *int) (int, error) {
+	return 0, nil
+}
+
+func (m *mockRepo) WriteEditAudit(context.Context, uuid.UUID, uuid.UUID) error {
+	return nil
+}
+
 // mockValidator is an in-memory CategoryValidator.
 type mockValidator struct {
 	err      error

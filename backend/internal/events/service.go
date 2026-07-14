@@ -25,6 +25,9 @@ var (
 	// ErrNotEditable indicates the event is in a status that cannot be edited
 	// (only draft events are editable).
 	ErrNotEditable = errors.New("not editable")
+	// ErrCapacityBelowOccupied indicates a capacity change below the number of
+	// occupied seats (going+accepted). The message carries the occupied count.
+	ErrCapacityBelowOccupied = errors.New("capacity below occupied seats")
 )
 
 // startOfMonthMoscow returns midnight on the first day of t's calendar month

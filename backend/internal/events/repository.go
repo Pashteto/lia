@@ -5,6 +5,7 @@ package events
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -69,6 +70,15 @@ type Repository interface {
 	// CountByOrganizerSince returns the number of events created by the given
 	// organizer at or after since (all statuses, draft + published).
 	CountByOrganizerSince(organizer uuid.UUID, since time.Time) (int, error)
+	// SetCapacityTx atomically changes an event's capacity, guarding against a
+	// reduction below the number of occupied seats (going+accepted), and then
+	// FIFO-promotes waitlisted rsvps into any newly freed seats. Returns the
+	// number of rows promoted. Returns ErrCapacityBelowOccupied (wrapping the
+	// occupied count) when newCapacity is set below the current occupancy.
+	SetCapacityTx(eventID uuid.UUID, newCapacity *int) (int, error)
+	// WriteEditAudit inserts one audit_log row recording an owner edit of the
+	// given event by the given actor.
+	WriteEditAudit(ctx context.Context, eventID, actorID uuid.UUID) error
 }
 
 // pgRepository is a go-pg backed Repository.
@@ -559,4 +569,63 @@ func (r *pgRepository) CountByOrganizerSince(organizer uuid.UUID, since time.Tim
 		return 0, fmt.Errorf("count events for organizer %s since %s: %w", organizer, since.Format(time.RFC3339), err)
 	}
 	return count, nil
+}
+
+// SetCapacityTx locks the event row, rejects a reduction below current
+// occupancy (going+accepted), writes the new capacity, then FIFO-promotes
+// waitlisted rsvps into any newly freed seats — all inside one transaction so
+// concurrent sign-ups/cancellations serialize against it.
+func (r *pgRepository) SetCapacityTx(eventID uuid.UUID, newCapacity *int) (int, error) {
+	var promoted int
+	err := r.db.RunInTransaction(context.Background(), func(tx *pg.Tx) error {
+		// Lock the event row to serialize with concurrent sign-ups.
+		if _, err := tx.Exec(`SELECT id FROM events WHERE id = ? FOR UPDATE`, eventID); err != nil {
+			return fmt.Errorf("lock event %s: %w", eventID, err)
+		}
+		occupied, err := tx.Model((*models.Rsvp)(nil)).
+			Where("event_id = ? AND status IN ('going','accepted')", eventID).Count()
+		if err != nil {
+			return fmt.Errorf("count occupied: %w", err)
+		}
+		if newCapacity != nil && *newCapacity < occupied {
+			return fmt.Errorf("%w: %d occupied", ErrCapacityBelowOccupied, occupied)
+		}
+		if _, err := tx.Exec(`UPDATE events SET capacity = ?, updated_at = now() WHERE id = ?`,
+			newCapacity, eventID); err != nil {
+			return fmt.Errorf("set capacity: %w", err)
+		}
+		// Promote FIFO from waitlist while there is room (unlimited => fill all).
+		for newCapacity == nil || occupied < *newCapacity {
+			next := new(models.Rsvp)
+			err := tx.Model(next).
+				Where("event_id = ? AND status = 'waitlist'", eventID).
+				Order("created_at ASC").Limit(1).Select()
+			if errors.Is(err, pg.ErrNoRows) {
+				break
+			}
+			if err != nil {
+				return fmt.Errorf("find waitlist head: %w", err)
+			}
+			next.Status = models.RsvpGoing
+			if _, err := tx.Model(next).Column("status", "updated_at").WherePK().Update(); err != nil {
+				return fmt.Errorf("promote waitlist: %w", err)
+			}
+			occupied++
+			promoted++
+		}
+		return nil
+	})
+	return promoted, err
+}
+
+// WriteEditAudit inserts one audit_log row recording an owner edit of eventID
+// by actorID.
+func (r *pgRepository) WriteEditAudit(ctx context.Context, eventID, actorID uuid.UUID) error {
+	if _, err := r.db.ExecContext(ctx,
+		`INSERT INTO audit_log (actor_user_id, action, target_type, target_id, metadata)
+		 VALUES (?, 'event.edit', 'event', ?, '{}'::jsonb)`,
+		actorID, eventID); err != nil {
+		return fmt.Errorf("insert edit audit: %w", err)
+	}
+	return nil
 }

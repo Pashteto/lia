@@ -32,7 +32,15 @@ export function apiEventToLia(e: ApiEvent): LiaEvent {
     format: (e.format as EventFormat) ?? "offline",
     status: e.status,
     startsAt: e.starts_at,
-    endsAt: e.ends_at,
+    // The backend serializes an unset ends_at as the Go zero time
+    // ("0001-01-01T00:00:00Z") rather than omitting it. Treat any pre-1971
+    // value as "no end date" so the `?? startsAt` fallback (e.g. the ended
+    // check on event detail) works — otherwise the year-0001 string is truthy
+    // and every open-ended future event reads as already ended.
+    endsAt:
+      e.ends_at && new Date(e.ends_at).getUTCFullYear() > 1970
+        ? e.ends_at
+        : undefined,
     priceType: (e.price_type as PriceType) ?? "free",
     priceMin: e.price_min,
     organizer: e.organizer

@@ -191,6 +191,15 @@ func TestUpdateEvent_Locked_Returns409(t *testing.T) {
 	}
 }
 
+func TestUpdateEvent_CapacityBelowOccupied_Returns409(t *testing.T) {
+	svc := &mockEventsService{updateErr: fmt.Errorf("%w: 3 occupied", eventsdomain.ErrCapacityBelowOccupied)}
+	h := NewUpdateEvent(svc)
+	resp := h.Handle(updateParams(t), testPrincipal())
+	if _, ok := resp.(*eventsops.UpdateEventConflict); !ok {
+		t.Fatalf("expected *UpdateEventConflict, got %T", resp)
+	}
+}
+
 func TestUpdateEvent_Invalid_Returns400(t *testing.T) {
 	svc := &mockEventsService{updateErr: fmt.Errorf("%w: bad", eventsdomain.ErrInvalidInput)}
 	h := NewUpdateEvent(svc)

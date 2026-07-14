@@ -56,6 +56,9 @@ func (h *UpdateEvent) Handle(params eventsops.UpdateEventParams, principal *apim
 		case errors.Is(err, eventsdomain.ErrNotEditable):
 			return eventsops.NewUpdateEventConflict().
 				WithPayload(DefaultError(http.StatusConflict, err, nil))
+		case errors.Is(err, eventsdomain.ErrCapacityBelowOccupied):
+			return eventsops.NewUpdateEventConflict().
+				WithPayload(DefaultError(http.StatusConflict, err, nil))
 		default:
 			return eventsops.NewUpdateEventServiceUnavailable().
 				WithPayload(DefaultError(http.StatusServiceUnavailable, err, nil))

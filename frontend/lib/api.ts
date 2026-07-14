@@ -275,6 +275,11 @@ export interface CreateEventInput {
   starts_at: string; // ISO 8601
   ends_at?: string;
   cover_file_id?: string;
+  // Signup configuration (backend maps these in EventFromAPIInput).
+  signup_mode?: "open" | "application" | "external";
+  capacity?: number;
+  curator_question?: string;
+  external_registration_url?: string;
 }
 
 /**

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
+import { useAuth } from "@/lib/auth-context";
 import { getMyFeedback, submitFeedback } from "@/lib/api";
 
 const STARS = [1, 2, 3, 4, 5];
@@ -15,6 +16,7 @@ const STARS = [1, 2, 3, 4, 5];
  * ended-only / one-per-user via distinct Russian error messages.
  */
 export function FeedbackForm({ eventId }: { eventId: string }) {
+  const { isAuthed } = useAuth();
   const [checking, setChecking] = useState(true);
   const [submitted, setSubmitted] = useState(false);
   const [rating, setRating] = useState(0);
@@ -24,6 +26,9 @@ export function FeedbackForm({ eventId }: { eventId: string }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!isAuthed) {
+      return;
+    }
     let cancelled = false;
     getMyFeedback(eventId)
       .then((already) => {
@@ -35,7 +40,7 @@ export function FeedbackForm({ eventId }: { eventId: string }) {
     return () => {
       cancelled = true;
     };
-  }, [eventId]);
+  }, [eventId, isAuthed]);
 
   async function handleSubmit() {
     if (rating < 1) {
@@ -52,6 +57,16 @@ export function FeedbackForm({ eventId }: { eventId: string }) {
     } finally {
       setBusy(false);
     }
+  }
+
+  if (!isAuthed) {
+    return (
+      <div className="rounded-card bg-bg-secondary p-4 text-center shadow-card-subtle">
+        <p className="text-[15px] text-label-secondary">
+          Войдите, чтобы оставить отзыв о встрече
+        </p>
+      </div>
+    );
   }
 
   if (checking) {

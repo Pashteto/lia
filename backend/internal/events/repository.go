@@ -79,6 +79,11 @@ type Repository interface {
 	// WriteEditAudit inserts one audit_log row recording an owner edit of the
 	// given event by the given actor.
 	WriteEditAudit(ctx context.Context, eventID, actorID uuid.UUID) error
+	// CountOccupiedSeats returns the number of occupied seats (going+accepted)
+	// for the given event. Non-transactional; used to pre-validate a capacity
+	// edit before any other field is written. The authoritative, race-safe
+	// check remains SetCapacityTx's locked re-check.
+	CountOccupiedSeats(eventID uuid.UUID) (int, error)
 }
 
 // pgRepository is a go-pg backed Repository.
@@ -616,6 +621,19 @@ func (r *pgRepository) SetCapacityTx(eventID uuid.UUID, newCapacity *int) (int, 
 		return nil
 	})
 	return promoted, err
+}
+
+// CountOccupiedSeats returns the number of occupied seats (going+accepted) for
+// eventID via a plain (non-transactional) count. Used to pre-validate a
+// capacity edit before the rest of the update is persisted; SetCapacityTx
+// still re-checks this under FOR UPDATE at apply time.
+func (r *pgRepository) CountOccupiedSeats(eventID uuid.UUID) (int, error) {
+	occupied, err := r.db.Model((*models.Rsvp)(nil)).
+		Where("event_id = ? AND status IN ('going','accepted')", eventID).Count()
+	if err != nil {
+		return 0, fmt.Errorf("count occupied seats for event %s: %w", eventID, err)
+	}
+	return occupied, nil
 }
 
 // WriteEditAudit inserts one audit_log row recording an owner edit of eventID

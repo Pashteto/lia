@@ -323,11 +323,30 @@ func (s *service) Update(ctx context.Context, id, ownerID uuid.UUID, p UpdatePar
 		return nil, fmt.Errorf("%w: %s", ErrInvalidInput, err.Error())
 	}
 
+	// Pre-validate a capacity change BEFORE any field write, so a rejection
+	// (invalid value or below current occupancy) never leaves a partial,
+	// unaudited edit (e.g. a title change) committed. SetCapacityTx below
+	// remains the authoritative, race-safe apply (re-checked under FOR UPDATE).
+	if p.Capacity != nil {
+		if *p.Capacity <= 0 {
+			return nil, fmt.Errorf("%w: лимит мест должен быть больше нуля", ErrInvalidInput)
+		}
+		occupied, err := s.repo.CountOccupiedSeats(id)
+		if err != nil {
+			return nil, fmt.Errorf("count occupied seats: %w", err)
+		}
+		if *p.Capacity < occupied {
+			return nil, fmt.Errorf("%w: %d occupied", ErrCapacityBelowOccupied, occupied)
+		}
+	}
+
 	if err := s.repo.Update(event); err != nil {
 		return nil, fmt.Errorf("update event: %w", err)
 	}
 
-	// Capacity change: guarded, atomic, promotes the waitlist.
+	// Capacity change: guarded, atomic, promotes the waitlist. The narrow race
+	// (occupancy changing between the pre-check above and this locked apply)
+	// is still safe: SetCapacityTx re-checks under FOR UPDATE and can 409 here.
 	if p.Capacity != nil {
 		if _, err := s.repo.SetCapacityTx(id, p.Capacity); err != nil {
 			if errors.Is(err, ErrCapacityBelowOccupied) {

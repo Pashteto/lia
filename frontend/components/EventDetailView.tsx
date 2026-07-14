@@ -4,7 +4,6 @@ import { SignupCTA } from "@/components/SignupCTA";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { EventCover } from "@/components/ui/EventCover";
 import { VenueMap } from "@/components/VenueMap";
-import { useAuth } from "@/lib/auth-context";
 import {
   formatAttendance,
   formatEventDate,
@@ -18,7 +17,6 @@ import Link from "next/link";
 // SSR fetch, common published case) and the client-side owner-draft fallback.
 // Uses only client-safe children, so it works in either context.
 export function EventDetailView({ event }: { event: LiaEvent }) {
-  const { isAuthed } = useAuth();
   const attendance = formatAttendance(event);
   const where =
     event.venue?.name ?? (event.format === "online" ? "Онлайн" : "—");
@@ -137,7 +135,7 @@ export function EventDetailView({ event }: { event: LiaEvent }) {
           </Section>
         )}
 
-        {ended && isAuthed && (
+        {ended && (
           <Section title="Отзыв">
             <FeedbackForm eventId={event.id} />
           </Section>

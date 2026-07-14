@@ -33,6 +33,12 @@ type mockRepo struct {
 	capacityErr       error
 	editAuditWritten  bool
 	editAuditErr      error
+
+	// R1 fix: pre-validated capacity edit (occupancy read before any write).
+	occupiedSeats    int
+	occupiedErr      error
+	occupiedCallArg  uuid.UUID
+	updateCallCount  int
 }
 
 func (m *mockRepo) Create(event *models.Event) error {
@@ -53,8 +59,14 @@ func (m *mockRepo) List(f ListFilter) ([]*models.Event, error) {
 }
 
 func (m *mockRepo) Update(event *models.Event) error {
+	m.updateCallCount++
 	m.updated = event
 	return m.updateErr
+}
+
+func (m *mockRepo) CountOccupiedSeats(id uuid.UUID) (int, error) {
+	m.occupiedCallArg = id
+	return m.occupiedSeats, m.occupiedErr
 }
 
 func (m *mockRepo) Nearby(lat, lon float64, limit int) ([]*NearbyResult, error) {
@@ -474,6 +486,72 @@ func TestService_Update_RejectsNonSettableStatus(t *testing.T) {
 	_, err := svc.Update(context.Background(), ev.ID, owner, UpdateParams{Status: &pending})
 	if !errors.Is(err, ErrInvalidInput) {
 		t.Fatalf("expected ErrInvalidInput, got %v", err)
+	}
+}
+
+// TestUpdate_CapacityBelowOccupancy_RejectsBeforeAnyFieldWrite verifies the R1
+// fix: lowering capacity below current occupancy on a published edit returns
+// ErrCapacityBelowOccupied AND never calls repo.Update — so a title change
+// bundled in the same PATCH is never partially committed ahead of the 409.
+func TestUpdate_CapacityBelowOccupancy_RejectsBeforeAnyFieldWrite(t *testing.T) {
+	owner := uuid.Must(uuid.NewV4())
+	ev := publishedEvent(owner)
+	repo := &mockRepo{get: ev, occupiedSeats: 5}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+
+	title := "Новое название"
+	cap := 3
+	_, err := svc.Update(context.Background(), ev.ID, owner, UpdateParams{Title: &title, Capacity: &cap})
+	if !errors.Is(err, ErrCapacityBelowOccupied) {
+		t.Fatalf("expected ErrCapacityBelowOccupied, got %v", err)
+	}
+	if repo.updateCallCount != 0 {
+		t.Fatalf("expected repo.Update NOT to be called on a rejected capacity edit, called %d times", repo.updateCallCount)
+	}
+	if repo.capacityCallCount != 0 {
+		t.Fatalf("expected SetCapacityTx not to be reached, called %d times", repo.capacityCallCount)
+	}
+	if repo.editAuditWritten {
+		t.Fatal("expected no audit write on a rejected edit")
+	}
+}
+
+// TestUpdate_CapacityZero_RejectsInvalidInput closes the create-vs-PATCH gap
+// where a PATCH previously accepted capacity:0.
+func TestUpdate_CapacityZero_RejectsInvalidInput(t *testing.T) {
+	owner := uuid.Must(uuid.NewV4())
+	ev := publishedEvent(owner)
+	repo := &mockRepo{get: ev}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+
+	cap := 0
+	_, err := svc.Update(context.Background(), ev.ID, owner, UpdateParams{Capacity: &cap})
+	if !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("expected ErrInvalidInput, got %v", err)
+	}
+	if repo.updateCallCount != 0 {
+		t.Fatalf("expected repo.Update NOT to be called for capacity<=0, called %d times", repo.updateCallCount)
+	}
+}
+
+// TestUpdate_CapacityAtOccupancy_Allowed verifies the pre-check allows the
+// boundary case (capacity == occupied) and proceeds through to SetCapacityTx.
+func TestUpdate_CapacityAtOccupancy_Allowed(t *testing.T) {
+	owner := uuid.Must(uuid.NewV4())
+	ev := publishedEvent(owner)
+	repo := &mockRepo{get: ev, occupiedSeats: 5}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+
+	cap := 5
+	_, err := svc.Update(context.Background(), ev.ID, owner, UpdateParams{Capacity: &cap})
+	if err != nil {
+		t.Fatalf("expected capacity == occupied to be allowed, got %v", err)
+	}
+	if repo.updateCallCount != 1 {
+		t.Fatalf("expected repo.Update to be called once, got %d", repo.updateCallCount)
+	}
+	if repo.capacityCallCount != 1 {
+		t.Fatalf("expected SetCapacityTx to be called once, got %d", repo.capacityCallCount)
 	}
 }
 

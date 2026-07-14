@@ -85,6 +85,7 @@ export function CreateEventForm() {
   });
 
   const isFree = useWatch({ control, name: "isFree" });
+  const signupMode = useWatch({ control, name: "signupMode" });
 
   const [coverFileId, setCoverFileId] = useState<string | undefined>(undefined);
   const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | undefined>(undefined);
@@ -130,6 +131,15 @@ export function CreateEventForm() {
       starts_at: new Date(v.startsAt).toISOString(),
       ends_at: v.endsAt ? new Date(v.endsAt).toISOString() : undefined,
       cover_file_id: coverFileId,
+      signup_mode: v.signupMode,
+      capacity:
+        v.signupMode !== "external" && v.capacity != null && String(v.capacity) !== ""
+          ? Number(v.capacity)
+          : undefined,
+      curator_question:
+        v.signupMode === "application" ? v.curatorQuestion?.trim() || undefined : undefined,
+      external_registration_url:
+        v.signupMode === "external" ? v.externalRegistrationUrl?.trim() || undefined : undefined,
     };
     mutation.mutate(input);
   };
@@ -282,6 +292,59 @@ export function CreateEventForm() {
           <Field label="Окончание">
             <input type="datetime-local" className={inputCls} {...register("endsAt")} />
           </Field>
+        </Section>
+
+        <Section title="Запись">
+          <Field label="Как записываются">
+            <Controller
+              control={control}
+              name="signupMode"
+              render={({ field }) => (
+                <Segmented
+                  options={[
+                    { value: "open", label: "Открытая" },
+                    { value: "application", label: "По заявке" },
+                    { value: "external", label: "Внешняя ссылка" },
+                  ]}
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
+            />
+          </Field>
+
+          {signupMode !== "external" && (
+            <Field label="Лимит мест" error={errors.capacity?.message}>
+              <input
+                type="number"
+                min={1}
+                className={inputCls}
+                placeholder="Оставьте пустым — без ограничения"
+                {...register("capacity")}
+              />
+            </Field>
+          )}
+
+          {signupMode === "application" && (
+            <Field label="Вопрос кандидату" error={errors.curatorQuestion?.message}>
+              <textarea
+                className={cn(inputCls, "min-h-[72px] resize-y")}
+                placeholder="Покажется в форме заявки. Например: «Над чем работаете?»"
+                {...register("curatorQuestion")}
+              />
+            </Field>
+          )}
+
+          {signupMode === "external" && (
+            <Field label="Ссылка для регистрации" error={errors.externalRegistrationUrl?.message}>
+              <input
+                type="url"
+                className={inputCls}
+                placeholder="https://…"
+                {...register("externalRegistrationUrl")}
+              />
+            </Field>
+          )}
         </Section>
 
         <Section title="Участники и цена">

@@ -18,12 +18,14 @@ import (
 	categoriesdomain "github.com/Pashteto/lia/internal/categories"
 	complaintsdomain "github.com/Pashteto/lia/internal/complaints"
 	eventsdomain "github.com/Pashteto/lia/internal/events"
+	fbdomain "github.com/Pashteto/lia/internal/feedback"
 	filesdomain "github.com/Pashteto/lia/internal/files"
 	followsdomain "github.com/Pashteto/lia/internal/follows"
 	"github.com/Pashteto/lia/internal/grpcclient"
 	"github.com/Pashteto/lia/internal/http/admin"
 	"github.com/Pashteto/lia/internal/http/auth"
 	complaintshttp "github.com/Pashteto/lia/internal/http/complaints"
+	feedbackhttp "github.com/Pashteto/lia/internal/http/feedback"
 	followshttp "github.com/Pashteto/lia/internal/http/follows"
 	"github.com/Pashteto/lia/internal/http/handlers"
 	"github.com/Pashteto/lia/internal/http/middlewares"
@@ -57,6 +59,7 @@ type Module struct {
 	organizers organizersdomain.Service
 	follows    followsdomain.Service
 	complaints complaintsdomain.Service
+	feedback   fbdomain.Service
 	settings   settingsdomain.Service
 	server     *httpserver.Server
 	api        *operations.LiaAPIAPI
@@ -127,6 +130,9 @@ func (m *Module) SetSettings(svc settingsdomain.Service) { m.settings = svc }
 
 // SetComplaints injects the complaints domain service. Call before Init.
 func (m *Module) SetComplaints(svc complaintsdomain.Service) { m.complaints = svc }
+
+// SetFeedback injects the post-event feedback domain service. Call before Init.
+func (m *Module) SetFeedback(svc fbdomain.Service) { m.feedback = svc }
 
 // Name returns the module identifier.
 func (m *Module) Name() string {
@@ -336,6 +342,15 @@ func (m *Module) initAPI() error {
 		})
 	}
 
+	// Build the feedback handler (private post-event ratings); nil in no-DB mode.
+	var feedbackH http.Handler
+	if m.feedback != nil {
+		feedbackH = feedbackhttp.NewHandler(feedbackhttp.Deps{
+			Authenticate: m.auth.Authenticate,
+			Feedback:     m.feedback,
+		})
+	}
+
 	// Mount the admin handler ahead of the swagger mux, then organizers, then
 	// uploads, then base. These paths bypass swagger validation entirely.
 	router := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -359,6 +374,12 @@ func (m *Module) initAPI() error {
 		if complaintsH != nil &&
 			strings.HasPrefix(p, "/api/v1/events/") && strings.HasSuffix(p, "/complaints") {
 			complaintsH.ServeHTTP(w, r)
+			return
+		}
+		if feedbackH != nil &&
+			((strings.HasPrefix(p, "/api/v1/events/") && strings.HasSuffix(p, "/feedback")) ||
+				p == "/api/v1/me/feedback") {
+			feedbackH.ServeHTTP(w, r)
 			return
 		}
 		if mounted != nil &&

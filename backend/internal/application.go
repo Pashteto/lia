@@ -16,6 +16,7 @@ import (
 	cleanupmod "github.com/Pashteto/lia/internal/cleanup"
 	"github.com/Pashteto/lia/internal/complaints"
 	eventsdomain "github.com/Pashteto/lia/internal/events"
+	"github.com/Pashteto/lia/internal/feedback"
 	filesdomain "github.com/Pashteto/lia/internal/files"
 	followsdomain "github.com/Pashteto/lia/internal/follows"
 	grpcmod "github.com/Pashteto/lia/internal/grpc"
@@ -264,6 +265,9 @@ func (app *App) registerModules() error {
 			)
 			httpModule.SetComplaints(
 				complaints.NewService(complaints.NewRepository(repoModule.DB()), modSvc),
+			)
+			httpModule.SetFeedback(
+				feedback.NewService(feedback.NewRepository(repoModule.DB())),
 			)
 		}
 

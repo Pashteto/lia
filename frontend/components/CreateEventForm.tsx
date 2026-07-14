@@ -17,20 +17,45 @@ import { useRouter } from "next/navigation";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 
-const schema = z.object({
-  title: z.string().min(1, "Укажите название"),
-  description: z.string().optional(),
-  categoryIds: z.array(z.string()).optional(),
-  format: z.enum(["offline", "online"]),
-  venueId: z.string().optional(),
-  startsAt: z.string().min(1, "Укажите дату и время"),
-  endsAt: z.string().optional(),
-  isFree: z.boolean(),
-  priceMin: z.coerce.number().int().min(0).optional(),
-  status: z.enum(["draft", "published"]),
-});
+export const eventFormSchema = z
+  .object({
+    title: z.string().min(1, "Укажите название"),
+    description: z.string().optional(),
+    categoryIds: z.array(z.string()).optional(),
+    format: z.enum(["offline", "online"]),
+    venueId: z.string().optional(),
+    startsAt: z.string().min(1, "Укажите дату и время"),
+    endsAt: z.string().optional(),
+    isFree: z.boolean(),
+    priceMin: z.coerce.number().int().min(0).optional(),
+    status: z.enum(["draft", "published"]),
+    signupMode: z.enum(["open", "application", "external"]),
+    capacity: z.coerce.number().int().positive("Лимит мест должен быть больше нуля").optional(),
+    curatorQuestion: z.string().optional(),
+    externalRegistrationUrl: z.string().optional(),
+  })
+  .superRefine((v, ctx) => {
+    if (v.signupMode === "application" && !v.curatorQuestion?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["curatorQuestion"],
+        message: "Для режима «по заявке» нужен вопрос кандидату",
+      });
+    }
+    if (v.signupMode === "external") {
+      const url = v.externalRegistrationUrl?.trim() ?? "";
+      const ok = /^https?:\/\/.+/.test(url);
+      if (!ok) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["externalRegistrationUrl"],
+          message: "Укажите ссылку для внешней регистрации (http/https)",
+        });
+      }
+    }
+  });
 
-type FormValues = z.input<typeof schema>;
+type FormValues = z.input<typeof eventFormSchema>;
 
 const inputCls =
   "w-full rounded-control bg-fill px-3.5 py-2.5 text-[17px] text-label outline-none placeholder:text-label-secondary focus:ring-2 focus:ring-accent";
@@ -45,7 +70,7 @@ export function CreateEventForm() {
     control,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(eventFormSchema),
     defaultValues: {
       format: "offline",
       isFree: true,
@@ -55,6 +80,7 @@ export function CreateEventForm() {
       status: "published",
       categoryIds: [],
       venueId: "",
+      signupMode: "open",
     },
   });
 

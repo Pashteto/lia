@@ -1,6 +1,7 @@
 package models
 
 import (
+	"strings"
 	"testing"
 	"time"
 )
@@ -38,5 +39,17 @@ func TestEventValidateSignupMode(t *testing.T) {
 	bad.SignupMode = "bogus"
 	if err := bad.Validate(); err == nil {
 		t.Fatal("unknown signup_mode should fail")
+	}
+}
+
+func TestEventValidate_SignupMessages(t *testing.T) {
+	e := &Event{Title: "T", StartsAt: time.Now(), Status: EventPublished, SignupMode: "application"}
+	if err := e.Validate(); err == nil || !strings.Contains(err.Error(), "вопрос") {
+		t.Fatalf("want curator-question message, got %v", err)
+	}
+	cap0 := 0
+	e2 := &Event{Title: "T", StartsAt: time.Now(), Status: EventPublished, SignupMode: "open", Capacity: &cap0}
+	if err := e2.Validate(); err == nil || !strings.Contains(err.Error(), "больше нуля") {
+		t.Fatalf("want capacity message, got %v", err)
 	}
 }

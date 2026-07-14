@@ -102,17 +102,17 @@ func (e *Event) Validate() error {
 		// ok; empty defaults to open at the DB layer
 	case "application":
 		if e.CuratorQuestion == "" {
-			return newValidationError("curator_question", "is required for application signup")
+			return newValidationError("curator_question", "нужен вопрос кандидату для режима «по заявке»")
 		}
 	case "external":
 		if e.ExternalRegistrationURL == "" {
-			return newValidationError("external_registration_url", "is required for external signup")
+			return newValidationError("external_registration_url", "нужна ссылка для внешней регистрации")
 		}
 	default:
 		return newValidationError("signup_mode", "invalid value")
 	}
 	if e.Capacity != nil && *e.Capacity <= 0 {
-		return newValidationError("capacity", "must be positive")
+		return newValidationError("capacity", "лимит мест должен быть больше нуля")
 	}
 
 	return nil

@@ -3,10 +3,10 @@ package service
 import (
 	"context"
 	"crypto/rand"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"math/big"
+	"time"
 
 	"gateguard/internal/models"
 	"gateguard/internal/repository"
@@ -14,13 +14,6 @@ import (
 
 // ErrVerificationTokenInvalid is returned when an email/token pair does not match.
 var ErrVerificationTokenInvalid = errors.New("verification token invalid")
-
-// newVerificationToken returns a random URL-safe token.
-func newVerificationToken() string {
-	b := make([]byte, 24)
-	_, _ = rand.Read(b)
-	return base64.RawURLEncoding.EncodeToString(b)
-}
 
 // newVerificationCode returns a cryptographically-random 6-digit numeric code
 // as a zero-padded string (e.g. "042173").
@@ -37,26 +30,24 @@ func newVerificationCode() string {
 	return fmt.Sprintf("%06d", n.Int64())
 }
 
-// sendVerificationStub is a NON-PRODUCTION stub: it logs the verification link
-// instead of emailing it. Replace with the SMTP notificator before real prod.
-func (u *UsersService) sendVerificationStub(ctx context.Context, user *models.User) {
-	u.log.WarnCtx(ctx, fmt.Sprintf(
-		"[STUB] email verification not sent (no mailer wired). email=%s token=%s",
-		user.Email, user.EmailVerificationToken))
-}
-
-// RequestEmailVerification regenerates + persists a verification token and
-// (stub) "sends" it.
+// RequestEmailVerification regenerates a 6-digit code, stamps the send time, and
+// emails it. Enforces a 60-second resend cooldown (Task 5 adds the check).
 func (u *UsersService) RequestEmailVerification(ctx context.Context, email string) error {
 	user := &models.User{Email: email}
 	if err := u.repository.GetUser(ctx, user, repository.Email); err != nil {
 		return fmt.Errorf("lookup user %s: %w", email, err)
 	}
-	user.EmailVerificationToken = newVerificationToken()
-	if err := u.repository.UpdateUserBy(ctx, user, repository.Email, "email_verification_token"); err != nil {
-		return fmt.Errorf("persist token %s: %w", email, err)
+
+	user.EmailVerificationToken = newVerificationCode()
+	user.EmailVerificationSentAt = time.Now()
+	if err := u.repository.UpdateUserBy(ctx, user, repository.Email,
+		"email_verification_token", "email_verification_sent_at"); err != nil {
+		return fmt.Errorf("persist code %s: %w", email, err)
 	}
-	u.sendVerificationStub(ctx, user)
+
+	if err := u.notificator.SendEmailVerification(ctx, email, user.EmailVerificationToken); err != nil {
+		return fmt.Errorf("send verification %s: %w", email, err)
+	}
 	return nil
 }
 

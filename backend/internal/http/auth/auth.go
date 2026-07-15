@@ -161,10 +161,11 @@ func toPrincipal(u *domain.User) *models.User {
 	name := u.Name
 	status := u.Status.String()
 	return &models.User{
-		UUID:   strfmt.UUID(u.UUID.String()),
-		Email:  &email,
-		Name:   &name,
-		Status: &status,
+		UUID:          strfmt.UUID(u.UUID.String()),
+		Email:         &email,
+		Name:          &name,
+		Status:        &status,
+		EmailVerified: u.EmailVerified,
 	}
 }
 

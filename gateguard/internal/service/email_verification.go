@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"math/big"
 
 	"gateguard/internal/models"
 	"gateguard/internal/repository"
@@ -19,6 +20,21 @@ func newVerificationToken() string {
 	b := make([]byte, 24)
 	_, _ = rand.Read(b)
 	return base64.RawURLEncoding.EncodeToString(b)
+}
+
+// newVerificationCode returns a cryptographically-random 6-digit numeric code
+// as a zero-padded string (e.g. "042173").
+func newVerificationCode() string {
+	n, err := rand.Int(rand.Reader, big.NewInt(1000000))
+	if err != nil {
+		// rand.Reader failure is catastrophic; fall back to a non-guessable-enough
+		// value derived from the same reader via a smaller read.
+		b := make([]byte, 3)
+		_, _ = rand.Read(b)
+		n = big.NewInt(int64(b[0])<<16 | int64(b[1])<<8 | int64(b[2]))
+		n.Mod(n, big.NewInt(1000000))
+	}
+	return fmt.Sprintf("%06d", n.Int64())
 }
 
 // sendVerificationStub is a NON-PRODUCTION stub: it logs the verification link

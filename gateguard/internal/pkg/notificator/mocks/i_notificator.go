@@ -71,6 +71,54 @@ func (_c *INotificator_InviteUserToOrganization_Call) RunAndReturn(run func(cont
 	return _c
 }
 
+// SendEmailVerification provides a mock function with given fields: ctx, to, code
+func (_m *INotificator) SendEmailVerification(ctx context.Context, to string, code string) error {
+	ret := _m.Called(ctx, to, code)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SendEmailVerification")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
+		r0 = rf(ctx, to, code)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// INotificator_SendEmailVerification_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SendEmailVerification'
+type INotificator_SendEmailVerification_Call struct {
+	*mock.Call
+}
+
+// SendEmailVerification is a helper method to define mock.On call
+//   - ctx context.Context
+//   - to string
+//   - code string
+func (_e *INotificator_Expecter) SendEmailVerification(ctx interface{}, to interface{}, code interface{}) *INotificator_SendEmailVerification_Call {
+	return &INotificator_SendEmailVerification_Call{Call: _e.mock.On("SendEmailVerification", ctx, to, code)}
+}
+
+func (_c *INotificator_SendEmailVerification_Call) Run(run func(ctx context.Context, to string, code string)) *INotificator_SendEmailVerification_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *INotificator_SendEmailVerification_Call) Return(_a0 error) *INotificator_SendEmailVerification_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *INotificator_SendEmailVerification_Call) RunAndReturn(run func(context.Context, string, string) error) *INotificator_SendEmailVerification_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // NewINotificator creates a new instance of INotificator. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewINotificator(t interface {

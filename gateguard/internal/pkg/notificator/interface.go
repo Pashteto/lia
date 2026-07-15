@@ -10,4 +10,5 @@ import (
 
 type INotificator interface {
 	InviteUserToOrganization(ctx context.Context, to string, tmpl *templates.UserInviteToOrg) error
+	SendEmailVerification(ctx context.Context, to, code string) error
 }

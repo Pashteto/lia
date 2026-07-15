@@ -79,3 +79,9 @@ func (s *SMTPNotificator) sendTemplate(ctx context.Context, to string, template 
 
 	return nil
 }
+
+// SendEmailVerification emails a 6-digit verification code.
+func (s *SMTPNotificator) SendEmailVerification(ctx context.Context, to, code string) error {
+	tmpl := templates.NewEmailVerification(s.log, code)
+	return s.sendTemplate(ctx, to, tmpl)
+}

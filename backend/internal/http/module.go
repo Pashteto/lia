@@ -29,11 +29,13 @@ import (
 	feedbackhttp "github.com/Pashteto/lia/internal/http/feedback"
 	followshttp "github.com/Pashteto/lia/internal/http/follows"
 	"github.com/Pashteto/lia/internal/http/handlers"
+	httpinvitations "github.com/Pashteto/lia/internal/http/invitations"
 	"github.com/Pashteto/lia/internal/http/middlewares"
 	organizershttp "github.com/Pashteto/lia/internal/http/organizers"
 	httpserver "github.com/Pashteto/lia/internal/http/server"
 	"github.com/Pashteto/lia/internal/http/server/operations"
 	"github.com/Pashteto/lia/internal/http/uploads"
+	invitationsdomain "github.com/Pashteto/lia/internal/invitations"
 	"github.com/Pashteto/lia/internal/moderation"
 	organizersdomain "github.com/Pashteto/lia/internal/organizers"
 	rsvpdomain "github.com/Pashteto/lia/internal/rsvp"
@@ -46,27 +48,29 @@ import (
 
 // Module implements module.Module interface for the HTTP server.
 type Module struct {
-	config     *config.HTTPConfig
-	service    service.IService
-	grpcClient grpcclient.IClient
-	events     eventsdomain.Service
-	categories categoriesdomain.Service
-	venues     venuesdomain.Service
-	files      filesdomain.Service
-	storage    storage.Storage
-	rsvp       rsvpdomain.Service
-	moderation moderation.Service
-	modReason  func(uuid.UUID) (string, error)
-	organizers organizersdomain.Service
-	follows    followsdomain.Service
-	complaints complaintsdomain.Service
-	feedback   fbdomain.Service
-	settings   settingsdomain.Service
-	server     *httpserver.Server
-	api        *operations.LiaAPIAPI
-	handler    *http.Handler
-	auth       *auth.Auth
-	signer     auth.Signer
+	config             *config.HTTPConfig
+	service            service.IService
+	grpcClient         grpcclient.IClient
+	events             eventsdomain.Service
+	categories         categoriesdomain.Service
+	venues             venuesdomain.Service
+	files              filesdomain.Service
+	storage            storage.Storage
+	rsvp               rsvpdomain.Service
+	moderation         moderation.Service
+	modReason          func(uuid.UUID) (string, error)
+	organizers         organizersdomain.Service
+	follows            followsdomain.Service
+	complaints         complaintsdomain.Service
+	feedback           fbdomain.Service
+	settings           settingsdomain.Service
+	invitations        invitationsdomain.Service
+	invitationsBaseURL string
+	server             *httpserver.Server
+	api                *operations.LiaAPIAPI
+	handler            *http.Handler
+	auth               *auth.Auth
+	signer             auth.Signer
 }
 
 // NewModule creates a new HTTP module instance.
@@ -135,6 +139,13 @@ func (m *Module) SetComplaints(svc complaintsdomain.Service) { m.complaints = sv
 
 // SetFeedback injects the post-event feedback domain service. Call before Init.
 func (m *Module) SetFeedback(svc fbdomain.Service) { m.feedback = svc }
+
+// SetInvitations injects the invitations domain service + the public base URL
+// used to build invite accept links. Call before Init.
+func (m *Module) SetInvitations(svc invitationsdomain.Service, baseURL string) {
+	m.invitations = svc
+	m.invitationsBaseURL = baseURL
+}
 
 // Name returns the module identifier.
 func (m *Module) Name() string {
@@ -354,6 +365,17 @@ func (m *Module) initAPI() error {
 		})
 	}
 
+	// Build the invitations handler (organizer invite-by-email + accept/decline
+	// by token or id); nil in no-DB mode, in which case those paths fall to base.
+	var invitationsH http.Handler
+	if m.invitations != nil {
+		invitationsH = httpinvitations.NewHandler(httpinvitations.Deps{
+			Authenticate: m.auth.Authenticate,
+			Service:      m.invitations,
+			BaseURL:      m.invitationsBaseURL,
+		})
+	}
+
 	// Build the auth-verify handler (public: request-verification + verify-email
 	// proxy GateGuard's email-verification RPCs). Present whenever the demo-login
 	// signer is wired; otherwise it 503s per-request (no signer configured).
@@ -392,6 +414,13 @@ func (m *Module) initAPI() error {
 			((strings.HasPrefix(p, "/api/v1/events/") && strings.HasSuffix(p, "/feedback")) ||
 				p == "/api/v1/me/feedback") {
 			feedbackH.ServeHTTP(w, r)
+			return
+		}
+		if invitationsH != nil &&
+			((strings.HasPrefix(p, "/api/v1/events/") && strings.HasSuffix(p, "/invitations")) ||
+				strings.HasPrefix(p, "/api/v1/invitations/") ||
+				strings.HasPrefix(p, "/api/v1/me/invitations")) {
+			invitationsH.ServeHTTP(w, r)
 			return
 		}
 		if mounted != nil &&

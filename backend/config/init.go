@@ -105,6 +105,23 @@ func setDefaults() {
 	// Events quota
 	viper.SetDefault("events_monthly_limit", 10)
 
+	// Public base URL (used to build invite accept links)
+	viper.SetDefault("public_base_url", "https://presence.tarski.ru")
+	viper.BindEnv("public_base_url", "PUBLIC_BASE_URL") //nolint:errcheck
+
+	// SMTP defaults (invitations mailer). Blank address degrades to a no-op
+	// mailer, so dev/local runs without SMTP config don't fail invites.
+	viper.SetDefault("smtp.address", "")
+	viper.SetDefault("smtp.username", "")
+	viper.SetDefault("smtp.password", "")
+	viper.SetDefault("smtp.from", "")
+
+	// SMTP env overrides (secrets come from environment, not config files)
+	viper.BindEnv("smtp.address", "SMTP_ADDRESS")   //nolint:errcheck
+	viper.BindEnv("smtp.username", "SMTP_USERNAME") //nolint:errcheck
+	viper.BindEnv("smtp.password", "SMTP_PASSWORD") //nolint:errcheck
+	viper.BindEnv("smtp.from", "SMTP_FROM")         //nolint:errcheck
+
 	// Cleanup module defaults
 	viper.SetDefault("cleanup.enabled", true)
 	viper.SetDefault("cleanup.interval", "24h")
@@ -115,13 +132,13 @@ func setDefaults() {
 	viper.BindEnv("cleanup.grace", "FILE_CLEANUP_GRACE")       //nolint:errcheck
 
 	// S3 env overrides (secrets come from environment, not config files)
-	viper.BindEnv("storage.s3.endpoint", "S3_ENDPOINT")   //nolint:errcheck
-	viper.BindEnv("storage.s3.region", "S3_REGION")       //nolint:errcheck
-	viper.BindEnv("storage.s3.bucket", "S3_BUCKET")       //nolint:errcheck
-	viper.BindEnv("storage.s3.access_key", "S3_ACCESS_KEY") //nolint:errcheck
-	viper.BindEnv("storage.s3.secret_key", "S3_SECRET_KEY") //nolint:errcheck
-	viper.BindEnv("storage.s3.use_ssl", "STORAGE_S3_USE_SSL") //nolint:errcheck
-	viper.BindEnv("storage.backend", "STORAGE_BACKEND")       //nolint:errcheck
-	viper.BindEnv("storage.local_dir", "STORAGE_LOCAL_DIR") //nolint:errcheck
+	viper.BindEnv("storage.s3.endpoint", "S3_ENDPOINT")         //nolint:errcheck
+	viper.BindEnv("storage.s3.region", "S3_REGION")             //nolint:errcheck
+	viper.BindEnv("storage.s3.bucket", "S3_BUCKET")             //nolint:errcheck
+	viper.BindEnv("storage.s3.access_key", "S3_ACCESS_KEY")     //nolint:errcheck
+	viper.BindEnv("storage.s3.secret_key", "S3_SECRET_KEY")     //nolint:errcheck
+	viper.BindEnv("storage.s3.use_ssl", "STORAGE_S3_USE_SSL")   //nolint:errcheck
+	viper.BindEnv("storage.backend", "STORAGE_BACKEND")         //nolint:errcheck
+	viper.BindEnv("storage.local_dir", "STORAGE_LOCAL_DIR")     //nolint:errcheck
 	viper.BindEnv("storage.public_base", "STORAGE_PUBLIC_BASE") //nolint:errcheck
 }

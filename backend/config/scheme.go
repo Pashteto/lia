@@ -113,6 +113,16 @@ type S3StorageConfig struct {
 	UseSSL    bool   `mapstructure:"use_ssl"`
 }
 
+// SMTPConfig holds outbound-mail settings for the invitations mailer. A blank
+// Address yields a no-op mailer (see notifications.NewSMTPMailer), so local/dev
+// runs without SMTP config don't fail invites.
+type SMTPConfig struct {
+	Address  string `mapstructure:"address"`
+	Username string `mapstructure:"username"`
+	Password string `mapstructure:"password"`
+	From     string `mapstructure:"from"`
+}
+
 // CleanupConfig holds orphan-file cleanup settings.
 type CleanupConfig struct {
 	// Interval is how often the cleanup job runs (e.g. "24h").
@@ -147,8 +157,16 @@ type Scheme struct {
 	// Cleanup configuration for orphan-file cleanup (always non-nil; enabled by default).
 	Cleanup *CleanupConfig `mapstructure:"cleanup"`
 
+	// SMTP configuration for the invitations mailer (always non-nil; blank
+	// Address degrades to a no-op mailer).
+	SMTP *SMTPConfig `mapstructure:"smtp"`
+
 	// Env is the application environment (e.g. prod, dev, local).
 	Env string `mapstructure:"env"`
+
+	// PublicBaseURL is the publicly-reachable frontend origin used to build
+	// invite accept links (e.g. "https://presence.tarski.ru").
+	PublicBaseURL string `mapstructure:"public_base_url"`
 
 	// EventsMonthlyLimit caps how many events a single organizer may create in
 	// one calendar month (Europe/Moscow). 0 means unlimited.

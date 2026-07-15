@@ -1,7 +1,7 @@
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { EventCover } from "@/components/ui/EventCover";
 import { cn } from "@/lib/cn";
-import { formatAttendance, formatEventDate, formatPrice } from "@/lib/format";
+import { formatAttendance, formatEventRange, formatPrice } from "@/lib/format";
 import type { LiaEvent } from "@/lib/types";
 import Link from "next/link";
 import type React from "react";
@@ -51,7 +51,7 @@ export function EventCard({
         </div>
         <h3 className="text-[17px] font-semibold leading-snug">{event.title}</h3>
         <p className="text-[13px] text-label-secondary">
-          {formatEventDate(event.startsAt)}
+          {formatEventRange(event)}
           {event.venue ? ` · ${event.venue.name}` : ""}
         </p>
         {event.organizer?.name ? (

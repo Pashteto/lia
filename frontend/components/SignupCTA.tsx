@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { LoginModal } from "@/components/AuthButton";
 import { Button } from "@/components/ui/Button";
-import { cancelRsvp, eventCalendarUrl, signUp } from "@/lib/api";
+import { cancelRsvp, eventCalendarUrl, fetchEventWithAuth, signUp } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import type { LiaEvent, RsvpStatus } from "@/lib/types";
 
@@ -91,9 +91,9 @@ function ApplicationSheet({
 export function SignupCTA({ event }: { event: LiaEvent }) {
   const { isAuthed, ready } = useAuth();
 
-  // Local state — authoritative after any user action this session.
-  // We do NOT trust event.myRsvpStatus on initial load because GET /events/{id}
-  // does not populate my_rsvp_status per-caller in the current backend slice.
+  // Local state — seeded from the server's my_rsvp_status (populated on
+  // GET /events/{id}) and authoritative after any user action this session.
+  // A reload therefore renders the correct joined/applied state.
   const [localStatus, setLocalStatus] = useState<LocalStatus>(
     event.myRsvpStatus ?? "",
   );
@@ -101,6 +101,32 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
   const [error, setError] = useState<string | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showApplicationSheet, setShowApplicationSheet] = useState(false);
+
+  // The user has taken an action this session (sign up / cancel / apply) — once
+  // true, the authed refetch below must not overwrite what they just did.
+  const acted = useRef(false);
+
+  // The detail page SSR-fetches the event anonymously (shared revalidate cache),
+  // so event.myRsvpStatus arrives as "" there. Once we know the caller is
+  // authed, re-fetch THEIR status client-side (no-store, token) so a reload
+  // shows the correct joined/applied state (design-review R4). Skipped if the
+  // user has already acted this session.
+  useEffect(() => {
+    if (!ready || !isAuthed) return;
+    let cancelled = false;
+    void fetchEventWithAuth(event.id)
+      .then((e) => {
+        if (!cancelled && e && !acted.current) {
+          setLocalStatus(e.myRsvpStatus ?? "");
+        }
+      })
+      .catch(() => {
+        // Best-effort enrichment; leave the mount-seeded status on failure.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, isAuthed, event.id]);
 
   const calendarUrl = eventCalendarUrl(event.id);
 
@@ -111,6 +137,7 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
   }
 
   async function handleSignUp(applicationAnswer?: string) {
+    acted.current = true;
     if (!isAuthed) {
       handleAuthError();
       return;
@@ -142,6 +169,7 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
   }
 
   async function handleCancel() {
+    acted.current = true;
     if (!isAuthed) {
       handleAuthError();
       return;

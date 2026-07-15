@@ -19,6 +19,7 @@ export default function AdminOrganizersPage() {
   const [revokeReason, setRevokeReason] = useState("");
   const [actionError, setActionError] = useState("");
   const [searching, setSearching] = useState(false);
+  const [acting, setActing] = useState(false);
 
   async function doSearch() {
     if (!q.trim()) return;
@@ -43,30 +44,52 @@ export default function AdminOrganizersPage() {
     }
   }
 
+  // A 409 means the org is already in the target state — the mutation the user
+  // wanted has effectively happened. Treat it as success (refetch), not error.
+  function is409(err: unknown): boolean {
+    return err instanceof Error && err.message.includes("409");
+  }
+
   async function onRevoke() {
-    if (!selected) return;
+    if (!selected || acting) return;
     if (!revokeReason.trim()) {
       setActionError("Укажите причину отзыва");
       return;
     }
+    setActing(true);
     try {
       await revokeOrganizer(selected.id, revokeReason.trim());
       setRevokeReason("");
       setActionError("");
       await open(selected.id);
-    } catch {
-      setActionError("Не удалось отозвать подтверждение");
+    } catch (err) {
+      if (is409(err)) {
+        setRevokeReason("");
+        setActionError("");
+        await open(selected.id);
+      } else {
+        setActionError("Не удалось отозвать подтверждение");
+      }
+    } finally {
+      setActing(false);
     }
   }
 
   async function onToggleAuto() {
-    if (!selected) return;
+    if (!selected || acting) return;
+    setActing(true);
     try {
       setActionError("");
       await setOrganizerAutoVerify(selected.id, !selected.auto_verify);
       await open(selected.id);
-    } catch {
-      setActionError("Не удалось изменить авто-подтверждение");
+    } catch (err) {
+      if (is409(err)) {
+        await open(selected.id);
+      } else {
+        setActionError("Не удалось изменить авто-подтверждение");
+      }
+    } finally {
+      setActing(false);
     }
   }
 
@@ -137,6 +160,7 @@ export default function AdminOrganizersPage() {
               type="checkbox"
               checked={selected.auto_verify}
               onChange={onToggleAuto}
+              disabled={acting}
               className="h-4 w-4 accent-accent"
             />
             <span>
@@ -162,11 +186,11 @@ export default function AdminOrganizersPage() {
               />
               <Button
                 variant="tinted"
-                disabled={!revokeReason.trim()}
+                disabled={acting || !revokeReason.trim()}
                 onClick={onRevoke}
                 className="text-red-500 hover:bg-red-500/10 disabled:opacity-40"
               >
-                Отозвать подтверждение
+                {acting ? "Отзываем…" : "Отозвать подтверждение"}
               </Button>
             </div>
           )}

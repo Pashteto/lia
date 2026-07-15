@@ -27,6 +27,7 @@ export default function ModerationOrganizersPage() {
   const [rejectTarget, setRejectTarget] = useState<AdminOrganizer | null>(null);
   const [reason, setReason] = useState("");
   const [actionError, setActionError] = useState("");
+  const [acting, setActing] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -52,15 +53,26 @@ export default function ModerationOrganizersPage() {
   }
 
   async function confirmReject() {
-    if (!rejectTarget || !reason.trim()) return;
+    if (!rejectTarget || acting || !reason.trim()) return;
+    setActing(true);
     try {
       await rejectOrganizer(rejectTarget.id, reason.trim());
       setActionError("");
       setRejectTarget(null);
       setReason("");
       reload();
-    } catch {
-      setActionError("Не удалось отклонить организатора");
+    } catch (err) {
+      if (err instanceof Error && err.message.includes("409")) {
+        // Already rejected — the mutation effectively happened, refetch quietly.
+        setActionError("");
+        setRejectTarget(null);
+        setReason("");
+        reload();
+      } else {
+        setActionError("Не удалось отклонить организатора");
+      }
+    } finally {
+      setActing(false);
     }
   }
 
@@ -185,11 +197,11 @@ export default function ModerationOrganizersPage() {
               </Button>
               <Button
                 variant="filled"
-                disabled={!reason.trim()}
+                disabled={acting || !reason.trim()}
                 onClick={confirmReject}
                 className="bg-red-500 hover:opacity-90 disabled:opacity-40"
               >
-                Отклонить
+                {acting ? "Отклоняем…" : "Отклонить"}
               </Button>
             </div>
           </div>

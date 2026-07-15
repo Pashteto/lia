@@ -21,6 +21,7 @@ export default function ComplaintsInbox() {
   const [pending, setPending] = useState<ComplaintGroup | null>(null); // takedown target
   const [reason, setReason] = useState("");
   const [error, setError] = useState("");
+  const [acting, setActing] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -48,25 +49,46 @@ export default function ComplaintsInbox() {
   }
 
   async function confirmTakedown() {
-    if (!pending || !reason.trim()) return;
+    if (!pending || acting || !reason.trim()) return;
+    setActing(true);
     try {
       await resolveComplaints(pending.event_id, "takedown", reason.trim());
       setError("");
       setPending(null);
       setReason("");
       reload();
-    } catch {
-      setError("Не удалось снять событие");
+    } catch (err) {
+      if (err instanceof Error && err.message.includes("409")) {
+        // Event already taken down — the mutation effectively happened, refetch quietly.
+        setError("");
+        setPending(null);
+        setReason("");
+        reload();
+      } else {
+        setError("Не удалось снять событие");
+      }
+    } finally {
+      setActing(false);
     }
   }
 
   async function onDismiss(eventId: string) {
+    if (acting) return;
+    setActing(true);
     try {
       await resolveComplaints(eventId, "dismiss", "");
       setError("");
       reload();
-    } catch {
-      setError("Не удалось отклонить жалобы");
+    } catch (err) {
+      if (err instanceof Error && err.message.includes("409")) {
+        // Already resolved — the mutation effectively happened, refetch quietly.
+        setError("");
+        reload();
+      } else {
+        setError("Не удалось отклонить жалобы");
+      }
+    } finally {
+      setActing(false);
     }
   }
 
@@ -124,7 +146,7 @@ export default function ComplaintsInbox() {
                     Снять
                   </Button>
                 ) : null}
-                <Button variant="tinted" onClick={() => onDismiss(g.event_id)}>
+                <Button variant="tinted" disabled={acting} onClick={() => onDismiss(g.event_id)}>
                   Отклонить
                 </Button>
               </div>
@@ -157,10 +179,10 @@ export default function ComplaintsInbox() {
               <Button
                 variant="filled"
                 onClick={confirmTakedown}
-                disabled={!reason.trim()}
+                disabled={acting || !reason.trim()}
                 className="text-red-500"
               >
-                Снять и закрыть жалобы
+                {acting ? "Снимаем…" : "Снять и закрыть жалобы"}
               </Button>
             </div>
           </div>

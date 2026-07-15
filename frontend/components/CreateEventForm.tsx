@@ -4,6 +4,8 @@ import { useState } from "react";
 
 import { LoginModal } from "@/components/AuthButton";
 import { Button } from "@/components/ui/Button";
+import { DateTimeField } from "@/components/ui/DateTimeField";
+import { ImageUpload } from "@/components/ui/ImageUpload";
 import { Segmented } from "@/components/ui/Segmented";
 import { Switch } from "@/components/ui/Switch";
 import { VenuePicker } from "@/components/VenuePicker";
@@ -99,10 +101,10 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
     defaultValues: {
       format: initial?.format ?? "offline",
       isFree: initial?.isFree ?? true,
-      // Default to published so a created event is immediately visible in the
-      // discovery feed (which lists status=published). Users can still pick
-      // "Черновик" in the status control to keep it hidden.
-      status: initial?.status ?? "published",
+      // Default to Черновик so an accidental "Сохранить" never publishes a
+      // half-built event. Publishing is an explicit choice (status control, or
+      // the "Опубликовать" action on /events/mine behind a confirm).
+      status: initial?.status ?? "draft",
       categoryIds: initial?.categoryIds ?? [],
       venueId: initial?.venueId ?? "",
       signupMode: initial?.signupMode ?? "open",
@@ -152,9 +154,7 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
     ((initial?.startsAt != null && startsAt !== initial.startsAt) ||
       (initial?.venueId != null && venueId !== initial.venueId));
 
-  const handleCoverChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleCoverFile = async (file: File) => {
     setCoverError(undefined);
     setCoverUploading(true);
     try {
@@ -246,31 +246,13 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
         <div className="mb-6">
           <label className="block">
             <span className="mb-1.5 block text-[13px] text-label-secondary">Обложка</span>
-            <div className="rounded-card bg-bg-secondary p-4">
-              {coverPreviewUrl && (
-                <div className="relative mb-3 aspect-[3/2] w-full overflow-hidden rounded-[10px] bg-fill">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={coverPreviewUrl}
-                    alt="Предпросмотр обложки"
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-              )}
-              <input
-                type="file"
-                accept="image/*"
-                disabled={coverUploading}
-                onChange={handleCoverChange}
-                className="block w-full text-[15px] text-label file:mr-3 file:rounded-full file:border-0 file:bg-fill file:px-4 file:py-1.5 file:text-[14px] file:font-medium file:text-label file:transition hover:file:bg-fill-secondary disabled:opacity-60"
-              />
-              {coverUploading && (
-                <p className="mt-2 text-[13px] text-label-secondary">Загрузка…</p>
-              )}
-              {coverError && (
-                <p className="mt-2 text-[13px] text-red-500">{coverError}</p>
-              )}
-            </div>
+            <ImageUpload
+              label="обложку"
+              previewUrl={coverPreviewUrl}
+              uploading={coverUploading}
+              error={coverError}
+              onFile={handleCoverFile}
+            />
           </label>
         </div>
 
@@ -361,10 +343,22 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
             />
           </Field>
           <Field label="Начало" error={errors.startsAt?.message}>
-            <input type="datetime-local" className={inputCls} {...register("startsAt")} />
+            <Controller
+              control={control}
+              name="startsAt"
+              render={({ field }) => (
+                <DateTimeField value={field.value ?? ""} onChange={field.onChange} />
+              )}
+            />
           </Field>
           <Field label="Окончание">
-            <input type="datetime-local" className={inputCls} {...register("endsAt")} />
+            <Controller
+              control={control}
+              name="endsAt"
+              render={({ field }) => (
+                <DateTimeField value={field.value ?? ""} onChange={field.onChange} />
+              )}
+            />
           </Field>
           {showChangeNotice && (
             <p className="text-[13px] text-label-secondary">

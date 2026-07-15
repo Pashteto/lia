@@ -6,7 +6,7 @@ import { EventCover } from "@/components/ui/EventCover";
 import { VenueMap } from "@/components/VenueMap";
 import {
   formatAttendance,
-  formatEventDate,
+  formatEventRange,
   formatPrice,
 } from "@/lib/format";
 import type { LiaEvent } from "@/lib/types";
@@ -65,7 +65,7 @@ export function EventDetailView({ event }: { event: LiaEvent }) {
 
         {/* Key facts */}
         <dl className="mt-5 grid grid-cols-2 gap-3">
-          <Fact label="Когда" value={formatEventDate(event.startsAt)} />
+          <Fact label="Когда" value={formatEventRange(event)} />
           <Fact label="Где" value={where} />
           <Fact label="Участников" value={attendance ?? "—"} />
           <Fact label="Формат" value={event.format === "online" ? "Онлайн" : "Очно"} />

@@ -213,9 +213,10 @@ Expected: no errors.
 
 - [ ] **Step 10: Commit**
 
+Commit **only the source files**. The generated artifacts (`backend/internal/http/models/`, `backend/internal/http/server/embedded_spec.go`) are gitignored by repo convention (`backend/.gitignore`: "Generated swagger/HTTP API code — kept locally, not committed") and reproduced by `make generate-api` at build/deploy time. Do NOT commit them. Only `backend/api/swagger.yaml` (the source) carries the schema change.
+
 ```bash
-git add backend/internal/models/rsvp.go backend/internal/rsvp/repository.go backend/internal/rsvp/service.go backend/internal/http/formatter/rsvp.go backend/internal/http/formatter/rsvp_test.go backend/internal/http/server/embedded_spec.go
-git add -A backend/internal/http/models
+git add backend/api/swagger.yaml backend/internal/models/rsvp.go backend/internal/rsvp/repository.go backend/internal/rsvp/service.go backend/internal/http/formatter/rsvp.go backend/internal/http/formatter/rsvp_test.go
 git commit -m "feat(rsvp): expose applicant name on applications response (name only)"
 ```
 

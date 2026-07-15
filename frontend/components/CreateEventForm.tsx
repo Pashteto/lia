@@ -99,10 +99,10 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
     defaultValues: {
       format: initial?.format ?? "offline",
       isFree: initial?.isFree ?? true,
-      // Default to published so a created event is immediately visible in the
-      // discovery feed (which lists status=published). Users can still pick
-      // "Черновик" in the status control to keep it hidden.
-      status: initial?.status ?? "published",
+      // Default to Черновик so an accidental "Сохранить" never publishes a
+      // half-built event. Publishing is an explicit choice (status control, or
+      // the "Опубликовать" action on /events/mine behind a confirm).
+      status: initial?.status ?? "draft",
       categoryIds: initial?.categoryIds ?? [],
       venueId: initial?.venueId ?? "",
       signupMode: initial?.signupMode ?? "open",

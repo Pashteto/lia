@@ -91,9 +91,9 @@ function ApplicationSheet({
 export function SignupCTA({ event }: { event: LiaEvent }) {
   const { isAuthed, ready } = useAuth();
 
-  // Local state — authoritative after any user action this session.
-  // We do NOT trust event.myRsvpStatus on initial load because GET /events/{id}
-  // does not populate my_rsvp_status per-caller in the current backend slice.
+  // Local state — seeded from the server's my_rsvp_status (populated on
+  // GET /events/{id}) and authoritative after any user action this session.
+  // A reload therefore renders the correct joined/applied state.
   const [localStatus, setLocalStatus] = useState<LocalStatus>(
     event.myRsvpStatus ?? "",
   );

@@ -27,6 +27,12 @@ func (f *fakeSigner) SignUpPassword(_ context.Context, _, _, _ string) (string, 
 func (f *fakeSigner) SignInPassword(_ context.Context, _, _ string) (string, error) {
 	return f.token, f.err
 }
+func (f *fakeSigner) RequestEmailVerification(_ context.Context, _ string) error {
+	return f.err
+}
+func (f *fakeSigner) VerifyEmail(_ context.Context, _, _ string) error {
+	return f.err
+}
 
 var _ authpkg.Signer = (*fakeSigner)(nil)
 

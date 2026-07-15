@@ -24,6 +24,7 @@ import (
 	"github.com/Pashteto/lia/internal/grpcclient"
 	"github.com/Pashteto/lia/internal/http/admin"
 	"github.com/Pashteto/lia/internal/http/auth"
+	"github.com/Pashteto/lia/internal/http/authverify"
 	complaintshttp "github.com/Pashteto/lia/internal/http/complaints"
 	feedbackhttp "github.com/Pashteto/lia/internal/http/feedback"
 	followshttp "github.com/Pashteto/lia/internal/http/follows"
@@ -65,6 +66,7 @@ type Module struct {
 	api        *operations.LiaAPIAPI
 	handler    *http.Handler
 	auth       *auth.Auth
+	signer     auth.Signer
 }
 
 // NewModule creates a new HTTP module instance.
@@ -246,6 +248,7 @@ func (m *Module) initAPI() error {
 		}
 		signer = s
 	}
+	m.signer = signer
 	api.AuthDemoLoginHandler = handlers.NewDemoLogin(signer)
 	api.AuthRegisterHandler = handlers.NewRegister(signer)
 	api.AuthLoginHandler = handlers.NewLogin(signer)
@@ -351,10 +354,19 @@ func (m *Module) initAPI() error {
 		})
 	}
 
+	// Build the auth-verify handler (public: request-verification + verify-email
+	// proxy GateGuard's email-verification RPCs). Present whenever the demo-login
+	// signer is wired; otherwise it 503s per-request (no signer configured).
+	authVerifyH := authverify.NewHandler(authverify.Deps{Signer: m.signer})
+
 	// Mount the admin handler ahead of the swagger mux, then organizers, then
 	// uploads, then base. These paths bypass swagger validation entirely.
 	router := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		p := r.URL.Path
+		if p == "/auth/request-verification" || p == "/auth/verify-email" {
+			authVerifyH.ServeHTTP(w, r)
+			return
+		}
 		if p == "/auth/me" || strings.HasPrefix(p, "/api/v1/admin/") {
 			adminH.ServeHTTP(w, r)
 			return

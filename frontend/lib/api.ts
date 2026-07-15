@@ -977,3 +977,50 @@ export async function getMyFeedback(eventId: string): Promise<boolean> {
   if (!res.ok) return false;
   return ((await res.json()) as { submitted: boolean }).submitted;
 }
+
+export async function sendInvitations(eventId: string, emails: string[]): Promise<number> {
+  const res = await fetch(`${API_V1}/events/${eventId}/invitations`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+    body: JSON.stringify({ emails }),
+  });
+  if (res.status === 403) {
+    const b = await res.clone().json().catch(() => ({}));
+    if (b?.code === "email_not_verified") throw new Error(EMAIL_NOT_VERIFIED);
+  }
+  if (!res.ok) throw new Error(`invite failed: ${res.status}`);
+  const data = await res.json();
+  return data.invited ?? 0;
+}
+
+export interface InvitationPreview { event_id: string; event_title: string; status: string; }
+export async function getInvitationPreview(token: string): Promise<InvitationPreview> {
+  const res = await fetch(`${API_V1}/invitations/${token}`, { cache: "no-store" });
+  if (!res.ok) throw new Error(`preview failed: ${res.status}`);
+  return res.json();
+}
+
+async function invitationAction(path: string): Promise<void> {
+  const res = await fetch(`${API_V1}${path}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${getToken()}` },
+  });
+  if (res.status === 403) {
+    const b = await res.clone().json().catch(() => ({}));
+    if (b?.code === "email_not_verified") throw new Error(EMAIL_NOT_VERIFIED);
+  }
+  if (!res.ok && res.status !== 204) throw new Error(`invitation action failed: ${res.status}`);
+}
+export const acceptInvitation = (token: string) => invitationAction(`/invitations/${token}/accept`);
+export const declineInvitation = (token: string) => invitationAction(`/invitations/${token}/decline`);
+export const acceptMyInvitation = (id: string) => invitationAction(`/me/invitations/${id}/accept`);
+export const declineMyInvitation = (id: string) => invitationAction(`/me/invitations/${id}/decline`);
+
+export interface MyInvitation { id: string; event_id: string; token: string; status: string; }
+export async function fetchMyInvitations(): Promise<MyInvitation[]> {
+  const res = await fetch(`${API_V1}/me/invitations`, {
+    headers: { Authorization: `Bearer ${getToken()}` }, cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`my invitations failed: ${res.status}`);
+  return res.json();
+}

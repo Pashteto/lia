@@ -18,7 +18,7 @@ func authFn(ok bool) func(string) (*domain.User, error) {
 		if !ok || tok == "" {
 			return nil, http.ErrNoCookie
 		}
-		return &domain.User{UUID: uuid.Must(uuid.NewV4()), Email: "u@x", Role: "common"}, nil
+		return &domain.User{UUID: uuid.Must(uuid.NewV4()), Email: "u@x", Role: "common", EmailVerified: true}, nil
 	}
 }
 
@@ -85,5 +85,27 @@ func TestSubmit_400BadCategory(t *testing.T) {
 func TestSubmit_404NoEvent(t *testing.T) {
 	if w := req(t, true, stubService{err: complaintsdomain.ErrTargetNotFound}, `{"category":"spam"}`); w.Code != http.StatusNotFound {
 		t.Fatalf("status = %d, want 404", w.Code)
+	}
+}
+
+func TestSubmit_403Unverified(t *testing.T) {
+	id := uuid.Must(uuid.NewV4()).String()
+	deps := Deps{
+		Authenticate: func(tok string) (*domain.User, error) {
+			return &domain.User{UUID: uuid.Must(uuid.NewV4()), Email: "u@x", Role: "common", EmailVerified: false}, nil
+		},
+		Complaints: stubService{created: true},
+	}
+	h := NewHandler(deps)
+	r := httptest.NewRequest(http.MethodPost, "/api/v1/events/"+id+"/complaints", strings.NewReader(`{"category":"spam"}`))
+	r.Header.Set("Authorization", "Bearer x")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, r)
+
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("status = %d, want 403", w.Code)
+	}
+	if !strings.Contains(w.Body.String(), "email_not_verified") {
+		t.Fatalf("body missing code: %s", w.Body.String())
 	}
 }

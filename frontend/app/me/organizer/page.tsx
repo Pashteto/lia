@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { ImageUpload } from "@/components/ui/ImageUpload";
 import { useAuth } from "@/lib/auth-context";
 import {
   getMyOrganizer,
@@ -36,6 +37,9 @@ export default function MyOrganizerPage() {
   const [description, setDescription] = useState("");
   const [website, setWebsite] = useState("");
   const [logoFileId, setLogoFileId] = useState<string | undefined>();
+  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | undefined>();
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [logoError, setLogoError] = useState<string | undefined>();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,6 +52,7 @@ export default function MyOrganizerPage() {
           setName(o.name);
           setDescription(o.description);
           setWebsite(o.website_url);
+          setLogoPreviewUrl(o.logo_url);
         }
       })
       .catch((e) => setError(String(e)));
@@ -105,11 +110,16 @@ export default function MyOrganizerPage() {
   };
 
   const onLogo = async (file: File) => {
+    setLogoError(undefined);
+    setLogoUploading(true);
     try {
-      const { id } = await uploadFile(file);
+      const { id, url } = await uploadFile(file);
       setLogoFileId(id);
+      setLogoPreviewUrl(url);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setLogoError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setLogoUploading(false);
     }
   };
 
@@ -176,15 +186,13 @@ export default function MyOrganizerPage() {
         </label>
         <label className="block">
           <span className="mb-1.5 block text-[13px] text-label-secondary">Логотип</span>
-          <input
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            className="block w-full text-[15px] text-label file:mr-3 file:rounded-full file:border-0 file:bg-fill file:px-4 file:py-1.5 file:text-[14px] file:font-medium file:text-label file:transition hover:file:bg-fill disabled:opacity-60"
-            onChange={(e) => e.target.files?.[0] && onLogo(e.target.files[0])}
+          <ImageUpload
+            label="логотип"
+            previewUrl={logoPreviewUrl}
+            uploading={logoUploading}
+            error={logoError}
+            onFile={onLogo}
           />
-          {logoFileId && (
-            <p className="mt-1 text-[13px] text-label-secondary">Файл загружен ✓</p>
-          )}
         </label>
       </div>
 

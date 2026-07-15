@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { LoginModal } from "@/components/AuthButton";
 import { Button } from "@/components/ui/Button";
+import { DateTimeField } from "@/components/ui/DateTimeField";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { Segmented } from "@/components/ui/Segmented";
 import { Switch } from "@/components/ui/Switch";
@@ -342,10 +343,22 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
             />
           </Field>
           <Field label="Начало" error={errors.startsAt?.message}>
-            <input type="datetime-local" className={inputCls} {...register("startsAt")} />
+            <Controller
+              control={control}
+              name="startsAt"
+              render={({ field }) => (
+                <DateTimeField value={field.value ?? ""} onChange={field.onChange} />
+              )}
+            />
           </Field>
           <Field label="Окончание">
-            <input type="datetime-local" className={inputCls} {...register("endsAt")} />
+            <Controller
+              control={control}
+              name="endsAt"
+              render={({ field }) => (
+                <DateTimeField value={field.value ?? ""} onChange={field.onChange} />
+              )}
+            />
           </Field>
           {showChangeNotice && (
             <p className="text-[13px] text-label-secondary">

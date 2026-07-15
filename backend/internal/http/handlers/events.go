@@ -179,6 +179,10 @@ func NewCreateEvent(svc eventsdomain.Service) *CreateEvent {
 
 // Handle POST /events.
 func (h *CreateEvent) Handle(params eventsops.CreateEventParams, principal *apimodels.User) middleware.Responder {
+	if !IsVerified(principal) {
+		return UnverifiedResponder()
+	}
+
 	event, err := formatter.EventFromAPIInput(params.Body)
 	if err != nil {
 		return eventsops.NewCreateEventBadRequest().

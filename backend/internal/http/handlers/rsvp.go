@@ -39,6 +39,9 @@ func (h *SignUp) Handle(params rsvpops.SignUpParams, principal *apimodels.User) 
 		return rsvpops.NewSignUpUnauthorized().
 			WithPayload(DefaultError(http.StatusUnauthorized, errors.New("authentication required"), nil))
 	}
+	if !IsVerified(principal) {
+		return UnverifiedResponder()
+	}
 	userID, err := uuid.FromString(principal.UUID.String())
 	if err != nil {
 		return rsvpops.NewSignUpUnauthorized().

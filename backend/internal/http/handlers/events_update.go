@@ -30,6 +30,9 @@ func (h *UpdateEvent) Handle(params eventsops.UpdateEventParams, principal *apim
 		return eventsops.NewUpdateEventUnauthorized().
 			WithPayload(DefaultError(http.StatusUnauthorized, errors.New("authentication required"), nil))
 	}
+	if !IsVerified(principal) {
+		return UnverifiedResponder()
+	}
 	ownerID, err := uuid.FromString(principal.UUID.String())
 	if err != nil {
 		return eventsops.NewUpdateEventUnauthorized().

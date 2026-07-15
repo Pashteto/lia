@@ -105,6 +105,7 @@ func (u *User) Proto() *proto.User {
 		Organizations:   orgs,
 		PreferredStacks: u.PreferredStacks,
 		TrialUsed:       u.TrialUsed,
+		EmailVerified:   u.EmailVerified,
 	}
 }
 
@@ -125,6 +126,7 @@ func UserFromProto(pb *proto.User) *User {
 		Role:          UserRoleFromProto(pb.Role),
 		Organizations: orgs,
 		TrialUsed:     pb.TrialUsed,
+		EmailVerified: pb.EmailVerified,
 	}
 }
 

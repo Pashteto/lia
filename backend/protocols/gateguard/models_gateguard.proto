@@ -17,6 +17,7 @@ message User {
   repeated bytes organizations  = 10;
   repeated int64 preferred_stacks = 11;
   bool           trial_used       = 12;
+  bool           email_verified   = 13;
 }
 
 // UserStatus is enum with available User statuses

@@ -257,6 +257,7 @@ type User struct {
 	Organizations   [][]byte               `protobuf:"bytes,10,rep,name=organizations,proto3" json:"organizations,omitempty"`
 	PreferredStacks []int64                `protobuf:"varint,11,rep,packed,name=preferred_stacks,json=preferredStacks,proto3" json:"preferred_stacks,omitempty"`
 	TrialUsed       bool                   `protobuf:"varint,12,opt,name=trial_used,json=trialUsed,proto3" json:"trial_used,omitempty"`
+	EmailVerified   bool                   `protobuf:"varint,13,opt,name=email_verified,json=emailVerified,proto3" json:"email_verified,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -371,6 +372,13 @@ func (x *User) GetPreferredStacks() []int64 {
 func (x *User) GetTrialUsed() bool {
 	if x != nil {
 		return x.TrialUsed
+	}
+	return false
+}
+
+func (x *User) GetEmailVerified() bool {
+	if x != nil {
+		return x.EmailVerified
 	}
 	return false
 }
@@ -516,7 +524,7 @@ var File_models_gateguard_proto protoreflect.FileDescriptor
 
 const file_models_gateguard_proto_rawDesc = "" +
 	"\n" +
-	"\x16models_gateguard.proto\x12\x10gateguard.models\"\xf6\x02\n" +
+	"\x16models_gateguard.proto\x12\x10gateguard.models\"\x9d\x03\n" +
 	"\x04User\x12\x12\n" +
 	"\x04uuid\x18\x01 \x01(\fR\x04uuid\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x12\n" +
@@ -531,7 +539,8 @@ const file_models_gateguard_proto_rawDesc = "" +
 	" \x03(\fR\rorganizations\x12)\n" +
 	"\x10preferred_stacks\x18\v \x03(\x03R\x0fpreferredStacks\x12\x1d\n" +
 	"\n" +
-	"trial_used\x18\f \x01(\bR\ttrialUsed\"3\n" +
+	"trial_used\x18\f \x01(\bR\ttrialUsed\x12%\n" +
+	"\x0eemail_verified\x18\r \x01(\bR\remailVerified\"3\n" +
 	"\x05Users\x12*\n" +
 	"\x04user\x18\x01 \x03(\v2\x16.gateguard.models.UserR\x04user\"\x94\x02\n" +
 	"\n" +

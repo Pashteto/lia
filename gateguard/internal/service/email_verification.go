@@ -20,6 +20,11 @@ const verificationResendCooldown = 60 * time.Second
 // ErrVerificationCooldown is returned when a code was sent less than the cooldown ago.
 var ErrVerificationCooldown = errors.New("verification code recently sent")
 
+const verificationCodeTTL = 15 * time.Minute
+
+// ErrVerificationCodeExpired is returned when a matching code is older than the TTL.
+var ErrVerificationCodeExpired = errors.New("verification code expired")
+
 // newVerificationCode returns a cryptographically-random 6-digit numeric code
 // as a zero-padded string (e.g. "042173").
 func newVerificationCode() string {
@@ -69,6 +74,10 @@ func (u *UsersService) VerifyEmail(ctx context.Context, email, token string) err
 	}
 	if token == "" || user.EmailVerificationToken != token {
 		return ErrVerificationTokenInvalid
+	}
+	if user.EmailVerificationSentAt.IsZero() ||
+		time.Since(user.EmailVerificationSentAt) > verificationCodeTTL {
+		return ErrVerificationCodeExpired
 	}
 	user.EmailVerified = true
 	user.EmailVerificationToken = ""

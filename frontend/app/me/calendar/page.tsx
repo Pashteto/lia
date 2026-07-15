@@ -13,9 +13,9 @@ import {
   addDays,
   civilKey,
   dayLabel,
+  eventDayKeys,
   monthGrid,
   monthYearLabel,
-  moscowDayKey,
   moscowTime,
   sameMonth,
   shiftMonth,
@@ -128,17 +128,19 @@ export default function CalendarPage() {
     enabled: ready && isAuthed,
   });
 
-  // Bucket events by their Europe/Moscow civil day.
+  // Bucket events by every Europe/Moscow civil day they span.
   const byDay = useMemo(() => {
     const map = new Map<string, CalendarEvent[]>();
     for (const ev of events) {
-      const key = moscowDayKey(new Date(ev.startsAt));
-      const list = map.get(key);
-      if (list) list.push(ev);
-      else map.set(key, [ev]);
+      for (const key of eventDayKeys(ev.startsAt, ev.endsAt)) {
+        const list = map.get(key) ?? [];
+        list.push(ev);
+        map.set(key, list);
+      }
     }
-    for (const list of map.values())
+    for (const list of map.values()) {
       list.sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+    }
     return map;
   }, [events]);
 

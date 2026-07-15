@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { FilterChip } from "@/components/ui/FilterChip";
 import { cancelRsvp, fetchMyApplications } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import { formatEventDate } from "@/lib/format";
+import { formatEventDate, formatEventRange } from "@/lib/format";
 import type { Rsvp, RsvpStatus } from "@/lib/types";
 
 type Tab = "applied" | "accepted" | "declined" | "withdrawn";
@@ -63,7 +63,7 @@ function ApplicationCard({ rsvp, tab }: { rsvp: Rsvp; tab: Tab }) {
         <StatusChip status={rsvp.status} />
         {event && (
           <span className="text-[13px] text-label-secondary">
-            {formatEventDate(event.startsAt)}
+            {formatEventRange(event)}
           </span>
         )}
         <span className="text-[13px] text-label-secondary ml-auto">

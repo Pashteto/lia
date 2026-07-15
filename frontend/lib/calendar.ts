@@ -96,3 +96,24 @@ export function shiftMonth(anchor: Date, delta: number): Date {
 
 /** Russian short weekday headers, Monday first. */
 export const WEEKDAY_LABELS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+
+/**
+ * The Europe/Moscow civil day keys ("YYYY-MM-DD") an event occupies, inclusive
+ * of start and end. Single-day (or open-ended, i.e. zero-time end) → one key.
+ * Used to span multi-day events across every calendar cell they cover.
+ */
+export function eventDayKeys(startsAt: string, endsAt: string | undefined): string[] {
+  const startKey = moscowDayKey(new Date(startsAt));
+  const realEnd = endsAt && new Date(endsAt).getUTCFullYear() > 1 ? endsAt : undefined;
+  if (!realEnd) return [startKey];
+  const endKey = moscowDayKey(new Date(realEnd));
+  if (endKey <= startKey) return [startKey];
+  const [sy, sm, sd] = startKey.split("-").map(Number);
+  const keys: string[] = [];
+  let cursor = civil(sy, sm - 1, sd);
+  while (civilKey(cursor) <= endKey) {
+    keys.push(civilKey(cursor));
+    cursor = addDays(cursor, 1);
+  }
+  return keys;
+}

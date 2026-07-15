@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { FilterChip } from "@/components/ui/FilterChip";
 import { cancelRsvp, fetchMyPractices } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import { formatEventDate } from "@/lib/format";
+import { formatEventRange } from "@/lib/format";
 import type { Rsvp, RsvpStatus } from "@/lib/types";
 
 type Tab = "upcoming" | "past";
@@ -64,7 +64,7 @@ function PracticeRow({ rsvp, tab }: { rsvp: Rsvp; tab: Tab }) {
             <StatusChip status={rsvp.status} />
             {event && (
               <span className="text-[13px] text-label-secondary">
-                {formatEventDate(event.startsAt)}
+                {formatEventRange(event)}
               </span>
             )}
           </div>

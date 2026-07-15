@@ -69,5 +69,5 @@ func (g *gatekeeperValidator) Validate(ctx context.Context, token string) (*Clai
 		subject = id.String()
 	}
 
-	return &Claims{Subject: subject, Email: u.Email, Name: u.Name, Role: u.Role.String()}, nil
+	return &Claims{Subject: subject, Email: u.Email, Name: u.Name, Role: u.Role.String(), EmailVerified: u.EmailVerified}, nil
 }

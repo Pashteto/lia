@@ -330,6 +330,21 @@ func TestAuthenticate_SyncsRoleOnExistingUser(t *testing.T) {
 	}
 }
 
+func TestAuthenticate_PropagatesEmailVerified(t *testing.T) {
+	svc := newFakeService()
+	a := NewAuth(svc, false, nil, WithValidator(fakeValidator{
+		claims: &Claims{Subject: "s", Email: "v@example.com", Name: "V", Role: "common", EmailVerified: true},
+	}))
+
+	u, err := a.Authenticate("Bearer tok")
+	if err != nil {
+		t.Fatalf("authenticate: %v", err)
+	}
+	if !u.EmailVerified {
+		t.Fatalf("expected domain user EmailVerified=true, got false")
+	}
+}
+
 func TestNewAuth(t *testing.T) {
 	tests := []struct {
 		name        string

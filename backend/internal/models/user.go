@@ -23,6 +23,12 @@ type User struct {
 	Role      string     `pg:"role,use_zero"`
 	CreatedAt time.Time  `pg:"created_at,notnull,default:now()"`
 	UpdatedAt time.Time  `pg:"updated_at,notnull,default:now()"`
+
+	// EmailVerified is claim-sourced from GateGuard on every auth, not a column
+	// on the local users table — tagged pg:"-" so go-pg's model-based
+	// Insert/Select/Update (see internal/repository/postgres.go) never
+	// generates SQL referencing a nonexistent "email_verified" column.
+	EmailVerified bool `pg:"-"`
 }
 
 // emailRegex is a basic email validation pattern.

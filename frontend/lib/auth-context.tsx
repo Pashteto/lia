@@ -40,6 +40,8 @@ interface AuthState {
   loginPassword: (email: string, password: string) => Promise<void>;
   /** Clears the session. */
   logout: () => void;
+  /** Re-fetches /auth/me and updates role/emailVerified (e.g. after verifying email). */
+  refresh: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -178,6 +180,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
+  const refresh = useCallback(async () => {
+    if (!getToken()) return;
+    try {
+      const me = await getMe();
+      setRole(me?.role ?? null);
+      setEmailVerified(me?.emailVerified ?? false);
+    } catch {
+      setRole(null);
+      setEmailVerified(false);
+    } finally {
+      setRoleResolved(true);
+    }
+  }, []);
+
   const logout = useCallback(() => {
     clearSession();
     setRole(null);
@@ -198,8 +214,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       register,
       loginPassword,
       logout,
+      refresh,
     }),
-    [email, ready, role, roleResolved, emailVerified, login, register, loginPassword, logout],
+    [email, ready, role, roleResolved, emailVerified, login, register, loginPassword, logout, refresh],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

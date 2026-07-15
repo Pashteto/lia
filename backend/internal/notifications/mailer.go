@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"html"
 	"net/smtp"
 	"strings"
 )
@@ -59,6 +60,8 @@ func (m *smtpMailer) SendEventInvitation(_ context.Context, to, eventTitle, acce
 
 // RenderInvitationEmail builds the subject line and HTML body (pure/testable).
 func RenderInvitationEmail(eventTitle, acceptURL string) (string, string) {
+	safeTitle := html.EscapeString(eventTitle)
+	safeURL := html.EscapeString(acceptURL)
 	subject := "Subject: Presence: приглашение на событие"
 	body := fmt.Sprintf(`<!DOCTYPE html><html lang="ru"><body style="font-family:Arial,sans-serif;background:#f4f4f4;padding:20px;">
 <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:8px;padding:24px;line-height:1.5;">
@@ -66,7 +69,7 @@ func RenderInvitationEmail(eventTitle, acceptURL string) (string, string) {
 <p>Вас пригласили на «%s».</p>
 <p><a href="%s" style="display:inline-block;padding:10px 20px;background:#8950fa;color:#fff;text-decoration:none;border-radius:20px;">Открыть приглашение</a></p>
 <p style="color:#666;font-size:13px;">Если ссылка не открывается, скопируйте её в браузер: %s</p>
-</div></body></html>`, eventTitle, acceptURL, acceptURL)
+</div></body></html>`, safeTitle, safeURL, safeURL)
 	return subject, body
 }
 

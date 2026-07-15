@@ -16,3 +16,16 @@ func TestRenderInvitationEmail(t *testing.T) {
 		t.Fatalf("body missing title or link: %s", body)
 	}
 }
+
+func TestRenderInvitationEmail_EscapesHTML(t *testing.T) {
+	_, body := notifications.RenderInvitationEmail(`<script>alert(1)</script> & "quoted"`, "https://x.test/a?b=1&c=2")
+	if strings.Contains(body, "<script>") {
+		t.Fatalf("body contains unescaped <script>: %s", body)
+	}
+	if !strings.Contains(body, "&lt;script&gt;") {
+		t.Fatalf("body missing escaped title: %s", body)
+	}
+	if !strings.Contains(body, "&amp;") {
+		t.Fatalf("body missing escaped ampersand: %s", body)
+	}
+}

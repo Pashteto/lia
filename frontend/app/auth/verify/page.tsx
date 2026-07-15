@@ -9,7 +9,7 @@ const inputClass =
   "w-full rounded-control bg-fill px-3.5 py-2.5 text-[17px] text-label outline-none placeholder:text-label-secondary focus:ring-2 focus:ring-accent";
 
 export default function VerifyPage() {
-  const { email } = useAuth();
+  const { email, refresh } = useAuth();
   const router = useRouter();
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
@@ -35,6 +35,7 @@ export default function VerifyPage() {
     setError("");
     try {
       await verifyEmail(addr, code);
+      await refresh(); // re-fetch /auth/me so emailVerified updates before navigating
       router.push("/"); // verified; caller flows resume
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка проверки кода");

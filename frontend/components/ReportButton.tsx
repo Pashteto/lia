@@ -4,8 +4,10 @@ import { useState } from "react";
 
 import { LoginModal } from "@/components/AuthButton";
 import { Button } from "@/components/ui/Button";
+import { VerifyEmailInterstitial } from "@/components/VerifyEmailInterstitial";
 import {
   COMPLAINT_CATEGORIES,
+  EMAIL_NOT_VERIFIED,
   submitComplaint,
   type ComplaintCategory,
 } from "@/lib/api";
@@ -15,6 +17,7 @@ export function ReportButton({ eventId }: { eventId: string }) {
   const { isAuthed } = useAuth();
   const [open, setOpen] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const [showVerify, setShowVerify] = useState(false);
   const [category, setCategory] = useState<ComplaintCategory>(COMPLAINT_CATEGORIES[0].value);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
@@ -41,6 +44,11 @@ export function ReportButton({ eventId }: { eventId: string }) {
       if (err instanceof Error && err.message === "not authenticated") {
         setOpen(false);
         setShowLogin(true);
+        return;
+      }
+      if (err instanceof Error && err.message === EMAIL_NOT_VERIFIED) {
+        setOpen(false);
+        setShowVerify(true);
         return;
       }
       setError("Не удалось отправить жалобу");
@@ -114,6 +122,7 @@ export function ReportButton({ eventId }: { eventId: string }) {
       ) : null}
 
       {showLogin ? <LoginModal onClose={() => setShowLogin(false)} /> : null}
+      {showVerify ? <VerifyEmailInterstitial onClose={() => setShowVerify(false)} /> : null}
     </>
   );
 }

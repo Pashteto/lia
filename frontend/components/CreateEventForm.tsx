@@ -9,7 +9,8 @@ import { ImageUpload } from "@/components/ui/ImageUpload";
 import { Segmented } from "@/components/ui/Segmented";
 import { Switch } from "@/components/ui/Switch";
 import { VenuePicker } from "@/components/VenuePicker";
-import { createEvent, getCategories, patchEvent, type CreateEventInput, uploadFile } from "@/lib/api";
+import { VerifyEmailInterstitial } from "@/components/VerifyEmailInterstitial";
+import { createEvent, EMAIL_NOT_VERIFIED, getCategories, patchEvent, type CreateEventInput, uploadFile } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/cn";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -469,22 +470,42 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
           </Field>
         </Section>
 
-        {mode === "create" && mutation.isError && (
-          <p className="mt-4 text-[15px] text-red-500">
-            {mutation.error instanceof Error && mutation.error.message.includes("429")
-              ? "Достигнут лимит: 10 событий в месяц. Лимит обновится 1-го числа."
-              : "Не удалось сохранить событие. Проверьте, что бэкенд запущен."}
-          </p>
-        )}
+        {mode === "create" &&
+          mutation.isError &&
+          !(mutation.error instanceof Error && mutation.error.message === EMAIL_NOT_VERIFIED) && (
+            <p className="mt-4 text-[15px] text-red-500">
+              {mutation.error instanceof Error && mutation.error.message.includes("429")
+                ? "Достигнут лимит: 10 событий в месяц. Лимит обновится 1-го числа."
+                : "Не удалось сохранить событие. Проверьте, что бэкенд запущен."}
+            </p>
+          )}
 
-        {mode === "edit" && editMutation.isError && (
-          <p className="mt-4 text-[15px] text-red-500">
-            {editMutation.error instanceof Error && editMutation.error.message.includes("409")
-              ? /occupied|capacity/i.test(editMutation.error.message)
-                ? "Нельзя уменьшить лимит мест ниже числа уже записавшихся"
-                : "Это событие нельзя редактировать в текущем статусе"
-              : "Не удалось сохранить изменения. Проверьте, что бэкенд запущен."}
-          </p>
+        {mode === "edit" &&
+          editMutation.isError &&
+          !(editMutation.error instanceof Error && editMutation.error.message === EMAIL_NOT_VERIFIED) && (
+            <p className="mt-4 text-[15px] text-red-500">
+              {editMutation.error instanceof Error && editMutation.error.message.includes("409")
+                ? /occupied|capacity/i.test(editMutation.error.message)
+                  ? "Нельзя уменьшить лимит мест ниже числа уже записавшихся"
+                  : "Это событие нельзя редактировать в текущем статусе"
+                : "Не удалось сохранить изменения. Проверьте, что бэкенд запущен."}
+            </p>
+          )}
+
+        {((mode === "create" &&
+          mutation.isError &&
+          mutation.error instanceof Error &&
+          mutation.error.message === EMAIL_NOT_VERIFIED) ||
+          (mode === "edit" &&
+            editMutation.isError &&
+            editMutation.error instanceof Error &&
+            editMutation.error.message === EMAIL_NOT_VERIFIED)) && (
+          <VerifyEmailInterstitial
+            onClose={() => {
+              mutation.reset();
+              editMutation.reset();
+            }}
+          />
         )}
       </div>
     </form>

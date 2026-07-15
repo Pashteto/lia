@@ -17,6 +17,8 @@ var (
 	ErrOrganizationNotValid      = errors.New("entered organization is not valid")
 	ErrSuchUserAlreadyExists     = errors.New("this user already exists in the organization")
 	ErrInvitesRateLimitReached   = errors.New("invites rate limit reached")
+	// ErrEmailNotVerified blocks invite acceptance by an unverified account.
+	ErrEmailNotVerified = errors.New("email not verified")
 )
 
 // HandleOrganizationError maps errors to HTTP status codes and payloads

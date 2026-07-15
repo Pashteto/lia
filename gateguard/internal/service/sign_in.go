@@ -45,6 +45,10 @@ func (u *UsersService) SignInOAuth(ctx context.Context, user *models.User) ([]by
 				return ErrInviteStatusNotValid
 			}
 
+			if !user.EmailVerified {
+				return ErrEmailNotVerified
+			}
+
 			invitation.Status = models.Accepted
 			err = u.repository.UpdateInvitationBy(ctx, invitation, repository.InvitationByReferralCode)
 			if err != nil {

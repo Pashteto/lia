@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"gateguard/internal/models"
 	"gateguard/internal/pkg/password"
@@ -37,15 +38,16 @@ func (u *UsersService) SignUpWithPassword(ctx context.Context, email, name, plai
 		return nil, nil, fmt.Errorf("hash password: %w", hErr)
 	}
 
-	token := newVerificationToken()
+	code := newVerificationCode()
 	user := &models.User{
-		Email:                  email,
-		Name:                   name,
-		Status:                 models.UserActive,
-		Role:                   models.UserRoleCommon,
-		PasswordHash:           hash,
-		EmailVerified:          false,
-		EmailVerificationToken: token,
+		Email:                   email,
+		Name:                    name,
+		Status:                  models.UserActive,
+		Role:                    models.UserRoleCommon,
+		PasswordHash:            hash,
+		EmailVerified:           false,
+		EmailVerificationToken:  code,
+		EmailVerificationSentAt: time.Now(),
 	}
 
 	if errors.Is(err, repository.ErrUserNotFound) {
@@ -58,13 +60,16 @@ func (u *UsersService) SignUpWithPassword(ctx context.Context, email, name, plai
 		// Pre-existing passwordless account: attach credentials to it.
 		user.UUID = existing.UUID
 		if uErr := u.repository.UpdateUserBy(ctx, user, repository.Email,
-			"password_hash", "email_verification_token", "email_verified", "name"); uErr != nil {
+			"password_hash", "email_verification_token", "email_verification_sent_at", "email_verified", "name"); uErr != nil {
 			u.log.ErrorCtx(ctx, uErr, fmt.Sprintf("attach credentials %s", email))
 			return nil, nil, fmt.Errorf("attach credentials %s: %w", email, uErr)
 		}
 	}
 
-	u.sendVerificationStub(ctx, user)
+	if sErr := u.notificator.SendEmailVerification(ctx, email, code); sErr != nil {
+		// Do not fail signup if the email send fails; the user can request a resend.
+		u.log.ErrorCtx(ctx, sErr, fmt.Sprintf("send verification email %s", email))
+	}
 
 	jwt, jErr := u.createJWT(user)
 	if jErr != nil {

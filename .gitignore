@@ -9,3 +9,6 @@ stitch_.zip
 
 # Visual companion working files
 .superpowers/
+
+# Local secrets captured by browser-setup agent (never commit)
+*.local.md

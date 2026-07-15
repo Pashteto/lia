@@ -23,6 +23,10 @@ type Signer interface {
 	SignUpPassword(ctx context.Context, email, name, password string) (string, error)
 	// SignInPassword verifies a password and returns a session JWT.
 	SignInPassword(ctx context.Context, email, password string) (string, error)
+	// RequestEmailVerification asks GateGuard to (re)send a verification code.
+	RequestEmailVerification(ctx context.Context, email string) error
+	// VerifyEmail submits a code to mark the address verified.
+	VerifyEmail(ctx context.Context, email, code string) error
 }
 
 // ErrInvalidCredentials / ErrUserExists let handlers map password-auth failures
@@ -126,4 +130,28 @@ func (s *gatekeeperSigner) SignInPassword(ctx context.Context, email, password s
 		return "", fmt.Errorf("gateguard returned an empty token")
 	}
 	return string(resp.Token), nil
+}
+
+func (s *gatekeeperSigner) RequestEmailVerification(ctx context.Context, email string) error {
+	if s.cfg.Timeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, s.cfg.Timeout)
+		defer cancel()
+	}
+	if _, err := s.client.RequestEmailVerification(ctx, &gg.EmailRequest{Email: email}); err != nil {
+		return fmt.Errorf("gateguard request verification: %w", err)
+	}
+	return nil
+}
+
+func (s *gatekeeperSigner) VerifyEmail(ctx context.Context, email, code string) error {
+	if s.cfg.Timeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, s.cfg.Timeout)
+		defer cancel()
+	}
+	if _, err := s.client.VerifyEmail(ctx, &gg.VerifyEmailRequest{Email: email, Token: code}); err != nil {
+		return fmt.Errorf("gateguard verify email: %w", err)
+	}
+	return nil
 }

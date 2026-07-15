@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 
 import { EventApplicationsPanel } from "@/components/EventApplicationsPanel";
+import { InviteByEmailPanel } from "@/components/InviteByEmailPanel";
 import { OrganizerFeedback } from "@/components/OrganizerFeedback";
 import { PublishEventButton } from "@/components/PublishEventButton";
 import { EventCard } from "@/components/ui/EventCard";
@@ -33,6 +34,25 @@ function ApplicationsExpander({ event }: { event: LiaEvent }) {
         <span>Заявки</span>
       </button>
       {open && <EventApplicationsPanel eventId={event.id} />}
+    </div>
+  );
+}
+
+/** Collapsible "Пригласить" expander shown on published events, letting the
+ * organizer send email invitations. */
+function InviteExpander({ event }: { event: LiaEvent }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-1">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center gap-1 rounded-control px-2 py-1.5 text-[13px] font-medium text-accent hover:bg-accent/8 transition"
+      >
+        <span>{open ? "▾" : "▸"}</span>
+        <span>Пригласить</span>
+      </button>
+      {open && <InviteByEmailPanel eventId={event.id} />}
     </div>
   );
 }
@@ -139,6 +159,7 @@ export default function MyEventsPage() {
               {e.signupMode === "application" && (
                 <ApplicationsExpander event={e} />
               )}
+              {e.status === "published" && <InviteExpander event={e} />}
               {e.status === "published" && <FeedbackExpander event={e} />}
             </div>
           ))}

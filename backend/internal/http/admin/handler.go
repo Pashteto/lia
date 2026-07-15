@@ -95,8 +95,9 @@ func (h *handler) me(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]string{
+	writeJSON(w, http.StatusOK, map[string]any{
 		"id": u.UUID.String(), "email": u.Email, "name": u.Name, "role": u.Role,
+		"email_verified": u.EmailVerified,
 	})
 }
 

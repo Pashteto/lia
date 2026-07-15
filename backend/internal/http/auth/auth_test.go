@@ -21,6 +21,10 @@ type fakeGGClient struct {
 	signErr   error
 
 	gotSignInUser *gg.User // captures the User passed to SignInOAuth
+
+	verifyErr            error
+	lastRequestVerifyReq *gg.EmailRequest
+	lastVerifyEmailReq   *gg.VerifyEmailRequest
 }
 
 func (f *fakeGGClient) CheckAuth(_ context.Context, _ *gg.TokenRequest, _ ...grpc.CallOption) (*gg.User, error) {
@@ -35,6 +39,14 @@ func (f *fakeGGClient) SignUpWithPassword(_ context.Context, _ *gg.SignUpRequest
 }
 func (f *fakeGGClient) SignInWithPassword(_ context.Context, _ *gg.PasswordSignInRequest, _ ...grpc.CallOption) (*gg.TokenResponse, error) {
 	return f.tokenResp, f.signErr
+}
+func (f *fakeGGClient) RequestEmailVerification(_ context.Context, in *gg.EmailRequest, _ ...grpc.CallOption) (*gg.Empty, error) {
+	f.lastRequestVerifyReq = in
+	return &gg.Empty{}, f.verifyErr
+}
+func (f *fakeGGClient) VerifyEmail(_ context.Context, in *gg.VerifyEmailRequest, _ ...grpc.CallOption) (*gg.Empty, error) {
+	f.lastVerifyEmailReq = in
+	return &gg.Empty{}, f.verifyErr
 }
 
 // TestSigner_SignIn_SendsValidStatusAndRole guards against the demo-login 503:
@@ -88,6 +100,46 @@ func TestSigner_SignIn_EmptyToken(t *testing.T) {
 
 	if _, err := s.SignIn(context.Background(), "a@b.com", "A"); err == nil {
 		t.Error("expected error when GateGuard returns an empty token")
+	}
+}
+
+func TestSigner_RequestEmailVerification(t *testing.T) {
+	fake := &fakeGGClient{}
+	s := newSignerWithClient(fake)
+
+	if err := s.RequestEmailVerification(context.Background(), "u@example.com"); err != nil {
+		t.Fatalf("request: %v", err)
+	}
+	if fake.lastRequestVerifyReq == nil || fake.lastRequestVerifyReq.Email != "u@example.com" {
+		t.Fatalf("expected RPC called with email, got %+v", fake.lastRequestVerifyReq)
+	}
+}
+
+func TestSigner_RequestEmailVerification_Error(t *testing.T) {
+	s := newSignerWithClient(&fakeGGClient{verifyErr: fmt.Errorf("gateguard down")})
+
+	if err := s.RequestEmailVerification(context.Background(), "u@example.com"); err == nil {
+		t.Error("expected error when RequestEmailVerification fails")
+	}
+}
+
+func TestSigner_VerifyEmail(t *testing.T) {
+	fake := &fakeGGClient{}
+	s := newSignerWithClient(fake)
+
+	if err := s.VerifyEmail(context.Background(), "u@example.com", "123456"); err != nil {
+		t.Fatalf("verify: %v", err)
+	}
+	if fake.lastVerifyEmailReq == nil || fake.lastVerifyEmailReq.Email != "u@example.com" || fake.lastVerifyEmailReq.Token != "123456" {
+		t.Fatalf("expected RPC called with email+token, got %+v", fake.lastVerifyEmailReq)
+	}
+}
+
+func TestSigner_VerifyEmail_Error(t *testing.T) {
+	s := newSignerWithClient(&fakeGGClient{verifyErr: fmt.Errorf("invalid code")})
+
+	if err := s.VerifyEmail(context.Background(), "u@example.com", "000000"); err == nil {
+		t.Error("expected error when VerifyEmail fails")
 	}
 }
 
@@ -327,6 +379,21 @@ func TestAuthenticate_SyncsRoleOnExistingUser(t *testing.T) {
 	}
 	if storedUser.Role != "admin" {
 		t.Fatalf("stored user role = %q, want admin (role drift-sync failed)", storedUser.Role)
+	}
+}
+
+func TestAuthenticate_PropagatesEmailVerified(t *testing.T) {
+	svc := newFakeService()
+	a := NewAuth(svc, false, nil, WithValidator(fakeValidator{
+		claims: &Claims{Subject: "s", Email: "v@example.com", Name: "V", Role: "common", EmailVerified: true},
+	}))
+
+	u, err := a.Authenticate("Bearer tok")
+	if err != nil {
+		t.Fatalf("authenticate: %v", err)
+	}
+	if !u.EmailVerified {
+		t.Fatalf("expected domain user EmailVerified=true, got false")
 	}
 }
 

@@ -305,6 +305,10 @@ export async function createEvent(input: CreateEventInput): Promise<LiaEvent> {
     headers,
     body: JSON.stringify(input),
   });
+  if (res.status === 403) {
+    const b = await res.clone().json().catch(() => ({}));
+    if (b?.code === "email_not_verified") throw new Error(EMAIL_NOT_VERIFIED);
+  }
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
     throw new Error(`create event failed: ${res.status} ${detail}`);
@@ -331,6 +335,10 @@ export async function patchEvent(
     headers,
     body: JSON.stringify(patch),
   });
+  if (res.status === 403) {
+    const b = await res.clone().json().catch(() => ({}));
+    if (b?.code === "email_not_verified") throw new Error(EMAIL_NOT_VERIFIED);
+  }
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
     throw new Error(`patch event failed: ${res.status} ${detail}`);
@@ -462,6 +470,10 @@ export async function signUp(eventId: string, applicationAnswer?: string): Promi
     const body = await res.json().catch(() => ({}));
     throw new Error(`EXTERNAL:${body?.message ?? body?.detail ?? ""}`); // caller opens organizer URL
   }
+  if (res.status === 403) {
+    const b = await res.clone().json().catch(() => ({}));
+    if (b?.code === "email_not_verified") throw new Error(EMAIL_NOT_VERIFIED);
+  }
   if (!res.ok) throw new Error(`sign up failed: ${res.status}`);
   return apiRsvpToLia(await res.json());
 }
@@ -578,15 +590,46 @@ function authHeaders(): HeadersInit {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+/** Thrown by gated write calls when the backend returns 403 `{"code":"email_not_verified"}`. */
+export const EMAIL_NOT_VERIFIED = "EMAIL_NOT_VERIFIED";
+
 export async function getMe(): Promise<{
   id: string;
   email: string;
   name: string;
   role: string;
+  emailVerified: boolean;
 } | null> {
   const res = await fetch(`${API_BASE}/auth/me`, { headers: authHeaders(), cache: "no-store" });
   if (!res.ok) return null;
-  return res.json();
+  const data = await res.json();
+  return {
+    id: data.id,
+    email: data.email,
+    name: data.name,
+    role: data.role,
+    emailVerified: !!data.email_verified,
+  };
+}
+
+/** Requests a fresh verification code via POST /auth/request-verification. */
+export async function requestVerification(email: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/auth/request-verification`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  if (!res.ok && res.status !== 204) throw new Error(`request verification failed: ${res.status}`);
+}
+
+/** Verifies the account's email via POST /auth/verify-email. */
+export async function verifyEmail(email: string, code: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/auth/verify-email`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, code }),
+  });
+  if (!res.ok && res.status !== 204) throw new Error("Неверный или просроченный код");
 }
 
 export async function getAdminOverview(): Promise<{
@@ -639,6 +682,10 @@ export async function submitComplaint(
     headers: { ...authHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ category, note }),
   });
+  if (res.status === 403) {
+    const b = await res.clone().json().catch(() => ({}));
+    if (b?.code === "email_not_verified") throw new Error(EMAIL_NOT_VERIFIED);
+  }
   if (!res.ok) {
     if (res.status === 401) throw new Error("not authenticated");
     throw new Error(`complaint: ${res.status}`);
@@ -929,4 +976,51 @@ export async function getMyFeedback(eventId: string): Promise<boolean> {
   });
   if (!res.ok) return false;
   return ((await res.json()) as { submitted: boolean }).submitted;
+}
+
+export async function sendInvitations(eventId: string, emails: string[]): Promise<number> {
+  const res = await fetch(`${API_V1}/events/${eventId}/invitations`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+    body: JSON.stringify({ emails }),
+  });
+  if (res.status === 403) {
+    const b = await res.clone().json().catch(() => ({}));
+    if (b?.code === "email_not_verified") throw new Error(EMAIL_NOT_VERIFIED);
+  }
+  if (!res.ok) throw new Error(`invite failed: ${res.status}`);
+  const data = await res.json();
+  return data.invited ?? 0;
+}
+
+export interface InvitationPreview { event_id: string; event_title: string; status: string; }
+export async function getInvitationPreview(token: string): Promise<InvitationPreview> {
+  const res = await fetch(`${API_V1}/invitations/${token}`, { cache: "no-store" });
+  if (!res.ok) throw new Error(`preview failed: ${res.status}`);
+  return res.json();
+}
+
+async function invitationAction(path: string): Promise<void> {
+  const res = await fetch(`${API_V1}${path}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${getToken()}` },
+  });
+  if (res.status === 403) {
+    const b = await res.clone().json().catch(() => ({}));
+    if (b?.code === "email_not_verified") throw new Error(EMAIL_NOT_VERIFIED);
+  }
+  if (!res.ok && res.status !== 204) throw new Error(`invitation action failed: ${res.status}`);
+}
+export const acceptInvitation = (token: string) => invitationAction(`/invitations/${token}/accept`);
+export const declineInvitation = (token: string) => invitationAction(`/invitations/${token}/decline`);
+export const acceptMyInvitation = (id: string) => invitationAction(`/me/invitations/${id}/accept`);
+export const declineMyInvitation = (id: string) => invitationAction(`/me/invitations/${id}/decline`);
+
+export interface MyInvitation { id: string; event_id: string; token: string; status: string; }
+export async function fetchMyInvitations(): Promise<MyInvitation[]> {
+  const res = await fetch(`${API_V1}/me/invitations`, {
+    headers: { Authorization: `Bearer ${getToken()}` }, cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`my invitations failed: ${res.status}`);
+  return res.json();
 }

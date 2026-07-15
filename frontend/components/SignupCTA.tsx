@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 
 import { LoginModal } from "@/components/AuthButton";
 import { Button } from "@/components/ui/Button";
-import { cancelRsvp, eventCalendarUrl, fetchEventWithAuth, signUp } from "@/lib/api";
+import { VerifyEmailInterstitial } from "@/components/VerifyEmailInterstitial";
+import { cancelRsvp, eventCalendarUrl, EMAIL_NOT_VERIFIED, fetchEventWithAuth, signUp } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import type { LiaEvent, RsvpStatus } from "@/lib/types";
 
@@ -101,6 +102,7 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
   const [error, setError] = useState<string | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showApplicationSheet, setShowApplicationSheet] = useState(false);
+  const [showVerify, setShowVerify] = useState(false);
 
   // The user has taken an action this session (sign up / cancel / apply) — once
   // true, the authed refetch below must not overwrite what they just did.
@@ -152,6 +154,10 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
       if (err instanceof Error) {
         if (err.message === "not authenticated") {
           handleAuthError();
+          return;
+        }
+        if (err.message === EMAIL_NOT_VERIFIED) {
+          setShowVerify(true);
           return;
         }
         if (err.message.startsWith("EXTERNAL:")) {
@@ -311,6 +317,9 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
         {showLoginModal && (
           <LoginModal onClose={() => setShowLoginModal(false)} />
         )}
+        {showVerify && (
+          <VerifyEmailInterstitial onClose={() => setShowVerify(false)} />
+        )}
       </div>
     );
   }
@@ -392,6 +401,9 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
             busy={busy}
             error={error}
           />
+        )}
+        {showVerify && (
+          <VerifyEmailInterstitial onClose={() => setShowVerify(false)} />
         )}
       </div>
     );

@@ -53,6 +53,13 @@ func (h *handler) submit(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
+	if !u.EmailVerified {
+		writeJSON(w, http.StatusForbidden, map[string]string{
+			"code":    "email_not_verified",
+			"message": "Подтвердите электронную почту, чтобы продолжить",
+		})
+		return
+	}
 	eventID, err := uuid.FromString(r.PathValue("id"))
 	if err != nil {
 		writeErr(w, http.StatusBadRequest, "invalid id")

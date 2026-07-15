@@ -1238,6 +1238,8 @@ definitions:
         description: Timestamp when user was last updated (UTC)
         readOnly: true
         x-example: "2024-01-20T10:30:00Z"
+      email_verified:
+        type: boolean
 
   Health:
     type: object

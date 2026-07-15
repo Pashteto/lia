@@ -22,8 +22,10 @@ import (
 	grpcmod "github.com/Pashteto/lia/internal/grpc"
 	grpcclientmod "github.com/Pashteto/lia/internal/grpcclient"
 	httpmod "github.com/Pashteto/lia/internal/http"
+	invitationsdomain "github.com/Pashteto/lia/internal/invitations"
 	"github.com/Pashteto/lia/internal/moderation"
 	"github.com/Pashteto/lia/internal/module"
+	"github.com/Pashteto/lia/internal/notifications"
 	organizersdomain "github.com/Pashteto/lia/internal/organizers"
 	"github.com/Pashteto/lia/internal/repository"
 	rsvpdomain "github.com/Pashteto/lia/internal/rsvp"
@@ -269,6 +271,39 @@ func (app *App) registerModules() error {
 			httpModule.SetFeedback(
 				feedback.NewService(feedback.NewRepository(repoModule.DB())),
 			)
+
+			// Wire invitations service + mailer (requires DB + events; RSVP is
+			// nil-guarded since the RSVP feature can be disabled).
+			if app.eventsSvc != nil {
+				var smtpAddr, smtpUser, smtpPass, smtpFrom string
+				if app.config.SMTP != nil {
+					smtpAddr = app.config.SMTP.Address
+					smtpUser = app.config.SMTP.Username
+					smtpPass = app.config.SMTP.Password
+					smtpFrom = app.config.SMTP.From
+				}
+				mailer := notifications.NewSMTPMailer(smtpAddr, smtpUser, smtpPass, smtpFrom)
+				signUp := func(ctx context.Context, eventID, userID uuid.UUID, answer string) error {
+					if app.rsvpSvc == nil {
+						return fmt.Errorf("rsvp service unavailable")
+					}
+					_, err := app.rsvpSvc.SignUp(ctx, eventID, userID, answer)
+					return err
+				}
+				invSvc := invitationsdomain.NewService(
+					invitationsdomain.NewRepository(repoModule.DB()),
+					invitationsdomain.NewEventPort(func(ctx context.Context, id string) (string, uuid.UUID, error) {
+						ev, err := app.eventsSvc.GetByID(ctx, id)
+						if err != nil {
+							return "", uuid.Nil, err
+						}
+						return ev.Title, ev.OrganizerID, nil
+					}),
+					invitationsdomain.NewRSVPPort(signUp),
+					mailer,
+				)
+				httpModule.SetInvitations(invSvc, app.config.PublicBaseURL)
+			}
 		}
 
 		app.modules.Register(httpModule)

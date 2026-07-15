@@ -2,6 +2,7 @@ package admin
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -138,6 +139,33 @@ func TestAuthMe_401Anon(t *testing.T) {
 	newTestHandler("admin").ServeHTTP(w, r)
 	if w.Code != http.StatusUnauthorized {
 		t.Fatalf("status = %d, want 401", w.Code)
+	}
+}
+
+func TestAuthMe_200IncludesEmailVerified(t *testing.T) {
+	h := NewHandler(Deps{
+		Authenticate: func(tok string) (*domain.User, error) {
+			return &domain.User{UUID: uuid.Must(uuid.NewV4()), Email: "u@x", Name: "U", Role: "common", EmailVerified: true}, nil
+		},
+		Moderation: stubMod{},
+	})
+	r := httptest.NewRequest(http.MethodGet, "/auth/me", nil)
+	r.Header.Set("Authorization", "Bearer x")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, r)
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200", w.Code)
+	}
+	var body map[string]any
+	if err := json.NewDecoder(w.Body).Decode(&body); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	v, ok := body["email_verified"]
+	if !ok {
+		t.Fatalf("response missing email_verified key: %v", body)
+	}
+	if verified, ok := v.(bool); !ok || !verified {
+		t.Fatalf("email_verified = %v, want true", v)
 	}
 }
 

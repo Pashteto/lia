@@ -72,6 +72,10 @@ func (u *UsersService) ReactToInvitation(ctx context.Context, in ReactToInvitati
 				return fmt.Errorf("personal referrals not implemented yet")
 			}
 
+			if !inviteeUser.EmailVerified {
+				return ErrEmailNotVerified
+			}
+
 			_, err = u.orgs.UpdateUserRoleInOrganization(ctx, organizations.UpdateUserRoleParams{
 				OrganizationUUID: *invitation.Organization,
 				Email:            in.InviteeEmail,

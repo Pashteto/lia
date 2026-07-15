@@ -30,6 +30,8 @@ interface AuthState {
    * short-circuit before checking roleResolved.
    */
   roleResolved: boolean;
+  /** Whether the signed-in user's email is verified, per the server. False when unknown/signed out. */
+  emailVerified: boolean;
   /** Demo-login with an email; persists the session. Throws on failure. */
   login: (email: string, name?: string) => Promise<void>;
   /** Register with email + password; persists the session. Throws on failure. */
@@ -38,6 +40,8 @@ interface AuthState {
   loginPassword: (email: string, password: string) => Promise<void>;
   /** Clears the session. */
   logout: () => void;
+  /** Re-fetches /auth/me and updates role/emailVerified (e.g. after verifying email). */
+  refresh: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -103,13 +107,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const [role, setRole] = useState<string | null>(null);
   const [roleResolved, setRoleResolved] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
 
   // Populate role from the server on mount when a session already exists.
   useEffect(() => {
     if (getToken()) {
       getMe()
-        .then((me) => setRole(me?.role ?? null))
-        .catch(() => setRole(null))
+        .then((me) => {
+          setRole(me?.role ?? null);
+          setEmailVerified(me?.emailVerified ?? false);
+        })
+        .catch(() => {
+          setRole(null);
+          setEmailVerified(false);
+        })
         .finally(() => setRoleResolved(true));
     }
     // No token → leave roleResolved=false; the gate uses isAuthed first.
@@ -120,8 +131,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSession(token, loginEmail);
     notifyAuthListeners();
     getMe()
-      .then((me) => setRole(me?.role ?? null))
-      .catch(() => setRole(null))
+      .then((me) => {
+        setRole(me?.role ?? null);
+        setEmailVerified(me?.emailVerified ?? false);
+      })
+      .catch(() => {
+        setRole(null);
+        setEmailVerified(false);
+      })
       .finally(() => setRoleResolved(true));
   }, []);
 
@@ -131,8 +148,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(token, regEmail);
       notifyAuthListeners();
       getMe()
-        .then((me) => setRole(me?.role ?? null))
-        .catch(() => setRole(null))
+        .then((me) => {
+          setRole(me?.role ?? null);
+          setEmailVerified(me?.emailVerified ?? false);
+        })
+        .catch(() => {
+          setRole(null);
+          setEmailVerified(false);
+        })
         .finally(() => setRoleResolved(true));
     },
     [],
@@ -144,17 +167,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(token, loginEmail);
       notifyAuthListeners();
       getMe()
-        .then((me) => setRole(me?.role ?? null))
-        .catch(() => setRole(null))
+        .then((me) => {
+          setRole(me?.role ?? null);
+          setEmailVerified(me?.emailVerified ?? false);
+        })
+        .catch(() => {
+          setRole(null);
+          setEmailVerified(false);
+        })
         .finally(() => setRoleResolved(true));
     },
     [],
   );
 
+  const refresh = useCallback(async () => {
+    if (!getToken()) return;
+    try {
+      const me = await getMe();
+      setRole(me?.role ?? null);
+      setEmailVerified(me?.emailVerified ?? false);
+    } catch {
+      setRole(null);
+      setEmailVerified(false);
+    } finally {
+      setRoleResolved(true);
+    }
+  }, []);
+
   const logout = useCallback(() => {
     clearSession();
     setRole(null);
     setRoleResolved(false);
+    setEmailVerified(false);
     notifyAuthListeners();
   }, []);
 
@@ -165,12 +209,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       ready,
       role,
       roleResolved,
+      emailVerified,
       login,
       register,
       loginPassword,
       logout,
+      refresh,
     }),
-    [email, ready, role, roleResolved, login, register, loginPassword, logout],
+    [email, ready, role, roleResolved, emailVerified, login, register, loginPassword, logout, refresh],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

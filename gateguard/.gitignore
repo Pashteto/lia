@@ -22,7 +22,7 @@ bin/*
 
 __debug_bin
 
-gateguard
+/gateguard
 
 data/
 

@@ -20,11 +20,12 @@ import (
 
 // Claims is the identity a TokenValidator extracts from a validated token.
 type Claims struct {
-	Subject   string
-	Email     string
-	Name      string
-	Role      string
-	ExpiresAt time.Time
+	Subject       string
+	Email         string
+	Name          string
+	Role          string
+	EmailVerified bool
+	ExpiresAt     time.Time
 }
 
 // TokenValidator validates a bearer token and returns its claims. The Gatekeeper
@@ -92,7 +93,7 @@ func (a *Auth) Authenticate(token string) (*domain.User, error) {
 		return nil, apierr.New(401, "unauthorized access or invalid credentials")
 	}
 
-	u, err := a.ensureUser(context.Background(), claims.Email, claims.Name, normalizeRole(claims.Role))
+	u, err := a.ensureUser(context.Background(), claims.Email, claims.Name, normalizeRole(claims.Role), claims.EmailVerified)
 	if err != nil {
 		logger.Log().Errorf("auth: user provisioning failed for subject %s: %v", claims.Subject, err)
 		return nil, apierr.New(401, "unauthorized access or invalid credentials")
@@ -113,18 +114,19 @@ func (a *Auth) CheckAuth(token string) (*models.User, error) {
 // ensureUser looks up a local user by email, provisioning one just-in-time on
 // first sight (keyed by the unique email column — no schema change needed).
 // The role is synced from the authoritative claim if it has drifted.
-func (a *Auth) ensureUser(ctx context.Context, email, name, role string) (*domain.User, error) {
+func (a *Auth) ensureUser(ctx context.Context, email, name, role string, emailVerified bool) (*domain.User, error) {
 	u, err := a.service.GetUserByEmail(ctx, email)
 	if err != nil {
 		if !stderrors.Is(err, service.ErrNotFound) {
 			return nil, fmt.Errorf("lookup user: %w", err)
 		}
 		u = &domain.User{
-			UUID:   uuid.Must(uuid.NewV4()),
-			Email:  email,
-			Name:   name,
-			Status: domain.UserActive,
-			Role:   role,
+			UUID:          uuid.Must(uuid.NewV4()),
+			Email:         email,
+			Name:          name,
+			Status:        domain.UserActive,
+			Role:          role,
+			EmailVerified: emailVerified,
 		}
 		if err := a.service.CreateUser(ctx, u); err != nil {
 			return nil, fmt.Errorf("provision user: %w", err)
@@ -138,6 +140,7 @@ func (a *Auth) ensureUser(ctx context.Context, email, name, role string) (*domai
 		}
 		u.Role = role
 	}
+	u.EmailVerified = emailVerified
 	return u, nil
 }
 
@@ -158,10 +161,11 @@ func toPrincipal(u *domain.User) *models.User {
 	name := u.Name
 	status := u.Status.String()
 	return &models.User{
-		UUID:   strfmt.UUID(u.UUID.String()),
-		Email:  &email,
-		Name:   &name,
-		Status: &status,
+		UUID:          strfmt.UUID(u.UUID.String()),
+		Email:         &email,
+		Name:          &name,
+		Status:        &status,
+		EmailVerified: u.EmailVerified,
 	}
 }
 
@@ -179,10 +183,11 @@ func (a *Auth) mockUser() *models.User {
 // mockDomainUser returns a mock domain user for testing without gatekeeper.
 func (a *Auth) mockDomainUser() *domain.User {
 	return &domain.User{
-		UUID:   uuid.Must(uuid.FromString("FA734DC4-22E6-41C5-A913-30C302C1CA68")),
-		Email:  "test@example.com",
-		Name:   "Test User",
-		Status: domain.UserActive,
-		Role:   "common",
+		UUID:          uuid.Must(uuid.FromString("FA734DC4-22E6-41C5-A913-30C302C1CA68")),
+		Email:         "test@example.com",
+		Name:          "Test User",
+		Status:        domain.UserActive,
+		Role:          "common",
+		EmailVerified: true,
 	}
 }

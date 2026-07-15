@@ -1,0 +1,73 @@
+syntax = "proto3";
+package gateguard.models;
+
+option go_package = "presto-protocols/gateguard";
+
+// User is
+message User {
+  bytes          uuid           = 1;
+  string         email          = 2;
+  string         name           = 3;
+  string         avatar         = 4;
+  UserStatus     status         = 5;
+  int64          created        = 6;
+  uint32         ip             = 7;
+  string         refCode        = 8;
+  UserRole       role           = 9;
+  repeated bytes organizations  = 10;
+  repeated int64 preferred_stacks = 11;
+  bool           trial_used       = 12;
+  bool           email_verified   = 13;
+}
+
+// UserStatus is enum with available User statuses
+enum UserStatus {
+  // Unknown status
+  UserUnknown         =   0;
+
+  // Active user with all access to API
+  UserActive          =   2;
+
+  // Archived user with no access to API
+  UserArchive         =   3;
+}
+
+// Users is
+message Users {
+  repeated User user = 1;
+}
+
+enum UserRole {
+  UserRoleUnknown     = 0;
+  UserRoleCommon      = 1;
+  UserRoleViewer      = 2;
+  UserRoleBilling     = 3;
+  UserRoleAdmin       = 4;
+}
+
+enum RoleType {
+  RoleUnknown  = 0;
+  RoleOwner    = 1;
+  RoleBilling  = 2;
+  RoleCreator  = 3;
+  RoleCommon   = 4;
+}
+
+message Invitation {
+  string           inviter       = 1;
+  string           invitee       = 2;
+  string           organization  = 3;
+  InvitationStatus status        = 4;
+  string           referral_code = 5;
+  int64            created_at    = 6;
+  RoleType         role          = 7;
+}
+
+enum InvitationStatus {
+  InvitationPending  = 0;
+  InvitationAccepted = 1;
+  InvitationDeclined = 2;
+  InvitationIgnored  = 3;
+  InvitationRevoked  = 4;
+  InvitationUnknown  = 5;
+}

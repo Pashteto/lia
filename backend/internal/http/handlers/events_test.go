@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 	"github.com/gofrs/uuid"
 
@@ -88,7 +89,7 @@ func TestCreateEvent_QuotaExceeded_Returns429(t *testing.T) {
 	email := strfmt.Email("u@example.com")
 	name := "U"
 	status := "active"
-	principal := &models.User{UUID: pu, Email: &email, Name: &name, Status: &status}
+	principal := &models.User{UUID: pu, Email: &email, Name: &name, Status: &status, EmailVerified: true}
 
 	resp := h.Handle(params, principal)
 	if resp == nil {
@@ -107,6 +108,40 @@ func TestCreateEvent_QuotaExceeded_Returns429(t *testing.T) {
 	const wantMsg = "Достигнут лимит: 10 событий в месяц. Лимит обновится 1-го числа."
 	if tooMany.Payload.Message == nil || *tooMany.Payload.Message != wantMsg {
 		t.Errorf("expected payload message %q, got %v", wantMsg, tooMany.Payload.Message)
+	}
+}
+
+func TestCreateEvent_UnverifiedForbidden(t *testing.T) {
+	svc := &mockEventsService{}
+	h := NewCreateEvent(svc)
+
+	title := "Test Event"
+	starts := strfmt.DateTime(time.Now())
+	params := eventsops.CreateEventParams{
+		Body: &models.EventInput{
+			Title:    &title,
+			StartsAt: &starts,
+		},
+	}
+	req, _ := http.NewRequest(http.MethodPost, "/api/v1/events", nil)
+	params.HTTPRequest = req
+
+	pu := strfmt.UUID(uuid.Must(uuid.NewV4()).String())
+	email := strfmt.Email("u@example.com")
+	name := "U"
+	status := "active"
+	// EmailVerified deliberately left false (zero value).
+	principal := &models.User{UUID: pu, Email: &email, Name: &name, Status: &status}
+
+	resp := h.Handle(params, principal)
+	if resp == nil {
+		t.Fatal("nil responder")
+	}
+
+	rr := httptest.NewRecorder()
+	resp.WriteResponse(rr, runtime.JSONProducer())
+	if rr.Code != http.StatusForbidden {
+		t.Fatalf("want 403 for unverified, got %d", rr.Code)
 	}
 }
 
@@ -133,7 +168,7 @@ func TestCreateEvent_SetsOrganizerFromPrincipal(t *testing.T) {
 	email := strfmt.Email("u@example.com")
 	name := "U"
 	status := "active"
-	principal := &models.User{UUID: pu, Email: &email, Name: &name, Status: &status}
+	principal := &models.User{UUID: pu, Email: &email, Name: &name, Status: &status, EmailVerified: true}
 
 	resp := h.Handle(params, principal)
 	if resp == nil {
@@ -162,7 +197,7 @@ func testPrincipal() *models.User {
 	email := strfmt.Email("u@example.com")
 	name := "U"
 	status := "active"
-	return &models.User{UUID: pu, Email: &email, Name: &name, Status: &status}
+	return &models.User{UUID: pu, Email: &email, Name: &name, Status: &status, EmailVerified: true}
 }
 
 func TestUpdateEvent_Unauthenticated_Returns401(t *testing.T) {

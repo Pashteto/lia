@@ -19,6 +19,7 @@ const refCode = "abcDEF"
 func (s *UseCaseSuite) Test_ReactToInvitation_Success() {
 	s.Run("accept", func() {
 		initialInvitee := *fake.User()
+		initialInvitee.EmailVerified = true
 		initialInvitation := *fake.Invitation()
 
 		initialInvitation.Invitee = initialInvitee.Email
@@ -60,6 +61,7 @@ func (s *UseCaseSuite) Test_ReactToInvitation_Success() {
 
 	s.Run("decline", func() {
 		initialInvitee := *fake.User()
+		initialInvitee.EmailVerified = true
 		initialInvitation := *fake.Invitation()
 
 		initialInvitation.Invitee = initialInvitee.Email
@@ -95,8 +97,40 @@ func (s *UseCaseSuite) Test_ReactToInvitation_Success() {
 	})
 }
 
+func (s *UseCaseSuite) Test_ReactToInvitation_Accept_BlockedWhenUnverified() {
+	initialInvitee := *fake.User()
+	initialInvitee.EmailVerified = false
+	initialInvitee.Status = models.UserActive
+
+	initialInvitation := *fake.Invitation()
+	initialInvitation.Invitee = initialInvitee.Email
+	initialInvitation.ReferralCode = refCode
+
+	s.repo.EXPECT().GetUser(mock.Anything, &models.User{Email: initialInvitee.Email}, repository.Email).
+		Run(func(ctx context.Context, model *models.User, getter repository.UserGetter) {
+			*model = initialInvitee
+		}).Return(nil).Once()
+
+	s.repo.EXPECT().GetInvitation(mock.Anything, &models.Invitation{ReferralCode: refCode}, repository.InvitationByReferralCode).
+		Run(func(ctx context.Context, model *models.Invitation, getter repository.InvitationGetter) {
+			cp := pointer.Ref(initialInvitation)
+			cp.Status = models.Pending
+
+			*model = *cp
+		}).Return(nil).Once()
+
+	err := s.service.ReactToInvitation(s.ctx, service.ReactToInvitationIn{
+		InviteeEmail: initialInvitee.Email,
+		Status:       models.Accepted,
+		RefCode:      refCode,
+	})
+
+	s.Require().ErrorIs(err, service.ErrEmailNotVerified)
+}
+
 func (s *UseCaseSuite) Test_ReactToInvitation_Errors() {
 	invitee := fake.User()
+	invitee.EmailVerified = true
 	invitation := fake.Invitation()
 
 	invitation.Invitee = invitee.Email

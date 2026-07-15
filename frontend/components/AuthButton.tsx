@@ -38,6 +38,12 @@ export function AuthButton() {
         >
           Организаторам
         </Link>
+        <Link
+          href="/me/invitations"
+          className="text-[14px] font-medium text-accent"
+        >
+          Приглашения
+        </Link>
         {role === "admin" && (
           <Link
             href="/admin"

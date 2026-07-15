@@ -1,10 +1,14 @@
 package service_test
 
 import (
+	"context"
+	"time"
+
 	"github.com/stretchr/testify/mock"
 
 	"gateguard/internal/models"
 	"gateguard/internal/repository"
+	"gateguard/internal/service"
 )
 
 func (s *UseCaseSuite) Test_RequestEmailVerification_SendsCode() {
@@ -30,4 +34,19 @@ func (s *UseCaseSuite) Test_RequestEmailVerification_SendsCode() {
 
 	err := s.service.RequestEmailVerification(s.ctx, email)
 	s.Require().NoError(err)
+}
+
+func (s *UseCaseSuite) Test_RequestEmailVerification_Cooldown() {
+	email := "user@example.com"
+
+	// GetUser returns a user whose last send was 5 seconds ago → cooldown active.
+	s.repo.EXPECT().
+		GetUser(mock.Anything, mock.MatchedBy(func(u *models.User) bool { return u.Email == email }), repository.Email).
+		Run(func(_ context.Context, u *models.User, _ repository.UserGetter) {
+			u.EmailVerificationSentAt = time.Now().Add(-5 * time.Second)
+		}).
+		Return(nil).Once()
+
+	err := s.service.RequestEmailVerification(s.ctx, email)
+	s.Require().ErrorIs(err, service.ErrVerificationCooldown)
 }

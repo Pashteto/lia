@@ -15,6 +15,11 @@ import (
 // ErrVerificationTokenInvalid is returned when an email/token pair does not match.
 var ErrVerificationTokenInvalid = errors.New("verification token invalid")
 
+const verificationResendCooldown = 60 * time.Second
+
+// ErrVerificationCooldown is returned when a code was sent less than the cooldown ago.
+var ErrVerificationCooldown = errors.New("verification code recently sent")
+
 // newVerificationCode returns a cryptographically-random 6-digit numeric code
 // as a zero-padded string (e.g. "042173").
 func newVerificationCode() string {
@@ -36,6 +41,11 @@ func (u *UsersService) RequestEmailVerification(ctx context.Context, email strin
 	user := &models.User{Email: email}
 	if err := u.repository.GetUser(ctx, user, repository.Email); err != nil {
 		return fmt.Errorf("lookup user %s: %w", email, err)
+	}
+
+	if !user.EmailVerificationSentAt.IsZero() &&
+		time.Since(user.EmailVerificationSentAt) < verificationResendCooldown {
+		return ErrVerificationCooldown
 	}
 
 	user.EmailVerificationToken = newVerificationCode()

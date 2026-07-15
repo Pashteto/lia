@@ -236,7 +236,7 @@ func TestGetEventByID_AnonymousDraft_Returns404(t *testing.T) {
 		Status: domainmodels.EventDraft, Title: "D", StartsAt: time.Now(),
 	}}
 	// checkAuth returns unauthorized for any token (anonymous caller).
-	h := NewGetEventByID(svc, func(string) (*models.User, error) { return nil, errors.New("no auth") })
+	h := NewGetEventByID(svc, nil, func(string) (*models.User, error) { return nil, errors.New("no auth") })
 
 	resp := h.Handle(getByIDParams(t, ""))
 	if _, ok := resp.(*eventsops.GetEventByIDNotFound); !ok {
@@ -253,7 +253,7 @@ func TestGetEventByID_OwnerDraft_Returns200(t *testing.T) {
 	ownerPrincipal := &models.User{}
 	pu := strfmt.UUID(owner.String())
 	ownerPrincipal.UUID = pu
-	h := NewGetEventByID(svc, func(string) (*models.User, error) { return ownerPrincipal, nil })
+	h := NewGetEventByID(svc, nil, func(string) (*models.User, error) { return ownerPrincipal, nil })
 
 	resp := h.Handle(getByIDParams(t, "Bearer tok"))
 	if _, ok := resp.(*eventsops.GetEventByIDOK); !ok {
@@ -266,7 +266,7 @@ func TestGetEventByID_AnonymousPublished_Returns200(t *testing.T) {
 		ID: uuid.Must(uuid.NewV4()), OrganizerID: uuid.Must(uuid.NewV4()),
 		Status: domainmodels.EventPublished, Title: "P", StartsAt: time.Now(),
 	}}
-	h := NewGetEventByID(svc, func(string) (*models.User, error) { return nil, errors.New("no auth") })
+	h := NewGetEventByID(svc, nil, func(string) (*models.User, error) { return nil, errors.New("no auth") })
 
 	resp := h.Handle(getByIDParams(t, ""))
 	if _, ok := resp.(*eventsops.GetEventByIDOK); !ok {

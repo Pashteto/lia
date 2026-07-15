@@ -41,6 +41,9 @@ type Service interface {
 	ListApplications(ctx context.Context, eventID, organizerID uuid.UUID) ([]*models.Rsvp, error)
 	Decide(ctx context.Context, eventID, organizerID, rsvpID uuid.UUID, accept bool) (*models.Rsvp, error)
 	CalendarICS(ctx context.Context, eventID uuid.UUID) ([]byte, error)
+	// StatusForUser returns the caller's RSVP status on an event, or "" when
+	// they have none. Used to render the correct join/apply state on reload.
+	StatusForUser(ctx context.Context, eventID, userID uuid.UUID) (models.RsvpStatus, error)
 }
 
 type service struct{ repo Repository }
@@ -223,6 +226,20 @@ func (s *service) CalendarICS(_ context.Context, eventID uuid.UUID) ([]byte, err
 		return nil, fmt.Errorf("%w: event has no start time", ErrInvalidInput)
 	}
 	return buildICS(event), nil
+}
+
+func (s *service) StatusForUser(_ context.Context, eventID, userID uuid.UUID) (models.RsvpStatus, error) {
+	if eventID == uuid.Nil || userID == uuid.Nil {
+		return "", nil
+	}
+	r, err := s.repo.GetUserRsvp(eventID, userID)
+	if err != nil {
+		if isNoRows(err) {
+			return "", nil
+		}
+		return "", err
+	}
+	return r.Status, nil
 }
 
 // nowFn returns the current time; overridable in tests.

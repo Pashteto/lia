@@ -315,6 +315,40 @@ func TestAcceptSecondApplicantWaitlistsWhenFirstAccepted(t *testing.T) {
 	}
 }
 
+func TestStatusForUser(t *testing.T) {
+	cap1 := 5
+	e := openEvent(&cap1)
+	userID := uuid.Must(uuid.NewV4())
+
+	t.Run("returns the user's status", func(t *testing.T) {
+		f := newFake(e)
+		row := &models.Rsvp{ID: uuid.Must(uuid.NewV4()), EventID: e.ID, UserID: userID, Status: models.RsvpGoing}
+		f.rsvps[row.ID] = row
+		svc := NewService(f)
+
+		got, err := svc.StatusForUser(context.Background(), e.ID, userID)
+		if err != nil {
+			t.Fatalf("StatusForUser returned error: %v", err)
+		}
+		if got != models.RsvpGoing {
+			t.Fatalf("want RsvpGoing, got %s", got)
+		}
+	})
+
+	t.Run("no rsvp -> empty status, no error", func(t *testing.T) {
+		f := newFake(e) // no rsvps planted -> GetUserRsvp returns pg.ErrNoRows
+		svc := NewService(f)
+
+		got, err := svc.StatusForUser(context.Background(), e.ID, userID)
+		if err != nil {
+			t.Fatalf("StatusForUser returned error: %v", err)
+		}
+		if got != models.RsvpStatus("") {
+			t.Fatalf("want empty status, got %q", got)
+		}
+	})
+}
+
 // FIX B: cancelling an accepted seat must promote a waitlisted row to going.
 func TestCancelAcceptedPromotesWaitlist(t *testing.T) {
 	cap1 := 1

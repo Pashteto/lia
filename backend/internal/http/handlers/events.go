@@ -13,6 +13,7 @@ import (
 	apimodels "github.com/Pashteto/lia/internal/http/models"
 	eventsops "github.com/Pashteto/lia/internal/http/server/operations/events"
 	organizersdomain "github.com/Pashteto/lia/internal/organizers"
+	rsvpdomain "github.com/Pashteto/lia/internal/rsvp"
 	"github.com/Pashteto/lia/pkg/logger"
 )
 
@@ -97,13 +98,19 @@ func (h *ListEvents) Handle(params eventsops.ListEventsParams) middleware.Respon
 // visible only to their owner; everyone else gets 404 (existence not leaked).
 type GetEventByID struct {
 	events    eventsdomain.Service
+	rsvp      rsvpdomain.Service // optional; nil → my_rsvp_status stays ""
 	checkAuth func(string) (*apimodels.User, error)
 }
 
 // NewGetEventByID creates a GetEventByID handler. checkAuth resolves the caller
 // from the Authorization header; it may be nil (treated as always-anonymous).
-func NewGetEventByID(svc eventsdomain.Service, checkAuth func(string) (*apimodels.User, error)) *GetEventByID {
-	return &GetEventByID{events: svc, checkAuth: checkAuth}
+// rsvp may be nil (no-DB mode), in which case my_rsvp_status is left empty.
+func NewGetEventByID(
+	svc eventsdomain.Service,
+	rsvp rsvpdomain.Service,
+	checkAuth func(string) (*apimodels.User, error),
+) *GetEventByID {
+	return &GetEventByID{events: svc, rsvp: rsvp, checkAuth: checkAuth}
 }
 
 // Handle GET /events/{id}.
@@ -128,6 +135,20 @@ func (h *GetEventByID) Handle(params eventsops.GetEventByIDParams) middleware.Re
 	if event.Status.String() != "published" && !h.callerOwns(params, event.OrganizerID.String()) {
 		return eventsops.NewGetEventByIDNotFound().
 			WithPayload(DefaultError(http.StatusNotFound, errors.New("event not found"), nil))
+	}
+
+	// Populate my_rsvp_status for the authenticated caller so the detail page
+	// renders the correct join/apply state on reload (design-review R4).
+	if h.rsvp != nil && h.checkAuth != nil {
+		if u, err := h.checkAuth(params.HTTPRequest.Header.Get("Authorization")); err == nil && u != nil {
+			if uid, err := uuid.FromString(u.UUID.String()); err == nil {
+				if eid, err := uuid.FromString(params.ID.String()); err == nil {
+					if st, err := h.rsvp.StatusForUser(params.HTTPRequest.Context(), eid, uid); err == nil {
+						event.MyRsvpStatus = string(st)
+					}
+				}
+			}
+		}
 	}
 
 	return eventsops.NewGetEventByIDOK().WithPayload(formatter.EventToAPI(event))

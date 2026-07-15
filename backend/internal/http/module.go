@@ -255,7 +255,7 @@ func (m *Module) initAPI() error {
 	if m.events != nil {
 		api.EventsListEventsHandler = handlers.NewListEvents(m.events, m.organizers)
 		api.EventsListMyEventsHandler = handlers.NewListMyEvents(m.events)
-		api.EventsGetEventByIDHandler = handlers.NewGetEventByID(m.events, m.auth.CheckAuth)
+		api.EventsGetEventByIDHandler = handlers.NewGetEventByID(m.events, m.rsvp, m.auth.CheckAuth)
 		api.EventsCreateEventHandler = handlers.NewCreateEvent(m.events)
 		api.EventsNearbyEventsHandler = handlers.NewNearbyEvents(m.events)
 		api.EventsUpdateEventHandler = handlers.NewUpdateEvent(m.events)

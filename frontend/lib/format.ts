@@ -6,19 +6,14 @@ import type { LiaEvent } from "./types";
 const dateFmt = new Intl.DateTimeFormat("ru-RU", {
   day: "numeric",
   month: "long",
-  timeZone: "Europe/Moscow",
-});
-
-const timeFmt = new Intl.DateTimeFormat("ru-RU", {
   hour: "2-digit",
   minute: "2-digit",
   timeZone: "Europe/Moscow",
 });
 
-/** "13 июня, 19:00" */
+/** "13 июня в 19:00" */
 export function formatEventDate(iso: string): string {
-  const date = new Date(iso);
-  return `${dateFmt.format(date)}, ${timeFmt.format(date)}`;
+  return dateFmt.format(new Date(iso));
 }
 
 // Day + month only, e.g. "15 августа" — for the ends of a multi-day range.
@@ -32,18 +27,14 @@ const dayFmt = new Intl.DateTimeFormat("ru-RU", {
   day: "numeric",
   timeZone: "Europe/Moscow",
 });
-// The Europe/Moscow civil day ("YYYY-MM-DD") and month of an instant.
-function moscowParts(iso: string): { day: string; month: string } {
-  // en-CA yields ISO "YYYY-MM-DD"; split off day/month for cheap comparison.
-  const [y, m, d] = new Intl.DateTimeFormat("en-CA", {
+// The Europe/Moscow civil day of an instant, as ISO "YYYY-MM-DD" (en-CA yields it).
+function moscowDay(iso: string): string {
+  return new Intl.DateTimeFormat("en-CA", {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
     timeZone: "Europe/Moscow",
-  })
-    .format(new Date(iso))
-    .split("-");
-  return { day: `${y}-${m}-${d}`, month: m };
+  }).format(new Date(iso));
 }
 // A backend zero-time ("0001-01-01…") means "no end set" (see the ends_at hotfix).
 function hasRealEnd(endsAt?: string): boolean {
@@ -52,23 +43,24 @@ function hasRealEnd(endsAt?: string): boolean {
 
 /**
  * Human date for a card/detail. Single-day events keep the familiar
- * "13 июня, 19:00" form; multi-day events render a civil-day range
- * ("15–17 августа" within a month, "31 июля – 2 августа" across months).
+ * "13 июня в 19:00" form; multi-day events render a civil-day range
+ * ("15–17 августа" within one month, "31 июля – 2 августа" across months
+ * or years).
  */
 export function formatEventRange(
   event: Pick<LiaEvent, "startsAt" | "endsAt">,
 ): string {
   if (!hasRealEnd(event.endsAt)) return formatEventDate(event.startsAt);
-  const start = moscowParts(event.startsAt);
-  const end = moscowParts(event.endsAt as string);
-  if (start.day === end.day) return formatEventDate(event.startsAt);
-  if (start.month === end.month) {
-    // Same month → "15–17 августа" (end carries the month word).
+  const startDay = moscowDay(event.startsAt);
+  const endDay = moscowDay(event.endsAt as string);
+  if (startDay === endDay) return formatEventDate(event.startsAt);
+  // Same year AND month (compare "YYYY-MM") → "15–17 августа".
+  if (startDay.slice(0, 7) === endDay.slice(0, 7)) {
     return `${dayFmt.format(new Date(event.startsAt))}–${dayMonthFmt.format(
       new Date(event.endsAt as string),
     )}`;
   }
-  // Cross-month → "31 июля – 2 августа" (spaced en-dash, both months).
+  // Different month or year → "31 июля – 2 августа" (spaced en-dash, both months).
   return `${dayMonthFmt.format(new Date(event.startsAt))} – ${dayMonthFmt.format(
     new Date(event.endsAt as string),
   )}`;

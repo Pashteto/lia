@@ -1,6 +1,14 @@
 # HANDOFF — Email Verification (SendPulse) + Event Invitations
 
-**Status as of 2026-07-16:** Feature is **code-complete and merged to local `main`** (merge commit `f4bdbeb`). What remains is **operational**: push, set up the email sender + DNS, and deploy. Nothing below is blocked by code — it's all config/ops.
+**Status as of 2026-07-16 (revised):** Feature is **code-complete and merged**, and `f4bdbeb`
+is now **on `origin/main`**. The SendPulse account, the SMTP credentials, and the
+`info@tarski.ru` sender all **already exist** — see
+`docs/superpowers/runbooks/2026-07-15-sendpulse-nicru-credentials.local.md` (git-ignored,
+holds the secrets + the exact env var names verified against the code).
+
+**What actually remains:** (1) add the SPF/DKIM/DMARC records at nic.ru and confirm the
+domain in SendPulse — deliverability only, not a blocker; (2) set the env vars; (3) apply
+migration 020 + deploy. Nothing is blocked by code.
 
 ---
 
@@ -12,10 +20,19 @@
 | Backend / gateguard build + tests | ✅ Pass on merged `main` |
 | Frontend production build | ✅ Clean (routes `/auth/verify`, `/invite/[token]`, `/me/invitations`) |
 | Migration `000020_event_invitations` | ✅ Written + validated on real Postgres 16 (not yet applied to prod) |
-| `git push origin main` | ❌ **Not pushed** — `main` is 32 commits ahead of `origin/main` |
-| SendPulse sending account | ❌ Not created |
-| nic.ru DNS (SPF/DKIM/DMARC for `tarski.ru`) | ❌ Not added |
+| `git push origin main` | ✅ **Done** — merge `f4bdbeb` is on `origin/main` (verified 2026-07-16) |
+| SendPulse sending account | ✅ **Exists** — Free SMTP plan, 12k/mo, active until 2026-08-15 |
+| SendPulse sender `info@tarski.ru` | ✅ **Active** — no click-confirmation outstanding |
+| SendPulse SMTP credentials | ✅ **Captured** → `runbooks/2026-07-15-sendpulse-nicru-credentials.local.md` |
+| SendPulse authenticated domain `tarski.ru` | 🟡 Added 2026-07-16 — **"Awaiting confirmation"** pending DNS |
+| nic.ru DNS (SPF/DKIM/DMARC for `tarski.ru`) | ❌ Not added — **next step, needs operator login** |
 | Deploy (migration + env + images) | ❌ Not done |
+
+> **Status corrected 2026-07-16.** The three ❌ rows above (push / account / sender) were
+> stale — all were already done. **Email can be sent today**: `info@tarski.ru` is an active
+> sender and the SMTP creds work, signed by SendPulse's own domain. The remaining DNS work
+> is a *deliverability* upgrade (SPF/DKIM aligned to `tarski.ru`, inbox vs. spam), **not a
+> hard blocker**. You can wire env + deploy now and do DNS as a follow-up.
 
 **What the feature does:** organizer invites people to an event by email; invitees (incl. people with no account) accept via an email link or in-app list; accepting requires a verified email; unverified users are blocked from creating/editing events, RSVP/applying, and complaints. Verification = a 6-digit code emailed on signup.
 
@@ -67,10 +84,19 @@
 Once the domain verifies green in SendPulse and you have the SMTP creds:
 
 - [ ] **GateGuard** (sends the verification codes) — set env:
-  - `notificator.address` = `<SendPulse SMTP host:port>`
-  - `notificator.username` = `<SMTP login>`
-  - `notificator.password` = `<SMTP password>`
-  - `notificator.from` = `info@tarski.ru`
+  - `NOTIFICATOR_ADDRESS` = `<SendPulse SMTP host:port>`
+  - `NOTIFICATOR_USERNAME` = `<SMTP login>`
+  - `NOTIFICATOR_PASSWORD` = `<SMTP password>`
+  - `NOTIFICATOR_FROM` = `info@tarski.ru`
+  - ⚠️ **Corrected 2026-07-16.** This list previously read `notificator.address` etc.
+    Those are internal *config keys*, not env var names — setting them as env vars does
+    nothing. GateGuard uses `viper.AutomaticEnv()` + `SetEnvKeyReplacer(".", "_")`
+    (`gateguard/cmd/root/root.go:36-37`), so the key `notificator.address` is fed by
+    `NOTIFICATOR_ADDRESS`.
+  - ⚠️ If unset, GateGuard does **not** fail — it falls back to defaults pointing at
+    Gateway.fm infra (`smtp.gmail.com:587`, `infra@gateway.fm`, empty password;
+    `gateguard/config/init.go:37-42`) and verification mail silently fails. Confirm the
+    vars are really present in the deployed container.
 - [ ] **Lia backend** (sends the invite emails) — set env:
   - `SMTP_ADDRESS` = `<host:port>`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM` = `info@tarski.ru`
   - `PUBLIC_BASE_URL` = `https://presence.tarski.ru` (default; this builds the `/invite/<token>` links)

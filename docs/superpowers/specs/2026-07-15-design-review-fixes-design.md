@@ -69,7 +69,7 @@ Severity tags: **[B]** blocker · **[Maj]** major · **[Min]** minor/polish. `(f
 
 **13. Organizer hub `/organizer` weak hierarchy [Maj] (fe)** — Real card affordance (borders/hover/icons); single-source the profile-status (currently duplicated); badge the disabled «Подписчики» tile as **«Скоро»** (decided: badge, not hide). Give the empty hub a first-run 1→2 path (профиль → первое событие).
 
-**14. Map bright tiles in dark UI [Maj] (fe)** — Dark tile theme (e.g. Carto dark) in `components/map/LeafletMap.tsx`; enrich marker popup with date/venue/price (currently title-only).
+**14. Map bright tiles in dark UI [Maj] (fe)** — ~~Dark tile theme (e.g. Carto dark) in `components/map/LeafletMap.tsx`~~ **superseded**: Leaflet was replaced by Yandex JS API v2.1 (see `docs/superpowers/runbooks/2026-07-16-yandex-maps-deploy.md`), and `LeafletMap.tsx` no longer exists. Remaining actionable part: enrich the Yandex map's marker popup/balloon with date/venue/price (currently title-only); dark-tile theming for Yandex Maps is not yet scoped.
 
 **15. Public organizer page thin [Min→Maj] (fe)** — Surface org bio/description + logo on `/organizers/[id]` (data is collected in the profile form). Logo resolution may be deferred if blocked on storage.
 

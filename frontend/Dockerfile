@@ -17,6 +17,12 @@ COPY . .
 ARG NEXT_PUBLIC_API_URL=http://127.0.0.1:9
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
+# Yandex Maps JS API v2.1 key (public, Referer-restricted). Empty default is
+# fine: without a key the build still succeeds and the map falls back to the
+# "Карта недоступна" placeholder.
+ARG NEXT_PUBLIC_YANDEX_MAPS_KEY=
+ENV NEXT_PUBLIC_YANDEX_MAPS_KEY=$NEXT_PUBLIC_YANDEX_MAPS_KEY
+
 RUN pnpm build
 
 EXPOSE 3001

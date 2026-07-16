@@ -122,6 +122,10 @@ func setDefaults() {
 	viper.BindEnv("smtp.password", "SMTP_PASSWORD") //nolint:errcheck
 	viper.BindEnv("smtp.from", "SMTP_FROM")         //nolint:errcheck
 
+	// Geocoder defaults (Yandex Geocoder HTTP API key; secret comes from env)
+	viper.SetDefault("geocoder.key", "")
+	viper.BindEnv("geocoder.key", "YANDEX_GEOCODER_KEY") //nolint:errcheck
+
 	// Cleanup module defaults
 	viper.SetDefault("cleanup.enabled", true)
 	viper.SetDefault("cleanup.interval", "24h")

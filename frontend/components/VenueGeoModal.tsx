@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import { geocodeAddress, type GeoResult } from "@/lib/nominatim";
+import { geocodeAddress, type GeoResult } from "@/lib/geocode";
 import { updateVenue, type ApiVenue } from "@/lib/api";
 
-const LeafletMap = dynamic(
-  () => import("@/components/map/LeafletMap").then((m) => m.LeafletMap),
+const YandexMap = dynamic(
+  () => import("@/components/map/YandexMap").then((m) => m.YandexMap),
   { ssr: false },
 );
 
@@ -29,7 +29,7 @@ export function VenueGeoModal({
   );
   const [saving, setSaving] = useState(false);
 
-  // Debounce: ≥ 700 ms → ≤ ~1 req/s per Nominatim usage policy.
+  // Debounce address lookups to ~1 req/s.
   useEffect(() => {
     const t = setTimeout(() => setDebounced(q), 700);
     return () => clearTimeout(t);
@@ -93,15 +93,14 @@ export function VenueGeoModal({
             ))}
           </div>
         )}
-        <LeafletMap
+        <YandexMap
           center={pos ?? MOSCOW}
           marker={pos ?? undefined}
           draggableMarker
           onMarkerMove={(lat, lon) => setPos([lat, lon])}
         />
         <p className="mt-1 text-[12px] text-label-secondary">
-          Поиск адресов — © OpenStreetMap / Nominatim. Перетащите метку для
-          точности.
+          Поиск адресов — © Яндекс. Перетащите метку для точности.
         </p>
         <div className="mt-3 flex justify-end gap-2">
           <button

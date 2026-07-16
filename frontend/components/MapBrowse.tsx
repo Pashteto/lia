@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { fetchNearbyEvents } from "@/lib/api";
 import type { LiaEvent } from "@/lib/types";
 
-const LeafletMap = dynamic(() => import("@/components/map/LeafletMap").then((m) => m.LeafletMap), {
+const YandexMap = dynamic(() => import("@/components/map/YandexMap").then((m) => m.YandexMap), {
   ssr: false,
 });
 
@@ -55,7 +55,7 @@ export function MapBrowse() {
           Искать в этой области
         </button>
       </div>
-      <LeafletMap center={center} pins={pins} className="h-[60vh] w-full rounded-control" />
+      <YandexMap center={center} pins={pins} className="h-[60vh] w-full rounded-control" />
       {truncated && (
         <p className="text-[12px] text-label-secondary">Показаны первые {PIN_CAP} событий.</p>
       )}

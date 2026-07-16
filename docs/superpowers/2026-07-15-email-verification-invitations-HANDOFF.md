@@ -24,11 +24,11 @@ migration 020 + deploy. Nothing is blocked by code.
 | SendPulse sending account | ✅ **Exists** — Free SMTP plan, 12k/mo, active until 2026-08-15 |
 | SendPulse sender `info@tarski.ru` | ✅ **Active** — no click-confirmation outstanding |
 | SendPulse SMTP credentials | ✅ **Captured** → `runbooks/2026-07-15-sendpulse-nicru-credentials.local.md` |
-| SendPulse authenticated domain `tarski.ru` | 🟡 Added 2026-07-16 — "Awaiting confirmation" until DKIM propagates |
-| nic.ru DNS — SPF | ✅ **Live + propagated 2026-07-16**, SendPulse checker green |
-| nic.ru DNS — DKIM (`sign._domainkey`) | 🟡 **Added + published**, propagating (NXDOMAIN as of ~18:55) |
-| nic.ru DNS — DMARC | ✅ Pre-existing `p=quarantine` — **deliberately left alone**, see §4 |
-| Deploy (migration + env + images) | ❌ **Not done — now the only real work left** |
+| SendPulse authenticated domain `tarski.ru` | ✅ **VERIFIED 2026-07-16** — DKIM + SPF + DMARC all green |
+| nic.ru DNS — SPF / DKIM / DMARC | ✅ **All live + propagated.** DMARC stayed at the pre-existing `p=quarantine` (SendPulse accepts it; its suggested `p=none` was never needed) |
+| Deploy (migration + env + images) | ✅ **DONE 2026-07-16 ~21:50** — runbook `runbooks/2026-07-16-email-verification-invitations-deploy.md` |
+| Prod DB | ✅ **Migration 020 applied** (019 → 020, not dirty, `event_invitations` created) |
+| **Real-inbox delivery** | ❌ **NOT PROVEN — the one thing left.** See §6 |
 
 > **Status corrected 2026-07-16.** The three ❌ rows above (push / account / sender) were
 > stale — all were already done. **Email can be sent today**: `info@tarski.ru` is an active

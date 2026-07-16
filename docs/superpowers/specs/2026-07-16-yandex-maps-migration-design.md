@@ -1,8 +1,33 @@
 # Yandex Maps Migration — Design
 
 **Date:** 2026-07-16
-**Status:** Approved (design), pending implementation plan
+**Status:** Implemented
 **Author:** brainstorming session
+
+> **AMENDMENT 2026-07-16 — JS API v3 → v2.1.** This document specifies the map
+> component on **JS API v3**. That is superseded: the implementation ships on
+> **v2.1** (`api-maps.yandex.ru/2.1`). Reason: the provisioned JavaScript API key
+> is rejected by v3 (`403 {"message":"Invalid api key"}`) even after its
+> **HTTP Referer restriction was correctly configured** (key status "Активен",
+> referers `presence.tarski.ru` + `localhost`) and given propagation time. The
+> same key is served by v2.1 (HTTP 200), which renders equally
+> border-compliant Russian maps — the actual goal. Root cause of the v3
+> rejection is unconfirmed; a v3 key/product was not obtainable from either the
+> old or new developer cabinet on this account.
+>
+> Consequences vs. the text below:
+> - Component targets v2.1 (`ymaps` global, `ymaps.ready`, `ymaps.Map`,
+>   `ymaps.Placemark`, `map.geoObjects`) instead of v3 (`ymaps3`).
+> - v2.1 uses **[lat, lon] natively**, matching the component props, so the
+>   `lib/coords.ts` `toLngLat` helper was **removed** as dead code.
+> - Pin balloons take HTML strings, so labels/hrefs are **HTML-escaped**
+>   (v3's DOM-element markers did not need this).
+> - Everything else stands: the auth-gated backend geocode proxy is unchanged
+>   and verified working; Leaflet/Nominatim fully removed.
+>
+> **Note:** the free JavaScript API tier is **100 requests/day** (geocoder:
+> 1000/day) — tighter than the pricing pages suggest, and a likely reason to
+> move to a paid tier for real traffic.
 
 ## Problem
 

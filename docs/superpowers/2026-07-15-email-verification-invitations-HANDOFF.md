@@ -36,52 +36,100 @@ migration 020 + deploy. Nothing is blocked by code.
 
 **What the feature does:** organizer invites people to an event by email; invitees (incl. people with no account) accept via an email link or in-app list; accepting requires a verified email; unverified users are blocked from creating/editing events, RSVP/applying, and complaints. Verification = a 6-digit code emailed on signup.
 
-**Why email setup is the blocker:** the code builds/tests/deploys fine with **no** SMTP config (codes are generated but never delivered; invites still appear in-app). But for verification codes and invite emails to actually reach inboxes, you need a real sender (SendPulse) with authenticated DNS on `tarski.ru`. That's the manual part below.
+**Why email setup was thought to be the blocker:** the code builds/tests/deploys fine with **no** SMTP config (codes are generated but never delivered; invites still appear in-app). Reaching real inboxes needs a real sender — which now exists. See the revised framing above: sending works today; DNS is the inbox-vs-spam upgrade.
 
 ---
 
-## 2. TODO — Push (2 min)
+## 2. ~~TODO — Push~~ ✅ DONE
 
-- [ ] `cd /Users/dodonovpavel/gateway_fm/REAL_WORLD_ASSETS/1-lia && git push origin main`
-  - Publishes the 32 unpushed commits. Do this whenever you're comfortable; nothing else requires it first, but the deploy image is built from this tree.
-
----
-
-## 3. TODO — SendPulse sender account
-
-> There's a **browser-agent prompt** that does most of this for you (you just log in manually): `docs/superpowers/runbooks/2026-07-15-sendpulse-nicru-browser-setup-prompt.md`. Paste it into a browser-capable Claude session. The manual steps below are the same thing if you'd rather click through yourself. Free tier = 12,000 emails/month, enough for this app.
-
-- [ ] **Create/log into a SendPulse account** at https://sendpulse.com (the account's own login email can be anything — it does NOT need to be `@tarski.ru`).
-- [ ] **Add `tarski.ru` as a sending domain.** Navigate to the SMTP / transactional section → "Sending domains" / "Add domain" → enter `tarski.ru` and start the verification flow.
-- [ ] **Copy the DNS records SendPulse shows** (you'll paste these at nic.ru in step 4). Capture them **verbatim** — there are typically:
-  - an **SPF** value like `v=spf1 include:sendpulse.com ~all` (copy the exact `include:` host shown)
-  - a **DKIM** record: a host/selector (e.g. `sp._domainkey`) + a long `v=DKIM1; k=rsa; p=...` value (copy the **full** key)
-  - possibly an extra **verification TXT** token
-- [ ] **Add `info@tarski.ru` as the sender / From address.** Note whether SendPulse requires confirming `info@tarski.ru` via a click-email (if so you'll need mailbox access to that address — or domain verification alone may suffice).
-- [ ] **Copy the SMTP connection credentials** (Settings → SMTP): **host**, **port** (SendPulse offers 2525/465/587 — record all), **login**, **password**. Keep the password secret.
-- [ ] Save all captured values to `docs/superpowers/runbooks/2026-07-15-sendpulse-nicru-credentials.local.md` (already git-ignored via `*.local.md`).
-
-**Payment note:** SendPulse's free 12k/month tier needs no payment, but if account creation demands a card it's EUR (Visa/MC/PayPal). If that's a blocker, the fallback is **Unisender Go** (RU billing, ruble-friendly) — the SMTP wiring is identical, just different creds + a different SPF `include:`/DKIM.
+Merge `f4bdbeb` is on `origin/main` (verified 2026-07-16). Nothing to do.
 
 ---
 
-## 4. TODO — nic.ru DNS for `tarski.ru`
+## 3. ~~TODO — SendPulse sender account~~ ✅ DONE (2026-07-16)
 
-- [ ] Log into https://www.nic.ru (RU-Center) → **Мои домены** → `tarski.ru` → **Управление зоной / DNS zone management**.
-- [ ] If nic.ru says the domain uses **external nameservers** (not nic.ru's), you must add the records **wherever the authoritative NS are**, not here.
-- [ ] Add each record SendPulse gave you:
-  - [ ] **SPF** (TXT, name `@`): the SendPulse SPF string. ⚠️ A domain may have only **ONE** `v=spf1` record — if one already exists, **merge** the SendPulse `include:` into it rather than adding a second.
-  - [ ] **DKIM** (TXT, name = the selector e.g. `sp._domainkey`): the full `v=DKIM1; ...` value.
-  - [ ] **Verification TXT** (if SendPulse required one).
-  - [ ] **DMARC** (TXT, name `_dmarc`): `v=DMARC1; p=quarantine; rua=mailto:info@tarski.ru` (sane starter; skip/adjust if a `_dmarc` already exists).
-- [ ] Save the zone changes. **Propagation takes 30 min – a few hours.**
-- [ ] Back in SendPulse, click **Verify / Check records** on the domain until SPF + DKIM show green.
+All of this is complete. Captured values → `docs/superpowers/runbooks/2026-07-15-sendpulse-nicru-credentials.local.md` (git-ignored).
+
+- [x] SendPulse account exists — Pavel D. / `dodonovpavel@gmail.com` / ID 9460079. **Free SMTP plan, 12,000 emails/mo, active until 2026-08-15.** No payment was needed, so the Unisender Go fallback is moot.
+- [x] `tarski.ru` added as an authenticated domain (SMTP → Settings → Domain settings → Activate). Status: **"Awaiting confirmation"** until the DNS lands. One authenticated domain is allowed on the free plan; the paid upsell is only for *unlimited* domains.
+- [x] DNS records captured verbatim — see §4 below for the actual values.
+- [x] `info@tarski.ru` is an **Active** sender already. **No click-confirmation email is outstanding**, so mailbox access to that address is NOT needed.
+- [x] SMTP credentials captured: host `smtp-pulse.com`, ports 2525 / 465 SSL / 587 TLS, login `dodonovpavel@gmail.com`. Password is in the `.local.md`.
+
+**Free-tier limit worth knowing:** **50 emails/hour.** A burst of invitations larger than that will throttle. Not a problem at current scale, but it's the first ceiling you'll hit.
+
+---
+
+## 4. TODO — nic.ru DNS for `tarski.ru`  ← **THE ONLY REMAINING MANUAL STEP**
+
+**Blocked on operator login.** Attempted 2026-07-16; nic.ru presents a password wall and
+Claude cannot enter passwords. Log in at https://www.nic.ru/manager/ and the rest can be
+driven for you.
+
+The three records SendPulse generated (exact values, captured 2026-07-16 — also in the
+`.local.md`):
+
+| Type | Name | Value |
+|---|---|---|
+| TXT | `sign._domainkey.tarski.ru` | `v=DKIM1; k=rsa; p=…` (long — **see below**) |
+| TXT | `tarski.ru` (zone root / `@`) | `v=spf1 include:mxsspf.sendpulse.com include:dc1.nicmail.ru include:dc2.nicmail.ru ?all` |
+| TXT | `_dmarc.tarski.ru` | `v=DMARC1; p=none;` |
+
+Three things changed vs. what this doc originally assumed:
+
+- **The SPF is already merged, and it REPLACES the existing record.** SendPulse detected the
+  current `tarski.ru` SPF and folded the `dc1/dc2.nicmail.ru` includes into its generated
+  value. So do **not** add a second `v=spf1` — overwrite the existing one with the value
+  above. Capture the before-state first.
+- **SPF qualifier is `?all` (neutral)**, not the `~all` (softfail) guessed above. `?all`
+  asserts nothing, so it buys little anti-spoofing. Consider tightening to `~all` once
+  delivery is confirmed.
+- **DMARC: SendPulse suggests `p=none;`**, not the `p=quarantine` guessed above. Prefer
+  `p=none` to start — monitor-only, nothing gets quarantined while SPF/DKIM settle. Add
+  `rua=mailto:info@tarski.ru` if you want aggregate reports. Tighten later.
+- **No verification TXT token is required.**
+
+> ⚠️ **DKIM key — do NOT copy from any doc.** The full key is recorded in the `.local.md`,
+> but it was transcribed **off a screenshot** (SendPulse's copy button and the DOM reader
+> were both unusable under automation). One wrong base64 char makes DKIM fail *silently*.
+> **Re-copy it from the SendPulse dialog's own "Copy to clipboard" button** and paste that.
+> Dialog: SMTP → Settings → Domain settings → Activate.
+
+- [ ] Log in → **Мои домены** → `tarski.ru` → **Управление зоной**.
+- [ ] If nic.ru shows the domain on **external nameservers**, STOP — records must go wherever
+      the authoritative NS actually are. (The `dc1/dc2.nicmail.ru` includes in the existing
+      SPF suggest nic.ru mail is in play, but that does not by itself prove nic.ru holds the zone.)
+- [ ] Add/replace the three records above. Save the zone.
+- [ ] Propagation: 30 min – a few hours (SendPulse says DNS updates can take up to 24h).
+- [ ] Back in SendPulse → same Activate dialog → **"Check DNS records"** until SPF + DKIM go green.
+      Check once and wait; don't poll aggressively.
 
 ---
 
 ## 5. TODO — Wire env + deploy
 
-Once the domain verifies green in SendPulse and you have the SMTP creds:
+**You do NOT have to wait for the domain to verify.** The creds work now; DNS only improves
+inbox placement. The real values (password in the `.local.md`) — port 587/TLS chosen, with
+2525 as the usual fallback if the prod network blocks it:
+
+```
+# Lia backend                       # GateGuard
+SMTP_ADDRESS=smtp-pulse.com:587     NOTIFICATOR_ADDRESS=smtp-pulse.com:587
+SMTP_USERNAME=dodonovpavel@gmail.com  NOTIFICATOR_USERNAME=dodonovpavel@gmail.com
+SMTP_PASSWORD=<see .local.md>       NOTIFICATOR_PASSWORD=<see .local.md>
+SMTP_FROM=info@tarski.ru            NOTIFICATOR_FROM=info@tarski.ru
+PUBLIC_BASE_URL=https://presence.tarski.ru
+```
+
+> ⚠️ **Verify GateGuard's config actually landed.** Its env vars resolve via
+> `viper.AutomaticEnv()` + Unmarshal, and viper is known to not always feed `Unmarshal()`
+> from AutomaticEnv. Every `notificator.*` key here has a `SetDefault`, so it *should*
+> resolve — but this was traced by **reading code, not proven at runtime**
+> (`gateguard/cmd/root/root.go:52` does the Unmarshal). Since a miss falls back to
+> Gateway.fm defaults **silently**, treat "a verification email actually arrived" as the
+> only real confirmation.
+
+Original steps:
 
 - [ ] **GateGuard** (sends the verification codes) — set env:
   - `NOTIFICATOR_ADDRESS` = `<SendPulse SMTP host:port>`

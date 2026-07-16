@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { toLngLat } from "@/lib/coords";
 
 export interface MapPin {
   id: string;
@@ -12,19 +11,30 @@ export interface MapPin {
 }
 
 const KEY = process.env.NEXT_PUBLIC_YANDEX_MAPS_KEY ?? "";
-const PIN_CLASS =
-  "block h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-accent shadow";
 
-// Load the JS API v3 script exactly once across every map instance on the page.
+// Event titles are user-supplied and land in balloon HTML — escape them.
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// Load the JS API v2.1 script exactly once across every map instance on the page.
 let loaderPromise: Promise<void> | null = null;
 function loadYmaps(): Promise<void> {
-  const w = window as unknown as { ymaps3?: { ready: Promise<void> } };
-  if (w.ymaps3) return w.ymaps3.ready;
+  const w = window as unknown as { ymaps?: { ready: (cb: () => void) => void } };
   if (loaderPromise) return loaderPromise;
   loaderPromise = new Promise<void>((resolve, reject) => {
+    if (w.ymaps) {
+      w.ymaps.ready(() => resolve());
+      return;
+    }
     const script = document.createElement("script");
-    script.src = `https://api-maps.yandex.ru/v3/?apikey=${KEY}&lang=ru_RU`;
-    script.onload = () => w.ymaps3!.ready.then(() => resolve(), reject);
+    script.src = `https://api-maps.yandex.ru/2.1/?apikey=${KEY}&lang=ru_RU`;
+    script.onload = () => w.ymaps!.ready(() => resolve());
     script.onerror = () => reject(new Error("yandex maps failed to load"));
     document.head.appendChild(script);
   });
@@ -54,10 +64,12 @@ export function YandexMap({
   const markerRef = useRef<any>(null); // eslint-disable-line @typescript-eslint/no-explicit-any
   const pinRefs = useRef<any[]>([]); // eslint-disable-line @typescript-eslint/no-explicit-any
   const onMoveRef = useRef(onMarkerMove);
+  const [ready, setReady] = useState(false);
+
+  // Keep the drag callback current without re-creating the marker.
   useEffect(() => {
     onMoveRef.current = onMarkerMove;
   });
-  const [ready, setReady] = useState(false);
 
   // init once
   useEffect(() => {
@@ -66,13 +78,13 @@ export function YandexMap({
     loadYmaps()
       .then(() => {
         if (cancelled || !elRef.current || mapRef.current) return;
-        const ymaps3 = (window as any).ymaps3; // eslint-disable-line @typescript-eslint/no-explicit-any
-        const { YMap, YMapDefaultSchemeLayer, YMapDefaultFeaturesLayer } = ymaps3;
-        const map = new YMap(elRef.current, {
-          location: { center: toLngLat(center), zoom },
+        const ymaps = (window as any).ymaps; // eslint-disable-line @typescript-eslint/no-explicit-any
+        // v2.1 takes [lat, lon] — same order as our props, no conversion.
+        const map = new ymaps.Map(elRef.current, {
+          center,
+          zoom,
+          controls: ["zoomControl"],
         });
-        map.addChild(new YMapDefaultSchemeLayer());
-        map.addChild(new YMapDefaultFeaturesLayer());
         mapRef.current = map;
         setReady(true);
       })
@@ -91,34 +103,27 @@ export function YandexMap({
   // recenter
   useEffect(() => {
     if (!ready) return;
-    mapRef.current?.update?.({ location: { center: toLngLat(center), zoom } });
+    mapRef.current?.setCenter(center, zoom);
   }, [ready, center, zoom]);
 
   // single marker (static or draggable)
   useEffect(() => {
     if (!ready) return;
     const map = mapRef.current;
-    const ymaps3 = (window as any).ymaps3; // eslint-disable-line @typescript-eslint/no-explicit-any
-    if (!map || !ymaps3) return;
-    const { YMapMarker } = ymaps3;
+    const ymaps = (window as any).ymaps; // eslint-disable-line @typescript-eslint/no-explicit-any
+    if (!map || !ymaps) return;
     if (markerRef.current) {
-      map.removeChild(markerRef.current);
+      map.geoObjects.remove(markerRef.current);
       markerRef.current = null;
     }
     if (marker) {
-      const el = document.createElement("div");
-      el.className = PIN_CLASS;
-      const m = new YMapMarker(
-        {
-          coordinates: toLngLat(marker),
-          draggable: draggableMarker,
-          onDragEnd: (coords: [number, number]) =>
-            onMoveRef.current?.(coords[1], coords[0]),
-        },
-        el,
-      );
-      map.addChild(m);
-      markerRef.current = m;
+      const pm = new ymaps.Placemark(marker, {}, { draggable: draggableMarker });
+      pm.events.add("dragend", () => {
+        const c = pm.geometry.getCoordinates(); // [lat, lon]
+        onMoveRef.current?.(c[0], c[1]);
+      });
+      map.geoObjects.add(pm);
+      markerRef.current = pm;
     }
   }, [ready, marker, draggableMarker]);
 
@@ -126,19 +131,22 @@ export function YandexMap({
   useEffect(() => {
     if (!ready) return;
     const map = mapRef.current;
-    const ymaps3 = (window as any).ymaps3; // eslint-disable-line @typescript-eslint/no-explicit-any
-    if (!map || !ymaps3) return;
-    const { YMapMarker } = ymaps3;
-    pinRefs.current.forEach((m) => map.removeChild(m));
+    const ymaps = (window as any).ymaps; // eslint-disable-line @typescript-eslint/no-explicit-any
+    if (!map || !ymaps) return;
+    pinRefs.current.forEach((pm) => map.geoObjects.remove(pm));
     pinRefs.current = [];
     (pins ?? []).forEach((p) => {
-      const el = document.createElement(p.href ? "a" : "div");
-      if (p.href) (el as HTMLAnchorElement).href = p.href;
-      el.title = p.label ?? "";
-      el.className = PIN_CLASS;
-      const m = new YMapMarker({ coordinates: [p.lon, p.lat] }, el);
-      map.addChild(m);
-      pinRefs.current.push(m);
+      const label = escapeHtml(p.label ?? "");
+      const balloon = p.href
+        ? `<a href="${escapeHtml(p.href)}">${label}</a>`
+        : label;
+      const pm = new ymaps.Placemark(
+        [p.lat, p.lon],
+        { hintContent: label, balloonContent: balloon },
+        {},
+      );
+      map.geoObjects.add(pm);
+      pinRefs.current.push(pm);
     });
   }, [ready, pins]);
 

@@ -123,6 +123,11 @@ type SMTPConfig struct {
 	From     string `mapstructure:"from"`
 }
 
+// GeocoderConfig holds the Yandex Geocoder HTTP API credentials.
+type GeocoderConfig struct {
+	Key string `mapstructure:"key"`
+}
+
 // CleanupConfig holds orphan-file cleanup settings.
 type CleanupConfig struct {
 	// Interval is how often the cleanup job runs (e.g. "24h").
@@ -160,6 +165,9 @@ type Scheme struct {
 	// SMTP configuration for the invitations mailer (always non-nil; blank
 	// Address degrades to a no-op mailer).
 	SMTP *SMTPConfig `mapstructure:"smtp"`
+
+	// Geocoder configuration for the Yandex Geocoder HTTP API proxy.
+	Geocoder GeocoderConfig `mapstructure:"geocoder"`
 
 	// Env is the application environment (e.g. prod, dev, local).
 	Env string `mapstructure:"env"`

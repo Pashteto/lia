@@ -1,8 +1,17 @@
-# Production override for oracle-1. Apply with:
-#   docker compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml up -d
+# Production override for the presence.tarski.ru box (vds-ru215). Apply with the
+# FULL compose-file set the live stack actually runs on — omitting one drops that
+# service's overrides:
+#   docker compose --env-file .env.prod \
+#     -f docker-compose.yml -f docker-compose.prod.yml \
+#     -f docker-compose.gateguard.yml -f docker-compose.monitoring.yml up -d
 # --env-file feeds ${VAR} interpolation by parsing KEY=VALUE literally (no shell
 # execution), so passwords with shell-special chars are safe. Credentials come
 # from .env.prod (git-ignored) — never the committed dev/dev defaults.
+#
+# The origins below MUST stay presence.tarski.ru / api.presence.tarski.ru. This
+# file previously said lia.pashteto.com while the box had been hand-edited to the
+# real host; anyone "restoring from repo" would have broken CORS and every
+# cover_url on the live site. Keep this file in sync with the box.
 
 services:
   postgres:
@@ -34,15 +43,19 @@ services:
       DATABASE_USER: ${DATABASE_USER}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
       DATABASE_NAME: ${DATABASE_NAME}
+      # Yandex Geocoder HTTP API key, backing the auth-gated /api/v1/geocode
+      # proxy. Value comes from .env.prod (git-ignored) — never inline it here.
+      YANDEX_GEOCODER_KEY: ${YANDEX_GEOCODER_KEY}
       # Narrow CORS from the "*" default to the demo frontend origin only.
-      HTTP_CORS_ALLOWED_ORIGINS: "https://lia.pashteto.com"
+      HTTP_CORS_ALLOWED_ORIGINS: "https://presence.tarski.ru"
       GRPC_ENABLED: "false"
       # Blob storage (local-disk backend; swap to S3 via STORAGE_BACKEND=s3 + S3_*).
       # STORAGE_PUBLIC_BASE MUST be the absolute API origin + /api/v1/files so
-      # cover_url resolves cross-origin from the frontend (lia → api.lia).
+      # cover_url resolves cross-origin from the frontend
+      # (presence.tarski.ru → api.presence.tarski.ru).
       STORAGE_BACKEND: "local"
       STORAGE_LOCAL_DIR: "/data/uploads"
-      STORAGE_PUBLIC_BASE: "https://api.lia.pashteto.com/api/v1/files"
+      STORAGE_PUBLIC_BASE: "https://api.presence.tarski.ru/api/v1/files"
       # Per-user event-creation quota (calendar month, Europe/Moscow).
       EVENTS_MONTHLY_LIMIT: "10"
       # Daily orphaned-upload cleanup (24h grace; in-process ticker).

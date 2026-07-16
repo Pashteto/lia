@@ -24,9 +24,11 @@ migration 020 + deploy. Nothing is blocked by code.
 | SendPulse sending account | ✅ **Exists** — Free SMTP plan, 12k/mo, active until 2026-08-15 |
 | SendPulse sender `info@tarski.ru` | ✅ **Active** — no click-confirmation outstanding |
 | SendPulse SMTP credentials | ✅ **Captured** → `runbooks/2026-07-15-sendpulse-nicru-credentials.local.md` |
-| SendPulse authenticated domain `tarski.ru` | 🟡 Added 2026-07-16 — **"Awaiting confirmation"** pending DNS |
-| nic.ru DNS (SPF/DKIM/DMARC for `tarski.ru`) | ❌ Not added — **next step, needs operator login** |
-| Deploy (migration + env + images) | ❌ Not done |
+| SendPulse authenticated domain `tarski.ru` | 🟡 Added 2026-07-16 — "Awaiting confirmation" until DKIM propagates |
+| nic.ru DNS — SPF | ✅ **Live + propagated 2026-07-16**, SendPulse checker green |
+| nic.ru DNS — DKIM (`sign._domainkey`) | 🟡 **Added + published**, propagating (NXDOMAIN as of ~18:55) |
+| nic.ru DNS — DMARC | ✅ Pre-existing `p=quarantine` — **deliberately left alone**, see §4 |
+| Deploy (migration + env + images) | ❌ **Not done — now the only real work left** |
 
 > **Status corrected 2026-07-16.** The three ❌ rows above (push / account / sender) were
 > stale — all were already done. **Email can be sent today**: `info@tarski.ru` is an active
@@ -60,11 +62,40 @@ All of this is complete. Captured values → `docs/superpowers/runbooks/2026-07-
 
 ---
 
-## 4. TODO — nic.ru DNS for `tarski.ru`  ← **THE ONLY REMAINING MANUAL STEP**
+## 4. ~~TODO — nic.ru DNS~~ ✅ **ENTERED + PUBLISHED 2026-07-16 ~18:53** (DKIM propagating)
 
-**Blocked on operator login.** Attempted 2026-07-16; nic.ru presents a password wall and
-Claude cannot enter passwords. Log in at https://www.nic.ru/manager/ and the rest can be
-driven for you.
+**Done.** SPF replaced, SendPulse DKIM added, both published. Verified by DoH lookup:
+**SPF is live and SendPulse's checker shows it green**; **DKIM is still NXDOMAIN, i.e.
+propagating** (new name; up to 24h, usually far less). Domain stays "Awaiting confirmation"
+in SendPulse until DKIM lands. Exact before/after + how to finish → the `.local.md`.
+
+> **The zone already had a complete nicmail (nic.ru mail) email stack** — SPF, DKIM
+> (`nicmail20230706._domainkey`), DMARC and an `mx01.nicmail.ru` MX, all created
+> 2026-07-16 ~00:36, hours before this work and unknown to every planning doc. That
+> changed two decisions:
+>
+> - **DMARC was left alone at `p=quarantine`.** SendPulse suggests `p=none`; applying it
+>   would have *weakened* a stronger policy that already existed. Kept `quarantine`.
+>   Accepted trade-off: SendPulse mail sent before the DKIM propagates may be quarantined
+>   (it can't DMARC-align yet). Transient.
+> - **The two DKIM keys coexist** on different selectors (`nicmail20230706` vs `sign`), so
+>   nic.ru mail and SendPulse each sign with their own. Nothing was displaced.
+>
+> The SPF *replaced* the existing record with a strict superset (both `nicmail.ru`
+> includes preserved), so nic.ru mail keeps working. Rollback value is in the `.local.md`.
+
+**Gotchas learned here:**
+- **nic.ru DNS Master stages edits.** Changes sit behind a "Зона содержит неопубликованные
+  изменения" banner and are NOT live until you click **"Опубликовать"**.
+- **`dig`/`host` do not work from the Claude sandbox** (no resolver reachable). Verify with
+  DNS-over-HTTPS instead: `https://dns.google/resolve?name=<name>&type=TXT`.
+- **In SendPulse, reopen the records via "..." → "Show settings"**, NOT the "Activate"
+  button — Activate reopens the add-domain dialog and may regenerate the DKIM key.
+- The DKIM key was pasted straight from SendPulse's clipboard button, so the
+  transcription risk flagged earlier never materialized.
+
+<details>
+<summary>Original instructions (superseded — kept for reference)</summary>
 
 The three records SendPulse generated (exact values, captured 2026-07-16 — also in the
 `.local.md`):
@@ -103,6 +134,8 @@ Three things changed vs. what this doc originally assumed:
 - [ ] Propagation: 30 min – a few hours (SendPulse says DNS updates can take up to 24h).
 - [ ] Back in SendPulse → same Activate dialog → **"Check DNS records"** until SPF + DKIM go green.
       Check once and wait; don't poll aggressively.
+
+</details>
 
 ---
 

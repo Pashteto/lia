@@ -1,0 +1,115 @@
+name,venue_type,city,address,metro,district,lat,lon,source_note
+Московский буддийский центр Алмазного пути,spiritual,Moscow,"Каланчёвский тупик, дом 3-5, строение 6",Комсомольская,,55.771944,37.653474,buddhism.ru official listing
+Московский Буддийский Центр Ламы Цонкапы,spiritual,Moscow,"Мытная ул., дом 23, корп. 1",Тульская,,55.778719,37.673251,official site buddha.ru
+Буддийский центр Дзогчен Шри-Сингха,spiritual,Moscow,"ул. Мосфильмовская, д. 2В",Мосфильмовская,,55.717255,37.522528,official site buddhapath.ru
+Тибетский Дом в Москве,spiritual,Moscow,Рождественский бульвар,Трубная,,55.766425,37.625968,official site tibethouse.ru / Wikipedia
+Московская Соборная мечеть,spiritual,Moscow,"Выползов переулок, 7",Проспект Мира,,55.778942,37.626991,"multiple travel guides (russia360, tonkosti.ru)"
+Московская хоральная синагога,spiritual,Moscow,"Большой Спасоглинищевский переулок, 10",Китай-город,Басманный,55.755449,37.635111,official site centralsynagogue.ru
+Дацан Гунзэчойнэй,spiritual,Saint Petersburg,"Приморский проспект, 91",Старая Деревня,,59.983499,30.255972,dazan.spb.ru official site + press coverage
+Буддийский центр Алмазного пути традиции Карма Кагью,spiritual,Saint Petersburg,"Никольский переулок, 7 (офис 26)",Садовая,,59.919951,30.303914,buddhism.ru official listing + Yandex Maps
+Иоанновский ставропигиальный женский монастырь,spiritual,Saint Petersburg,"наб. реки Карповки, 45",Петроградская,,59.970798,30.300298,official site imonspb.ru
+Духовно-просветительский центр Санкт-Петербургской епархии,spiritual,Saint Petersburg,"Невский проспект, 177",Площадь Александра Невского,,59.92371,30.384167,Yandex Maps listing
+Artplay,loft,Moscow,"Нижняя Сыромятническая ул., 10",Чкаловская,Басманный,55.752334,37.671329,coworkstation.ru + kudago.com listing
+Дизайн-завод «Флакон»,loft,Moscow,"ул. Большая Новодмитровская, 36, стр. 12",Дмитровская,Бутырский,55.805017,37.585533,kudago.com / KP.RU coverage
+Хлебозавод №9,loft,Moscow,"ул. Новодмитровская, 1",Дмитровская,Бутырский,55.806632,37.585691,kudago.com listing
+ДК «Рассвет»,loft,Moscow,"Столярный переулок, 3, корп. 15",Улица 1905 года,Пресненский,55.764334,37.567965,dkrassvet.space official site + 2GIS
+Севкабель Порт,loft,Saint Petersburg,"Кожевенная линия, 40",,Василеостровский,59.924329,30.241901,sevcableport.ru official site + Yandex Maps
+Лофт Порт (Севкабель Порт),loft,Saint Petersburg,"Кожевенная линия, 34",,Василеостровский,59.923151,30.243798,2GIS listing
+Культурное пространство «Третье место»,loft,Saint Petersburg,"Литейный проспект, 62",,Центральный,59.933507,30.34838,culture.ru + 2GIS listing
+Рабочая Станция Plaza,coworking,Moscow,"ул. Бутырская, 62, 7 этаж",Дмитровская,Бутырский,55.802788,37.583751,coworkstation.ru official site
+Рабочая Станция Парк Горького,coworking,Moscow,"Ленинский проспект, 30А",Ленинский проспект,Якиманка,55.711722,37.581417,coworkstation.ru official site
+Рабочая Станция Artplay,coworking,Moscow,"ул. Нижняя Сыромятническая, 10, стр. 2, 7 этаж",Чкаловская,Басманный,55.752334,37.671329,coworkstation.ru official site
+SOK Рыбаков Тауэр,coworking,Moscow,"Ленинградский проспект, 36, стр. 11",Динамо,Аэропорт,55.788299,37.567838,sok.works official site + Yandex Maps
+Коворкинг Boiler,coworking,Moscow,"ул. Щербаковская, 16",Семёновская,Соколиная гора,55.781416,37.725007,kovorkingi.ru listing
+Атмосфера Известия,coworking,Moscow,"Тверская ул., 18, корп. 1",Пушкинская / Тверская / Чеховская,Тверской,55.766283,37.603177,kovorkingi.ru listing
+Коворкинг «Ясная Поляна»,coworking,Saint Petersburg,"ул. Льва Толстого, 1-3",Петроградская,Петроградский,59.964913,30.31284,coworkingspb.ru official site + Yandex Maps
+Практик (8-я линия В.О.),coworking,Saint Petersburg,"8-я линия В.О., 25",Василеостровская,Василеостровский,59.939682,30.279899,2GIS listing + praktik.work official site
+Студия «Воздух»,studio,Moscow,"ул. Вавилова, д. 81, корп. 1",Профсоюзная / Новые Черёмушки,Академический,55.751541,37.66459,vozduh-studio.ru official site
+Йога-дом,studio,Moscow,"Петровский переулок, 1/30",Чеховская,Тверской,55.765177,37.611646,yogadom.ru official site
+Qi Center,studio,Moscow,"ул. Архитектора Власова, 18",Новые Черёмушки,Академический,55.672158,37.543644,qi.center official site
+Bestmemories Фотостудия Лофт,studio,Moscow,"проспект Мира, 119, стр. 186",ВДНХ,Останкинский,55.827134,37.629837,bestmemories.ru official site
+LOFT 812,studio,Moscow,"ул. 1-я Бухвостова, 12/11, корп. 16, 2 этаж",Преображенская площадь,Преображенское,55.824805,37.415616,loft812.orgs.biz listing
+Бахрушинъ LOFT,studio,Moscow,"1-й Рижский переулок, д. 2, стр. 1",,Мещанский,55.809365,37.655023,bakhrushinloft.ru official site
+DIAR танцевальная студия,studio,Saint Petersburg,"проспект КИМа, д. 6, офис 364, 3 этаж",,Василеостровский,59.953365,30.244352,allfirms.co listing
+CORE студия горячей йоги,studio,Saint Petersburg,"Невский проспект, 118",Площадь Восстания,Центральный,59.935625,30.324654,core-studio.ru official site
+Y7studio,studio,Saint Petersburg,"Петровская коса, 6, корп. 1",,Петроградский,59.96153,30.246341,yoga7studio.ru official site
+Йога Семья,studio,Saint Petersburg,"Кронверкский проспект, 27Б",Горьковская,Петроградский,59.955358,30.322994,yogafamily.space official site
+Галерея «Триумф»,gallery,Moscow,"Ильинка ул., 3/8, стр. 5",Китай-город,Тверской,55.75455,37.623887,t-j.ru gallery roundup
+Галерея Gary Tatintsian,gallery,Moscow,"Крымский Вал ул., 9, стр. 4",Октябрьская / Парк Культуры,Якиманка,55.729154,37.60561,t-j.ru gallery roundup
+Галерея pop/off/art,gallery,Moscow,"4-й Сыромятнический переулок, 1/8, стр. 9 (Винзавод)",Курская / Чкаловская,Басманный,55.756157,37.665459,2GIS listing + afisha.ru
+ЦТИ «Фабрика»,gallery,Moscow,"Переведеновский переулок, 18",,Басманный,55.779627,37.689664,fabrikacci.com official site + artguide.com
+Музей современного искусства «Эрарта»,gallery,Saint Petersburg,"29-я линия В.О., 2",,Василеостровский,59.932162,30.251219,erarta.com official site
+Люмьер-Холл,gallery,Saint Petersburg,"наб. Обводного канала, 74, лит. Д",,Адмиралтейский,59.91042,30.32904,culture.ru + lumierehall.ru official site
+Галерея Марины Гисич,gallery,Saint Petersburg,"наб. реки Фонтанки, 121",,Центральный,59.921049,30.310591,gisich.com official site + culture.ru
+Галерея Anna Nova,gallery,Saint Petersburg,"ул. Жуковского, 28",,Центральный,59.936246,30.359804,culture.ru official listing
+Музей современного искусства «Артмуза»,gallery,Saint Petersburg,"13-я линия В.О., 70",,Василеостровский,59.945686,30.264865,artmuza.spb.ru official site + culture.ru
+Шанти Place,wellness_center,Moscow,"Мясницкий проезд, 2/1",Красные Ворота,Басманный,55.768162,37.64593,official site + Yandex Maps listing
+"Zen Space (студия йоги, ЖК Саларьево Парк)",wellness_center,Moscow,"Саларьевская улица, 14, корп. 3",Саларьево,Новомосковский,55.616702,37.411059,2GIS listing + fitmost.ru
+Вкус & Цвет (студия йоги и практик),wellness_center,Moscow,"Большая Новодмитровская ул., 36, стр. 7",Дмитровская,Бутырский,55.805864,37.585034,Yandex Maps + Zoon.ru listing
+ДЫШИ студия йоги и цигуна,wellness_center,Moscow,"улица Фадеева, 4А",Маяковская / Новослободская,,55.775023,37.600236,official site dishistudio.com + 2GIS
+UBU Yoga (студия горячей йоги),wellness_center,Moscow,"Благовещенский переулок, 3, стр. 1",Маяковская,Пресненский (Патриаршие пруды),55.767734,37.598064,official site ubu.yoga + 2GIS
+Планета Перемен (йога-центр на Мытнинской),wellness_center,Saint Petersburg,"Мытнинская улица, 11",Площадь Восстания / Чернышевская,Центральный,59.933512,30.377733,official site + Zoon.ru
+Планета Перемен (йога-центр на Ушинского),wellness_center,Saint Petersburg,"улица Ушинского, 3, корп. 3",,Калининский,60.040056,30.414771,official site + Yandex Maps
+Praktika (студия йоги),wellness_center,Saint Petersburg,"Большая Пушкарская улица, 10",Петроградская / Чкаловская,Петроградский,59.955908,30.298506,2GIS listing + official site praktika-place.ru
+Yoga Point (студия йоги на Петроградской),wellness_center,Saint Petersburg,"Каменноостровский проспект, 10Б",Петроградская,Петроградский,59.958701,30.316095,official site yogapoint-spb.ru
+Государственная Третьяковская галерея,museum,Moscow,"Лаврушинский переулок, 10",Третьяковская,Замоскворечье,55.741361,37.62022,"well-known institution, official site"
+Государственный исторический музей,museum,Moscow,"Красная площадь, 1",Охотный Ряд / Площадь Революции,Тверской,55.755323,37.617882,"well-known institution, official site"
+Музей Москвы,museum,Moscow,"Тверская улица, 21, стр. 1",Тверская / Пушкинская,Тверской,55.73658,37.593406,culture.ru / mosmuseum.ru listing
+Государственный биологический музей им. К.А. Тимирязева,museum,Moscow,"Малая Грузинская улица, 15",Краснопресненская / Баррикадная,Пресненский,55.764346,37.57149,culture.ru listing
+Измайловский кремль (историко-культурный комплекс),museum,Moscow,"Измайловское шоссе, 73",Партизанская,Измайлово,55.795463,37.749761,official site + press coverage
+Государственный Эрмитаж,museum,Saint Petersburg,"Дворцовая площадь, 2",Адмиралтейская,Центральный,59.939043,30.315354,"well-known institution, official site"
+Государственный Русский музей,museum,Saint Petersburg,"улица Инженерная, 4",Невский проспект / Гостиный двор,Центральный,59.938711,30.332311,"well-known institution, official site"
+Музей антропологии и этнографии им. Петра Великого (Кунсткамера),museum,Saint Petersburg,"Университетская набережная, 3",Адмиралтейская / Спортивная,Василеостровский,59.942357,30.304005,"well-known institution, official site"
+Государственный музей истории Санкт-Петербурга (Петропавловская крепость),museum,Saint Petersburg,"Александровский парк, 7, Петропавловская крепость, 3И",Горьковская / Спортивная,Петроградский,59.950375,30.315291,official site + press coverage
+Большой театр,theater,Moscow,"Театральная площадь, 1",Театральная / Охотный ряд,Тверской,55.76013,37.618612,"well-known institution, official site"
+Малый театр,theater,Moscow,"Театральный проезд, 1",Театральная / Охотный ряд,Тверской,55.75975,37.620631,"well-known institution, official site"
+Московский театр оперетты,theater,Moscow,"улица Большая Дмитровка, 6/2",Театральная / Охотный ряд,Тверской,55.764262,37.611803,official site + press coverage
+Центральный театр кукол им. С.В. Образцова,theater,Moscow,"Садовая-Самотечная улица, 3",Маяковская / Цветной бульвар,Тверской,55.774039,37.614306,official site + press coverage
+Московский Художественный театр им. А.П. Чехова (МХТ),theater,Moscow,"Камергерский переулок, 3",Охотный ряд / Театральная,Тверской,55.759913,37.612753,"well-known institution, official site"
+Мариинский театр,theater,Saint Petersburg,"Театральная площадь, 1",Садовая / Сенная площадь / Спасская,Адмиралтейский,59.925393,30.295836,"well-known institution, official site"
+Михайловский театр,theater,Saint Petersburg,"площадь Искусств, 1",Невский проспект / Гостиный двор,Центральный,59.937932,30.329065,"well-known institution, official site"
+Большой драматический театр им. Г.А. Товстоногова (БДТ),theater,Saint Petersburg,"Большая Конюшенная улица, 27",Невский проспект,Центральный,59.937099,30.321334,official site + press coverage
+Санкт-Петербургский государственный театр музыкальной комедии,theater,Saint Petersburg,"Итальянская улица, 13",Невский проспект / Гостиный двор,Центральный,59.936017,30.332937,official site + press coverage
+Парк искусств «Музеон»,outdoor,Moscow,"Крымский Вал, владение 2",Октябрьская / Парк культуры,Якиманка,55.735392,37.607342,culture.ru + official info
+Измайловский парк,outdoor,Moscow,"аллея Большого Круга, 7/а",Партизанская / Измайлово (МЦК),Измайлово,55.772287,37.754873,official site izmailovsky-park.ru
+Парк «Сокольники»,outdoor,Moscow,"5-й Лучевой просек, район Сокольники",Сокольники,Сокольники,55.816019,37.675827,official info + press coverage
+Парк «Красная Пресня»,outdoor,Moscow,"улица Мантулинская, 5",Выставочная / Улица 1905 года,Пресненский,55.755914,37.552797,press coverage (festival venue)
+Новая Голландия (парк),outdoor,Saint Petersburg,"набережная Адмиралтейского канала, 2",Адмиралтейская,Центральный,59.929392,30.28741,official site newhollandsp.ru + 2GIS
+Елагин остров (ЦПКиО им. С.М. Кирова),outdoor,Saint Petersburg,"Елагин остров, 4",Крестовский остров / Старая Деревня,Петроградский,59.979317,30.270036,official site elaginpark.org
+Парк Сосновка,outdoor,Saint Petersburg,"улица Жака Дюкло, 20Б",Озерки / Удельная,Выборгский,60.025758,30.335167,official info parksosnovka.ru + press coverage
+Циферблат (Ziferblat) на Кузнецком Мосту,cafe,Moscow,"ул. Кузнецкий Мост, 19, стр. 1",Кузнецкий Мост / Лубянка,,55.762614,37.625437,"multiple listings (Afisha, Zoon, official site)"
+Циферблат (Ziferblat) на Тверской,cafe,Moscow,"ул. Тверская, 12, стр. 1",Тверская / Пушкинская,,55.771925,37.596468,Zoon network listing
+Циферблат (Ziferblat) на Солянке,cafe,Moscow,"Лубянский проезд, 27/1, к1",,,55.759296,37.628192,Zoon network listing
+Книжный магазин-кафе «Достоевский»,cafe,Moscow,"Большой Трёхсвятительский переулок, 2/1, стр. 6",,,55.754814,37.645219,typical-moscow.ru + 2GIS listing
+Кафе Музея «Гараж»,cafe,Moscow,"Парк Горького, ул. Крымский Вал, 9, стр. 32",Октябрьская / Парк культуры,,55.731344,37.603725,official site garagemca.org + Parkgorkogo.ru
+Циферблат (Ziferblat) на Невском,cafe,Saint Petersburg,"Невский проспект, 81",Площадь Восстания,,59.930804,30.359081,localway.ru + a-a-ah.ru
+CODE 505 (антикафе),cafe,Saint Petersburg,"Невский проспект, 180 (5 этаж)",,,59.925103,30.382183,zoon.ru listing
+Книжный магазин «Подписные издания»,cafe,Saint Petersburg,"Литейный проспект, 57",,,59.934412,30.347687,official site podpisnie.ru + 2GIS
+Книжный магазин «Порядок слов»,cafe,Saint Petersburg,"набережная реки Фонтанки, 15, 1 этаж",Гостиный двор,,59.936243,30.34308,official site wordorder.ru + 2GIS
+SOK Земляной Вал,conference_room,Moscow,"Земляной Вал, 8",,,55.762187,37.656686,official site sok.works
+Коворкинг «Ключ» Патриаршие,conference_room,Moscow,Ермолаевский переулок (Патриаршие пруды),Маяковская,,55.764484,37.590911,official site thekey.space + coworkingtop.ru
+Коворкинг «Практик»,conference_room,Moscow,"Воронцовская улица, 49/28, стр. 1",,,55.732838,37.666721,kovorkingi.ru network listing
+Рабочая Станция (коворкинг),conference_room,Moscow,"Ленинский проспект, 30А",,,55.711722,37.581417,official site coworkstation.ru
+Worknation (Москва-Сити),conference_room,Moscow,"Пресненская набережная, 12, башня «Федерация-Восток», 37 этаж",,Москва-Сити,55.749683,37.537528,official site worknation.ru
+SMART-coworking на Коломяжском,conference_room,Saint Petersburg,"Коломяжский проспект, 19, к2, ТК «Капитолий», 3 этаж",Пионерская,Приморский район,60.007086,30.297589,official site smart-coworking.ru
+SMART-coworking на Шпалерной,conference_room,Saint Petersburg,"Шпалерная улица, 60Б, 1 этаж",Чернышевская,Центральный район,59.949026,30.357777,official site smart-coworking.ru
+GrowUP Coworking,conference_room,Saint Petersburg,"Большой Сампсониевский проспект, 61, к2",Выборгская,,59.973303,30.342663,official site growup-coworking.ru + Yandex Maps
+Культурный центр ЗИЛ,cultural_center,Moscow,"улица Восточная, 4, корпус 1",Автозаводская / Дубровка,,55.714469,37.657881,official site zilcc.ru + culture.ru
+ДК Рассвет,cultural_center,Moscow,"Столярный переулок, 3, к15",,,55.764334,37.567965,2GIS listing
+Культурный центр «Москвич»,cultural_center,Moscow,"Волгоградский проспект, 46/15",,,55.708076,37.733283,search aggregation of Moscow cultural centers
+Центральный дом архитектора (ЦДА),cultural_center,Moscow,"Гранатный переулок, 7, стр. 1",,,55.759397,37.590497,2GIS listing
+Культурный центр «ДОМ»,cultural_center,Moscow,"Большой Овчинниковский переулок, 24, строение 4",,,55.744477,37.651818,search aggregation of Moscow cultural centers
+Дворец культуры имени Ленсовета,cultural_center,Saint Petersburg,"Каменноостровский проспект, 42",Петроградская,,59.966977,30.310077,kuda-spb.ru + 2GIS
+ДК имени Кирова,cultural_center,Saint Petersburg,"Большой проспект В.О., 83",,Васильевский остров,59.933847,30.255012,search aggregation of SPB cultural centers
+Дом учёных имени М. Горького,cultural_center,Saint Petersburg,"Дворцовая набережная, 26",,,59.943151,30.320119,search aggregation of SPB cultural centers
+Дом культуры «Созвездие» (Калининский КДЦ),cultural_center,Saint Petersburg,"Пискарёвский проспект, 10",,Калининский район,59.964895,30.408383,spbdntd.ru listing
+Концертный зал «У Финляндского» (Калининский КДЦ),cultural_center,Saint Petersburg,"Арсенальная набережная, 13/1, литер А",,Калининский район,59.953266,30.357512,spbdntd.ru listing
+Лекторий Политехнического музея,lecture_hall,Moscow,"4-я Магистральная улица, 11, стр. 2 (БЦ «Магистраль»)",Полежаевская / Хорошёвская,,55.770445,37.517008,official site polymus.ru
+НИУ ВШЭ — лекторий OpenLectures,lecture_hall,Moscow,"Малый Гнездниковский переулок, 4, аудитория 10",,,55.761819,37.606169,official site hse.ru/lectorian/openlectures
+Точка кипения — Москва,lecture_hall,Moscow,"Малый Конюшковский переулок, 2, 3 этаж",,,55.75826,37.580595,leader-id.ru + moyaspravka.ru listing
+Библиотека им. Н.А. Некрасова (конференц-зал/аудитории),lecture_hall,Moscow,"улица Бауманская, 58/25, строение 14",,,55.767142,37.678637,official site nekrasovka.ru + mos.ru
+Точка кипения — Санкт-Петербург (ГУАП),lecture_hall,Saint Petersburg,"улица Большая Морская, 67",,,59.930269,30.295053,leader-id.ru + peterburg2.ru
+Точка кипения МБИ,lecture_hall,Saint Petersburg,"улица Малая Садовая, 6",,,59.934784,30.338025,leader-id.ru listing
+Точка кипения Политех,lecture_hall,Saint Petersburg,"Политехническая улица, 29, литер О",,,60.009137,30.381923,leader-id.ru listing
+Точка кипения РАНХиГС Санкт-Петербург,lecture_hall,Saint Petersburg,"Каменноостровский проспект, 66 (корпус юридического факультета РАНХиГС)",,,59.975484,30.302215,official site spb.ranepa.ru + leader-id.ru
+Европейский университет в Санкт-Петербурге (публичные лекции),lecture_hall,Saint Petersburg,"Гагаринская улица, 3/2 (главное здание, Шпалерная ул., 1)",,,59.944614,30.342909,official site eusp.org

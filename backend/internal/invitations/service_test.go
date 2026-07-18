@@ -16,6 +16,7 @@ type fakeRepo struct {
 	inserted []inv.Invitation
 	byToken  map[string]*inv.Invitation
 	statuses map[uuid.UUID]string
+	pending  []inv.Invitation
 }
 
 func (f *fakeRepo) Insert(_ context.Context, i inv.Invitation) error {
@@ -28,9 +29,11 @@ func (f *fakeRepo) GetByToken(_ context.Context, t string) (*inv.Invitation, err
 	}
 	return nil, inv.ErrNotFound
 }
-func (f *fakeRepo) GetByID(context.Context, uuid.UUID) (*inv.Invitation, error) { return nil, inv.ErrNotFound }
+func (f *fakeRepo) GetByID(context.Context, uuid.UUID) (*inv.Invitation, error) {
+	return nil, inv.ErrNotFound
+}
 func (f *fakeRepo) ListPendingByEmail(context.Context, string) ([]inv.Invitation, error) {
-	return nil, nil
+	return f.pending, nil
 }
 func (f *fakeRepo) SetStatus(_ context.Context, id uuid.UUID, s string) error {
 	if f.statuses == nil {
@@ -45,6 +48,10 @@ type fakeEvents struct{ owner uuid.UUID }
 
 func (f fakeEvents) GetByID(context.Context, string) (string, uuid.UUID, error) {
 	return "Йога", f.owner, nil
+}
+
+func (f fakeEvents) Details(context.Context, string) (inv.EventDetails, error) {
+	return inv.EventDetails{Title: "Йога", OrganizerName: "Студия"}, nil
 }
 
 type fakeRSVP struct{ signedUp []uuid.UUID }
@@ -141,6 +148,29 @@ func TestAcceptByToken_RejectsUnverified(t *testing.T) {
 	err := s.AcceptByToken(context.Background(), "tok", "a@x.com", uuid.Must(uuid.NewV4()), false)
 	if err != inv.ErrNotVerified {
 		t.Fatalf("want ErrNotVerified, got %v", err)
+	}
+}
+
+func TestListMine_EnrichesWithEventAndInviter(t *testing.T) {
+	eventID := uuid.Must(uuid.NewV4())
+	repo := &fakeRepo{pending: []inv.Invitation{
+		{ID: uuid.Must(uuid.NewV4()), EventID: eventID, InviteeEmail: "a@x.com", Status: "pending"},
+	}}
+	s := newSvc(repo, fakeEvents{}, &fakeRSVP{}, &fakeMailer{})
+
+	items, err := s.ListMine(context.Background(), "a@x.com")
+	if err != nil {
+		t.Fatalf("list mine: %v", err)
+	}
+	if len(items) != 1 {
+		t.Fatalf("want 1 item, got %d", len(items))
+	}
+	// fakeEvents.Details returns title "Йога", organizer "Студия".
+	if items[0].EventTitle != "Йога" || items[0].InviterName != "Студия" {
+		t.Fatalf("row not enriched: title=%q inviter=%q", items[0].EventTitle, items[0].InviterName)
+	}
+	if items[0].EventID != eventID {
+		t.Fatalf("event id lost: %v", items[0].EventID)
 	}
 }
 

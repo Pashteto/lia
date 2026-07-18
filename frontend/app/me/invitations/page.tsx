@@ -12,6 +12,7 @@ import {
   type MyInvitation,
 } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { formatEventDate } from "@/lib/format";
 
 function InvitationRow({ invitation }: { invitation: MyInvitation }) {
   const router = useRouter();
@@ -31,14 +32,26 @@ function InvitationRow({ invitation }: { invitation: MyInvitation }) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["my-invitations"] }),
   });
 
+  const meta = [
+    invitation.event_starts_at ? formatEventDate(invitation.event_starts_at) : null,
+    invitation.inviter_name ? `от ${invitation.inviter_name}` : null,
+  ].filter(Boolean);
+
   return (
     <li className="flex items-center justify-between gap-3 rounded-card bg-bg-secondary p-4 shadow-card-subtle">
-      <Link
-        href={`/events/${invitation.event_id}`}
-        className="text-[17px] font-semibold text-accent hover:underline"
-      >
-        Открыть событие
-      </Link>
+      <div className="min-w-0">
+        <Link
+          href={`/events/${invitation.event_id}`}
+          className="block truncate text-[17px] font-semibold text-accent hover:underline"
+        >
+          {invitation.event_title || "Открыть событие"}
+        </Link>
+        {meta.length > 0 && (
+          <p className="mt-0.5 truncate text-[13px] text-label-secondary">
+            {meta.join(" · ")}
+          </p>
+        )}
+      </div>
       <div className="flex shrink-0 gap-2">
         <button
           onClick={() => accept.mutate()}

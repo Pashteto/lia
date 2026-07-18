@@ -1024,7 +1024,18 @@ export const declineInvitation = (token: string) => invitationAction(`/invitatio
 export const acceptMyInvitation = (id: string) => invitationAction(`/me/invitations/${id}/accept`);
 export const declineMyInvitation = (id: string) => invitationAction(`/me/invitations/${id}/decline`);
 
-export interface MyInvitation { id: string; event_id: string; token: string; status: string; }
+export interface MyInvitation {
+  id: string;
+  event_id: string;
+  token: string;
+  status: string;
+  // Enriched by the backend so each row is identifiable. Optional because a
+  // failed per-row event lookup falls back to the bare invitation, and
+  // event_starts_at is omitted when the event has no start time.
+  event_title?: string;
+  event_starts_at?: string;
+  inviter_name?: string;
+}
 export async function fetchMyInvitations(): Promise<MyInvitation[]> {
   const res = await fetch(`${API_V1}/me/invitations`, {
     headers: { Authorization: `Bearer ${getToken()}` }, cache: "no-store",

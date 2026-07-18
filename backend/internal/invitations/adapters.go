@@ -9,16 +9,25 @@ import (
 // eventsAdapter adapts events.Service to EventPort.
 type eventsAdapter struct {
 	getByID func(ctx context.Context, id string) (title string, organizerUserID uuid.UUID, err error)
+	details func(ctx context.Context, id string) (EventDetails, error)
 }
 
-// NewEventPort builds an EventPort over a getByID closure (typically wrapping
-// events.Service.GetByID and unpacking the title/organizer fields).
-func NewEventPort(getByID func(ctx context.Context, id string) (string, uuid.UUID, error)) EventPort {
-	return eventsAdapter{getByID: getByID}
+// NewEventPort builds an EventPort over a getByID closure (title/organizer for
+// invite/preview) and a details closure (title/start/organizer-name for the
+// "my invitations" list), both typically wrapping events.Service.GetByID.
+func NewEventPort(
+	getByID func(ctx context.Context, id string) (string, uuid.UUID, error),
+	details func(ctx context.Context, id string) (EventDetails, error),
+) EventPort {
+	return eventsAdapter{getByID: getByID, details: details}
 }
 
 func (a eventsAdapter) GetByID(ctx context.Context, id string) (string, uuid.UUID, error) {
 	return a.getByID(ctx, id)
+}
+
+func (a eventsAdapter) Details(ctx context.Context, id string) (EventDetails, error) {
+	return a.details(ctx, id)
 }
 
 // rsvpAdapter adapts rsvp.Service to RSVPPort.

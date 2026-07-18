@@ -299,6 +299,20 @@ func (app *App) registerModules() error {
 							return "", uuid.Nil, err
 						}
 						return ev.Title, ev.OrganizerID, nil
+					}, func(ctx context.Context, id string) (invitationsdomain.EventDetails, error) {
+						ev, err := app.eventsSvc.GetByID(ctx, id)
+						if err != nil {
+							return invitationsdomain.EventDetails{}, err
+						}
+						var organizerName string
+						if ev.Organizer != nil {
+							organizerName = ev.Organizer.Name
+						}
+						return invitationsdomain.EventDetails{
+							Title:         ev.Title,
+							StartsAt:      ev.StartsAt,
+							OrganizerName: organizerName,
+						}, nil
 					}),
 					invitationsdomain.NewRSVPPort(signUp),
 					mailer,

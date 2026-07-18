@@ -22,7 +22,7 @@ type stubSvc struct {
 	previewResp *inv.Preview
 	previewErr  error
 
-	listMine []inv.Invitation
+	listMine []inv.MineItem
 }
 
 func (s *stubSvc) Invite(_ context.Context, _, _ uuid.UUID, _ bool, emails []string, _ string) (int, error) {
@@ -35,7 +35,7 @@ func (s *stubSvc) AcceptByToken(_ context.Context, _, _ string, _ uuid.UUID, _ b
 	return nil
 }
 func (s *stubSvc) DeclineByToken(_ context.Context, _, _ string) error { return nil }
-func (s *stubSvc) ListMine(_ context.Context, _ string) ([]inv.Invitation, error) {
+func (s *stubSvc) ListMine(_ context.Context, _ string) ([]inv.MineItem, error) {
 	return s.listMine, nil
 }
 func (s *stubSvc) AcceptByID(_ context.Context, _ uuid.UUID, _ string, _ uuid.UUID, _ bool) error {

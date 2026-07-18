@@ -46,6 +46,17 @@ var ErrNotFound = errors.New("invitation not found")
 // are wired at the call site).
 type EventPort interface {
 	GetByID(ctx context.Context, id string) (title string, organizerUserID uuid.UUID, err error)
+	// Details returns the display data the "my invitations" list needs.
+	Details(ctx context.Context, id string) (EventDetails, error)
+}
+
+// EventDetails is the event display data shown on an invitation row. Only an
+// event's owner can issue invites (see Invite), so the event's organizer is the
+// inviter — OrganizerName therefore doubles as the inviter's name.
+type EventDetails struct {
+	Title         string
+	StartsAt      time.Time
+	OrganizerName string
 }
 type RSVPPort interface {
 	SignUp(ctx context.Context, eventID, userID uuid.UUID, answer string) error
@@ -69,6 +80,15 @@ type Preview struct {
 	Status     string
 }
 
+// MineItem is a pending invitation enriched with its event's display data, for
+// the authenticated "my invitations" list so each row is identifiable.
+type MineItem struct {
+	Invitation
+	EventTitle    string
+	EventStartsAt time.Time
+	InviterName   string
+}
+
 // Service is the invitations business logic: invite by email, preview an
 // invite by token, accept/decline (by token or by id), and list mine.
 type Service interface {
@@ -76,7 +96,7 @@ type Service interface {
 	Preview(ctx context.Context, token string) (*Preview, error)
 	AcceptByToken(ctx context.Context, token, userEmail string, userID uuid.UUID, verified bool) error
 	DeclineByToken(ctx context.Context, token, userEmail string) error
-	ListMine(ctx context.Context, email string) ([]Invitation, error)
+	ListMine(ctx context.Context, email string) ([]MineItem, error)
 	AcceptByID(ctx context.Context, id uuid.UUID, userEmail string, userID uuid.UUID, verified bool) error
 	DeclineByID(ctx context.Context, id uuid.UUID, userEmail string) error
 }
@@ -146,8 +166,24 @@ func (s *service) Preview(ctx context.Context, token string) (*Preview, error) {
 	return &Preview{EventID: invRow.EventID, EventTitle: title, Status: invRow.Status}, nil
 }
 
-func (s *service) ListMine(ctx context.Context, email string) ([]Invitation, error) {
-	return s.repo.ListPendingByEmail(ctx, email)
+func (s *service) ListMine(ctx context.Context, email string) ([]MineItem, error) {
+	rows, err := s.repo.ListPendingByEmail(ctx, email)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]MineItem, 0, len(rows))
+	for _, row := range rows {
+		item := MineItem{Invitation: row}
+		// Best-effort enrichment: a lookup failure for one event must not drop
+		// the whole list, so we fall back to the bare invitation row.
+		if d, dErr := s.events.Details(ctx, row.EventID.String()); dErr == nil {
+			item.EventTitle = d.Title
+			item.EventStartsAt = d.StartsAt
+			item.InviterName = d.OrganizerName
+		}
+		out = append(out, item)
+	}
+	return out, nil
 }
 
 func (s *service) AcceptByToken(ctx context.Context, token, userEmail string, userID uuid.UUID, verified bool) error {

@@ -10,6 +10,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gofrs/uuid"
 
@@ -61,7 +62,9 @@ func writeJSON(w http.ResponseWriter, code int, v any) {
 	w.WriteHeader(code)
 	_ = json.NewEncoder(w).Encode(v)
 }
-func writeErr(w http.ResponseWriter, code int, msg string) { writeJSON(w, code, map[string]string{"message": msg}) }
+func writeErr(w http.ResponseWriter, code int, msg string) {
+	writeJSON(w, code, map[string]string{"message": msg})
+}
 func writeUnverified(w http.ResponseWriter) {
 	writeJSON(w, http.StatusForbidden, map[string]string{"code": "email_not_verified", "message": "Подтвердите электронную почту, чтобы продолжить"})
 }
@@ -163,9 +166,15 @@ func (h *handler) listMine(w http.ResponseWriter, r *http.Request) {
 	}
 	out := make([]map[string]any, 0, len(list))
 	for _, i := range list {
-		out = append(out, map[string]any{
+		row := map[string]any{
 			"id": i.ID.String(), "event_id": i.EventID.String(), "token": i.Token, "status": i.Status,
-		})
+			"event_title": i.EventTitle, "inviter_name": i.InviterName,
+		}
+		// Omit a zero start time rather than emitting a bogus "0001-01-01".
+		if !i.EventStartsAt.IsZero() {
+			row["event_starts_at"] = i.EventStartsAt.Format(time.RFC3339)
+		}
+		out = append(out, row)
 	}
 	writeJSON(w, http.StatusOK, out)
 }

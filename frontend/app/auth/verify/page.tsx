@@ -41,7 +41,12 @@ export default function VerifyPage() {
     try {
       await verifyEmail(addr, code);
       await refresh(); // re-fetch /auth/me so emailVerified updates before navigating
-      router.push("/"); // verified; caller flows resume
+      // Resume the flow that triggered verification (e.g. an /invite/[token]
+      // page) via ?next=; fall back to the feed. Only app-internal paths are
+      // honored, to avoid an open-redirect.
+      const next = new URLSearchParams(window.location.search).get("next");
+      const dest = next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
+      router.push(dest);
     } catch (err) {
       const m = err instanceof Error ? err.message : "";
       if (m === VERIFICATION_EXPIRED) setError("Код истёк. Запросите новый.");

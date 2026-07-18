@@ -1,10 +1,21 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/lib/auth-context";
+
+// The current ?next= return-to, read from the live URL (client-only, so no
+// useSearchParams Suspense boundary is forced on every route that mounts the
+// modal). Only app-internal paths are honored (single leading "/"), never an
+// absolute/protocol-relative URL — this prevents an open-redirect via ?next=.
+function currentNext(): string | null {
+  if (typeof window === "undefined") return null;
+  const next = new URLSearchParams(window.location.search).get("next");
+  return next && next.startsWith("/") && !next.startsWith("//") ? next : null;
+}
 
 // Nav auth control: "Войти" when signed out (opens a demo-login modal), or the
 // signed-in email + "Выйти" when authed. Demo-login takes just an email — no
@@ -77,6 +88,8 @@ export function AuthButton() {
 
 export function LoginModal({ onClose }: { onClose: () => void }) {
   const { register, loginPassword } = useAuth();
+  const router = useRouter();
+  const next = currentNext();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -104,6 +117,9 @@ export function LoginModal({ onClose }: { onClose: () => void }) {
       } else {
         await loginPassword(email.trim(), password);
         onClose();
+        // Return the guest to where they came from (e.g. an /invite/[token]
+        // page), instead of stranding them on the feed.
+        if (next) router.push(next);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Не удалось войти. Попробуйте ещё раз.");
@@ -127,7 +143,10 @@ export function LoginModal({ onClose }: { onClose: () => void }) {
             Мы отправили 6-значный код на {registeredEmail}. Он действует 24 часа.
           </p>
           <div className="flex gap-2">
-            <Link href="/auth/verify" className="rounded-capsule bg-accent px-4 py-2 text-white">
+            <Link
+              href={next ? `/auth/verify?next=${encodeURIComponent(next)}` : "/auth/verify"}
+              className="rounded-capsule bg-accent px-4 py-2 text-white"
+            >
               Ввести код
             </Link>
             <button onClick={onClose} className="rounded-capsule bg-fill px-4 py-2 text-label">

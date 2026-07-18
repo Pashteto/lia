@@ -27,13 +27,16 @@ export const eventFormSchema = z
     categoryIds: z.array(z.string()).optional(),
     format: z.enum(["offline", "online"]),
     venueId: z.string().optional(),
-    startsAt: z.string().min(1, "Укажите дату и время"),
+    startsAt: z.string({ error: "Укажите дату и время" }).min(1, "Укажите дату и время"),
     endsAt: z.string().optional(),
     isFree: z.boolean(),
     priceMin: z.coerce.number().int().min(0).optional(),
     status: z.enum(["draft", "published"]),
     signupMode: z.enum(["open", "application", "external"]),
-    capacity: z.coerce.number().int().positive("Лимит мест должен быть больше нуля").optional(),
+    capacity: z.preprocess(
+      (v) => (v === "" || v == null ? undefined : v),
+      z.coerce.number().int().positive("Лимит мест должен быть больше нуля").optional(),
+    ),
     curatorQuestion: z.string().optional(),
     externalRegistrationUrl: z.string().optional(),
   })

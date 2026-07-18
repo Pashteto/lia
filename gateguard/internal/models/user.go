@@ -29,6 +29,7 @@ type User struct {
 	// to proto / API responses (see Proto(), which omits it).
 	PasswordHash            string    `pg:"password_hash"`
 	EmailVerified           bool      `pg:"email_verified,use_zero"`
+	EmailVerificationAttempts int       `pg:"email_verification_attempts,use_zero"`
 	EmailVerificationToken  string    `pg:"email_verification_token"`
 	EmailVerificationSentAt time.Time `pg:"email_verification_sent_at"`
 	CreatedOrRestored       bool      `pg:"-"`

@@ -55,10 +55,13 @@ export function EventCard({
           {event.venue ? ` · ${event.venue.name}` : ""}
         </p>
         {event.organizer?.name ? (
-          <p className="flex items-center gap-1.5 text-[13px] text-label-secondary">
+          <p className="text-[13px] text-label-secondary">
             Организатор: {event.organizer.name}
             {event.organizer.verified && (
-              <VerifiedBadge profileId={event.organizer.profile_id} />
+              <>
+                {" "}
+                <VerifiedBadge profileId={event.organizer.profile_id} />
+              </>
             )}
           </p>
         ) : null}

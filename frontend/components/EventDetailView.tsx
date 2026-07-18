@@ -89,9 +89,14 @@ export function EventDetailView({ event }: { event: LiaEvent }) {
               >
                 <div className="size-11 shrink-0 rounded-full bg-fill" aria-hidden />
                 <div>
-                  <p className="flex items-center gap-1.5 text-[17px] font-medium">
+                  <p className="text-[17px] font-medium">
                     {event.organizer.name || "Организатор"}
-                    {event.organizer.verified && <VerifiedBadge />}
+                    {event.organizer.verified && (
+                      <>
+                        {" "}
+                        <VerifiedBadge />
+                      </>
+                    )}
                   </p>
                   {event.organizer.affiliation && (
                     <p className="text-[13px] text-label-secondary">
@@ -104,9 +109,14 @@ export function EventDetailView({ event }: { event: LiaEvent }) {
               <div className="flex items-center gap-3">
                 <div className="size-11 shrink-0 rounded-full bg-fill" aria-hidden />
                 <div>
-                  <p className="flex items-center gap-1.5 text-[17px] font-medium">
+                  <p className="text-[17px] font-medium">
                     {event.organizer.name || "Организатор"}
-                    {event.organizer.verified && <VerifiedBadge />}
+                    {event.organizer.verified && (
+                      <>
+                        {" "}
+                        <VerifiedBadge />
+                      </>
+                    )}
                   </p>
                   {event.organizer.affiliation && (
                     <p className="text-[13px] text-label-secondary">

@@ -17,6 +17,16 @@ import (
 
 const defaultEndpoint = "https://geocode-maps.yandex.ru/1.x/"
 
+// Moscow viewport bias. Presence launches in Moscow, so we hint the geocoder to
+// rank results near the city center first. `ll` is the center (lon,lat) and
+// `spn` the span (Δlon,Δlat) covering greater Moscow. We deliberately omit
+// `rspn=1` (hard restrict) so a venue genuinely outside Moscow still resolves —
+// this is a soft ranking bias, not a filter.
+const (
+	moscowLL  = "37.617700,55.755800"
+	moscowSpn = "0.7,0.5"
+)
+
 // Result is one geocoded address, in [lat, lon] terms for frontend consumption.
 type Result struct {
 	Lat   float64 `json:"lat"`
@@ -76,6 +86,8 @@ func (c *Client) Geocode(ctx context.Context, q string) ([]Result, error) {
 		"format":  {"json"},
 		"lang":    {"ru_RU"},
 		"results": {"5"},
+		"ll":      {moscowLL},
+		"spn":     {moscowSpn},
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.endpoint+"?"+params.Encode(), nil)
 	if err != nil {

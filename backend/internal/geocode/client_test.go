@@ -15,6 +15,15 @@ func TestGeocodeParsesFeatureMembers(t *testing.T) {
 		if got := r.URL.Query().Get("apikey"); got != "test-key" {
 			t.Errorf("apikey = %q, want test-key", got)
 		}
+		if got := r.URL.Query().Get("ll"); got != "37.617700,55.755800" {
+			t.Errorf("ll = %q, want Moscow center", got)
+		}
+		if got := r.URL.Query().Get("spn"); got != "0.7,0.5" {
+			t.Errorf("spn = %q, want Moscow span", got)
+		}
+		if got := r.URL.Query().Get("rspn"); got != "" {
+			t.Errorf("rspn = %q, want empty (soft bias, not hard restrict)", got)
+		}
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"response":{"GeoObjectCollection":{"featureMember":[
 			{"GeoObject":{"metaDataProperty":{"GeocoderMetaData":{"text":"Россия, Москва"}},"Point":{"pos":"37.617635 55.755814"}}}

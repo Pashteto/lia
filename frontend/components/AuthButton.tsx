@@ -83,6 +83,7 @@ export function LoginModal({ onClose }: { onClose: () => void }) {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
 
   const isRegister = mode === "register";
   const canSubmit =
@@ -97,11 +98,13 @@ export function LoginModal({ onClose }: { onClose: () => void }) {
     setError(null);
     try {
       if (isRegister) {
-        await register(email.trim(), name.trim(), password);
+        const addr = email.trim();
+        await register(addr, name.trim(), password);
+        setRegisteredEmail(addr); // show the confirmation instead of closing
       } else {
         await loginPassword(email.trim(), password);
+        onClose();
       }
-      onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Не удалось войти. Попробуйте ещё раз.");
     } finally {
@@ -111,6 +114,30 @@ export function LoginModal({ onClose }: { onClose: () => void }) {
 
   const inputClass =
     "w-full rounded-control bg-fill px-3.5 py-2.5 text-[17px] text-label outline-none placeholder:text-label-secondary focus:ring-2 focus:ring-accent";
+
+  if (registeredEmail) {
+    return (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+        onClick={onClose}
+      >
+        <div className="w-full max-w-sm rounded-card bg-bg p-5" onClick={(e) => e.stopPropagation()}>
+          <h2 className="mb-1 text-[17px] font-semibold">Проверьте почту</h2>
+          <p className="mb-4 text-[13px] text-label-secondary">
+            Мы отправили 6-значный код на {registeredEmail}. Он действует 24 часа.
+          </p>
+          <div className="flex gap-2">
+            <Link href="/auth/verify" className="rounded-capsule bg-accent px-4 py-2 text-white">
+              Ввести код
+            </Link>
+            <button onClick={onClose} className="rounded-capsule bg-fill px-4 py-2 text-label">
+              Позже
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

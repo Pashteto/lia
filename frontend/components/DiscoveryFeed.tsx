@@ -34,6 +34,10 @@ export function DiscoveryFeed({
   const [nearby, setNearby] = useState<LiaEvent[] | null>(null);
   const [geoError, setGeoError] = useState<string | null>(null);
   const [geoLoading, setGeoLoading] = useState(false);
+  // "Now" for the upcoming/past split, captured once at mount (a lazy
+  // initializer keeps Date.now() out of render — the feed doesn't need to
+  // re-partition as the clock ticks).
+  const [now] = useState(() => Date.now());
 
   // Date chips (today/weekend) resolve to a [from, to) window, computed once per
   // active-chip change so the server query and the client filter agree on it.
@@ -55,7 +59,7 @@ export function DiscoveryFeed({
   });
 
   const events = useMemo(() => {
-    return allEvents.filter((e) => {
+    const filtered = allEvents.filter((e) => {
       let matchesFilter: boolean;
       if (active === "all") {
         matchesFilter = true;
@@ -74,7 +78,19 @@ export function DiscoveryFeed({
         (e.organizer?.name ?? "").toLowerCase().includes(query.toLowerCase());
       return matchesFilter && matchesQuery;
     });
-  }, [allEvents, active, dateRange, query]);
+    // Lead with upcoming events (soonest first); demote past events below them
+    // (most-recent past first). The backend returns no particular order, so the
+    // feed would otherwise open on stale/past events. .filter() already returned
+    // a fresh array, so sorting in place doesn't mutate allEvents.
+    return filtered.sort((a, b) => {
+      const ta = new Date(a.startsAt).getTime();
+      const tb = new Date(b.startsAt).getTime();
+      const aUpcoming = ta >= now;
+      const bUpcoming = tb >= now;
+      if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1;
+      return aUpcoming ? ta - tb : tb - ta;
+    });
+  }, [allEvents, active, dateRange, query, now]);
 
   const enableNearby = () => {
     if (!navigator.geolocation) {

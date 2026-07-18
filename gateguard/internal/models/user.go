@@ -11,31 +11,31 @@ import (
 )
 
 type User struct {
-	tableName         struct{} `pg:"users,discard_unknown_columns"`
-	UUID              uuid.UUID
-	Email             string
-	Name              string
-	Avatar            string
-	IP                uint32      `pg:",use_zero"`
-	Status            UserStatus  `pg:"-"`
-	StatusSQL         string      `pg:"status"`
-	Role              UserRole    `pg:"-"`
-	RoleSQL           string      `pg:"role"`
-	RefCode           string      `pg:"-"`
-	Organizations     []uuid.UUID `pg:"organizations,array"`
-	PreferredStacks   []int64     `pg:"preferred_stacks,array"`
-	TrialUsed         bool        `pg:",use_zero"`
+	tableName       struct{} `pg:"users,discard_unknown_columns"`
+	UUID            uuid.UUID
+	Email           string
+	Name            string
+	Avatar          string
+	IP              uint32      `pg:",use_zero"`
+	Status          UserStatus  `pg:"-"`
+	StatusSQL       string      `pg:"status"`
+	Role            UserRole    `pg:"-"`
+	RoleSQL         string      `pg:"role"`
+	RefCode         string      `pg:"-"`
+	Organizations   []uuid.UUID `pg:"organizations,array"`
+	PreferredStacks []int64     `pg:"preferred_stacks,array"`
+	TrialUsed       bool        `pg:",use_zero"`
 	// Credential + email-verification fields. PasswordHash is NEVER serialized
 	// to proto / API responses (see Proto(), which omits it).
-	PasswordHash            string    `pg:"password_hash"`
-	EmailVerified           bool      `pg:"email_verified,use_zero"`
+	PasswordHash              string    `pg:"password_hash"`
+	EmailVerified             bool      `pg:"email_verified,use_zero"`
 	EmailVerificationAttempts int       `pg:"email_verification_attempts,use_zero"`
-	EmailVerificationToken  string    `pg:"email_verification_token"`
-	EmailVerificationSentAt time.Time `pg:"email_verification_sent_at"`
-	CreatedOrRestored       bool      `pg:"-"`
-	UpdatedAt               time.Time
-	CreatedAt               time.Time
-	DeletedAt               time.Time
+	EmailVerificationToken    string    `pg:"email_verification_token"`
+	EmailVerificationSentAt   time.Time `pg:"email_verification_sent_at"`
+	CreatedOrRestored         bool      `pg:"-"`
+	UpdatedAt                 time.Time
+	CreatedAt                 time.Time
+	DeletedAt                 time.Time
 }
 
 // BeforeInsert is Pre-Insert hook that creates new

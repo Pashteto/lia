@@ -20,10 +20,21 @@ const verificationResendCooldown = 60 * time.Second
 // ErrVerificationCooldown is returned when a code was sent less than the cooldown ago.
 var ErrVerificationCooldown = errors.New("verification code recently sent")
 
-const verificationCodeTTL = 15 * time.Minute
+// 24h: the code arrives unannounced, so a short clock strands users who don't
+// check mail immediately. Brute force is bounded by verificationMaxAttempts
+// below, not by this TTL.
+const verificationCodeTTL = 24 * time.Hour
+
+// verificationMaxAttempts caps wrong guesses per issued code. A 6-digit code is
+// 1,000,000 combinations; without this cap the TTL is the only bound.
+const verificationMaxAttempts = 5
 
 // ErrVerificationCodeExpired is returned when a matching code is older than the TTL.
 var ErrVerificationCodeExpired = errors.New("verification code expired")
+
+// ErrVerificationTooManyAttempts is returned once a code has been guessed wrong
+// verificationMaxAttempts times. The code is dead; the user must resend.
+var ErrVerificationTooManyAttempts = errors.New("verification attempts exceeded")
 
 // newVerificationCode returns a cryptographically-random 6-digit numeric code
 // as a zero-padded string (e.g. "042173").
@@ -55,8 +66,9 @@ func (u *UsersService) RequestEmailVerification(ctx context.Context, email strin
 
 	user.EmailVerificationToken = newVerificationCode()
 	user.EmailVerificationSentAt = time.Now()
+	user.EmailVerificationAttempts = 0 // a new code gets a fresh guess budget
 	if err := u.repository.UpdateUserBy(ctx, user, repository.Email,
-		"email_verification_token", "email_verification_sent_at"); err != nil {
+		"email_verification_token", "email_verification_sent_at", "email_verification_attempts"); err != nil {
 		return fmt.Errorf("persist code %s: %w", email, err)
 	}
 
@@ -72,17 +84,40 @@ func (u *UsersService) VerifyEmail(ctx context.Context, email, token string) err
 	if err := u.repository.GetUser(ctx, user, repository.Email); err != nil {
 		return fmt.Errorf("lookup user %s: %w", email, err)
 	}
+	// ORDER IS LOAD-BEARING: this MUST precede the token comparison. Lockout
+	// clears the token, so a later check would fall into the mismatch branch and
+	// report ErrVerificationTokenInvalid — telling a locked-out user "wrong code"
+	// forever with no hint that resending is the way out.
+	if user.EmailVerificationAttempts >= verificationMaxAttempts {
+		return ErrVerificationTooManyAttempts
+	}
+
 	if token == "" || user.EmailVerificationToken != token {
+		user.EmailVerificationAttempts++
+		cols := []string{"email_verification_attempts"}
+		if user.EmailVerificationAttempts >= verificationMaxAttempts {
+			user.EmailVerificationToken = "" // burn the code
+			cols = append(cols, "email_verification_token")
+		}
+		if err := u.repository.UpdateUserBy(ctx, user, repository.Email, cols...); err != nil {
+			return fmt.Errorf("persist attempt %s: %w", email, err)
+		}
+		if user.EmailVerificationAttempts >= verificationMaxAttempts {
+			return ErrVerificationTooManyAttempts
+		}
 		return ErrVerificationTokenInvalid
 	}
+
 	if user.EmailVerificationSentAt.IsZero() ||
 		time.Since(user.EmailVerificationSentAt) > verificationCodeTTL {
 		return ErrVerificationCodeExpired
 	}
+
 	user.EmailVerified = true
 	user.EmailVerificationToken = ""
+	user.EmailVerificationAttempts = 0
 	if err := u.repository.UpdateUserBy(ctx, user, repository.Email,
-		"email_verified", "email_verification_token"); err != nil {
+		"email_verified", "email_verification_token", "email_verification_attempts"); err != nil {
 		return fmt.Errorf("mark verified %s: %w", email, err)
 	}
 	return nil

@@ -25,7 +25,7 @@ export default function RootLayout({
             keep the explicit choice winning over prefers-color-scheme. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("theme");if(t!=="light"&&t!=="dark"){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.classList.add(t);}catch(e){}})();`,
+            __html: `(function(){try{var t=localStorage.getItem("theme");if(t!=="light"&&t!=="dark"){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";localStorage.setItem("theme",t);}document.documentElement.classList.add(t);}catch(e){}})();`,
           }}
         />
       </head>

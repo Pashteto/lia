@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { requestVerification, verifyEmail } from "@/lib/api";
+import {
+  requestVerification,
+  verifyEmail,
+  VERIFICATION_EXPIRED,
+  VERIFICATION_ATTEMPTS_EXCEEDED,
+} from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
 const inputClass =
@@ -38,7 +43,11 @@ export default function VerifyPage() {
       await refresh(); // re-fetch /auth/me so emailVerified updates before navigating
       router.push("/"); // verified; caller flows resume
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка проверки кода");
+      const m = err instanceof Error ? err.message : "";
+      if (m === VERIFICATION_EXPIRED) setError("Код истёк. Запросите новый.");
+      else if (m === VERIFICATION_ATTEMPTS_EXCEEDED)
+        setError("Код заблокирован после 5 попыток. Запросите новый.");
+      else setError("Неверный код.");
     } finally {
       setBusy(false);
     }

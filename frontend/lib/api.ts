@@ -593,6 +593,10 @@ function authHeaders(): HeadersInit {
 /** Thrown by gated write calls when the backend returns 403 `{"code":"email_not_verified"}`. */
 export const EMAIL_NOT_VERIFIED = "EMAIL_NOT_VERIFIED";
 
+export const VERIFICATION_EXPIRED = "VERIFICATION_EXPIRED";
+export const VERIFICATION_INVALID = "VERIFICATION_INVALID";
+export const VERIFICATION_ATTEMPTS_EXCEEDED = "VERIFICATION_ATTEMPTS_EXCEEDED";
+
 export async function getMe(): Promise<{
   id: string;
   email: string;
@@ -629,7 +633,11 @@ export async function verifyEmail(email: string, code: string): Promise<void> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, code }),
   });
-  if (!res.ok && res.status !== 204) throw new Error("Неверный или просроченный код");
+  if (res.ok || res.status === 204) return;
+  const b = await res.json().catch(() => null);
+  if (b?.code === "verification_expired") throw new Error(VERIFICATION_EXPIRED);
+  if (b?.code === "verification_attempts_exceeded") throw new Error(VERIFICATION_ATTEMPTS_EXCEEDED);
+  throw new Error(VERIFICATION_INVALID);
 }
 
 export async function getAdminOverview(): Promise<{

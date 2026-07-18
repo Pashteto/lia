@@ -9,7 +9,7 @@
 > - **Live-verified (API):** `/`, `/auth/verify`, `/map`, `api…/events?limit=1` all 200; gateguard gRPC :9090 clean; **new proxy path live** — `POST /auth/verify-email` (ROOT, not `/api/v1/`) with a bogus code → `{"code":"verification_invalid","message":"Неверный код."}` 400.
 > - **NOT yet verified:** the browser E2E — a real signup → «Проверьте почту» confirmation → banner → enter emailed code → both clear. Needs a **real SendPulse signup** (Claude cannot create accounts / enter passwords; the human signs up, logs are watched). GateGuard only logs on send *failure*, so log silence = success; SendPulse → SMTP → Sending History is the authoritative record.
 > - **Deferred (unchanged, out of scope, handoff §7):** invite expiry not enforced on accept; re-inviting a pending email emails a dead link (`ON CONFLICT DO NOTHING`); `RequestEmailVerification` has no per-IP rate limit (60s per-account cooldown only). Final review Minors (plan-mandated, not fixed): proxy `default` branch maps infra `codes.Unknown/Unavailable` to "Неверный код." (a 503 branch would be nicer); proxy RU message strings duplicate frontend copy.
-> - **Still local:** the 8 commits are on `main` but **NOT pushed to `origin`** (origin/main = `653c058`). Push when ready.
+> - **Pushed:** `origin/main` = **`f1c9669`** (in sync; the 8 feature commits + docs pushed 2026-07-18).
 >
 > _Prior current-state blocks below remain accurate for their features; the DB/image facts above supersede older ones._
 

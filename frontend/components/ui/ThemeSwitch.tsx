@@ -18,10 +18,14 @@ function subscribe(callback: () => void) {
   };
 }
 
-// The pre-hydration inline script in layout.tsx resolves the class on <html>;
-// we read it back as the source of truth.
+// The pre-hydration inline script in layout.tsx resolves the theme onto the
+// <html data-theme> attribute; we read it back as the source of truth. (An
+// attribute, not a class, so React doesn't strip it on hydration — see
+// layout.tsx / globals.css.)
 function getSnapshot(): Theme {
-  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+  return document.documentElement.getAttribute("data-theme") === "dark"
+    ? "dark"
+    : "light";
 }
 
 // SSR has no DOM; default to light to match the server-rendered markup.
@@ -30,9 +34,7 @@ function getServerSnapshot(): Theme {
 }
 
 function applyTheme(next: Theme) {
-  const root = document.documentElement;
-  root.classList.toggle("dark", next === "dark");
-  root.classList.toggle("light", next === "light");
+  document.documentElement.setAttribute("data-theme", next);
   try {
     localStorage.setItem("theme", next);
   } catch {
@@ -48,10 +50,10 @@ function applyTheme(next: Theme) {
  * opposite side. Track tint shifts warm-day ↔ deep-night so the control reads
  * the mode at a glance.
  *
- * Applies an explicit `.light`/`.dark` class on <html> so the choice wins over
+ * Sets an explicit `data-theme` attribute on <html> so the choice wins over
  * the OS `prefers-color-scheme` (see globals.css) and persists it to
- * localStorage. `useSyncExternalStore` reads the class set by the pre-hydration
- * script in layout.tsx without a hydration mismatch.
+ * localStorage. `useSyncExternalStore` reads the attribute set by the
+ * pre-hydration script in layout.tsx without a hydration mismatch.
  */
 export function ThemeSwitch() {
   const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);

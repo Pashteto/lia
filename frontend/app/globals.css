@@ -8,8 +8,12 @@
  * Do NOT bundle SF Pro as a webfont — system stack only (DESIGN.md Legal note).
  */
 
-/* Enable a class-based dark variant in addition to the OS preference. */
-@custom-variant dark (&:where(.dark, .dark *));
+/* Enable an explicit dark variant (via the [data-theme] attribute on <html>) in
+ * addition to the OS preference. An attribute is used rather than a class
+ * because React controls <html>'s className and strips a script-added class on
+ * hydration, whereas it leaves an attribute it doesn't render untouched — so the
+ * explicit choice survives a full page load on every route. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 :root {
   /* Backgrounds */
@@ -37,11 +41,11 @@
 }
 
 /* Follow the OS only when the user hasn't made an explicit choice. The
- * `:not(.light)` guard lets the `.light` class force light on a dark-mode OS
- * (without it the media query and `.dark` set identical values, so the toggle
- * had no visible effect — see ThemeToggle). */
+ * `:not([data-theme="light"])` guard lets an explicit light choice force light
+ * on a dark-mode OS (without it the media query and the dark override set
+ * identical values, so the toggle had no visible effect — see ThemeSwitch). */
 @media (prefers-color-scheme: dark) {
-  :root:not(.light) {
+  :root:not([data-theme="light"]) {
     --bg: #000000;
     --bg-grouped: #000000; /* intentional per UIKit: grouped == base in dark */
     --bg-secondary: #1c1c1e;
@@ -57,8 +61,8 @@
   }
 }
 
-/* Explicit class override (wins over OS preference). */
-.dark {
+/* Explicit dark override (wins over OS preference). */
+:root[data-theme="dark"] {
   --bg: #000000;
   --bg-grouped: #000000;
   --bg-secondary: #1c1c1e;

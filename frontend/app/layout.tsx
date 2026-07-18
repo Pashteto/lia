@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Providers } from "./providers";
 import { TabBar } from "@/components/ui/TabBar";
+import { VerifyEmailBanner } from "@/components/VerifyEmailBanner";
 import "./globals.css";
 
 // No webfont import: the design system uses the system font stack only
@@ -29,7 +30,10 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full bg-bg-grouped text-label">
-        <Providers>{children}</Providers>
+        <Providers>
+          <VerifyEmailBanner />
+          {children}
+        </Providers>
         <TabBar />
       </body>
     </html>

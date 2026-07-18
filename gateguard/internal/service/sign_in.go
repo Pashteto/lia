@@ -103,7 +103,7 @@ func (u *UsersService) SignInOAuth(ctx context.Context, user *models.User) ([]by
 		u.log.ErrorCtx(ctx, err, "error occurred while trying to update user with login ip")
 	}
 
-	token, err := u.createJWT(user)
+	token, err := u.createJWT(ctx, user)
 	if err != nil {
 		u.log.ErrorCtx(ctx, err, "create user session token")
 		return nil, nil, fmt.Errorf("create user session token: %w", err)
@@ -120,7 +120,7 @@ func (u *UsersService) getOrCreateUser(ctx context.Context, user *models.User) e
 
 		err = u.repository.CreateUser(ctx, user)
 		if err != nil {
-			u.log.ErrorCtx(ctx, err, fmt.Sprintf("create user %s", user.Email))
+			u.log.ErrorCtx(ctx, err, "create user %s", user.Email)
 			return fmt.Errorf("create user %s: %w", user.Email, err)
 		}
 		user.CreatedOrRestored = true
@@ -129,7 +129,7 @@ func (u *UsersService) getOrCreateUser(ctx context.Context, user *models.User) e
 	}
 
 	if err != nil {
-		u.log.ErrorCtx(ctx, err, fmt.Sprintf("get user %s from database", user.Email))
+		u.log.ErrorCtx(ctx, err, "get user %s from database", user.Email)
 		return fmt.Errorf("get user %s from database: %w", user.Email, err)
 	}
 

@@ -17,7 +17,7 @@ import (
 	"github.com/gateway-fm/scriptorium/transactions"
 	version "github.com/gateway-fm/scriptorium/versioner"
 	"github.com/go-pg/pg/v10"
-	"github.com/go-redis/redis"
+	"github.com/redis/go-redis/v9"
 
 	"gateguard/config"
 	"gateguard/internal/pkg/clients/organizations"
@@ -143,7 +143,7 @@ func (app *App) initKeyValue(cfg *config.Redis) (err error) {
 
 	app.keyValue = nosql.New(opts)
 
-	if _, err = app.keyValue.Ping(); err != nil {
+	if _, err = app.keyValue.Ping(app.ctx); err != nil {
 		return fmt.Errorf("init KeyValue: %w", err)
 	}
 

@@ -3,6 +3,8 @@
 package mocks
 
 import (
+	"context"
+
 	"github.com/andskur/gatekeeper"
 
 	mock "github.com/stretchr/testify/mock"
@@ -21,9 +23,9 @@ func (_m *ISessions) EXPECT() *ISessions_Expecter {
 	return &ISessions_Expecter{mock: &_m.Mock}
 }
 
-// Create provides a mock function with given fields: data
-func (_m *ISessions) Create(data map[string]interface{}) (sessions.Token, error) {
-	ret := _m.Called(data)
+// Create provides a mock function with given fields: ctx, data
+func (_m *ISessions) Create(ctx context.Context, data map[string]interface{}) (sessions.Token, error) {
+	ret := _m.Called(ctx, data)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Create")
@@ -31,19 +33,19 @@ func (_m *ISessions) Create(data map[string]interface{}) (sessions.Token, error)
 
 	var r0 sessions.Token
 	var r1 error
-	if rf, ok := ret.Get(0).(func(map[string]interface{}) (sessions.Token, error)); ok {
-		return rf(data)
+	if rf, ok := ret.Get(0).(func(context.Context, map[string]interface{}) (sessions.Token, error)); ok {
+		return rf(ctx, data)
 	}
-	if rf, ok := ret.Get(0).(func(map[string]interface{}) sessions.Token); ok {
-		r0 = rf(data)
+	if rf, ok := ret.Get(0).(func(context.Context, map[string]interface{}) sessions.Token); ok {
+		r0 = rf(ctx, data)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(sessions.Token)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(map[string]interface{}) error); ok {
-		r1 = rf(data)
+	if rf, ok := ret.Get(1).(func(context.Context, map[string]interface{}) error); ok {
+		r1 = rf(ctx, data)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -57,14 +59,15 @@ type ISessions_Create_Call struct {
 }
 
 // Create is a helper method to define mock.On call
+//   - ctx context.Context
 //   - data map[string]interface{}
-func (_e *ISessions_Expecter) Create(data interface{}) *ISessions_Create_Call {
-	return &ISessions_Create_Call{Call: _e.mock.On("Create", data)}
+func (_e *ISessions_Expecter) Create(ctx interface{}, data interface{}) *ISessions_Create_Call {
+	return &ISessions_Create_Call{Call: _e.mock.On("Create", ctx, data)}
 }
 
-func (_c *ISessions_Create_Call) Run(run func(data map[string]interface{})) *ISessions_Create_Call {
+func (_c *ISessions_Create_Call) Run(run func(ctx context.Context, data map[string]interface{})) *ISessions_Create_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(map[string]interface{}))
+		run(args[0].(context.Context), args[1].(map[string]interface{}))
 	})
 	return _c
 }
@@ -74,22 +77,22 @@ func (_c *ISessions_Create_Call) Return(_a0 sessions.Token, _a1 error) *ISession
 	return _c
 }
 
-func (_c *ISessions_Create_Call) RunAndReturn(run func(map[string]interface{}) (sessions.Token, error)) *ISessions_Create_Call {
+func (_c *ISessions_Create_Call) RunAndReturn(run func(context.Context, map[string]interface{}) (sessions.Token, error)) *ISessions_Create_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// Delete provides a mock function with given fields: token
-func (_m *ISessions) Delete(token sessions.Token) error {
-	ret := _m.Called(token)
+// Delete provides a mock function with given fields: ctx, token
+func (_m *ISessions) Delete(ctx context.Context, token sessions.Token) error {
+	ret := _m.Called(ctx, token)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Delete")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(sessions.Token) error); ok {
-		r0 = rf(token)
+	if rf, ok := ret.Get(0).(func(context.Context, sessions.Token) error); ok {
+		r0 = rf(ctx, token)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -103,14 +106,15 @@ type ISessions_Delete_Call struct {
 }
 
 // Delete is a helper method to define mock.On call
+//   - ctx context.Context
 //   - token sessions.Token
-func (_e *ISessions_Expecter) Delete(token interface{}) *ISessions_Delete_Call {
-	return &ISessions_Delete_Call{Call: _e.mock.On("Delete", token)}
+func (_e *ISessions_Expecter) Delete(ctx interface{}, token interface{}) *ISessions_Delete_Call {
+	return &ISessions_Delete_Call{Call: _e.mock.On("Delete", ctx, token)}
 }
 
-func (_c *ISessions_Delete_Call) Run(run func(token sessions.Token)) *ISessions_Delete_Call {
+func (_c *ISessions_Delete_Call) Run(run func(ctx context.Context, token sessions.Token)) *ISessions_Delete_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(sessions.Token))
+		run(args[0].(context.Context), args[1].(sessions.Token))
 	})
 	return _c
 }
@@ -120,14 +124,14 @@ func (_c *ISessions_Delete_Call) Return(_a0 error) *ISessions_Delete_Call {
 	return _c
 }
 
-func (_c *ISessions_Delete_Call) RunAndReturn(run func(sessions.Token) error) *ISessions_Delete_Call {
+func (_c *ISessions_Delete_Call) RunAndReturn(run func(context.Context, sessions.Token) error) *ISessions_Delete_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// Get provides a mock function with given fields: token
-func (_m *ISessions) Get(token sessions.Token) (map[string]interface{}, error) {
-	ret := _m.Called(token)
+// Get provides a mock function with given fields: ctx, token
+func (_m *ISessions) Get(ctx context.Context, token sessions.Token) (map[string]interface{}, error) {
+	ret := _m.Called(ctx, token)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Get")
@@ -135,19 +139,19 @@ func (_m *ISessions) Get(token sessions.Token) (map[string]interface{}, error) {
 
 	var r0 map[string]interface{}
 	var r1 error
-	if rf, ok := ret.Get(0).(func(sessions.Token) (map[string]interface{}, error)); ok {
-		return rf(token)
+	if rf, ok := ret.Get(0).(func(context.Context, sessions.Token) (map[string]interface{}, error)); ok {
+		return rf(ctx, token)
 	}
-	if rf, ok := ret.Get(0).(func(sessions.Token) map[string]interface{}); ok {
-		r0 = rf(token)
+	if rf, ok := ret.Get(0).(func(context.Context, sessions.Token) map[string]interface{}); ok {
+		r0 = rf(ctx, token)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(map[string]interface{})
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(sessions.Token) error); ok {
-		r1 = rf(token)
+	if rf, ok := ret.Get(1).(func(context.Context, sessions.Token) error); ok {
+		r1 = rf(ctx, token)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -161,14 +165,15 @@ type ISessions_Get_Call struct {
 }
 
 // Get is a helper method to define mock.On call
+//   - ctx context.Context
 //   - token sessions.Token
-func (_e *ISessions_Expecter) Get(token interface{}) *ISessions_Get_Call {
-	return &ISessions_Get_Call{Call: _e.mock.On("Get", token)}
+func (_e *ISessions_Expecter) Get(ctx interface{}, token interface{}) *ISessions_Get_Call {
+	return &ISessions_Get_Call{Call: _e.mock.On("Get", ctx, token)}
 }
 
-func (_c *ISessions_Get_Call) Run(run func(token sessions.Token)) *ISessions_Get_Call {
+func (_c *ISessions_Get_Call) Run(run func(ctx context.Context, token sessions.Token)) *ISessions_Get_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(sessions.Token))
+		run(args[0].(context.Context), args[1].(sessions.Token))
 	})
 	return _c
 }
@@ -178,14 +183,14 @@ func (_c *ISessions_Get_Call) Return(data map[string]interface{}, err error) *IS
 	return _c
 }
 
-func (_c *ISessions_Get_Call) RunAndReturn(run func(sessions.Token) (map[string]interface{}, error)) *ISessions_Get_Call {
+func (_c *ISessions_Get_Call) RunAndReturn(run func(context.Context, sessions.Token) (map[string]interface{}, error)) *ISessions_Get_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// RefreshToken provides a mock function with given fields: oldToken
-func (_m *ISessions) RefreshToken(oldToken sessions.Token) (sessions.Token, error) {
-	ret := _m.Called(oldToken)
+// RefreshToken provides a mock function with given fields: ctx, oldToken
+func (_m *ISessions) RefreshToken(ctx context.Context, oldToken sessions.Token) (sessions.Token, error) {
+	ret := _m.Called(ctx, oldToken)
 
 	if len(ret) == 0 {
 		panic("no return value specified for RefreshToken")
@@ -193,19 +198,19 @@ func (_m *ISessions) RefreshToken(oldToken sessions.Token) (sessions.Token, erro
 
 	var r0 sessions.Token
 	var r1 error
-	if rf, ok := ret.Get(0).(func(sessions.Token) (sessions.Token, error)); ok {
-		return rf(oldToken)
+	if rf, ok := ret.Get(0).(func(context.Context, sessions.Token) (sessions.Token, error)); ok {
+		return rf(ctx, oldToken)
 	}
-	if rf, ok := ret.Get(0).(func(sessions.Token) sessions.Token); ok {
-		r0 = rf(oldToken)
+	if rf, ok := ret.Get(0).(func(context.Context, sessions.Token) sessions.Token); ok {
+		r0 = rf(ctx, oldToken)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(sessions.Token)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(sessions.Token) error); ok {
-		r1 = rf(oldToken)
+	if rf, ok := ret.Get(1).(func(context.Context, sessions.Token) error); ok {
+		r1 = rf(ctx, oldToken)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -219,14 +224,15 @@ type ISessions_RefreshToken_Call struct {
 }
 
 // RefreshToken is a helper method to define mock.On call
+//   - ctx context.Context
 //   - oldToken sessions.Token
-func (_e *ISessions_Expecter) RefreshToken(oldToken interface{}) *ISessions_RefreshToken_Call {
-	return &ISessions_RefreshToken_Call{Call: _e.mock.On("RefreshToken", oldToken)}
+func (_e *ISessions_Expecter) RefreshToken(ctx interface{}, oldToken interface{}) *ISessions_RefreshToken_Call {
+	return &ISessions_RefreshToken_Call{Call: _e.mock.On("RefreshToken", ctx, oldToken)}
 }
 
-func (_c *ISessions_RefreshToken_Call) Run(run func(oldToken sessions.Token)) *ISessions_RefreshToken_Call {
+func (_c *ISessions_RefreshToken_Call) Run(run func(ctx context.Context, oldToken sessions.Token)) *ISessions_RefreshToken_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(sessions.Token))
+		run(args[0].(context.Context), args[1].(sessions.Token))
 	})
 	return _c
 }
@@ -236,7 +242,7 @@ func (_c *ISessions_RefreshToken_Call) Return(_a0 sessions.Token, _a1 error) *IS
 	return _c
 }
 
-func (_c *ISessions_RefreshToken_Call) RunAndReturn(run func(sessions.Token) (sessions.Token, error)) *ISessions_RefreshToken_Call {
+func (_c *ISessions_RefreshToken_Call) RunAndReturn(run func(context.Context, sessions.Token) (sessions.Token, error)) *ISessions_RefreshToken_Call {
 	_c.Call.Return(run)
 	return _c
 }

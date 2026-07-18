@@ -8,7 +8,6 @@ import (
 	"github.com/gateway-fm/scriptorium/clog"
 	middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	mwRecovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
-	grpcSentry "github.com/johnbellone/grpc-middleware-sentry"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
@@ -89,7 +88,6 @@ func (s *Server) initServer(timeout string) error {
 	}
 
 	middlewares := middleware.ChainUnaryServer(
-		grpcSentry.UnaryServerInterceptor(),
 		mwRecovery.UnaryServerInterceptor(),
 	)
 

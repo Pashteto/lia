@@ -20,7 +20,7 @@ func (u *UsersService) UserByUUID(ctx context.Context, userUUID uuid.UUID) (user
 	user = &models.User{UUID: userUUID}
 
 	if err = u.repository.GetUser(ctx, user, repository.UserUUID); err != nil {
-		u.log.ErrorCtx(ctx, err, fmt.Sprintf("get user with uuid %s repository error", user.UUID.String()))
+		u.log.ErrorCtx(ctx, err, "get user with uuid %s repository error", user.UUID.String())
 		return nil, fmt.Errorf("get user %s from repository by UUID: %w", userUUID.String(), err)
 	}
 
@@ -35,7 +35,7 @@ func (u *UsersService) UserByEmail(ctx context.Context, email string) (user *mod
 	user = &models.User{Email: email}
 
 	if err = u.repository.GetUser(ctx, user, repository.Email); err != nil {
-		u.log.ErrorCtx(ctx, err, fmt.Sprintf("get user %s from database by email", email))
+		u.log.ErrorCtx(ctx, err, "get user %s from database by email", email)
 		return nil, fmt.Errorf("get user %s from database by email: %w", email, err)
 	}
 
@@ -63,7 +63,7 @@ func (u *UsersService) DeleteUser(ctx context.Context, token []byte) error {
 	user.DeletedAt = time.Now()
 
 	if err = u.repository.UpdateUserBy(ctx, user, repository.UserUUID, "status", "deleted_at"); err != nil {
-		u.log.ErrorCtx(ctx, err, fmt.Sprintf("update user %s status", user.UUID.String()))
+		u.log.ErrorCtx(ctx, err, "update user %s status", user.UUID.String())
 		return fmt.Errorf("update user %s status: %w", user.UUID.String(), err)
 	}
 	return nil
@@ -93,14 +93,14 @@ func (u *UsersService) UpdateRole(ctx context.Context, userUUID uuid.UUID, role 
 	}
 
 	if err := u.repository.UpdateUserBy(ctx, user, repository.Email, "role"); err != nil {
-		u.log.ErrorCtx(ctx, err, fmt.Sprintf("update user %s", user.UUID.String()))
+		u.log.ErrorCtx(ctx, err, "update user %s", user.UUID.String())
 		return fmt.Errorf("update user %s: %w", user.UUID.String(), err)
 	}
 
 	return nil
 }
 
-func (u *UsersService) createJWT(user *models.User) (token []byte, err error) {
+func (u *UsersService) createJWT(ctx context.Context, user *models.User) (token []byte, err error) {
 	// Special users with extended token lifetime (3 months)
 	specialUsers := []string{
 		"innovativeblock501@gmail.com",
@@ -112,7 +112,7 @@ func (u *UsersService) createJWT(user *models.User) (token []byte, err error) {
 			u.log.Info(fmt.Sprintf("Creating extended session token for special user: %s", user.Email))
 			// For special users, use the extended session if available
 			if u.extendedSession != nil {
-				return u.extendedSession.Create(user.ToJWT())
+				return u.extendedSession.Create(ctx, user.ToJWT())
 			} else {
 				u.log.Warn(fmt.Sprintf("Extended session not available for special user: %s", user.Email))
 			}
@@ -121,7 +121,7 @@ func (u *UsersService) createJWT(user *models.User) (token []byte, err error) {
 	}
 
 	u.log.Info(fmt.Sprintf("Creating regular session token for user: %s", user.Email))
-	return u.sessions.Create(user.ToJWT())
+	return u.sessions.Create(ctx, user.ToJWT())
 }
 
 func (u *UsersService) userUUIDFromToken(ctx context.Context, token []byte) (uuid.UUID, error) {
@@ -130,11 +130,11 @@ func (u *UsersService) userUUIDFromToken(ctx context.Context, token []byte) (uui
 	})
 
 	// Try regular session first
-	claims, err := u.sessions.Get(token)
+	claims, err := u.sessions.Get(ctx, token)
 	if err != nil {
 		// If regular session fails, try extended session
 		if u.extendedSession != nil {
-			claims, err = u.extendedSession.Get(token)
+			claims, err = u.extendedSession.Get(ctx, token)
 			if err != nil {
 				u.log.ErrorCtx(ctx, err, "get claims from token (both regular and extended sessions)")
 				return uuid.Nil, fmt.Errorf("check auth: %w", err)
@@ -226,7 +226,7 @@ func (u *UsersService) SetUsersPreferredStack(ctx context.Context, userUUID uuid
 	user.PreferredStacks = stacks
 
 	if err = u.repository.UpdateUserBy(ctx, user, repository.UserUUID, "preferred_stacks"); err != nil {
-		u.log.ErrorCtx(ctx, err, fmt.Sprintf("update user %s preferred stacks", user.UUID.String()))
+		u.log.ErrorCtx(ctx, err, "update user %s preferred stacks", user.UUID.String())
 
 		return fmt.Errorf("update user %s preferred stacks: %w", user.UUID.String(), err)
 	}
@@ -250,7 +250,7 @@ func (u *UsersService) SetUsersTrialUsed(ctx context.Context, userUUID uuid.UUID
 	user.TrialUsed = trialUsed
 
 	if err = u.repository.UpdateUserBy(ctx, user, repository.UserUUID, "trial_used"); err != nil {
-		u.log.ErrorCtx(ctx, err, fmt.Sprintf("update user %s used trial", user.UUID.String()))
+		u.log.ErrorCtx(ctx, err, "update user %s used trial", user.UUID.String())
 
 		return fmt.Errorf("update user %s used trial: %w", user.UUID.String(), err)
 	}

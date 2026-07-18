@@ -28,7 +28,7 @@ func (s *UseCaseSuite) Test_SignInOAuth_Success() {
 
 		s.repo.EXPECT().GetUser(mock.Anything, user, repository.Email).Return(nil).Once()
 		s.repo.EXPECT().UpdateUserBy(mock.Anything, user, repository.Email, ipKey).Return(nil).Once()
-		s.sessions.EXPECT().Create(user.ToJWT()).Return(tokenExpected, nil)
+		s.sessions.EXPECT().Create(mock.Anything, user.ToJWT()).Return(tokenExpected, nil)
 
 		tokenGot, user, err := s.service.SignInOAuth(s.ctx, user)
 		s.Require().NoError(err)
@@ -53,7 +53,7 @@ func (s *UseCaseSuite) Test_SignInOAuth_Success() {
 		s.repo.EXPECT().GetUser(mock.Anything, user, repository.Email).Return(repository.ErrUserNotFound).Once()
 		s.repo.EXPECT().CreateUser(mock.Anything, user).Return(nil).Once()
 		s.repo.EXPECT().UpdateUserBy(mock.Anything, user, repository.Email, ipKey).Return(nil).Once()
-		s.sessions.EXPECT().Create(user.ToJWT()).Return(tokenExpected, nil)
+		s.sessions.EXPECT().Create(mock.Anything, user.ToJWT()).Return(tokenExpected, nil)
 
 		tokenGot, user, err := s.service.SignInOAuth(s.ctx, user)
 		s.Require().NoError(err)

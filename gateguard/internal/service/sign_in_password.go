@@ -52,7 +52,7 @@ func (u *UsersService) SignUpWithPassword(ctx context.Context, email, name, plai
 
 	if errors.Is(err, repository.ErrUserNotFound) {
 		if cErr := u.repository.CreateUser(ctx, user); cErr != nil {
-			u.log.ErrorCtx(ctx, cErr, fmt.Sprintf("create user %s", email))
+			u.log.ErrorCtx(ctx, cErr, "create user %s", email)
 			return nil, nil, fmt.Errorf("create user %s: %w", email, cErr)
 		}
 		user.CreatedOrRestored = true
@@ -61,17 +61,17 @@ func (u *UsersService) SignUpWithPassword(ctx context.Context, email, name, plai
 		user.UUID = existing.UUID
 		if uErr := u.repository.UpdateUserBy(ctx, user, repository.Email,
 			"password_hash", "email_verification_token", "email_verification_sent_at", "email_verified", "name"); uErr != nil {
-			u.log.ErrorCtx(ctx, uErr, fmt.Sprintf("attach credentials %s", email))
+			u.log.ErrorCtx(ctx, uErr, "attach credentials %s", email)
 			return nil, nil, fmt.Errorf("attach credentials %s: %w", email, uErr)
 		}
 	}
 
 	if sErr := u.notificator.SendEmailVerification(ctx, email, code); sErr != nil {
 		// Do not fail signup if the email send fails; the user can request a resend.
-		u.log.ErrorCtx(ctx, sErr, fmt.Sprintf("send verification email %s", email))
+		u.log.ErrorCtx(ctx, sErr, "send verification email %s", email)
 	}
 
-	jwt, jErr := u.createJWT(user)
+	jwt, jErr := u.createJWT(ctx, user)
 	if jErr != nil {
 		u.log.ErrorCtx(ctx, jErr, "create user session token")
 		return nil, nil, fmt.Errorf("create session token: %w", jErr)
@@ -95,7 +95,7 @@ func (u *UsersService) SignInWithPassword(ctx context.Context, email, plain stri
 		return nil, nil, ErrInvalidCredentials
 	}
 
-	jwt, err := u.createJWT(user)
+	jwt, err := u.createJWT(ctx, user)
 	if err != nil {
 		u.log.ErrorCtx(ctx, err, "create user session token")
 		return nil, nil, fmt.Errorf("create session token: %w", err)

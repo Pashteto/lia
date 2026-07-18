@@ -8,6 +8,8 @@ import (
 	"net/http"
 
 	authpkg "github.com/Pashteto/lia/internal/http/auth"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // Deps carries the signer used to reach GateGuard.
@@ -34,6 +36,12 @@ func writeErr(w http.ResponseWriter, code int, msg string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	_ = json.NewEncoder(w).Encode(map[string]string{"message": msg})
+}
+
+func writeErrCode(w http.ResponseWriter, httpCode int, code, msg string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(httpCode)
+	_ = json.NewEncoder(w).Encode(map[string]string{"code": code, "message": msg})
 }
 
 func (h *handler) request(w http.ResponseWriter, r *http.Request) {
@@ -69,7 +77,18 @@ func (h *handler) verify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := h.deps.Signer.VerifyEmail(r.Context(), body.Email, body.Code); err != nil {
-		writeErr(w, http.StatusBadRequest, "invalid or expired code")
+		// status.FromError unwraps %w via errors.As (grpc-go v1.81.1), so the
+		// code set by GateGuard survives signer.go's fmt.Errorf wrap.
+		switch status.Code(err) {
+		case codes.ResourceExhausted:
+			writeErrCode(w, http.StatusTooManyRequests, "verification_attempts_exceeded",
+				"Код заблокирован после 5 попыток. Запросите новый.")
+		case codes.DeadlineExceeded:
+			writeErrCode(w, http.StatusBadRequest, "verification_expired",
+				"Код истёк. Запросите новый.")
+		default:
+			writeErrCode(w, http.StatusBadRequest, "verification_invalid", "Неверный код.")
+		}
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)

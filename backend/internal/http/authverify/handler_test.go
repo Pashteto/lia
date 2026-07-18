@@ -2,10 +2,15 @@ package authverify
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type fakeSigner struct {
@@ -77,6 +82,42 @@ func TestVerifyEmail_SignerError_Returns400(t *testing.T) {
 
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400, got %d", rec.Code)
+	}
+}
+
+func TestVerify_MapsGRPCCodesToJSONCodes(t *testing.T) {
+	cases := []struct {
+		name     string
+		grpcErr  error
+		wantHTTP int
+		wantCode string
+	}{
+		{"expired", status.Error(codes.DeadlineExceeded, "x"), http.StatusBadRequest, "verification_expired"},
+		{"invalid", status.Error(codes.InvalidArgument, "x"), http.StatusBadRequest, "verification_invalid"},
+		{"locked", status.Error(codes.ResourceExhausted, "x"), http.StatusTooManyRequests, "verification_attempts_exceeded"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			wrapped := fmt.Errorf("gateguard verify email: %w", tc.grpcErr)
+			h := NewHandler(Deps{Signer: &fakeSigner{err: wrapped}})
+			req := httptest.NewRequest("POST", "/auth/verify-email",
+				strings.NewReader(`{"email":"a@b.c","code":"123456"}`))
+			rec := httptest.NewRecorder()
+			h.ServeHTTP(rec, req)
+
+			if rec.Code != tc.wantHTTP {
+				t.Fatalf("status: want %d, got %d", tc.wantHTTP, rec.Code)
+			}
+			var body struct {
+				Code string `json:"code"`
+			}
+			if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
+				t.Fatalf("decode: %v", err)
+			}
+			if body.Code != tc.wantCode {
+				t.Fatalf("code: want %q, got %q", tc.wantCode, body.Code)
+			}
+		})
 	}
 }
 

@@ -2,8 +2,13 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
+	"gateguard/internal/service"
 	proto "gateguard/protocols/gateguard"
 )
 
@@ -51,7 +56,16 @@ func (h *GateguardHandlers) VerifyEmail(ctx context.Context, req *proto.VerifyEm
 
 	if err := h.srv.VerifyEmail(ctx, req.Email, req.Token); err != nil {
 		h.log.ErrorCtx(ctx, err, "Failed to verify email")
-		return nil, fmt.Errorf("verify email: %w", err)
+		switch {
+		case errors.Is(err, service.ErrVerificationTooManyAttempts):
+			return nil, status.Error(codes.ResourceExhausted, "verification attempts exceeded")
+		case errors.Is(err, service.ErrVerificationCodeExpired):
+			return nil, status.Error(codes.DeadlineExceeded, "verification code expired")
+		case errors.Is(err, service.ErrVerificationTokenInvalid):
+			return nil, status.Error(codes.InvalidArgument, "verification token invalid")
+		default:
+			return nil, fmt.Errorf("verify email: %w", err)
+		}
 	}
 
 	return &proto.Empty{}, nil

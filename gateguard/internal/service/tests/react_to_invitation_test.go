@@ -38,10 +38,12 @@ func (s *UseCaseSuite) Test_ReactToInvitation_Success() {
 				*model = *cp
 			}).Return(nil).Once()
 
-		s.oMock.EXPECT().AddUserToOrganization(mock.Anything, organizations.AddUserParams{
+		s.oMock.EXPECT().UpdateUserRoleInOrganization(mock.Anything, organizations.UpdateUserRoleParams{
 			OrganizationUUID: *initialInvitation.Organization,
-			UserUUID:         initialInvitee.UUID,
-			Role:             omodels.StringToRoleType(initialInvitation.InviteeRole),
+			Email:            initialInvitee.Email,
+			UserUUID:         &initialInvitee.UUID,
+			Role:             pointer.Ref(omodels.StringToRoleType(initialInvitation.InviteeRole)),
+			Status:           pointer.Ref(omodels.UserStatusAccepted),
 		}).Return(&omodels.Organization{}, nil).Once()
 
 		cp := &initialInvitation
@@ -80,6 +82,11 @@ func (s *UseCaseSuite) Test_ReactToInvitation_Success() {
 
 				*model = *cp
 			}).Return(nil).Once()
+
+		s.oMock.EXPECT().RemoveUserFromOrganization(mock.Anything, organizations.RemoveUserParams{
+			OrganizationUUID: *initialInvitation.Organization,
+			Email:            initialInvitee.Email,
+		}).Return(nil).Once()
 
 		cp := &initialInvitation
 		cp.Status = models.Declined
@@ -193,10 +200,12 @@ func (s *UseCaseSuite) Test_ReactToInvitation_Errors() {
 				*model = cp
 			}).Return(nil).Once()
 
-		s.oMock.EXPECT().AddUserToOrganization(mock.Anything, organizations.AddUserParams{
+		s.oMock.EXPECT().UpdateUserRoleInOrganization(mock.Anything, organizations.UpdateUserRoleParams{
 			OrganizationUUID: *invitation.Organization,
-			UserUUID:         invitee.UUID,
-			Role:             omodels.StringToRoleType(invitation.InviteeRole),
+			Email:            invitee.Email,
+			UserUUID:         &invitee.UUID,
+			Role:             pointer.Ref(omodels.StringToRoleType(invitation.InviteeRole)),
+			Status:           pointer.Ref(omodels.UserStatusAccepted),
 		}).Return(nil, organizations.ErrOrganizationDeleted).Once()
 
 		err := s.service.ReactToInvitation(s.ctx, service.ReactToInvitationIn{
@@ -221,10 +230,12 @@ func (s *UseCaseSuite) Test_ReactToInvitation_Errors() {
 				*model = cp
 			}).Return(nil).Once()
 
-		s.oMock.EXPECT().AddUserToOrganization(mock.Anything, organizations.AddUserParams{
+		s.oMock.EXPECT().UpdateUserRoleInOrganization(mock.Anything, organizations.UpdateUserRoleParams{
 			OrganizationUUID: *invitation.Organization,
-			UserUUID:         invitee.UUID,
-			Role:             omodels.StringToRoleType(invitation.InviteeRole),
+			Email:            invitee.Email,
+			UserUUID:         &invitee.UUID,
+			Role:             pointer.Ref(omodels.StringToRoleType(invitation.InviteeRole)),
+			Status:           pointer.Ref(omodels.UserStatusAccepted),
 		}).Return(nil, organizations.ErrPermissionDenied).Once()
 
 		err := s.service.ReactToInvitation(s.ctx, service.ReactToInvitationIn{
@@ -249,10 +260,12 @@ func (s *UseCaseSuite) Test_ReactToInvitation_Errors() {
 				*model = cp
 			}).Return(nil).Once()
 
-		s.oMock.EXPECT().AddUserToOrganization(mock.Anything, organizations.AddUserParams{
+		s.oMock.EXPECT().UpdateUserRoleInOrganization(mock.Anything, organizations.UpdateUserRoleParams{
 			OrganizationUUID: *invitation.Organization,
-			UserUUID:         invitee.UUID,
-			Role:             omodels.StringToRoleType(invitation.InviteeRole),
+			Email:            invitee.Email,
+			UserUUID:         &invitee.UUID,
+			Role:             pointer.Ref(omodels.StringToRoleType(invitation.InviteeRole)),
+			Status:           pointer.Ref(omodels.UserStatusAccepted),
 		}).Return(nil, nil).Once()
 
 		s.repo.EXPECT().UpdateInvitationBy(mock.Anything, mock.MatchedBy(func(i *models.Invitation) bool {

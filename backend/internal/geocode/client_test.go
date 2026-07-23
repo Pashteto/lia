@@ -59,3 +59,30 @@ func TestGeocodeBlankQuerySkipsRequest(t *testing.T) {
 		t.Fatalf("len = %d, want 0", len(got))
 	}
 }
+
+func TestSearchPlacesParsesBusinesses(t *testing.T) {
+	body := `{"features":[
+      {"geometry":{"coordinates":[30.316,59.933]},
+       "properties":{"name":"Дом Радио","description":"Санкт-Петербург",
+       "CompanyMetaData":{"name":"Дом Радио","address":"наб. реки Мойки, 20"}}}
+    ]}`
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("type") != "biz" {
+			t.Errorf("type=%q", r.URL.Query().Get("type"))
+		}
+		_, _ = w.Write([]byte(body))
+	}))
+	defer srv.Close()
+	c := NewClient("").WithPlacesKey("k")
+	c.placesEndpoint = srv.URL // test hook
+	got, err := c.SearchPlaces(context.Background(), "Дом Радио")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 1 || got[0].Label != "Дом Радио · наб. реки Мойки, 20" {
+		t.Fatalf("got %+v", got)
+	}
+	if got[0].Lat != 59.933 || got[0].Lon != 30.316 {
+		t.Fatalf("coords %+v", got[0])
+	}
+}

@@ -125,7 +125,8 @@ type SMTPConfig struct {
 
 // GeocoderConfig holds the Yandex Geocoder HTTP API credentials.
 type GeocoderConfig struct {
-	Key string `mapstructure:"key"`
+	Key       string `mapstructure:"key"`
+	PlacesKey string `mapstructure:"places_key"`
 }
 
 // CleanupConfig holds orphan-file cleanup settings.

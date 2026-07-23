@@ -15,6 +15,7 @@ import (
 // Geocoder is the subset of *geo.Client the handler needs (for test injection).
 type Geocoder interface {
 	Geocode(ctx context.Context, q string) ([]geo.Result, error)
+	SearchPlaces(ctx context.Context, q string) ([]geo.Result, error)
 }
 
 // Deps are the handler's injected dependencies.
@@ -33,6 +34,7 @@ func NewHandler(deps Deps) http.Handler {
 	h := &handler{deps: deps}
 	h.mux = http.NewServeMux()
 	h.mux.HandleFunc("GET /api/v1/geocode", h.geocode)
+	h.mux.HandleFunc("GET /api/v1/places", h.places)
 	return h
 }
 
@@ -61,6 +63,19 @@ func (h *handler) geocode(w http.ResponseWriter, r *http.Request) {
 	results, err := h.deps.Client.Geocode(r.Context(), r.URL.Query().Get("q"))
 	if err != nil {
 		writeErr(w, http.StatusServiceUnavailable, "geocode_failed")
+		return
+	}
+	writeJSON(w, http.StatusOK, results)
+}
+
+func (h *handler) places(w http.ResponseWriter, r *http.Request) {
+	if h.principal(r) == nil {
+		writeErr(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	results, err := h.deps.Client.SearchPlaces(r.Context(), r.URL.Query().Get("q"))
+	if err != nil {
+		writeErr(w, http.StatusServiceUnavailable, "places_failed")
 		return
 	}
 	writeJSON(w, http.StatusOK, results)

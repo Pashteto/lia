@@ -254,6 +254,7 @@ func (app *App) registerModules() error {
 		httpModule.SetOrganizers(app.organizersSvc)
 		httpModule.SetFollows(app.followsSvc)
 		httpModule.SetGeocoder(app.config.Geocoder.Key)
+		httpModule.SetPlaces(app.config.Geocoder.PlacesKey)
 
 		// Wire moderation + complaints services (require DB; reuse the same *pg.DB
 		// already used by the events and rsvp repositories — no second pool opened).

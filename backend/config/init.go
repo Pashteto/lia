@@ -125,6 +125,8 @@ func setDefaults() {
 	// Geocoder defaults (Yandex Geocoder HTTP API key; secret comes from env)
 	viper.SetDefault("geocoder.key", "")
 	viper.BindEnv("geocoder.key", "YANDEX_GEOCODER_KEY") //nolint:errcheck
+	viper.SetDefault("geocoder.places_key", "")
+	viper.BindEnv("geocoder.places_key", "YANDEX_PLACES_KEY") //nolint:errcheck
 
 	// Cleanup module defaults
 	viper.SetDefault("cleanup.enabled", true)

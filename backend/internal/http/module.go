@@ -69,6 +69,7 @@ type Module struct {
 	invitations        invitationsdomain.Service
 	invitationsBaseURL string
 	geocoderKey        string
+	placesKey          string
 	server             *httpserver.Server
 	api                *operations.LiaAPIAPI
 	handler            *http.Handler
@@ -152,6 +153,9 @@ func (m *Module) SetInvitations(svc invitationsdomain.Service, baseURL string) {
 
 // SetGeocoder injects the Yandex Geocoder API key. Call before Init.
 func (m *Module) SetGeocoder(key string) { m.geocoderKey = key }
+
+// SetPlaces injects the Yandex Places (Search) API key. Call before Init.
+func (m *Module) SetPlaces(key string) { m.placesKey = key }
 
 // Name returns the module identifier.
 func (m *Module) Name() string {
@@ -382,12 +386,12 @@ func (m *Module) initAPI() error {
 		})
 	}
 
-	// Build the geocode proxy handler (auth-gated GET /api/v1/geocode); always
-	// present, since the underlying client safely errors per-request when no
-	// API key is configured.
+	// Build the geocode proxy handler (auth-gated GET /api/v1/geocode and
+	// GET /api/v1/places); always present, since the underlying client safely
+	// errors per-request when no API key is configured.
 	geocodeH := geocodehttp.NewHandler(geocodehttp.Deps{
 		Authenticate: m.auth.Authenticate,
-		Client:       geo.NewClient(m.geocoderKey),
+		Client:       geo.NewClient(m.geocoderKey).WithPlacesKey(m.placesKey),
 	})
 
 	// Build the auth-verify handler (public: request-verification + verify-email
@@ -437,7 +441,7 @@ func (m *Module) initAPI() error {
 			invitationsH.ServeHTTP(w, r)
 			return
 		}
-		if p == "/api/v1/geocode" {
+		if p == "/api/v1/geocode" || p == "/api/v1/places" {
 			geocodeH.ServeHTTP(w, r)
 			return
 		}

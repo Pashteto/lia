@@ -24,3 +24,17 @@ export async function geocodeAddress(q: string): Promise<GeoResult[]> {
   if (!res.ok) throw new Error(`geocode failed: ${res.status}`);
   return (await res.json()) as GeoResult[];
 }
+
+/** Venue/organization NAME search via the auth-gated backend Yandex Places proxy. */
+export async function searchPlaces(q: string): Promise<GeoResult[]> {
+  const query = q.trim();
+  if (query === "") return [];
+  const token = getToken();
+  if (!token) throw new Error("not authenticated");
+  const res = await fetch(`${API_BASE}/api/v1/places?q=${encodeURIComponent(query)}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`places failed: ${res.status}`);
+  return (await res.json()) as GeoResult[];
+}

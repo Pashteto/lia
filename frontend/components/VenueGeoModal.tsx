@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import { geocodeAddress, type GeoResult } from "@/lib/geocode";
+import { geocodeAddress, searchPlaces, type GeoResult } from "@/lib/geocode";
 import { updateVenue, type ApiVenue } from "@/lib/api";
 
 const YandexMap = dynamic(
@@ -38,9 +38,20 @@ export function VenueGeoModal({
   useEffect(() => {
     if (debounced.trim() === "") return;
     let live = true;
-    geocodeAddress(debounced)
-      .then((r) => live && setResults(r))
-      .catch(() => setResults([]));
+    Promise.allSettled([searchPlaces(debounced), geocodeAddress(debounced)]).then(
+      ([places, addrs]) => {
+        if (!live) return;
+        const p = places.status === "fulfilled" ? places.value : [];
+        const a = addrs.status === "fulfilled" ? addrs.value : [];
+        const seen = new Set<string>();
+        const merged = [...p, ...a].filter((r) => {
+          if (seen.has(r.label)) return false;
+          seen.add(r.label);
+          return true;
+        });
+        setResults(merged);
+      },
+    );
     return () => {
       live = false;
     };
@@ -71,7 +82,7 @@ export function VenueGeoModal({
         </h2>
         <input
           className="mb-2 w-full rounded-control bg-fill px-3.5 py-2.5 text-[15px] text-label outline-none placeholder:text-label-secondary"
-          placeholder="Введите адрес"
+          placeholder="Название или адрес"
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
@@ -100,7 +111,7 @@ export function VenueGeoModal({
           onMarkerMove={(lat, lon) => setPos([lat, lon])}
         />
         <p className="mt-1 text-[12px] text-label-secondary">
-          Поиск адресов — © Яндекс. Перетащите метку для точности.
+          Поиск по названию и адресу — © Яндекс. Перетащите метку для точности.
         </p>
         <div className="mt-3 flex justify-end gap-2">
           <button

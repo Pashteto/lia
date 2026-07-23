@@ -78,6 +78,21 @@ func (u *UsersService) RequestEmailVerification(ctx context.Context, email strin
 	return nil
 }
 
+// MarkEmailVerified flips email_verified=true for an already-existing account.
+// Trusted path: the caller (Lia) has proven the user owns the address (invite
+// accept). No token/code required.
+func (u *UsersService) MarkEmailVerified(ctx context.Context, email string) error {
+	user := &models.User{Email: email}
+	if err := u.repository.GetUser(ctx, user, repository.Email); err != nil {
+		return fmt.Errorf("lookup user %s: %w", email, err)
+	}
+	user.EmailVerified = true
+	if err := u.repository.UpdateUserBy(ctx, user, repository.Email, "email_verified"); err != nil {
+		return fmt.Errorf("mark verified %s: %w", email, err)
+	}
+	return nil
+}
+
 // VerifyEmail marks the account verified when the email/token pair matches.
 func (u *UsersService) VerifyEmail(ctx context.Context, email, token string) error {
 	user := &models.User{Email: email}

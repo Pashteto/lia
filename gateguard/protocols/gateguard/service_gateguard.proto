@@ -29,6 +29,11 @@ service GateguardService {
   // VerifyEmail (STUB) marks the account verified if the token matches.
   rpc VerifyEmail(VerifyEmailRequest) returns(Empty);
 
+  // MarkEmailVerified (trusted, internal) flips email_verified=true for an email
+  // without a code. Called by Lia when a user accepts an event invitation that
+  // was emailed to that same address — the accept proves ownership.
+  rpc MarkEmailVerified(EmailRequest) returns(Empty);
+
   rpc UserByUUID(UUIDRequest) returns(models.User);
 
   rpc UserByEmail(EmailRequest) returns(models.User);

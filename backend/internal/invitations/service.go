@@ -65,6 +65,13 @@ type MailerPort interface {
 	SendEventInvitation(ctx context.Context, to, eventTitle, acceptURL string) error
 }
 
+// EmailVerifier lets the accept flow mark an invitee's address verified: the
+// invitation was emailed to that address, so accepting it from the matching
+// account proves ownership. Backed by the GateGuard signer at the call site.
+type EmailVerifier interface {
+	MarkEmailVerified(ctx context.Context, email string) error
+}
+
 var (
 	ErrNotOwner      = errors.New("not event owner")
 	ErrNotVerified   = errors.New("email not verified")
@@ -102,15 +109,18 @@ type Service interface {
 }
 
 type service struct {
-	repo   Repository
-	events EventPort
-	rsvp   RSVPPort
-	mailer MailerPort
+	repo     Repository
+	events   EventPort
+	rsvp     RSVPPort
+	mailer   MailerPort
+	verifier EmailVerifier
 }
 
-// NewService builds the invitations service.
-func NewService(repo Repository, events EventPort, rsvp RSVPPort, mailer MailerPort) Service {
-	return &service{repo: repo, events: events, rsvp: rsvp, mailer: mailer}
+// NewService builds the invitations service. verifier may be nil (e.g. when
+// GateGuard is not configured); accept() then falls back to rejecting an
+// unverified invitee rather than silently skipping verification.
+func NewService(repo Repository, events EventPort, rsvp RSVPPort, mailer MailerPort, verifier EmailVerifier) Service {
+	return &service{repo: repo, events: events, rsvp: rsvp, mailer: mailer, verifier: verifier}
 }
 
 func newToken() string {
@@ -206,11 +216,19 @@ func (s *service) accept(ctx context.Context, invRow *Invitation, userEmail stri
 	if invRow.Status != "pending" {
 		return ErrNotPending
 	}
-	if !verified {
-		return ErrNotVerified
-	}
 	if !strings.EqualFold(strings.TrimSpace(userEmail), invRow.InviteeEmail) {
 		return ErrEmailMismatch
+	}
+	// The invitation was emailed to invRow.InviteeEmail; accepting it from the
+	// matching account proves ownership, so treat accept as email verification
+	// (closes the "invited user still forced to verify" gap, QA 5a).
+	if !verified {
+		if s.verifier == nil {
+			return ErrNotVerified
+		}
+		if err := s.verifier.MarkEmailVerified(ctx, invRow.InviteeEmail); err != nil {
+			return fmt.Errorf("verify invitee on accept: %w", err)
+		}
 	}
 	if err := s.rsvp.SignUp(ctx, invRow.EventID, userID, ""); err != nil {
 		return fmt.Errorf("rsvp on accept: %w", err)

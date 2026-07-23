@@ -22,6 +22,7 @@ import (
 	grpcmod "github.com/Pashteto/lia/internal/grpc"
 	grpcclientmod "github.com/Pashteto/lia/internal/grpcclient"
 	httpmod "github.com/Pashteto/lia/internal/http"
+	authpkg "github.com/Pashteto/lia/internal/http/auth"
 	invitationsdomain "github.com/Pashteto/lia/internal/invitations"
 	"github.com/Pashteto/lia/internal/moderation"
 	"github.com/Pashteto/lia/internal/module"
@@ -285,6 +286,22 @@ func (app *App) registerModules() error {
 					smtpFrom = app.config.SMTP.From
 				}
 				mailer := notifications.NewSMTPMailer(smtpAddr, smtpUser, smtpPass, smtpFrom)
+				// Verifier lets accept() mark an invitee verified via GateGuard
+				// (the emailed invite + matching account proves ownership). Nil
+				// when gatekeeper is unconfigured — accept() then keeps rejecting
+				// unverified invitees rather than skipping verification.
+				var verifier invitationsdomain.EmailVerifier
+				if app.config.HTTP.Gatekeeper != nil {
+					timeout := 5 * time.Second
+					if d, err := time.ParseDuration(app.config.HTTP.Gatekeeper.Timeout); err == nil && d > 0 {
+						timeout = d
+					}
+					s, err := authpkg.NewSigner(authpkg.GatekeeperConfig{Address: app.config.HTTP.Gatekeeper.Address, Timeout: timeout})
+					if err != nil {
+						return fmt.Errorf("init invitations verifier: %w", err)
+					}
+					verifier = s
+				}
 				signUp := func(ctx context.Context, eventID, userID uuid.UUID, answer string) error {
 					if app.rsvpSvc == nil {
 						return fmt.Errorf("rsvp service unavailable")
@@ -317,6 +334,7 @@ func (app *App) registerModules() error {
 					}),
 					invitationsdomain.NewRSVPPort(signUp),
 					mailer,
+					verifier,
 				)
 				httpModule.SetInvitations(invSvc, app.config.PublicBaseURL)
 			}

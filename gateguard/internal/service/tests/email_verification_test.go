@@ -2,6 +2,7 @@ package service_test
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/stretchr/testify/mock"
@@ -164,6 +165,37 @@ func (s *UseCaseSuite) Test_VerifyEmail_WithinTTLSucceedsAndResetsAttempts() {
 		Return(nil).Once()
 
 	s.Require().NoError(s.service.VerifyEmail(s.ctx, email, code))
+}
+
+// MarkEmailVerified is the trusted path: no code, just flip email_verified=true
+// on an existing account. Persist must target only the email_verified column.
+func (s *UseCaseSuite) Test_MarkEmailVerified_SetsFlag() {
+	email := "user@example.com"
+
+	s.repo.EXPECT().
+		GetUser(mock.Anything, mock.MatchedBy(func(u *models.User) bool { return u.Email == email }), repository.Email).
+		Return(nil).Once()
+
+	s.repo.EXPECT().
+		UpdateUserBy(mock.Anything,
+			mock.MatchedBy(func(u *models.User) bool { return u.EmailVerified }),
+			repository.Email,
+			"email_verified").
+		Return(nil).Once()
+
+	s.Require().NoError(s.service.MarkEmailVerified(s.ctx, email))
+}
+
+// An unknown address must surface the lookup error, not silently succeed.
+func (s *UseCaseSuite) Test_MarkEmailVerified_UnknownEmail() {
+	email := "nobody@example.com"
+
+	s.repo.EXPECT().
+		GetUser(mock.Anything, mock.MatchedBy(func(u *models.User) bool { return u.Email == email }), repository.Email).
+		Return(errors.New("no rows")).Once()
+
+	err := s.service.MarkEmailVerified(s.ctx, email)
+	s.Require().Error(err)
 }
 
 func (s *UseCaseSuite) Test_RequestEmailVerification_ResetsAttempts() {

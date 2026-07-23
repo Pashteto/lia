@@ -35,6 +35,10 @@ type IUsersService interface {
 	// VerifyEmail marks the account verified if the email/token pair matches (STUB flow).
 	VerifyEmail(ctx context.Context, email, token string) error
 
+	// MarkEmailVerified (trusted) flips email_verified=true for an address without a
+	// code. Called when Lia proves ownership (an emailed invitation was accepted).
+	MarkEmailVerified(ctx context.Context, email string) error
+
 	// UserByUUID retrieves a user by their UUID and returns the user and any error encountered.
 	UserByUUID(ctx context.Context, userUUID uuid.UUID) (*models.User, error)
 

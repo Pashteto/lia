@@ -26,6 +26,7 @@ const (
 	GateguardService_SignInWithPassword_FullMethodName         = "/gateguard.service.GateguardService/SignInWithPassword"
 	GateguardService_RequestEmailVerification_FullMethodName   = "/gateguard.service.GateguardService/RequestEmailVerification"
 	GateguardService_VerifyEmail_FullMethodName                = "/gateguard.service.GateguardService/VerifyEmail"
+	GateguardService_MarkEmailVerified_FullMethodName          = "/gateguard.service.GateguardService/MarkEmailVerified"
 	GateguardService_UserByUUID_FullMethodName                 = "/gateguard.service.GateguardService/UserByUUID"
 	GateguardService_UserByEmail_FullMethodName                = "/gateguard.service.GateguardService/UserByEmail"
 	GateguardService_DeleteUser_FullMethodName                 = "/gateguard.service.GateguardService/DeleteUser"
@@ -61,6 +62,10 @@ type GateguardServiceClient interface {
 	RequestEmailVerification(ctx context.Context, in *EmailRequest, opts ...grpc.CallOption) (*Empty, error)
 	// VerifyEmail (STUB) marks the account verified if the token matches.
 	VerifyEmail(ctx context.Context, in *VerifyEmailRequest, opts ...grpc.CallOption) (*Empty, error)
+	// MarkEmailVerified (trusted, internal) flips email_verified=true for an email
+	// without a code. Called by Lia when a user accepts an event invitation that
+	// was emailed to that same address — the accept proves ownership.
+	MarkEmailVerified(ctx context.Context, in *EmailRequest, opts ...grpc.CallOption) (*Empty, error)
 	UserByUUID(ctx context.Context, in *UUIDRequest, opts ...grpc.CallOption) (*User, error)
 	UserByEmail(ctx context.Context, in *EmailRequest, opts ...grpc.CallOption) (*User, error)
 	// DeleteUser is
@@ -156,6 +161,16 @@ func (c *gateguardServiceClient) VerifyEmail(ctx context.Context, in *VerifyEmai
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Empty)
 	err := c.cc.Invoke(ctx, GateguardService_VerifyEmail_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gateguardServiceClient) MarkEmailVerified(ctx context.Context, in *EmailRequest, opts ...grpc.CallOption) (*Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, GateguardService_MarkEmailVerified_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -303,6 +318,10 @@ type GateguardServiceServer interface {
 	RequestEmailVerification(context.Context, *EmailRequest) (*Empty, error)
 	// VerifyEmail (STUB) marks the account verified if the token matches.
 	VerifyEmail(context.Context, *VerifyEmailRequest) (*Empty, error)
+	// MarkEmailVerified (trusted, internal) flips email_verified=true for an email
+	// without a code. Called by Lia when a user accepts an event invitation that
+	// was emailed to that same address — the accept proves ownership.
+	MarkEmailVerified(context.Context, *EmailRequest) (*Empty, error)
 	UserByUUID(context.Context, *UUIDRequest) (*User, error)
 	UserByEmail(context.Context, *EmailRequest) (*User, error)
 	// DeleteUser is
@@ -354,6 +373,9 @@ func (UnimplementedGateguardServiceServer) RequestEmailVerification(context.Cont
 }
 func (UnimplementedGateguardServiceServer) VerifyEmail(context.Context, *VerifyEmailRequest) (*Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "method VerifyEmail not implemented")
+}
+func (UnimplementedGateguardServiceServer) MarkEmailVerified(context.Context, *EmailRequest) (*Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method MarkEmailVerified not implemented")
 }
 func (UnimplementedGateguardServiceServer) UserByUUID(context.Context, *UUIDRequest) (*User, error) {
 	return nil, status.Error(codes.Unimplemented, "method UserByUUID not implemented")
@@ -534,6 +556,24 @@ func _GateguardService_VerifyEmail_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GateguardServiceServer).VerifyEmail(ctx, req.(*VerifyEmailRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GateguardService_MarkEmailVerified_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EmailRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GateguardServiceServer).MarkEmailVerified(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GateguardService_MarkEmailVerified_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GateguardServiceServer).MarkEmailVerified(ctx, req.(*EmailRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -788,6 +828,10 @@ var GateguardService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "VerifyEmail",
 			Handler:    _GateguardService_VerifyEmail_Handler,
+		},
+		{
+			MethodName: "MarkEmailVerified",
+			Handler:    _GateguardService_MarkEmailVerified_Handler,
 		},
 		{
 			MethodName: "UserByUUID",

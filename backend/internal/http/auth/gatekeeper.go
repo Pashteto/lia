@@ -27,6 +27,7 @@ type ggClient interface {
 	SignInWithPassword(ctx context.Context, in *gg.PasswordSignInRequest, opts ...grpc.CallOption) (*gg.TokenResponse, error)
 	RequestEmailVerification(ctx context.Context, in *gg.EmailRequest, opts ...grpc.CallOption) (*gg.Empty, error)
 	VerifyEmail(ctx context.Context, in *gg.VerifyEmailRequest, opts ...grpc.CallOption) (*gg.Empty, error)
+	MarkEmailVerified(ctx context.Context, in *gg.EmailRequest, opts ...grpc.CallOption) (*gg.Empty, error)
 }
 
 // gatekeeperValidator validates bearer tokens against GateGuard's CheckAuth RPC.

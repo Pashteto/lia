@@ -50,6 +50,18 @@ func (h *GateguardHandlers) RequestEmailVerification(ctx context.Context, req *p
 	return &proto.Empty{}, nil
 }
 
+func (h *GateguardHandlers) MarkEmailVerified(ctx context.Context, req *proto.EmailRequest) (*proto.Empty, error) {
+	ctx = h.log.AddKeysValuesToCtx(ctx, map[string]interface{}{"request_email": req.Email})
+	h.log.DebugCtx(ctx, "MarkEmailVerified handler called")
+
+	if err := h.srv.MarkEmailVerified(ctx, req.Email); err != nil {
+		h.log.ErrorCtx(ctx, err, "Failed to mark email verified")
+		return nil, fmt.Errorf("mark email verified: %w", err)
+	}
+
+	return &proto.Empty{}, nil
+}
+
 func (h *GateguardHandlers) VerifyEmail(ctx context.Context, req *proto.VerifyEmailRequest) (*proto.Empty, error) {
 	ctx = h.log.AddKeysValuesToCtx(ctx, map[string]interface{}{"request_email": req.Email})
 	h.log.DebugCtx(ctx, "VerifyEmail handler called")

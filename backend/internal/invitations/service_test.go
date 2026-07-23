@@ -68,8 +68,25 @@ func (f *fakeMailer) SendEventInvitation(context.Context, string, string, string
 	return nil
 }
 
+type fakeVerifier struct {
+	marked []string
+	err    error
+}
+
+func (f *fakeVerifier) MarkEmailVerified(_ context.Context, email string) error {
+	if f.err != nil {
+		return f.err
+	}
+	f.marked = append(f.marked, email)
+	return nil
+}
+
 func newSvc(repo inv.Repository, ev inv.EventPort, r inv.RSVPPort, m *fakeMailer) inv.Service {
-	return inv.NewService(repo, ev, r, m)
+	return inv.NewService(repo, ev, r, m, &fakeVerifier{})
+}
+
+func newSvcWithVerifier(repo inv.Repository, ev inv.EventPort, r inv.RSVPPort, m *fakeMailer, v inv.EmailVerifier) inv.Service {
+	return inv.NewService(repo, ev, r, m, v)
 }
 
 func TestInvite_CreatesRowsAndSends(t *testing.T) {
@@ -140,11 +157,57 @@ func TestAcceptByToken_RejectsWrongEmail(t *testing.T) {
 	}
 }
 
-func TestAcceptByToken_RejectsUnverified(t *testing.T) {
+// Accepting an emailed invite from the matching (but not-yet-verified) account
+// proves ownership: the accept must succeed AND flip the invitee's email to
+// verified via the verifier (QA 5a), instead of rejecting with ErrNotVerified.
+func TestAcceptByToken_VerifiesUnverifiedInvitee(t *testing.T) {
+	id := uuid.Must(uuid.NewV4())
+	repo := &fakeRepo{byToken: map[string]*inv.Invitation{
+		"tok": {ID: id, InviteeEmail: "a@x.com", Status: "pending", ExpiresAt: time.Now().Add(time.Hour)},
+	}}
+	rsvp := &fakeRSVP{}
+	verifier := &fakeVerifier{}
+	s := newSvcWithVerifier(repo, fakeEvents{}, rsvp, &fakeMailer{}, verifier)
+
+	if err := s.AcceptByToken(context.Background(), "tok", "A@X.com", uuid.Must(uuid.NewV4()), false); err != nil {
+		t.Fatalf("accept (unverified invitee): %v", err)
+	}
+	if len(verifier.marked) != 1 || verifier.marked[0] != "a@x.com" {
+		t.Fatalf("want MarkEmailVerified(a@x.com), got %v", verifier.marked)
+	}
+	if repo.statuses[id] != "accepted" {
+		t.Fatalf("invite must be accepted, got %q", repo.statuses[id])
+	}
+	if len(rsvp.signedUp) != 1 {
+		t.Fatal("accept must sign the user up for the event")
+	}
+}
+
+// The email-match guard runs BEFORE verification: a wrong-email accept must not
+// verify anyone, even when unverified.
+func TestAcceptByToken_WrongEmailNotVerifiedDoesNotMark(t *testing.T) {
 	repo := &fakeRepo{byToken: map[string]*inv.Invitation{
 		"tok": {ID: uuid.Must(uuid.NewV4()), InviteeEmail: "a@x.com", Status: "pending", ExpiresAt: time.Now().Add(time.Hour)},
 	}}
-	s := newSvc(repo, fakeEvents{}, &fakeRSVP{}, &fakeMailer{})
+	verifier := &fakeVerifier{}
+	s := newSvcWithVerifier(repo, fakeEvents{}, &fakeRSVP{}, &fakeMailer{}, verifier)
+
+	err := s.AcceptByToken(context.Background(), "tok", "other@x.com", uuid.Must(uuid.NewV4()), false)
+	if err != inv.ErrEmailMismatch {
+		t.Fatalf("want ErrEmailMismatch, got %v", err)
+	}
+	if len(verifier.marked) != 0 {
+		t.Fatalf("must not verify on email mismatch, marked=%v", verifier.marked)
+	}
+}
+
+// With no verifier wired (GateGuard unconfigured), an unverified invitee still
+// gets rejected rather than silently skipping verification.
+func TestAcceptByToken_NilVerifierRejectsUnverified(t *testing.T) {
+	repo := &fakeRepo{byToken: map[string]*inv.Invitation{
+		"tok": {ID: uuid.Must(uuid.NewV4()), InviteeEmail: "a@x.com", Status: "pending", ExpiresAt: time.Now().Add(time.Hour)},
+	}}
+	s := newSvcWithVerifier(repo, fakeEvents{}, &fakeRSVP{}, &fakeMailer{}, nil)
 	err := s.AcceptByToken(context.Background(), "tok", "a@x.com", uuid.Must(uuid.NewV4()), false)
 	if err != inv.ErrNotVerified {
 		t.Fatalf("want ErrNotVerified, got %v", err)

@@ -1466,7 +1466,7 @@ const file_service_gateguard_proto_rawDesc = "" +
 	"\x12RtiValidationError\x10\x00\x12\x1b\n" +
 	"\x17RtiOrganizationConflict\x10\x01\x12\x1b\n" +
 	"\x17RtiInviteStatusConflict\x10\x02\x12\x19\n" +
-	"\x15RtiInviteUserMismatch\x10\x032\xa5\r\n" +
+	"\x15RtiInviteUserMismatch\x10\x032\xf5\r\n" +
 	"\x10GateguardService\x12G\n" +
 	"\vSignInOAuth\x12\x16.gateguard.models.User\x1a .gateguard.service.TokenResponse\x12D\n" +
 	"\aSignOut\x12\x1f.gateguard.service.TokenRequest\x1a\x18.gateguard.service.Empty\x12D\n" +
@@ -1474,7 +1474,8 @@ const file_service_gateguard_proto_rawDesc = "" +
 	"\x12SignUpWithPassword\x12 .gateguard.service.SignUpRequest\x1a .gateguard.service.TokenResponse\x12`\n" +
 	"\x12SignInWithPassword\x12(.gateguard.service.PasswordSignInRequest\x1a .gateguard.service.TokenResponse\x12U\n" +
 	"\x18RequestEmailVerification\x12\x1f.gateguard.service.EmailRequest\x1a\x18.gateguard.service.Empty\x12N\n" +
-	"\vVerifyEmail\x12%.gateguard.service.VerifyEmailRequest\x1a\x18.gateguard.service.Empty\x12D\n" +
+	"\vVerifyEmail\x12%.gateguard.service.VerifyEmailRequest\x1a\x18.gateguard.service.Empty\x12N\n" +
+	"\x11MarkEmailVerified\x12\x1f.gateguard.service.EmailRequest\x1a\x18.gateguard.service.Empty\x12D\n" +
 	"\n" +
 	"UserByUUID\x12\x1e.gateguard.service.UUIDRequest\x1a\x16.gateguard.models.User\x12F\n" +
 	"\vUserByEmail\x12\x1f.gateguard.service.EmailRequest\x1a\x16.gateguard.models.User\x12G\n" +
@@ -1556,39 +1557,41 @@ var file_service_gateguard_proto_depIdxs = []int32{
 	12, // 16: gateguard.service.GateguardService.SignInWithPassword:input_type -> gateguard.service.PasswordSignInRequest
 	10, // 17: gateguard.service.GateguardService.RequestEmailVerification:input_type -> gateguard.service.EmailRequest
 	13, // 18: gateguard.service.GateguardService.VerifyEmail:input_type -> gateguard.service.VerifyEmailRequest
-	9,  // 19: gateguard.service.GateguardService.UserByUUID:input_type -> gateguard.service.UUIDRequest
-	10, // 20: gateguard.service.GateguardService.UserByEmail:input_type -> gateguard.service.EmailRequest
-	7,  // 21: gateguard.service.GateguardService.DeleteUser:input_type -> gateguard.service.TokenRequest
-	24, // 22: gateguard.service.GateguardService.Users:input_type -> gateguard.service.Empty
-	6,  // 23: gateguard.service.GateguardService.UpdateUserRole:input_type -> gateguard.service.UpdateUserRoleRequest
-	14, // 24: gateguard.service.GateguardService.AddOrganizationToUser:input_type -> gateguard.service.AddOrganizationRequest
-	15, // 25: gateguard.service.GateguardService.RemoveOrganizationFromUser:input_type -> gateguard.service.RemoveOrganizationRequest
-	18, // 26: gateguard.service.GateguardService.InviteUserByEmail:input_type -> gateguard.service.InviteUserByEmailRequest
-	20, // 27: gateguard.service.GateguardService.AllInvitations:input_type -> gateguard.service.AllInvitationsRequest
-	22, // 28: gateguard.service.GateguardService.ReactToInvitation:input_type -> gateguard.service.ReactToInvitationRequest
-	4,  // 29: gateguard.service.GateguardService.SetUserPreferredStacks:input_type -> gateguard.service.SetUserPreferredStacksRequest
-	5,  // 30: gateguard.service.GateguardService.SetUserTrialUsed:input_type -> gateguard.service.SetUserTrialUsedRequest
-	8,  // 31: gateguard.service.GateguardService.SignInOAuth:output_type -> gateguard.service.TokenResponse
-	24, // 32: gateguard.service.GateguardService.SignOut:output_type -> gateguard.service.Empty
-	28, // 33: gateguard.service.GateguardService.CheckAuth:output_type -> gateguard.models.User
-	8,  // 34: gateguard.service.GateguardService.SignUpWithPassword:output_type -> gateguard.service.TokenResponse
-	8,  // 35: gateguard.service.GateguardService.SignInWithPassword:output_type -> gateguard.service.TokenResponse
-	24, // 36: gateguard.service.GateguardService.RequestEmailVerification:output_type -> gateguard.service.Empty
-	24, // 37: gateguard.service.GateguardService.VerifyEmail:output_type -> gateguard.service.Empty
-	28, // 38: gateguard.service.GateguardService.UserByUUID:output_type -> gateguard.models.User
-	28, // 39: gateguard.service.GateguardService.UserByEmail:output_type -> gateguard.models.User
-	24, // 40: gateguard.service.GateguardService.DeleteUser:output_type -> gateguard.service.Empty
-	29, // 41: gateguard.service.GateguardService.Users:output_type -> gateguard.models.Users
-	24, // 42: gateguard.service.GateguardService.UpdateUserRole:output_type -> gateguard.service.Empty
-	16, // 43: gateguard.service.GateguardService.AddOrganizationToUser:output_type -> gateguard.service.AddOrganizationResponse
-	17, // 44: gateguard.service.GateguardService.RemoveOrganizationFromUser:output_type -> gateguard.service.RemoveOrganizationResponse
-	19, // 45: gateguard.service.GateguardService.InviteUserByEmail:output_type -> gateguard.service.InviteUserByEmailResponse
-	21, // 46: gateguard.service.GateguardService.AllInvitations:output_type -> gateguard.service.AllInvitationsResponse
-	23, // 47: gateguard.service.GateguardService.ReactToInvitation:output_type -> gateguard.service.ReactToInvitationResponse
-	24, // 48: gateguard.service.GateguardService.SetUserPreferredStacks:output_type -> gateguard.service.Empty
-	24, // 49: gateguard.service.GateguardService.SetUserTrialUsed:output_type -> gateguard.service.Empty
-	31, // [31:50] is the sub-list for method output_type
-	12, // [12:31] is the sub-list for method input_type
+	10, // 19: gateguard.service.GateguardService.MarkEmailVerified:input_type -> gateguard.service.EmailRequest
+	9,  // 20: gateguard.service.GateguardService.UserByUUID:input_type -> gateguard.service.UUIDRequest
+	10, // 21: gateguard.service.GateguardService.UserByEmail:input_type -> gateguard.service.EmailRequest
+	7,  // 22: gateguard.service.GateguardService.DeleteUser:input_type -> gateguard.service.TokenRequest
+	24, // 23: gateguard.service.GateguardService.Users:input_type -> gateguard.service.Empty
+	6,  // 24: gateguard.service.GateguardService.UpdateUserRole:input_type -> gateguard.service.UpdateUserRoleRequest
+	14, // 25: gateguard.service.GateguardService.AddOrganizationToUser:input_type -> gateguard.service.AddOrganizationRequest
+	15, // 26: gateguard.service.GateguardService.RemoveOrganizationFromUser:input_type -> gateguard.service.RemoveOrganizationRequest
+	18, // 27: gateguard.service.GateguardService.InviteUserByEmail:input_type -> gateguard.service.InviteUserByEmailRequest
+	20, // 28: gateguard.service.GateguardService.AllInvitations:input_type -> gateguard.service.AllInvitationsRequest
+	22, // 29: gateguard.service.GateguardService.ReactToInvitation:input_type -> gateguard.service.ReactToInvitationRequest
+	4,  // 30: gateguard.service.GateguardService.SetUserPreferredStacks:input_type -> gateguard.service.SetUserPreferredStacksRequest
+	5,  // 31: gateguard.service.GateguardService.SetUserTrialUsed:input_type -> gateguard.service.SetUserTrialUsedRequest
+	8,  // 32: gateguard.service.GateguardService.SignInOAuth:output_type -> gateguard.service.TokenResponse
+	24, // 33: gateguard.service.GateguardService.SignOut:output_type -> gateguard.service.Empty
+	28, // 34: gateguard.service.GateguardService.CheckAuth:output_type -> gateguard.models.User
+	8,  // 35: gateguard.service.GateguardService.SignUpWithPassword:output_type -> gateguard.service.TokenResponse
+	8,  // 36: gateguard.service.GateguardService.SignInWithPassword:output_type -> gateguard.service.TokenResponse
+	24, // 37: gateguard.service.GateguardService.RequestEmailVerification:output_type -> gateguard.service.Empty
+	24, // 38: gateguard.service.GateguardService.VerifyEmail:output_type -> gateguard.service.Empty
+	24, // 39: gateguard.service.GateguardService.MarkEmailVerified:output_type -> gateguard.service.Empty
+	28, // 40: gateguard.service.GateguardService.UserByUUID:output_type -> gateguard.models.User
+	28, // 41: gateguard.service.GateguardService.UserByEmail:output_type -> gateguard.models.User
+	24, // 42: gateguard.service.GateguardService.DeleteUser:output_type -> gateguard.service.Empty
+	29, // 43: gateguard.service.GateguardService.Users:output_type -> gateguard.models.Users
+	24, // 44: gateguard.service.GateguardService.UpdateUserRole:output_type -> gateguard.service.Empty
+	16, // 45: gateguard.service.GateguardService.AddOrganizationToUser:output_type -> gateguard.service.AddOrganizationResponse
+	17, // 46: gateguard.service.GateguardService.RemoveOrganizationFromUser:output_type -> gateguard.service.RemoveOrganizationResponse
+	19, // 47: gateguard.service.GateguardService.InviteUserByEmail:output_type -> gateguard.service.InviteUserByEmailResponse
+	21, // 48: gateguard.service.GateguardService.AllInvitations:output_type -> gateguard.service.AllInvitationsResponse
+	23, // 49: gateguard.service.GateguardService.ReactToInvitation:output_type -> gateguard.service.ReactToInvitationResponse
+	24, // 50: gateguard.service.GateguardService.SetUserPreferredStacks:output_type -> gateguard.service.Empty
+	24, // 51: gateguard.service.GateguardService.SetUserTrialUsed:output_type -> gateguard.service.Empty
+	32, // [32:52] is the sub-list for method output_type
+	12, // [12:32] is the sub-list for method input_type
 	12, // [12:12] is the sub-list for extension type_name
 	12, // [12:12] is the sub-list for extension extendee
 	0,  // [0:12] is the sub-list for field type_name

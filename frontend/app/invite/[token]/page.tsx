@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { getInvitationPreview, acceptInvitation, EMAIL_NOT_VERIFIED, type InvitationPreview } from "@/lib/api";
+import { getInvitationPreview, acceptInvitation, type InvitationPreview } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
 export default function InvitePage() {
   const { token } = useParams<{ token: string }>();
   const router = useRouter();
-  const { isAuthed, ready, emailVerified } = useAuth();
+  const { isAuthed, ready } = useAuth();
   const [preview, setPreview] = useState<InvitationPreview | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -23,8 +23,9 @@ export default function InvitePage() {
     try {
       await acceptInvitation(token);
       router.push(`/events/${preview?.event_id ?? ""}`);
-    } catch (e) {
-      if (e instanceof Error && e.message === EMAIL_NOT_VERIFIED) { router.push("/auth/verify"); return; }
+    } catch {
+      // The backend now verifies an emailed invitee on accept, so a matching
+      // invitee no longer hits EMAIL_NOT_VERIFIED; show a generic failure.
       setError("Не удалось принять приглашение.");
     } finally {
       setBusy(false);
@@ -45,11 +46,6 @@ export default function InvitePage() {
           {/* Reuse the app's auth modal; the header AuthButton also exposes it.
               Simplest: link to home where the login modal lives, or mount <LoginModal/> here. */}
           <Link href={`/?next=/invite/${token}`} className="rounded-capsule bg-accent px-4 py-2 text-white">Войти</Link>
-        </div>
-      ) : !emailVerified ? (
-        <div className="rounded-card bg-bg-secondary p-4">
-          <p className="mb-3 text-[15px] text-label-secondary">Подтвердите почту, чтобы принять приглашение.</p>
-          <Link href="/auth/verify" className="rounded-capsule bg-accent px-4 py-2 text-white">Подтвердить почту</Link>
         </div>
       ) : (
         <button onClick={onAccept} disabled={busy}

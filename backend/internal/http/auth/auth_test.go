@@ -25,6 +25,7 @@ type fakeGGClient struct {
 	verifyErr            error
 	lastRequestVerifyReq *gg.EmailRequest
 	lastVerifyEmailReq   *gg.VerifyEmailRequest
+	lastMarkVerifiedReq  *gg.EmailRequest
 }
 
 func (f *fakeGGClient) CheckAuth(_ context.Context, _ *gg.TokenRequest, _ ...grpc.CallOption) (*gg.User, error) {
@@ -46,6 +47,10 @@ func (f *fakeGGClient) RequestEmailVerification(_ context.Context, in *gg.EmailR
 }
 func (f *fakeGGClient) VerifyEmail(_ context.Context, in *gg.VerifyEmailRequest, _ ...grpc.CallOption) (*gg.Empty, error) {
 	f.lastVerifyEmailReq = in
+	return &gg.Empty{}, f.verifyErr
+}
+func (f *fakeGGClient) MarkEmailVerified(_ context.Context, in *gg.EmailRequest, _ ...grpc.CallOption) (*gg.Empty, error) {
+	f.lastMarkVerifiedReq = in
 	return &gg.Empty{}, f.verifyErr
 }
 
@@ -140,6 +145,26 @@ func TestSigner_VerifyEmail_Error(t *testing.T) {
 
 	if err := s.VerifyEmail(context.Background(), "u@example.com", "000000"); err == nil {
 		t.Error("expected error when VerifyEmail fails")
+	}
+}
+
+func TestSigner_MarkEmailVerified(t *testing.T) {
+	fake := &fakeGGClient{}
+	s := newSignerWithClient(fake)
+
+	if err := s.MarkEmailVerified(context.Background(), "u@example.com"); err != nil {
+		t.Fatalf("mark verified: %v", err)
+	}
+	if fake.lastMarkVerifiedReq == nil || fake.lastMarkVerifiedReq.Email != "u@example.com" {
+		t.Fatalf("expected RPC called with email, got %+v", fake.lastMarkVerifiedReq)
+	}
+}
+
+func TestSigner_MarkEmailVerified_Error(t *testing.T) {
+	s := newSignerWithClient(&fakeGGClient{verifyErr: fmt.Errorf("gateguard down")})
+
+	if err := s.MarkEmailVerified(context.Background(), "u@example.com"); err == nil {
+		t.Error("expected error when MarkEmailVerified fails")
 	}
 }
 

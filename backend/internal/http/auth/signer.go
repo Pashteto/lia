@@ -27,6 +27,9 @@ type Signer interface {
 	RequestEmailVerification(ctx context.Context, email string) error
 	// VerifyEmail submits a code to mark the address verified.
 	VerifyEmail(ctx context.Context, email, code string) error
+	// MarkEmailVerified asks GateGuard to flip email_verified for an address the
+	// caller has already proven ownership of (invite accept) — no code required.
+	MarkEmailVerified(ctx context.Context, email string) error
 }
 
 // ErrInvalidCredentials / ErrUserExists let handlers map password-auth failures
@@ -140,6 +143,18 @@ func (s *gatekeeperSigner) RequestEmailVerification(ctx context.Context, email s
 	}
 	if _, err := s.client.RequestEmailVerification(ctx, &gg.EmailRequest{Email: email}); err != nil {
 		return fmt.Errorf("gateguard request verification: %w", err)
+	}
+	return nil
+}
+
+func (s *gatekeeperSigner) MarkEmailVerified(ctx context.Context, email string) error {
+	if s.cfg.Timeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, s.cfg.Timeout)
+		defer cancel()
+	}
+	if _, err := s.client.MarkEmailVerified(ctx, &gg.EmailRequest{Email: email}); err != nil {
+		return fmt.Errorf("gateguard mark verified: %w", err)
 	}
 	return nil
 }

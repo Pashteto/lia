@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { VerifyEmailInterstitial } from "@/components/VerifyEmailInterstitial";
 import { cancelRsvp, eventCalendarUrl, EMAIL_NOT_VERIFIED, fetchEventWithAuth, signUp } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { signupClosedLabel } from "@/lib/signup-availability";
 import type { LiaEvent, RsvpStatus } from "@/lib/types";
 
 // ─── Local types ────────────────────────────────────────────────────────────
@@ -221,6 +222,19 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
         <Button variant="filled" className="px-8" disabled>
           Записаться
         </Button>
+        {footer}
+      </div>
+    );
+  }
+
+  // Non-published events are not signup-able. Render the status instead of an
+  // active CTA so an unverified viewer isn't pushed into verification on a
+  // cancelled/withdrawn event (QA 5b).
+  const closed = signupClosedLabel(event.status);
+  if (closed) {
+    return (
+      <div className="flex flex-col items-end gap-2">
+        <span className="text-[15px] font-semibold text-label-secondary">{closed}</span>
         {footer}
       </div>
     );

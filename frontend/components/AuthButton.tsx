@@ -188,20 +188,7 @@ export function LoginModal({ onClose }: { onClose: () => void }) {
             className={inputClass}
           />
         </label>
-        {isRegister && (
-          <label className="mb-3 block">
-            <span className="mb-1.5 block text-[13px] text-label-secondary">
-              Имя (необязательно)
-            </span>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Ваше имя"
-              className={inputClass}
-            />
-          </label>
-        )}
-        <label className="mb-4 block">
+        <label className={isRegister ? "mb-3 block" : "mb-4 block"}>
           <span className="mb-1.5 block text-[13px] text-label-secondary">
             Пароль{isRegister ? " (минимум 8 символов)" : ""}
           </span>
@@ -215,6 +202,19 @@ export function LoginModal({ onClose }: { onClose: () => void }) {
             className={inputClass}
           />
         </label>
+        {isRegister && (
+          <label className="mb-4 block">
+            <span className="mb-1.5 block text-[13px] text-label-secondary">
+              Имя (необязательно)
+            </span>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Как вас представить участникам"
+              className={inputClass}
+            />
+          </label>
+        )}
         {error && <p className="mb-3 text-[14px] text-red-500">{error}</p>}
         <div className="flex items-center justify-between gap-2">
           <button

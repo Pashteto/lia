@@ -6,6 +6,7 @@ import { LoginModal } from "@/components/AuthButton";
 import { Button } from "@/components/ui/Button";
 import { VerifyEmailInterstitial } from "@/components/VerifyEmailInterstitial";
 import { cancelRsvp, eventCalendarUrl, EMAIL_NOT_VERIFIED, fetchEventWithAuth, signUp } from "@/lib/api";
+import { googleCalendarUrl } from "@/lib/calendar-links";
 import { useAuth } from "@/lib/auth-context";
 import { signupClosedLabel } from "@/lib/signup-availability";
 import type { LiaEvent, RsvpStatus } from "@/lib/types";
@@ -209,6 +210,14 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
         className="text-[13px] font-medium text-accent hover:opacity-70"
       >
         В календарь
+      </a>
+      <a
+        href={googleCalendarUrl(event)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-[13px] font-medium text-accent hover:opacity-70"
+      >
+        В Google
       </a>
       <SeatsCounter event={event} />
     </div>

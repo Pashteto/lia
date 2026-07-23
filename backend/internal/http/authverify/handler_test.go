@@ -24,6 +24,7 @@ func (f *fakeSigner) SignUpPassword(_ context.Context, _, _, _ string) (string, 
 func (f *fakeSigner) SignInPassword(_ context.Context, _, _ string) (string, error) { return "", nil }
 func (f *fakeSigner) RequestEmailVerification(_ context.Context, _ string) error    { return f.err }
 func (f *fakeSigner) VerifyEmail(_ context.Context, _, _ string) error              { return f.err }
+func (f *fakeSigner) MarkEmailVerified(_ context.Context, _ string) error           { return f.err }
 
 func TestRequestVerification_MissingEmail_Returns400(t *testing.T) {
 	h := NewHandler(Deps{Signer: &fakeSigner{}})

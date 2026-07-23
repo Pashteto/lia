@@ -33,6 +33,9 @@ func (f *fakeSigner) RequestEmailVerification(_ context.Context, _ string) error
 func (f *fakeSigner) VerifyEmail(_ context.Context, _, _ string) error {
 	return f.err
 }
+func (f *fakeSigner) MarkEmailVerified(_ context.Context, _ string) error {
+	return f.err
+}
 
 var _ authpkg.Signer = (*fakeSigner)(nil)
 

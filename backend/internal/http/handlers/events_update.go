@@ -24,14 +24,19 @@ func NewUpdateEvent(svc eventsdomain.Service) *UpdateEvent {
 	return &UpdateEvent{events: svc}
 }
 
+// isWithdraw reports whether the patch sets status to "cancelled" (an owner
+// withdrawing their own event). Withdrawing must not require email
+// verification — an unverified organizer still needs to be able to pull a
+// listing (QA 5b).
+func isWithdraw(status *string) bool {
+	return status != nil && *status == "cancelled"
+}
+
 // Handle PATCH /events/{id}.
 func (h *UpdateEvent) Handle(params eventsops.UpdateEventParams, principal *apimodels.User) middleware.Responder {
 	if principal == nil {
 		return eventsops.NewUpdateEventUnauthorized().
 			WithPayload(DefaultError(http.StatusUnauthorized, errors.New("authentication required"), nil))
-	}
-	if !IsVerified(principal) {
-		return UnverifiedResponder()
 	}
 	ownerID, err := uuid.FromString(principal.UUID.String())
 	if err != nil {
@@ -45,6 +50,13 @@ func (h *UpdateEvent) Handle(params eventsops.UpdateEventParams, principal *apim
 	}
 
 	p := formatter.EventPatchToUpdateParams(params.Body)
+
+	// Verified-gate everything EXCEPT a pure withdraw (status→cancelled); the
+	// service still enforces ownership + settable-status, so this only relaxes
+	// the email-verification precondition for pulling one's own listing.
+	if !isWithdraw(p.Status) && !IsVerified(principal) {
+		return UnverifiedResponder()
+	}
 
 	updated, err := h.events.Update(params.HTTPRequest.Context(), id, ownerID, p)
 	if err != nil {

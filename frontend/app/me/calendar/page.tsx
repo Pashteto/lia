@@ -126,6 +126,9 @@ export default function CalendarPage() {
     // exact placement is done client-side by Moscow civil day.
     queryFn: () => fetchCalendar(addDays(rangeStart, -1), addDays(rangeEnd, 1)),
     enabled: ready && isAuthed,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    placeholderData: (prev) => prev,
   });
 
   // Bucket events by every Europe/Moscow civil day they span.

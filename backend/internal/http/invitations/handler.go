@@ -121,10 +121,6 @@ func (h *handler) respond(w http.ResponseWriter, r *http.Request, byToken, accep
 		writeErr(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
-	if accept && !u.EmailVerified {
-		writeUnverified(w)
-		return
-	}
 	var err error
 	switch {
 	case byToken && accept:

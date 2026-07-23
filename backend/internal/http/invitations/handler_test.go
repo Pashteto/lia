@@ -23,6 +23,12 @@ type stubSvc struct {
 	previewErr  error
 
 	listMine []inv.MineItem
+
+	// acceptTokenCalled records whether AcceptByToken reached the service —
+	// used to prove the HTTP handler no longer blocks unverified acceptors
+	// before the service's own verify-on-accept logic runs.
+	acceptTokenCalled bool
+	acceptVerifiedArg bool
 }
 
 func (s *stubSvc) Invite(_ context.Context, _, _ uuid.UUID, _ bool, emails []string, _ string) (int, error) {
@@ -31,7 +37,9 @@ func (s *stubSvc) Invite(_ context.Context, _, _ uuid.UUID, _ bool, emails []str
 func (s *stubSvc) Preview(_ context.Context, _ string) (*inv.Preview, error) {
 	return s.previewResp, s.previewErr
 }
-func (s *stubSvc) AcceptByToken(_ context.Context, _, _ string, _ uuid.UUID, _ bool) error {
+func (s *stubSvc) AcceptByToken(_ context.Context, _, _ string, _ uuid.UUID, verified bool) error {
+	s.acceptTokenCalled = true
+	s.acceptVerifiedArg = verified
 	return nil
 }
 func (s *stubSvc) DeclineByToken(_ context.Context, _, _ string) error { return nil }
@@ -81,6 +89,39 @@ func TestInvite_Unauthorized(t *testing.T) {
 
 	if rr.Code != http.StatusUnauthorized {
 		t.Fatalf("no Authorization header must get 401, got %d", rr.Code)
+	}
+}
+
+// TestAcceptToken_UnverifiedUserReachesService is the regression guard for
+// the Task 10 Critical finding: the handler used to reject every accept from
+// an unverified user with a 403 before the service's verify-on-accept logic
+// (service.accept()) ever ran. The handler must now let unverified acceptors
+// through to the service — verification is the service's job, not the
+// handler's — and respond 204 on success.
+func TestAcceptToken_UnverifiedUserReachesService(t *testing.T) {
+	svc := &stubSvc{}
+	deps := httpinv.Deps{
+		Authenticate: func(string) (*domain.User, error) {
+			return &domain.User{UUID: uuid.Must(uuid.NewV4()), Email: "invitee@x.com", EmailVerified: false}, nil
+		},
+		Service: svc,
+		BaseURL: "https://presence.tarski.ru",
+	}
+	h := httpinv.NewHandler(deps)
+
+	req := httptest.NewRequest("POST", "/api/v1/invitations/some-token/accept", nil)
+	req.Header.Set("Authorization", "Bearer x")
+	rr := httptest.NewRecorder()
+	h.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusNoContent {
+		t.Fatalf("unverified invitee accept must reach the service and return 204, got %d body=%s", rr.Code, rr.Body.String())
+	}
+	if !svc.acceptTokenCalled {
+		t.Fatal("AcceptByToken was never called — handler still blocking unverified acceptors")
+	}
+	if svc.acceptVerifiedArg {
+		t.Fatal("expected verified=false to be passed through to the service")
 	}
 }
 

@@ -60,7 +60,12 @@ export function EventCard({
             {event.organizer.verified && (
               <>
                 {" "}
-                <VerifiedBadge profileId={event.organizer.profile_id} />
+                {/* No profileId here on purpose: the whole card is already an
+                    <a> to the event, so a linked badge would nest <a> in <a> —
+                    invalid HTML that the browser reparents, causing a hydration
+                    mismatch (React #418). Render the plain badge; the organizer
+                    profile stays linkable on the event-detail page. */}
+                <VerifiedBadge />
               </>
             )}
           </p>

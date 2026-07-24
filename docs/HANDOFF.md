@@ -1,6 +1,35 @@
 # Lia — Handoff
 
-> ## ⭐ CURRENT STATE — 2026-07-19 (read this first)
+> ## ⭐ CURRENT STATE — 2026-07-24 (read this first)
+>
+> **QA-20-jul "fix everything" — 11 fixes + a #418 hydration fix, all merged to `main` and DEPLOYED LIVE** on `presence.tarski.ru`. **Local `main` = `a366c61`, 15 commits AHEAD of `origin/main` (UNPUSHED)** — prod deployed from local images, not a pushed ref; `git push origin main` when ready. GateGuard DB **12 → 13**; Lia DB unchanged at **020**.
+>
+> Source: QA run `docs/qa/qa-20-jul-run/` → analysis `docs/qa/qa-20-jul-run/analysis.md` → plan `docs/superpowers/plans/2026-07-23-qa-20-jul-fix-everything.md` (executed via subagent-driven development) → deploy runbook `docs/superpowers/runbooks/2026-07-23-qa-20-jul-deploy.md`. Deep state in `[[lia-demo-deployment]]`.
+>
+> ### What shipped (11 fixes, plan Tasks 1–11; Task 7 intentionally deferred)
+> - **Banner `roleResolved` gate** (`VerifyEmailBanner.tsx`) — the "почта не подтверждена" banner no longer shows for verified users during the `/auth/me` load window. **CORRECTION:** this was NOT a stale-JWT bug — GateGuard `CheckAuth` reads `email_verified` live from DB; it was a frontend race gating on `ready` (hydration) instead of `roleResolved` (getMe settled).
+> - **GateGuard migration 000013** — backfills `email_verified=true WHERE role='admin'` (grandfathers pre-verification admins; admin no longer nagged).
+> - **SignupCTA by status** — non-published events show "Событие отменено/снято" instead of an active CTA (unverified viewers no longer pushed into verification on cancelled events).
+> - **Owner withdraw without verification** — `PATCH /events/{id}` status→cancelled bypasses the verified-gate (`events_update.go` `isWithdraw`).
+> - **Google Calendar deep-link** — "В Google" next to the `.ics` "В календарь" on the event CTA (`lib/calendar-links.ts`).
+> - **Calendar query caching** — `/me/calendar` `useQuery` staleTime/gcTime/placeholderData (stops per-navigation refetch).
+> - **Yandex Places proxy `/api/v1/places`** (NEW backend endpoint) + frontend venue-NAME search merged with address geocoding (`VenueGeoModal`). **⚠️ FOLLOW-UP: `YANDEX_PLACES_KEY` NOT yet provisioned in `/opt/lia/backend/.env.prod`** → venue-name search inert (degrades to address-only) until the key is added, then `up -d --no-build app`. Compose already declares it (backup `docker-compose.prod.yml.bak-pre-qa20-*`).
+> - **Invite-accept verifies email (5a)** — new GateGuard `MarkEmailVerified` gRPC; `invitations.accept()` verifies the invitee's email on accept (email-match FIRST, then verify — safe ordering). Removed the dead HTTP accept-guard (`http/invitations/handler.go`) that made the feature inert. GateGuard's generated `*_grpc.pb.go` is `.gitignored` (regenerated on box), so the Mac build baked in `MarkEmailVerified` — no on-box proto regen needed.
+> - **Signup field reorder** — Email → Пароль → Имя (placeholder "Как вас представить участникам") so the 2nd field isn't misread as confirm-email.
+> - **Task 7 DEFERRED:** backend calendar 3-query fan-out collapse (perf-only; Task 6 mitigates client-side). Not done.
+>
+> ### React #418 hydration bug FIXED (`a366c61`, separate discovery during live testing)
+> Every feed page threw a global `Minified React error #418`. **ROOT CAUSE = nested `<a>`:** `EventCard` is a `<Link>` and `VerifiedBadge` rendered a second `<Link>` (organizer profile) when given `profileId` → invalid `<a>`-in-`<a>` → browser reparents on hydration → #418. Only fires when a visible event has a **verified organizer** (real data has them; mock doesn't). Fix: card renders `<VerifiedBadge />` w/o `profileId`. **Cost 2 wasted redeploys** (r2 blamed feed `Date.now()` sort, r3 blamed `ThemeSwitch` — both wrong, both reverted; the light/dark correlation was coincidental). **LESSON: debug a prod #418 with a local dev build against prod data** (`NEXT_PUBLIC_API_URL=https://api.presence.tarski.ru pnpm dev`) — dev React names the exact element. Detail in `[[lia-demo-deployment]]`.
+>
+> ### Live-verified (prod browser, this session)
+> Signup field order; "В Google" + "В календарь" on event CTA; banner hidden for anon / shown for unverified; `/map` renders Yandex map + pins; `/api/v1/places` mounted (401 unauth); `/auth/verify`, `/me/invitations` render; **#418 gone in BOTH themes with verified-organizer cards present.** NOT live-verified (need auth/data/key): venue-name search (key unprovisioned), invite-accept end-to-end, admin banner post-relogin.
+>
+> ### Deploy artifacts
+> Images `gateguard/lia-backend/lia-frontend:qa20-r1` + `lia-frontend:qa20-r4` (#418). Rollback tags `*:rollback-qa20-20260723-202249` (backend/gateguard) + `lia-frontend-presence:rollback-qa20r4-*`. DB dumps `/opt/lia/backup-pre-qa20-{gateguard,lia_prod}-20260723-*.gz`. DB creds are `DATABASE_USER`/`DATABASE_PASSWORD`; pg superuser `lia_prod`; gateguard migrate script `/opt/lia/migrate-qa20-013.sh`. Disk 66%.
+>
+> ---
+
+> ## CURRENT STATE — 2026-07-19
 >
 > Three workstreams landed this session, all merged to `main` and (except where noted) **DEPLOYED LIVE** on `presence.tarski.ru`. **Local `main` = `origin/main` = `a49e337`** (pushed, in sync). **No DB migration** — prod DB stays at **020** (Lia) / **12** (GateGuard); nothing this session touched schema.
 >

@@ -89,6 +89,36 @@ fails on the github TLS curl).
   `cd /opt/lia/backend && docker compose --env-file .env.prod -f docker-compose.yml
   -f docker-compose.prod.yml -f docker-compose.gateguard.yml -f
   docker-compose.monitoring.yml up -d --no-build app` to activate venue-name search.
-- **Unproven live** (need auth + real data / a real inbox): map renders on `/map`;
-  invite-accept end-to-end verifies an unverified invitee; the admin banner is gone
-  after re-login (the `roleResolved` fix + backfill).
+- **Unproven live** (need auth + real data / a real inbox): invite-accept end-to-end
+  verifies an unverified invitee; the admin banner is gone after re-login.
+
+## Live browser verification (2026-07-24)
+Confirmed on prod: signup field order (Email→Пароль→Имя); "В Google" + "В календарь"
+on the event CTA; banner hidden for anon, shown for unverified; **`/map` renders a
+Yandex map + pins** (maps build-arg OK); `/api/v1/places` 401 (mounted); `/auth/verify`
++ `/me/invitations` render; feed leads with upcoming events. **NOT verified** (need
+auth/data/key): venue-name search (key unprovisioned), invite-accept end-to-end.
+
+## Follow-up frontend redeploy — React #418 hydration fix (`a366c61`, `lia-frontend:qa20-r4`)
+Live testing surfaced a **global `Minified React error #418`** on every feed page.
+- **Root cause = invalid nested `<a>`:** `EventCard` wraps the card in a `<Link>`
+  (`<a href="/events/…">`) and `VerifiedBadge` rendered a SECOND `<Link>`
+  (`<a href="/organizers/…">`) when passed a `profileId` → `<a>`-in-`<a>` → browser
+  reparents on hydration → DOM ≠ SSR → #418. Only fires when a visible event has a
+  **verified organizer** (real prod data has them; mock data mostly doesn't).
+- **Fix:** `EventCard` renders `<VerifiedBadge />` WITHOUT `profileId` (plain span);
+  organizer stays linkable on the event-detail page (badge not inside an anchor there).
+- **TWO WASTED REDEPLOYS (r2, r3) from mis-diagnosis — both reverted via `git reset`:**
+  r2 blamed the feed's `Date.now()` upcoming/past sort; r3 blamed `ThemeSwitch`'s
+  theme read. The "dark-theme errors / light-theme clean" correlation was a
+  COINCIDENCE (different feed fetches returned different event subsets — some with
+  verified organizers, some without). `<html>` already has `suppressHydrationWarning`.
+- **DEBUG LESSON:** minified prod React #418 hides the element. Run the frontend dev
+  build locally pointed at the PROD api —
+  `NEXT_PUBLIC_API_URL=https://api.presence.tarski.ru pnpm dev` — and load it; dev
+  React prints the exact element + component stack (`<a> cannot be a descendant of
+  <a>`). Confirmed the error gone after the fix, live, in BOTH themes.
+- Redeploy: build `lia-frontend:qa20-r4` (amd64, both build-args) → `save|ssh|load`
+  → tag `lia-frontend-presence:latest` → rename old container → `docker run`. Rollback
+  tag `lia-frontend-presence:rollback-qa20r4-*`. Backend/gateguard/DB untouched.
+  Pruned stale `old-*` containers + surplus rollback tags; disk 66%.

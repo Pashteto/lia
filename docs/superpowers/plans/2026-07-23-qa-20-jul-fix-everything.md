@@ -1,5 +1,18 @@
 # QA-прогон 20 июля — план «починить абсолютно всё»
 
+> ## ✅ STATUS — EXECUTED + DEPLOYED LIVE (2026-07-23/24)
+> Executed via subagent-driven development (fresh implementer + reviewer per task). **All tasks complete except Task 7 (backend calendar fan-out collapse) — intentionally DEFERRED** (perf-only; Task 6 mitigates client-side). Merged to `main` (`bafd694`) + **DEPLOYED LIVE** on `presence.tarski.ru`; GateGuard DB **12 → 13**. Deploy runbook: `docs/superpowers/runbooks/2026-07-23-qa-20-jul-deploy.md`.
+>
+> **Controller override applied:** Task 2 backfill targets `role='admin'` (verified enum literal), NOT the brief's placeholder email list (avoids needing prod-only email data).
+>
+> **Review caught 1 Critical** (Task 10): the HTTP accept-guard (`http/invitations/handler.go:124`) rejected unverified invitees BEFORE the new verify-on-accept logic ran, making the feature inert — fixed (guard removed + handler-level regression test). The full-suite gate caught a 2nd issue: two `fakeSigner` test doubles missing `MarkEmailVerified` after the interface change — fixed (`bafd694`).
+>
+> **NOT in this plan — discovered during live browser testing + fixed separately (`a366c61`):** a global **React #418 hydration error** on feed pages. Root cause = nested `<a>` (`EventCard` card-link wrapping `VerifiedBadge`'s organizer-link when a verified organizer is present) — NOT the theme/feed things first guessed. Frontend-only redeploy (`lia-frontend:qa20-r4`). See runbook + `[[lia-demo-deployment]]`.
+>
+> **⚠️ Remaining follow-up:** `YANDEX_PLACES_KEY` still unprovisioned in prod `.env.prod` → venue-name search (Tasks 8/9) inert until added + `up -d --no-build app`.
+>
+> ---
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Устранить все проблемы QA-прогона 20 июля (`docs/qa/qa-20-jul-run/analysis.md`) плюс баг «баннер неподтверждённой почты висит у верифицированного/админа».

@@ -153,7 +153,10 @@ export function DiscoveryFeed({
         className="mb-4"
       />
 
-      <div className="-mx-5 mb-4 flex gap-2 overflow-x-auto px-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {/* Filter row: category chips, then the location toggle set apart by a
+          hairline — the divider encodes that "рядом со мной" filters by a
+          different axis (distance) than the category chips beside it. */}
+      <div className="-mx-5 mb-6 flex items-center gap-2 overflow-x-auto px-5 py-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {FILTERS.map((f) => (
           <FilterChip
             key={f.slug}
@@ -162,32 +165,26 @@ export function DiscoveryFeed({
             onClick={() => setActive(f.slug)}
           />
         ))}
+
+        <span
+          className="mx-1 h-6 w-px shrink-0 self-center bg-separator"
+          aria-hidden
+        />
+
+        <FilterChip
+          label={geoLoading ? "Определяем…" : "Рядом со мной"}
+          active={isNearbyMode}
+          disabled={geoLoading}
+          onClick={isNearbyMode ? resetNearby : enableNearby}
+          aria-label={isNearbyMode ? "Сбросить фильтр по расстоянию" : "Показать события рядом со мной"}
+          icon={geoLoading ? <SpinnerGlyph /> : <PinGlyph />}
+          trailing={isNearbyMode ? <ClearGlyph /> : undefined}
+        />
       </div>
 
-      {/* Near-me control row */}
-      <div className="mb-6 flex items-center gap-3">
-        {isNearbyMode ? (
-          <button
-            type="button"
-            onClick={resetNearby}
-            className="rounded-full bg-fill px-4 py-1.5 text-[14px] font-medium text-label-primary transition hover:bg-fill-secondary"
-          >
-            сбросить
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={enableNearby}
-            disabled={geoLoading}
-            className="rounded-full bg-fill px-4 py-1.5 text-[14px] font-medium text-label-primary transition hover:bg-fill-secondary disabled:opacity-60"
-          >
-            {geoLoading ? "Определяем…" : "рядом со мной"}
-          </button>
-        )}
-        {geoError && (
-          <span className="text-[13px] text-label-secondary">{geoError}</span>
-        )}
-      </div>
+      {geoError && (
+        <p className="-mt-4 mb-6 text-[13px] text-label-secondary">{geoError}</p>
+      )}
 
       {isError && allEvents.length === 0 ? (
         <p className="py-16 text-center text-[15px] text-label-secondary">
@@ -217,5 +214,79 @@ export function DiscoveryFeed({
         </p>
       )}
     </main>
+  );
+}
+
+/** Location pin — marks the near-me chip as a distance filter, not a category. */
+function PinGlyph() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      className="shrink-0"
+      aria-hidden
+    >
+      <path
+        d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11Z"
+        fill="currentColor"
+        fillOpacity="0.18"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="10" r="2.5" fill="currentColor" />
+    </svg>
+  );
+}
+
+/** × affordance shown on the active near-me chip to signal it clears the filter. */
+function ClearGlyph() {
+  return (
+    <svg
+      width="13"
+      height="13"
+      viewBox="0 0 24 24"
+      fill="none"
+      className="-mr-1 shrink-0 opacity-80"
+      aria-hidden
+    >
+      <path
+        d="m7 7 10 10M17 7 7 17"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/** Spinner shown while geolocation resolves. */
+function SpinnerGlyph() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      className="shrink-0 animate-spin motion-reduce:animate-none"
+      aria-hidden
+    >
+      <circle
+        cx="12"
+        cy="12"
+        r="9"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeOpacity="0.25"
+      />
+      <path
+        d="M21 12a9 9 0 0 0-9-9"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+      />
+    </svg>
   );
 }

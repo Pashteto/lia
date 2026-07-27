@@ -31,7 +31,7 @@ export function Chip({ variant = "default", as = "button", className, children, 
     as === "button" && "cursor-pointer swiss-focus hover-invert",
     className,
   );
-  if (as === "span") return <span className={base}>{children}</span>;
+  if (as === "span") return <span className={base} {...(props as React.HTMLAttributes<HTMLSpanElement>)}>{children}</span>;
   return (
     <button type="button" className={base} {...props}>
       {children}

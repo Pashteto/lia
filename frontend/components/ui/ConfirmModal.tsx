@@ -46,7 +46,6 @@ export function ConfirmModal({
           </button>
           <Button
             type="button"
-            variant="filled"
             onClick={onConfirm}
             className={danger ? "bg-red-500 hover:opacity-90" : undefined}
           >

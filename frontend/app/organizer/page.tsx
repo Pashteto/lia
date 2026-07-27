@@ -50,7 +50,7 @@ export default function OrganizerHubPage() {
           </p>
         </div>
         <Link href="/events/new">
-          <Button variant="tinted">+ Создать событие</Button>
+          <Button variant="ghost">+ Создать событие</Button>
         </Link>
       </div>
 

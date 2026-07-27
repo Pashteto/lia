@@ -228,7 +228,7 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
   if (!ready) {
     return (
       <div className="flex flex-col items-end gap-2">
-        <Button variant="filled" className="px-8" disabled>
+        <Button className="px-8" disabled>
           Записаться
         </Button>
         {footer}
@@ -288,7 +288,7 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
               Вы записаны
             </span>
             <Button
-              variant="tinted"
+              variant="ghost"
               onClick={handleCancel}
               disabled={busy}
               className="px-4"
@@ -310,7 +310,7 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
               Вы в листе ожидания
             </span>
             <Button
-              variant="tinted"
+              variant="ghost"
               onClick={handleCancel}
               disabled={busy}
               className="px-4"
@@ -328,7 +328,6 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
     return (
       <div className="flex flex-col items-end gap-2">
         <Button
-          variant="filled"
           className="px-8"
           disabled={busy}
           onClick={() => handleSignUp()}
@@ -358,7 +357,7 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
               Заявка отправлена
             </span>
             <Button
-              variant="tinted"
+              variant="ghost"
               onClick={handleCancel}
               disabled={busy}
               className="px-4"
@@ -398,7 +397,6 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
     return (
       <div className="flex flex-col items-end gap-2">
         <Button
-          variant="filled"
           className="px-8"
           disabled={busy}
           onClick={() => {

@@ -106,7 +106,7 @@ export default function AdminOrganizersPage() {
           onChange={(e) => setQ(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && doSearch()}
         />
-        <Button variant="filled" onClick={doSearch} disabled={searching || !q.trim()}>
+        <Button onClick={doSearch} disabled={searching || !q.trim()}>
           Найти
         </Button>
       </div>
@@ -185,7 +185,7 @@ export default function AdminOrganizersPage() {
                 onChange={(e) => setRevokeReason(e.target.value)}
               />
               <Button
-                variant="tinted"
+                variant="ghost"
                 disabled={acting || !revokeReason.trim()}
                 onClick={onRevoke}
                 className="text-red-500 hover:bg-red-500/10 disabled:opacity-40"

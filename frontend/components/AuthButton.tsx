@@ -28,7 +28,7 @@ export function AuthButton() {
   // button doesn't flicker between states on hydration.
   if (!ready) {
     return (
-      <Button variant="plain" disabled>
+      <Button variant="ghost" disabled>
         Войти
       </Button>
     );
@@ -69,7 +69,7 @@ export function AuthButton() {
         >
           {email}
         </span>
-        <Button variant="plain" onClick={logout}>
+        <Button variant="ghost" onClick={logout}>
           Выйти
         </Button>
       </div>
@@ -78,7 +78,7 @@ export function AuthButton() {
 
   return (
     <>
-      <Button variant="plain" onClick={() => setOpen(true)}>
+      <Button variant="ghost" onClick={() => setOpen(true)}>
         Войти
       </Button>
       {open && <LoginModal onClose={() => setOpen(false)} />}

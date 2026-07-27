@@ -110,14 +110,14 @@ export default function ModerationQueue() {
               <div className="shrink-0">
                 {tab === "published" ? (
                   <Button
-                    variant="tinted"
+                    variant="ghost"
                     onClick={() => setPending(e)}
                     className="text-red-500 hover:bg-red-500/10"
                   >
                     Снять
                   </Button>
                 ) : (
-                  <Button variant="tinted" onClick={() => onReinstate(e.id)}>
+                  <Button variant="ghost" onClick={() => onReinstate(e.id)}>
                     Вернуть
                   </Button>
                 )}
@@ -159,7 +159,7 @@ export default function ModerationQueue() {
             )}
             <div className="flex justify-end gap-2">
               <Button
-                variant="plain"
+                variant="ghost"
                 onClick={() => {
                   setPending(null);
                   setReason("");
@@ -169,7 +169,6 @@ export default function ModerationQueue() {
                 Отмена
               </Button>
               <Button
-                variant="filled"
                 disabled={!reason.trim()}
                 onClick={confirmTakedown}
                 className="bg-red-500 hover:opacity-90 disabled:opacity-40"

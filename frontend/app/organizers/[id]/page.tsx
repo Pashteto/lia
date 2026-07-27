@@ -86,7 +86,7 @@ export default function PublicOrganizerPage() {
         {org.verified && <VerifiedBadge />}
         {ready && isAuthed && (
           <Button
-            variant={following ? "tinted" : "filled"}
+            variant={following ? "ghost" : "primary"}
             onClick={toggleFollow}
             disabled={pending}
             className="ml-auto"

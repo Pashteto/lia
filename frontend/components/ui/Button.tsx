@@ -1,32 +1,40 @@
 import { cn } from "@/lib/cn";
 import type { ButtonHTMLAttributes } from "react";
 
-type Variant = "filled" | "tinted" | "plain";
+type Variant = "primary" | "ghost" | "inverted" | "destructive" | "dark-ghost";
+type Size = "md" | "sm";
 
 const VARIANTS: Record<Variant, string> = {
-  // Filled: accent fill, white label — primary actions.
-  filled: "bg-accent text-white hover:opacity-90 active:opacity-80",
-  // Tinted: accent-tinted fill, accent label — secondary actions.
-  tinted: "bg-accent/12 text-accent hover:bg-accent/20",
-  // Plain: accent text only — tertiary / nav actions.
-  plain: "text-accent hover:opacity-70 px-0",
+  // Ink fill, white text; hover deepens to black.
+  primary: "bg-ink text-white hover:bg-black",
+  // Transparent, 1px ink border, ink text; hover inverts.
+  ghost: "border border-ink text-ink hover-invert",
+  // Admin primary on ink surface: paper fill, ink text.
+  inverted: "bg-paper text-ink hover:opacity-90",
+  // Red fill — destructive only (ОТКЛОНИТЬ etc.).
+  destructive: "bg-signal text-white hover:opacity-90",
+  // Admin tertiary on ink surface.
+  "dark-ghost": "border border-muted-2 text-muted-2 hover:opacity-90",
+};
+
+const SIZES: Record<Size, string> = {
+  md: "px-[11px] py-[11px] text-[11px]",
+  sm: "px-[4px] py-[7px] text-[9px]",
 };
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
+  size?: Size;
 }
 
-/** Apple-style button (filled / tinted / plain), ~12px continuous radius. */
-export function Button({
-  variant = "filled",
-  className,
-  ...props
-}: ButtonProps) {
+/** Swiss Grid CTA: uppercase 700 / 0.07em, zero radius, no motion. */
+export function Button({ variant = "primary", size = "md", className, ...props }: ButtonProps) {
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-control px-4 py-2.5 text-[15px] font-semibold transition select-none disabled:opacity-40 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-none",
+        "inline-flex items-center justify-center whitespace-nowrap text-center font-bold uppercase tracking-[0.07em] transition-colors duration-[120ms] ease-linear select-none swiss-focus disabled:bg-inactive disabled:text-muted-2 disabled:border-0",
         VARIANTS[variant],
+        SIZES[size],
         className,
       )}
       {...props}

@@ -18,7 +18,7 @@ export function ComingSoon({
       <h1 className="mt-2 text-[34px] font-bold tracking-[-0.022em]">{title}</h1>
       <p className="mt-3 max-w-md text-[17px] text-label-secondary">{note}</p>
       <Link href="/" className="mt-6">
-        <Button variant="tinted">К событиям</Button>
+        <Button variant="ghost">К событиям</Button>
       </Link>
     </main>
   );

@@ -236,7 +236,7 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
           </span>
           <Button
             type="submit"
-            variant="plain"
+            variant="ghost"
             disabled={mode === "edit" ? editMutation.isPending : mutation.isPending}
           >
             {(mode === "edit" ? editMutation.isPending : mutation.isPending)

@@ -87,7 +87,7 @@ function PracticeRow({ rsvp, tab }: { rsvp: Rsvp; tab: Tab }) {
 
         {canCancel && (
           <Button
-            variant="tinted"
+            variant="ghost"
             onClick={handleCancel}
             disabled={cancelling}
             className="shrink-0 self-start sm:self-center"
@@ -98,7 +98,7 @@ function PracticeRow({ rsvp, tab }: { rsvp: Rsvp; tab: Tab }) {
 
         {tab === "past" && (
           <Button
-            variant="tinted"
+            variant="ghost"
             onClick={() => setShowFeedback((v) => !v)}
             className="shrink-0 self-start sm:self-center"
           >

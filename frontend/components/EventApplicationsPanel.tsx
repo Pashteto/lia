@@ -142,7 +142,7 @@ export function EventApplicationsPanel({ eventId, eventTitle }: Props) {
               {isPending && (
                 <div className="flex shrink-0 gap-2">
                   <Button
-                    variant="tinted"
+                    variant="ghost"
                     className="py-1.5 text-[13px]"
                     disabled={isActing}
                     onClick={() => handleDecide(rsvp, "accept")}
@@ -150,7 +150,7 @@ export function EventApplicationsPanel({ eventId, eventTitle }: Props) {
                     {deciding[rsvp.id] === "accept" ? "…" : "Принять"}
                   </Button>
                   <Button
-                    variant="plain"
+                    variant="ghost"
                     className="py-1.5 text-[13px] text-red-500 hover:text-red-400"
                     disabled={isActing}
                     onClick={() => handleDecide(rsvp, "decline")}

@@ -113,7 +113,7 @@ export function FeedbackForm({ eventId }: { eventId: string }) {
       {error ? <p className="mt-2 text-[13px] text-red-500">{error}</p> : null}
 
       <div className="mt-3 flex justify-end">
-        <Button variant="filled" onClick={handleSubmit} disabled={busy}>
+        <Button onClick={handleSubmit} disabled={busy}>
           {busy ? "Отправка…" : "Отправить отзыв"}
         </Button>
       </div>

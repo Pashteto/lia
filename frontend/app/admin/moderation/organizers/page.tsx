@@ -131,13 +131,12 @@ export default function ModerationOrganizersPage() {
               {tab === "pending" && (
                 <div className="flex shrink-0 gap-2">
                   <Button
-                    variant="filled"
                     onClick={() => onVerify(o.id)}
                   >
                     Подтвердить
                   </Button>
                   <Button
-                    variant="tinted"
+                    variant="ghost"
                     onClick={() => {
                       setRejectTarget(o);
                       setReason("");
@@ -186,7 +185,7 @@ export default function ModerationOrganizersPage() {
             )}
             <div className="flex justify-end gap-2">
               <Button
-                variant="plain"
+                variant="ghost"
                 onClick={() => {
                   setRejectTarget(null);
                   setReason("");
@@ -196,7 +195,6 @@ export default function ModerationOrganizersPage() {
                 Отмена
               </Button>
               <Button
-                variant="filled"
                 disabled={acting || !reason.trim()}
                 onClick={confirmReject}
                 className="bg-red-500 hover:opacity-90 disabled:opacity-40"

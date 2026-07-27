@@ -139,14 +139,14 @@ export default function ComplaintsInbox() {
               <div className="flex shrink-0 flex-col gap-2">
                 {g.event_status === "published" ? (
                   <Button
-                    variant="tinted"
+                    variant="ghost"
                     onClick={() => setPending(g)}
                     className="text-red-500 hover:bg-red-500/10"
                   >
                     Снять
                   </Button>
                 ) : null}
-                <Button variant="tinted" disabled={acting} onClick={() => onDismiss(g.event_id)}>
+                <Button variant="ghost" disabled={acting} onClick={() => onDismiss(g.event_id)}>
                   Отклонить
                 </Button>
               </div>
@@ -173,11 +173,10 @@ export default function ComplaintsInbox() {
               className="w-full rounded-control bg-bg-tertiary p-3 text-[15px]"
             />
             <div className="mt-4 flex justify-end gap-2">
-              <Button variant="tinted" onClick={() => setPending(null)}>
+              <Button variant="ghost" onClick={() => setPending(null)}>
                 Отмена
               </Button>
               <Button
-                variant="filled"
                 onClick={confirmTakedown}
                 disabled={acting || !reason.trim()}
                 className="text-red-500"

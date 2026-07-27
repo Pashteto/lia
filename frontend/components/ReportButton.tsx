@@ -110,10 +110,10 @@ export function ReportButton({ eventId }: { eventId: string }) {
             {error ? <p className="mt-2 text-[13px] text-red-500">{error}</p> : null}
 
             <div className="mt-4 flex justify-end gap-2">
-              <Button variant="tinted" onClick={() => setOpen(false)}>
+              <Button variant="ghost" onClick={() => setOpen(false)}>
                 Отмена
               </Button>
-              <Button variant="filled" onClick={submit} disabled={busy}>
+              <Button onClick={submit} disabled={busy}>
                 {busy ? "Отправка…" : "Отправить"}
               </Button>
             </div>

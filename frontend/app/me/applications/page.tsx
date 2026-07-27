@@ -115,7 +115,7 @@ function ApplicationCard({ rsvp, tab }: { rsvp: Rsvp; tab: Tab }) {
       {canWithdraw && (
         <div className="pt-1">
           <Button
-            variant="tinted"
+            variant="ghost"
             onClick={handleWithdraw}
             disabled={withdrawing}
             className="text-red-600 bg-red-500/10 hover:bg-red-500/20"

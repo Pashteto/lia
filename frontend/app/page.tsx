@@ -2,7 +2,6 @@ import { AuthButton } from "@/components/AuthButton";
 import { DiscoveryFeed } from "@/components/DiscoveryFeed";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { GlassNav } from "@/components/ui/GlassNav";
-import { ThemeSwitch } from "@/components/ui/ThemeSwitch";
 import { fetchPublishedEvents } from "@/lib/api";
 import { MOCK_EVENTS } from "@/lib/mock-events";
 
@@ -19,12 +18,7 @@ export default async function DiscoveryPage() {
     <>
       <GlassNav
         title={<BrandLogo />}
-        actions={
-          <>
-            <ThemeSwitch />
-            <AuthButton />
-          </>
-        }
+        actions={<AuthButton />}
       />
       <DiscoveryFeed initialEvents={initialEvents} />
     </>

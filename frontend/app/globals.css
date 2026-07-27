@@ -1,146 +1,180 @@
 @import "tailwindcss";
 
 /*
- * Presence.Tarski design tokens — Apple HIG.
- * Source of truth: ../../design/DESIGN.md (and design/screens/*.html).
- * Light values are the defaults; dark overrides apply via `prefers-color-scheme`
- * and an explicit `.dark` class (so screens can be eyeballed in both themes).
- * Do NOT bundle SF Pro as a webfont — system stack only (DESIGN.md Legal note).
+ * Presence — Swiss Grid design tokens.
+ * Source of truth: docs/Redesign/5/design_handoff_presence_swiss_grid/README.md
+ * Identity: paper + ink, zero radius, zero shadows, 1px rules, tracked caps,
+ * all numerals in mono. Red = needs attention, never decorative.
  */
 
-/* Enable an explicit dark variant (via the [data-theme] attribute on <html>) in
- * addition to the OS preference. An attribute is used rather than a class
- * because React controls <html>'s className and strips a script-added class on
- * hydration, whereas it leaves an attribute it doesn't render untouched — so the
- * explicit choice survives a full page load on every route. */
-@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
-
 :root {
-  /* Backgrounds */
-  --bg: #ffffff; /* systemBackground (detail/reading base) */
-  --bg-grouped: #f2f2f7; /* systemGroupedBackground (list screens) */
-  --bg-secondary: #ffffff; /* cards on grouped bg */
-  --bg-tertiary: #ffffff;
+  /* palette (verbatim from handoff tokens.css) */
+  --ink: #111111;
+  --paper: #f2f0ec;
+  --white: #ffffff;
+  --signal: #e2231a;
+  --signal-tint: #ffd9d6;
+  --muted: #7d786e;
+  --muted-2: #8a857c;
+  --body-dim: #4f4a42;
+  --field-text: #6b665e;
+  --rule-light: #dddddd;
+  --rule-grid: #e0dcd4;
+  --rule-dark: #3a3733;
+  --admin-head: #1c1a18;
+  --text-dim-dark: #cfcabf;
+  --text-dim-dark-2: #a8a299;
+  --inactive: #dcd8d0;
+  --table-head: #e6e3dc;
+  --cell-blank: #eceae4;
 
-  /* Labels */
-  --label: #000000;
-  --label-secondary: rgba(60, 60, 67, 0.6);
-  --label-tertiary: rgba(60, 60, 67, 0.3);
-
-  /* Lines & fills */
-  --separator: rgba(60, 60, 67, 0.18);
-  --fill: rgba(118, 118, 128, 0.12);
-
-  /* Accent / status */
-  --accent: #007aff;
-  --success: #34c759;
-
-  /* Material (iOS 26 Liquid Glass — more translucent than .72 so the blur
-   * carries the surface, paired with an inset highlight in the glass utility). */
-  --glass: rgba(249, 249, 249, 0.6);
+  /* semantic surface (paper by default; flipped by data-surface="ink") */
+  --surface: var(--paper);
+  --on-surface: var(--ink);
+  --rule-inner: var(--rule-light);
+  --text-dim: var(--body-dim);
+  --surface-head: var(--table-head);
+  --hover-fill: var(--ink);
+  --hover-on: var(--paper);
 }
 
-/* Follow the OS only when the user hasn't made an explicit choice. The
- * `:not([data-theme="light"])` guard lets an explicit light choice force light
- * on a dark-mode OS (without it the media query and the dark override set
- * identical values, so the toggle had no visible effect — see ThemeSwitch). */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #000000;
-    --bg-grouped: #000000; /* intentional per UIKit: grouped == base in dark */
-    --bg-secondary: #1c1c1e;
-    --bg-tertiary: #2c2c2e;
-    --label: #ffffff;
-    --label-secondary: rgba(235, 235, 245, 0.6);
-    --label-tertiary: rgba(235, 235, 245, 0.3);
-    --separator: rgba(84, 84, 88, 0.65);
-    --fill: rgba(118, 118, 128, 0.24);
-    --accent: #0a84ff;
-    --success: #30d158;
-    --glass: rgba(30, 30, 30, 0.6);
-  }
+/* Inverted surface — admin, U7 ink panel, 404. Components are surface-blind:
+ * they use surface/on-surface/rule-inner and invert for free. */
+[data-surface="ink"] {
+  --surface: var(--ink);
+  --on-surface: var(--paper);
+  --rule-inner: var(--rule-dark);
+  --text-dim: var(--text-dim-dark);
+  --surface-head: var(--admin-head);
+  --hover-fill: var(--admin-head);
+  --hover-on: var(--paper);
 }
 
-/* Explicit dark override (wins over OS preference). */
-:root[data-theme="dark"] {
-  --bg: #000000;
-  --bg-grouped: #000000;
-  --bg-secondary: #1c1c1e;
-  --bg-tertiary: #2c2c2e;
-  --label: #ffffff;
-  --label-secondary: rgba(235, 235, 245, 0.6);
-  --label-tertiary: rgba(235, 235, 245, 0.3);
-  --separator: rgba(84, 84, 88, 0.65);
-  --fill: rgba(118, 118, 128, 0.24);
-  --accent: #0a84ff;
-  --success: #30d158;
-  --glass: rgba(30, 30, 30, 0.6);
-}
-
-/* Expose tokens to Tailwind utilities (bg-bg, text-label, rounded-card, …). */
 @theme inline {
-  --color-bg: var(--bg);
-  --color-bg-grouped: var(--bg-grouped);
-  --color-bg-secondary: var(--bg-secondary);
-  --color-bg-tertiary: var(--bg-tertiary);
-  --color-label: var(--label);
-  --color-label-secondary: var(--label-secondary);
-  --color-label-tertiary: var(--label-tertiary);
-  --color-separator: var(--separator);
-  --color-fill: var(--fill);
-  --color-accent: var(--accent);
-  --color-success: var(--success);
-  --color-glass: var(--glass);
+  --color-ink: var(--ink);
+  --color-paper: var(--paper);
+  --color-white: var(--white);
+  --color-signal: var(--signal);
+  --color-signal-tint: var(--signal-tint);
+  --color-muted: var(--muted);
+  --color-muted-2: var(--muted-2);
+  --color-body-dim: var(--body-dim);
+  --color-field-text: var(--field-text);
+  --color-rule-light: var(--rule-light);
+  --color-rule-grid: var(--rule-grid);
+  --color-rule-dark: var(--rule-dark);
+  --color-admin-head: var(--admin-head);
+  --color-text-dim-dark: var(--text-dim-dark);
+  --color-text-dim-dark-2: var(--text-dim-dark-2);
+  --color-inactive: var(--inactive);
+  --color-table-head: var(--table-head);
+  --color-cell-blank: var(--cell-blank);
+  --color-surface: var(--surface);
+  --color-on-surface: var(--on-surface);
+  --color-rule-inner: var(--rule-inner);
+  --color-text-dim: var(--text-dim);
+  --color-surface-head: var(--surface-head);
 
-  /* System font stack (renders SF Pro on Apple, OS font elsewhere). */
-  --font-sans: -apple-system, "SF Pro Text", "SF Pro Display", system-ui,
-    "Segoe UI", Roboto, sans-serif;
+  /* fonts — variables provided by next/font in app/layout.tsx */
+  --font-ui: var(--font-golos), "Helvetica Neue", Arial, sans-serif;
+  --font-alt: var(--font-manrope), var(--font-golos), sans-serif;
+  --font-mono: var(--font-jbmono), "SFMono-Regular", Menlo, monospace;
 
-  /* Continuous (squircle) radii — iOS 26 leans on larger continuous corners. */
-  --radius-control: 14px;
-  --radius-card-sm: 18px;
-  --radius-card: 22px;
-  --radius-fact: 16px;
-  --radius-sheet: 24px;
-  --radius-seg: 9px;
-  --radius-capsule: 980px;
+  /* the system has no radii and no shadows */
+  --radius-*: initial;
+  --shadow-*: initial;
 
-  /* System shadows (subtle — no heavy drop shadows). */
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08), 0 10px 30px rgba(0, 0, 0, 0.06);
-  --shadow-card-subtle: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --shadow-phone: 0 20px 50px rgba(0, 0, 0, 0.25);
+  /* TEMP Phase-1 compat: legacy radii/shadows resolve to nothing (flat). Remove in Phase 2. */
+  --radius-control: 0px;
+  --radius-card-sm: 0px;
+  --radius-card: 0px;
+  --radius-fact: 0px;
+  --radius-sheet: 0px;
+  --radius-seg: 0px;
+  --radius-capsule: 0px;
+  --shadow-card: 0 0 #0000;
+  --shadow-card-subtle: 0 0 #0000;
+  --shadow-phone: 0 0 #0000;
+  --shadow-glass: 0 0 #0000;
 
-  /* Elevation for floating Liquid Glass chrome (nav / tab capsule). */
-  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.12);
+  /* TEMP Phase-1 compat — old Apple-HIG color tokens still referenced by ~40
+   * unconverted consumer files. Remove in Phase 2. */
+  --color-bg: var(--paper);
+  --color-bg-grouped: var(--paper);
+  --color-bg-secondary: var(--white);
+  --color-bg-tertiary: var(--white);
+  --color-label: var(--ink);
+  --color-label-secondary: var(--body-dim);
+  --color-label-tertiary: var(--muted-2);
+  --color-separator: var(--rule-light);
+  --color-fill: var(--cell-blank);
+  --color-accent: var(--ink);
+  --color-success: var(--ink);
+  --color-glass: var(--paper);
 }
 
 html {
-  background: var(--bg-grouped);
-  color: var(--label);
-  font-family: var(--font-sans);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
-/* Liquid Glass — chrome layers only (nav/tab/sheet bars), never content.
- * The inset top highlight + soft drop shadow make the surface read as a lit,
- * floating translucent slab (iOS 26), not a flat tinted bar. */
+/* TEMP Phase-1 compat: `glass` is referenced as a plain class name by GlassNav,
+ * TabBar, AuthButton, ConfirmModal, admin/layout.tsx. Remove in Phase 2. */
 @utility glass {
-  background: var(--glass);
-  backdrop-filter: saturate(180%) blur(30px);
-  -webkit-backdrop-filter: saturate(180%) blur(30px);
-  box-shadow: var(--shadow-glass), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  background: var(--paper);
+  border-bottom: 1px solid var(--ink);
 }
-/* Dark omits saturate per DESIGN.md and dims the highlight. */
-@media (prefers-color-scheme: dark) {
-  :root:not(.light) .glass {
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
-    box-shadow: var(--shadow-glass), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+/* ——— Swiss type utilities ——— */
+
+/* Caption: 9px / 0.13em / uppercase / muted-2. The workhorse label. */
+@utility cap {
+  font-family: var(--font-alt);
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  line-height: 1.3;
+  color: var(--muted-2);
+}
+
+/* Label: 10px / 700 / 0.14em / uppercase, current colour. */
+@utility lbl {
+  font-family: var(--font-alt);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Kicker: 11px / 700 / 0.18em / uppercase / muted. */
+@utility kick {
+  font-family: var(--font-alt);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Square 2px focus outline on the current surface's on-colour. */
+@utility swiss-focus {
+  &:focus-visible {
+    outline: 2px solid var(--on-surface);
+    outline-offset: 0;
   }
 }
-.dark .glass {
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
-  box-shadow: var(--shadow-glass), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+/* Hover inverts — never tints. 120ms linear, background+color only. */
+@utility hover-invert {
+  transition: background-color 120ms linear, color 120ms linear;
+  @media (hover: hover) {
+    &:hover {
+      background: var(--hover-fill);
+      color: var(--hover-on);
+    }
+  }
 }

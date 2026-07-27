@@ -20,7 +20,7 @@ export interface AppHeaderProps {
   actions?: ReactNode;
 }
 
-function isActive(pathname: string, href: string): boolean {
+function matches(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(`${href}/`);
 }
@@ -29,6 +29,10 @@ function isActive(pathname: string, href: string): boolean {
  * active item = 2px bottom rule in currentColor. */
 export function AppHeader({ nav = [], admin, mobileCaption, actions }: AppHeaderProps) {
   const pathname = usePathname();
+  const activeHref = nav
+    .filter((item) => matches(pathname, item.href))
+    .reduce<string | null>((best, item) => (best === null || item.href.length > best.length ? item.href : best), null);
+
   return (
     <header
       className={cn(
@@ -44,10 +48,10 @@ export function AppHeader({ nav = [], admin, mobileCaption, actions }: AppHeader
           <Link
             key={item.href}
             href={item.href}
-            aria-current={isActive(pathname, item.href) ? "page" : undefined}
+            aria-current={item.href === activeHref ? "page" : undefined}
             className={cn(
               "swiss-focus font-alt text-[9px] uppercase tracking-[0.14em]",
-              isActive(pathname, item.href) && "border-b-2 border-current pb-[2px] font-bold",
+              item.href === activeHref && "border-b-2 border-current pb-[2px] font-bold",
             )}
           >
             {item.label}

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Golos_Text, Manrope, JetBrains_Mono } from "next/font/google";
 import { Providers } from "./providers";
-import { TabBar } from "@/components/ui/TabBar";
+import { TabBarGate } from "@/components/ui/TabBarGate";
 import { VerifyEmailBanner } from "@/components/VerifyEmailBanner";
 import "./globals.css";
 
@@ -46,7 +46,7 @@ export default function RootLayout({
           <VerifyEmailBanner />
           {children}
         </Providers>
-        <TabBar />
+        <TabBarGate />
       </body>
     </html>
   );

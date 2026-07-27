@@ -7,6 +7,11 @@
  * all numerals in mono. Red = needs attention, never decorative.
  */
 
+/* TEMP Phase-1 compat: dark mode is retired; keep `dark:` utilities inert
+ * (without this, Tailwind's default prefers-color-scheme dark variant fires).
+ * Remove in Phase 2 together with the last dark: consumer classes. */
+@custom-variant dark (&:where([data-theme="__retired__"], [data-theme="__retired__"] *));
+
 :root {
   /* palette (verbatim from handoff tokens.css) */
   --ink: #111111;

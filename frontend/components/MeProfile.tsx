@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 
 import { AppHeader, USER_NAV } from "@/components/ui/AppHeader";
@@ -128,9 +127,10 @@ function RowSkeletons() {
 
 export function MeProfile() {
   const { isAuthed, ready } = useAuth();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const requested = searchParams.get("tab");
-  const [tab, setTab] = useState<Tab>(isTab(requested) ? requested : "upcoming");
+  const tab: Tab = isTab(requested) ? requested : "upcoming";
 
   const authed = ready && isAuthed;
 
@@ -233,11 +233,11 @@ export function MeProfile() {
             <Chip
               key={t.key}
               variant={tab === t.key ? "active" : "default"}
-              onClick={() => setTab(t.key)}
+              onClick={() => router.replace(t.key === "upcoming" ? "/me" : `/me?tab=${t.key}`)}
               aria-pressed={tab === t.key}
-              className="max-sm:text-[8px]"
+              className="min-h-[44px] max-sm:text-[8px]"
             >
-              {t.label} · {countLabel(counts[t.key])}
+              {t.label} · <span className="font-mono">{countLabel(counts[t.key])}</span>
             </Chip>
           ))}
         </div>

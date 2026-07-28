@@ -11,7 +11,7 @@
 
 - **`/search` U3 · AI-подбор** replaces the `ComingSoon` stub with a deterministic smart-filter: four suggestion chips, free-text input, templated one-sentence answer, and ≤3 `EventModule` results with `Совпало: …` match reasons.
 - **Pure helpers** — `discover-intent` (chip + free-text → `DiscoverIntent`) and `discover-rank` (catalogue → ranked picks + answer sentence) — covered by Vitest TDD.
-- **Client shell** — `DiscoverBrowse` applies intents over TanStack Query (`fetchPublishedEvents`, optional `fetchNearbyEvents` for geo); loading uses `Skeleton`, empty/error use `EmptyState`; escape hatch `Точные фильтры →` always visible.
+- **Client shell** — `DiscoverBrowse` applies intents over TanStack Query (`fetchPublishedEvents`); geo intents resolve browser geolocation then filter the catalogue client-side via `haversineKm` in `discover-rank` (no nearby API call); loading uses `Skeleton`, empty/error use `EmptyState`; escape hatch `Точные фильтры →` always visible.
 - **Deferred:** real `POST /discover` / LLM integration (`lia-ai-provider-constraint`). Caption stays `AI-подбор` per handoff; answers are templated, not model-generated.
 
 ---

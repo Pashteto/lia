@@ -113,6 +113,7 @@ export function DiscoverBrowse({
           />
           <button
             type="submit"
+            disabled={phase === "loading"}
             aria-label="Подобрать"
             className="swiss-focus hover-invert min-h-[44px] bg-ink px-[20px] py-[11px] text-[12px] font-bold text-white max-sm:px-[13px] max-sm:py-[9px] max-sm:text-[11px]"
           >
@@ -124,6 +125,7 @@ export function DiscoverBrowse({
             <Chip
               key={c.id}
               variant={activeChip === c.id ? "active" : "default"}
+              disabled={phase === "loading"}
               className="min-h-[44px] max-sm:text-[8px]"
               onClick={() => {
                 setDraft(c.label);

@@ -24,7 +24,7 @@ pnpm lint
 | `app/events/new/page.tsx` | **Create event** form (`POST /events`). |
 | `app/search/page.tsx` | AI-search — stub. |
 | `app/providers.tsx` | TanStack Query provider. |
-| `components/ui/` | Design-system primitives: `Button`, `EventCard`, `FilterChip`, `SearchField`, `GlassNav`, `TabBar`, `Kicker`, `Segmented`, `Switch`. |
+| `components/ui/` | Design-system primitives: `Button`, `EventCard`, `FilterChip`, `GlassNav`, `TabBar`, `Kicker`, `Segmented`, `Switch`. |
 | `components/` | Composed pieces: `DiscoveryFeed`, `CreateEventForm`, `VenuePicker` (venue search/create typeahead), `ComingSoon`, `ThemeToggle`. |
 | `lib/` | `types.ts` (domain + API types), `api.ts` (backend client + mappers), `mock-events.ts` (fallback data), `format.ts`, `cn.ts`. |
 

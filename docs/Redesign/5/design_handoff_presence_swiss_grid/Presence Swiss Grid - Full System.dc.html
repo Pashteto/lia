@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<script src="./image-slot.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;900&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#dedbd4;font-family:'Archivo',sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:#111;text-decoration:underline}
+  a:hover{color:#e2231a}
+  .kick{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#7d786e}
+  .badge{display:inline-flex;align-items:center;gap:8px;font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#111;background:#f2f0ec;border:2px solid #111;padding:5px 14px;margin-bottom:10px}
+  .lbl{font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#7d786e;margin-bottom:8px}
+  .row2{display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start}
+  .d{width:680px;flex:none;background:#f2f0ec;color:#111;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 26px rgba(40,30,10,.14)}
+  .m{width:262px;flex:none;background:#f2f0ec;color:#111;display:flex;flex-direction:column;overflow:hidden;border:8px solid #111;border-radius:22px;box-shadow:0 10px 30px rgba(40,30,10,.2)}
+  .hd{padding:13px 20px;display:flex;justify-content:space-between;align-items:baseline;flex:none}
+  .hdm{padding:11px 14px;display:flex;justify-content:space-between;align-items:baseline;flex:none}
+  .wm{font-weight:900;font-size:13px;letter-spacing:-.01em}
+  .nv{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#111;display:flex;gap:14px}
+  .nv b{border-bottom:2px solid #111;padding-bottom:2px}
+  .cap{font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:#8a857c;line-height:1.3}
+  .val{font-weight:700;font-size:12px;line-height:1.25}
+  .t{border-top:1px solid #111}
+  .b{border-bottom:1px solid #111}
+  .r{border-right:1px solid #111}
+  .cell{padding:10px 14px}
+  .cta{background:#111;color:#fff;padding:11px;font-size:11px;font-weight:700;text-align:center;letter-spacing:.07em}
+  .cta.gh{background:transparent;color:#111;border:1px solid #111}
+  .chip{font-size:9px;letter-spacing:.12em;text-transform:uppercase;border:1px solid #111;padding:4px 9px;white-space:nowrap}
+  .chip.on{background:#111;color:#fff}
+  .num{font-family:'JetBrains Mono',monospace;font-weight:700}
+  .ttl{font-weight:900;letter-spacing:-.03em;line-height:.94;margin:0}
+  .tabs{display:flex;flex:none}
+  .tab{flex:1;text-align:center;padding:9px 4px;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#8a857c}
+  .tab.on{color:#111;font-weight:700}
+  .tab i{display:block;width:16px;height:16px;border:1.5px solid currentColor;margin:0 auto 4px}
+  .tab.on i{background:#111;border-color:#111}
+  .note{font-family:'Space Grotesk',sans-serif;font-size:12.5px;line-height:1.5;color:#4f4a42;max-width:62ch;margin:6px 0 16px}
+  .sechd{font-family:'Space Grotesk',sans-serif;font-weight:800;letter-spacing:-.02em;color:#111;margin:0 0 6px}
+</style>
+</helmet>
+
+<div style="padding:56px 48px 40px;max-width:1360px;margin:0 auto">
+  <div class="kick" style="margin-bottom:14px">Presence · полный редизайн · Swiss grid</div>
+  <h1 class="ttl" style="font-family:'Space Grotesk',sans-serif;font-size:60px;letter-spacing:-.03em;max-width:20ch;margin-bottom:16px">Все экраны в системе Swiss grid</h1>
+  <p class="note" style="font-size:15px;max-width:70ch">Единая сетка, один гротеск, волосяные линейки, ячейки-модули, цвет почти отсутствует. Ниже — 17 экранов: пользовательская часть, кабинет организатора и админ-панель. Карты интерактивные (OpenStreetMap), обложки — настоящие с сайта.</p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:22px">
+    <span class="chip on">Пользователь · 8</span><span class="chip">Организатор · 5</span><span class="chip">Админ · 4</span>
+  </div>
+</div>
+
+<!-- ============ FOUNDATIONS ============ -->
+<div style="padding:20px 48px 60px;max-width:1360px;margin:0 auto">
+  <div class="badge">00 · Основа системы</div>
+  <h2 class="sechd" style="font-size:30px">Токены и правила</h2>
+  <p class="note">Всё построено на четырёх решениях: одна гарнитура, шкала из шести кеглей, линейка 1px и модульная сетка. Цвет — только чёрный, бумага и один красный сигнал для критических состояний.</p>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid #111;background:#f2f0ec">
+    <div class="r" style="padding:18px">
+      <div class="cap" style="margin-bottom:12px">Гарнитура</div>
+      <div style="font-weight:900;font-size:30px;letter-spacing:-.03em;line-height:1">Archivo</div>
+      <div style="font-size:11px;margin-top:8px;line-height:1.6">900 — заголовки<br>700 — значения<br>400 — текст<br>Mono — числа</div>
+    </div>
+    <div class="r" style="padding:18px">
+      <div class="cap" style="margin-bottom:12px">Шкала кеглей</div>
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <span style="font-weight:900;font-size:26px;letter-spacing:-.03em;line-height:1">48 / 30</span>
+        <span style="font-weight:700;font-size:13px">14 / 12</span>
+        <span class="cap">10 / 9 · caps</span>
+      </div>
+    </div>
+    <div class="r" style="padding:18px">
+      <div class="cap" style="margin-bottom:12px">Палитра</div>
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <span style="width:34px;height:34px;background:#111"></span>
+        <span style="width:34px;height:34px;background:#f2f0ec;border:1px solid #111"></span>
+        <span style="width:34px;height:34px;background:#fff;border:1px solid #111"></span>
+        <span style="width:34px;height:34px;background:#e2231a"></span>
+      </div>
+      <div style="font-size:10px;line-height:1.5">#111 · #F2F0EC<br>#FFF · #E2231A</div>
+    </div>
+    <div style="padding:18px">
+      <div class="cap" style="margin-bottom:12px">Сетка</div>
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:2px;margin-bottom:8px">
+        <sc-for list="{{ six }}" as="s" hint-placeholder-count="6"><span style="height:34px;background:#dcd8d0"></span></sc-for>
+      </div>
+      <div style="font-size:10px;line-height:1.5">12 колонок / 6 модулей<br>линейка 1px · без скруглений</div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid #111;border-top:0;background:#f2f0ec">
+    <div class="r" style="padding:18px">
+      <div class="cap" style="margin-bottom:12px">Кнопки</div>
+      <div style="display:flex;flex-direction:column;gap:8px"><span class="cta">ЗАПИСАТЬСЯ</span><span class="cta gh">СОХРАНИТЬ</span></div>
+    </div>
+    <div class="r" style="padding:18px">
+      <div class="cap" style="margin-bottom:12px">Категории — номер, не цвет</div>
+      <div style="display:flex;flex-direction:column;gap:5px;font-size:11px">
+        <span><b class="num">01</b> · Медиации</span><span><b class="num">02</b> · Мастер-классы</span><span><b class="num">03</b> · Лекции</span><span><b class="num">04</b> · Кино · <b class="num">05</b> Спектакли</span>
+      </div>
+    </div>
+    <div style="padding:18px">
+      <div class="cap" style="margin-bottom:12px">Статусы</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="chip on">Опубликовано</span><span class="chip">Черновик</span><span class="chip" style="border-color:#e2231a;color:#e2231a">На модерации</span></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============ USER ============ -->
+<div style="padding:40px 48px 20px;max-width:1360px;margin:0 auto;border-top:2px solid #111">
+  <div class="kick" style="margin-bottom:10px">Часть 1</div>
+  <h2 class="sechd" style="font-size:42px">Пользователь</h2>
+  <p class="note">Восемь экранов пути зрителя: от ленты до записи на событие и своего профиля.</p>
+</div>
+
+<!-- U1 FEED -->
+<div style="padding:20px 48px 56px;max-width:1360px;margin:0 auto">
+  <div class="badge">U1 · Лента событий</div>
+  <p class="note">Каталожная сетка из ячеек. Номер вместо цветной плашки, цена всегда в правом нижнем углу модуля, фильтры разделены на два ряда: время и категория.</p>
+  <div class="row2">
+    <div>
+      <div class="lbl">Desktop</div>
+      <div class="d" style="height:560px">
+        <div class="hd"><span class="wm">PRESENCE</span><span class="nv"><b>События</b><span>Подбор</span><span>Календарь</span><span>Карта</span><span>Организаторам</span><span>Войти</span></span></div>
+        <div class="t b" style="padding:18px 20px;flex:none">
+          <div class="cap" style="margin-bottom:6px">Москва · 42 события · Июль 2026</div>
+          <h3 class="ttl" style="font-size:38px">Что смотреть<br>на этой неделе</h3>
+        </div>
+        <div class="b" style="display:flex;justify-content:space-between;padding:9px 20px;flex:none;gap:8px">
+          <span style="display:flex;gap:6px"><span class="chip on">Все</span><span class="chip">Сегодня</span><span class="chip">Выходные</span><span class="chip">Бесплатно</span></span>
+          <span style="display:flex;gap:6px"><span class="chip">Медиации</span><span class="chip">Лекции</span><span class="chip">Кино</span></span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;flex:1;min-height:0">
+          <sc-for list="{{ feed }}" as="e" hint-placeholder-count="6">
+            <div class="r b" style="padding:12px 14px;display:flex;flex-direction:column;min-width:0">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px"><span class="num" style="font-size:11px">{{ e.i }}</span><span class="cap">{{ e.cat }}</span></div>
+              <div style="font-weight:900;font-size:15px;letter-spacing:-.02em;line-height:1.02;margin-bottom:8px">{{ e.t }}</div>
+              <div class="cap" style="margin-bottom:2px">{{ e.v }}</div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:auto;padding-top:10px"><span class="num" style="font-size:11px">{{ e.d }}</span><span style="font-weight:900;font-size:12px">{{ e.p }}</span></div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="lbl">Mobile</div>
+      <div class="m" style="height:560px">
+        <div class="hdm"><span class="wm" style="font-size:11px">PRESENCE</span><span class="cap">МСК · 42</span></div>
+        <div class="t b" style="padding:13px 14px;flex:none"><h3 class="ttl" style="font-size:22px">Что смотреть<br>на этой неделе</h3></div>
+        <div class="b" style="padding:8px 14px;display:flex;gap:5px;flex:none;overflow:hidden"><span class="chip on" style="font-size:8px">Все</span><span class="chip" style="font-size:8px">Сегодня</span><span class="chip" style="font-size:8px">Free</span></div>
+        <div style="flex:1;min-height:0;overflow:hidden">
+          <sc-for list="{{ feed }}" as="e" hint-placeholder-count="6">
+            <div class="b" style="padding:10px 14px;display:grid;grid-template-columns:22px 1fr auto;gap:2px 10px;align-items:baseline">
+              <span class="num" style="font-size:10px">{{ e.i }}</span>
+              <span style="font-weight:700;font-size:12.5px;line-height:1.1">{{ e.t }}</span>
+              <span style="font-weight:900;font-size:10px">{{ e.p }}</span>
+              <span></span><span class="cap">{{ e.v }} · {{ e.d }}</span><span></span>
+            </div>
+          </sc-for>
+        </div>
+        <div class="tabs t"><span class="tab on"><i></i>Лента</span><span class="tab"><i></i>Подбор</span><span class="tab"><i></i>Карта</span><span class="tab"><i></i>Я</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- U2 EVENT -->
+<div style="padding:0 48px 56px;max-width:1360px;margin:0 auto">
+  <div class="badge">U2 · Страница события</div>
+  <p class="note">Обложка занимает два модуля, факты выстроены в линейку ячеек, карта площадки встроена внизу, действие закреплено справа.</p>
+  <div class="row2">
+    <div>
+      <div class="lbl">Desktop</div>
+      <div class="d" style="height:600px">
+        <div class="hd"><span class="wm">PRESENCE</span><span class="cap">← СОБЫТИЯ / 01</span></div>
+        <div class="t b" style="display:grid;grid-template-columns:1fr 1fr;flex:none">
+          <div class="r" style="height:190px"><image-slot id="sg-ev-a" shape="rect" fit="cover" src="https://presence.tarski.ru/covers/festival.jpg" placeholder="Обложка 01"></image-slot></div>
+          <div style="height:190px"><image-slot id="sg-ev-b" shape="rect" fit="cover" src="https://presence.tarski.ru/covers/mediation.jpg" placeholder="Обложка 02"></image-slot></div>
+        </div>
+        <div class="b" style="display:grid;grid-template-columns:1fr 200px;flex:none">
+          <div class="r" style="padding:16px 20px">
+            <div class="cap" style="margin-bottom:8px">01 · Фестивали · Очно</div>
+            <h3 class="ttl" style="font-size:30px;margin-bottom:10px">Летний фестиваль медиаискусства</h3>
+            <p style="font-size:12px;line-height:1.45;margin:0;color:#4f4a42;max-width:52ch">Два дня медиаинсталляций, перформансов и разговоров с художниками. Свободный вход по регистрации.</p>
+          </div>
+          <div style="padding:16px 18px;display:flex;flex-direction:column">
+            <div class="cap">Цена</div><div style="font-weight:900;font-size:26px;margin-bottom:12px">FREE</div>
+            <div class="cta" style="margin-top:auto">ЗАПИСАТЬСЯ</div>
+          </div>
+        </div>
+        <div class="b" style="display:grid;grid-template-columns:repeat(4,1fr);flex:none">
+          <div class="r cell"><div class="cap">Когда</div><div class="val">25–26 июля</div></div>
+          <div class="r cell"><div class="cap">Начало</div><div class="val">12:00</div></div>
+          <div class="r cell"><div class="cap">Места</div><div class="val"><span class="num">12 / 40</span></div></div>
+          <div class="cell"><div class="cap">Организатор</div><div class="val">Гараж ✓</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 200px;flex:1;min-height:0">
+          <div class="r"><iframe src="./map-embed.html?lat=55.7351&lng=37.6053&z=15&label=%D0%93%D0%90%D0%A0%D0%90%D0%96&bg=%23f2f0ec" style="display:block;width:100%;height:100%;border:0" loading="lazy" title="Карта площадки"></iframe></div>
+          <div style="padding:14px 18px;display:flex;flex-direction:column">
+            <div class="cap" style="margin-bottom:4px">Адрес</div>
+            <div class="val" style="margin-bottom:2px">Крымский Вал, 9, стр. 32</div>
+            <div style="font-size:11px;color:#6b665e;margin-bottom:12px">м. Парк культуры · 8 мин</div>
+            <div class="cta gh" style="margin-top:auto">МАРШРУТ</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="lbl">Mobile</div>
+      <div class="m" style="height:600px">
+        <div class="hdm"><span class="cap">←</span><span class="wm" style="font-size:11px">PRESENCE</span><span class="cap">♡</span></div>
+        <div class="t" style="height:130px;flex:none"><image-slot id="sg-ev-m" shape="rect" fit="cover" src="https://presence.tarski.ru/covers/festival.jpg" placeholder="Обложка"></image-slot></div>
+        <div class="t b" style="padding:13px 14px;flex:none">
+          <div class="cap" style="margin-bottom:6px">01 · Фестивали</div>
+          <h3 class="ttl" style="font-size:21px">Летний фестиваль медиаискусства</h3>
+        </div>
+        <div class="b" style="display:grid;grid-template-columns:1fr 1fr;flex:none">
+          <div class="r cell" style="padding:9px 12px"><div class="cap">Когда</div><div class="val" style="font-size:11px">25–26.07</div></div>
+          <div class="cell" style="padding:9px 12px"><div class="cap">Места</div><div class="val num" style="font-size:11px">12 / 40</div></div>
+        </div>
+        <div class="b" style="flex:1;min-height:0"><iframe src="./map-embed.html?lat=55.7351&lng=37.6053&z=15&label=%D0%93%D0%90%D0%A0%D0%90%D0%96&bg=%23f2f0ec&sm=1" style="display:block;width:100%;height:100%;border:0" loading="lazy" title="Карта площадки"></iframe></div>
+        <div style="padding:11px 14px;flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="font-weight:900;font-size:17px">FREE</span><span class="cta" style="flex:1;padding:10px">ЗАПИСАТЬСЯ</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- U3 AI -->
+<div style="padding:0 48px 56px;max-width:1360px;margin:0 auto">
+  <div class="badge">U3 · AI-подбор</div>
+  <p class="note">Вместо заглушки — настоящий диалог. Запрос сверху, ответ строкой, результаты теми же модулями с пометкой, почему совпало. Внизу всегда выход в точные фильтры, чтобы экран не был тупиком.</p>
+  <div class="row2">
+    <div>
+      <div class="lbl">Desktop</div>
+      <div class="d" style="height:520px">
+        <div class="hd"><span class="wm">PRESENCE</span><span class="nv"><span>События</span><b>Подбор</b><span>Календарь</span><span>Карта</span></span></div>
+        <div class="t b" style="padding:18px 20px;flex:none">
+          <div class="cap" style="margin-bottom:6px">AI-подбор</div>
+          <h3 class="ttl" style="font-size:34px;margin-bottom:14px">Что вам сейчас<br>откликается?</h3>
+          <div style="display:flex;gap:0;border:1px solid #111">
+            <span style="flex:1;padding:11px 14px;font-size:12px;color:#6b665e">Хочу спокойный вечер с искусством и без толпы…</span>
+            <span style="background:#111;color:#fff;padding:11px 20px;font-size:12px;font-weight:700">→</span>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:10px"><span class="chip">Тихое в выходные</span><span class="chip">Бесплатно рядом</span><span class="chip">Для двоих вечером</span><span class="chip">С детьми</span></div>
+        </div>
+        <div class="b" style="padding:12px 20px;flex:none;font-size:12.5px">Нашла три медиации в мини-группах на этой неделе — тихо и без спешки.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;flex:1;min-height:0">
+          <div class="r" style="padding:12px 14px;display:flex;flex-direction:column">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span class="num" style="font-size:11px">02</span><span class="cap">Медиации</span></div>
+            <div style="font-weight:900;font-size:15px;letter-spacing:-.02em;line-height:1.02;margin-bottom:6px">Медиация в залах старых мастеров</div>
+            <div class="cap">ГМИИ · 12.07</div>
+            <div style="margin-top:auto;padding-top:10px;font-size:10px;border-top:1px solid #ddd;padding-top:8px">Совпало: группа 8 человек</div>
+          </div>
+          <div class="r" style="padding:12px 14px;display:flex;flex-direction:column">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span class="num" style="font-size:11px">03</span><span class="cap">Лекции</span></div>
+            <div style="font-weight:900;font-size:15px;letter-spacing:-.02em;line-height:1.02;margin-bottom:6px">Лаборатория медиаций</div>
+            <div class="cap">Парк Горького · 15.08</div>
+            <div style="margin-top:auto;font-size:10px;border-top:1px solid #ddd;padding-top:8px">Совпало: тихий формат</div>
+          </div>
+          <div style="padding:12px 14px;display:flex;flex-direction:column">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span class="num" style="font-size:11px">04</span><span class="cap">Кино</span></div>
+            <div style="font-weight:900;font-size:15px;letter-spacing:-.02em;line-height:1.02;margin-bottom:6px">Кинопоказ с обсуждением</div>
+            <div class="cap">Еврейский музей · 20.07</div>
+            <div style="margin-top:auto;font-size:10px;border-top:1px solid #ddd;padding-top:8px">Совпало: вечер, будний день</div>
+          </div>
+        </div>
+        <div class="t" style="padding:10px 20px;flex:none;display:flex;justify-content:space-between;align-items:center"><span class="cap">Не то? Соберите вручную</span><span class="chip">Точные фильтры →</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="lbl">Mobile</div>
+      <div class="m" style="height:520px">
+        <div class="hdm"><span class="wm" style="font-size:11px">PRESENCE</span><span class="cap">ПОДБОР</span></div>
+        <div class="t b" style="padding:13px 14px;flex:none">
+          <h3 class="ttl" style="font-size:20px;margin-bottom:10px">Что вам сейчас откликается?</h3>
+          <div style="display:flex;border:1px solid #111"><span style="flex:1;padding:9px 10px;font-size:10.5px;color:#6b665e">Спокойный вечер…</span><span style="background:#111;color:#fff;padding:9px 13px;font-size:11px;font-weight:700">→</span></div>
+          <div style="display:flex;gap:5px;margin-top:8px;overflow:hidden"><span class="chip" style="font-size:8px">Тихое</span><span class="chip" style="font-size:8px">Бесплатно</span><span class="chip" style="font-size:8px">Вечер</span></div>
+        </div>
+        <div class="b" style="padding:10px 14px;font-size:11px;flex:none">Три медиации в мини-группах — тихо и без спешки.</div>
+        <div style="flex:1;min-height:0">
+          <div class="b" style="padding:10px 14px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span class="num" style="font-size:10px">02</span><span class="cap">Медиации</span></div><div style="font-weight:700;font-size:12.5px;line-height:1.1">Медиация в залах старых мастеров</div><div class="cap" style="margin-top:4px">Совпало: группа 8 человек</div></div>
+          <div class="b" style="padding:10px 14px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span class="num" style="font-size:10px">03</span><span class="cap">Лекции</span></div><div style="font-weight:700;font-size:12.5px;line-height:1.1">Лаборатория медиаций</div><div class="cap" style="margin-top:4px">Совпало: тихий формат</div></div>
+          <div style="padding:10px 14px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span class="num" style="font-size:10px">04</span><span class="cap">Кино</span></div><div style="font-weight:700;font-size:12.5px;line-height:1.1">Кинопоказ с обсуждением</div><div class="cap" style="margin-top:4px">Совпало: вечер буднего дня</div></div>
+        </div>
+        <div class="tabs t"><span class="tab"><i></i>Лента</span><span class="tab on"><i></i>Подбор</span><span class="tab"><i></i>Карта</span><span class="tab"><i></i>Я</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- U4 CALENDAR -->
+<div style="padding:0 48px 56px;max-width:1360px;margin:0 auto">
+  <div class="badge">U4 · Календарь</div>
+  <p class="note">Месяц — это сетка модулей, а не таблица. Дни с событиями получают номер категории; выбранный день раскрывается расписанием справа.</p>
+  <div class="row2">
+    <div>
+      <div class="lbl">Desktop</div>
+      <div class="d" style="height:480px">
+        <div class="hd"><span class="wm">PRESENCE</span><span class="nv"><span>События</span><span>Подбор</span><b>Календарь</b><span>Карта</span></span></div>
+        <div class="t b" style="padding:14px 20px;display:flex;justify-content:space-between;align-items:baseline;flex:none">
+          <h3 class="ttl" style="font-size:26px">Июль 2026</h3>
+          <span style="display:flex;gap:6px"><span class="chip on">Месяц</span><span class="chip">Список</span><span class="chip">←</span><span class="chip">→</span></span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 230px;flex:1;min-height:0">
+          <div class="r" style="display:flex;flex-direction:column">
+            <div class="b" style="display:grid;grid-template-columns:repeat(7,1fr);flex:none">
+              <sc-for list="{{ dow }}" as="w" hint-placeholder-count="7"><span class="cap" style="padding:6px 0;text-align:center">{{ w }}</span></sc-for>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:1fr;flex:1;min-height:0">
+              <sc-for list="{{ days }}" as="d" hint-placeholder-count="35">
+                <div style="border-right:1px solid #e0dcd4;border-bottom:1px solid #e0dcd4;padding:5px 7px;display:flex;flex-direction:column;background:{{ d.bg }}">
+                  <span class="num" style="font-size:10px;color:{{ d.fg }}">{{ d.n }}</span>
+                  <sc-if value="{{ d.dot }}" hint-placeholder-val="{{ false }}"><span style="margin-top:auto;font-size:8px;font-weight:700;letter-spacing:.06em">{{ d.tag }}</span></sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column">
+            <div class="b" style="padding:11px 14px"><div class="cap">Выбрано</div><div class="val" style="font-size:16px;font-weight:900">12 июля, вс</div></div>
+            <div class="b" style="padding:11px 14px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span class="num" style="font-size:10px">16:00</span><span class="chip" style="font-size:8px;padding:2px 6px">Записан</span></div><div style="font-weight:700;font-size:12.5px;line-height:1.1">Медиация в залах старых мастеров</div><div class="cap" style="margin-top:4px">ГМИИ им. Пушкина</div></div>
+            <div class="b" style="padding:11px 14px"><div class="num" style="font-size:10px;margin-bottom:4px">19:30</div><div style="font-weight:700;font-size:12.5px;line-height:1.1">Кинопоказ с обсуждением</div><div class="cap" style="margin-top:4px">Еврейский музей</div></div>
+            <div style="padding:11px 14px;margin-top:auto"><span class="cta gh" style="display:block">ДОБАВИТЬ В КАЛЕНДАРЬ</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="lbl">Mobile</div>
+      <div class="m" style="height:480px">
+        <div class="hdm"><span class="wm" style="font-size:11px">PRESENCE</span><span class="cap">ИЮЛЬ ’26</span></div>
+        <div class="t b" style="display:grid;grid-template-columns:repeat(7,1fr);flex:none">
+          <sc-for list="{{ dow }}" as="w" hint-placeholder-count="7"><span class="cap" style="padding:5px 0;text-align:center;font-size:7.5px">{{ w }}</span></sc-for>
+        </div>
+        <div class="b" style="display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:26px;flex:none">
+          <sc-for list="{{ days }}" as="d" hint-placeholder-count="35">
+            <div style="border-right:1px solid #e0dcd4;border-bottom:1px solid #e0dcd4;display:grid;place-items:center;background:{{ d.bg }}"><span class="num" style="font-size:9px;color:{{ d.fg }}">{{ d.n }}</span></div>
+          </sc-for>
+        </div>
+        <div class="b" style="padding:9px 14px;flex:none"><div class="cap">12 июля, воскресенье</div></div>
+        <div style="flex:1;min-height:0">
+          <div class="b" style="padding:9px 14px"><div class="num" style="font-size:9px;margin-bottom:3px">16:00</div><div style="font-weight:700;font-size:11.5px;line-height:1.1">Медиация в залах старых мастеров</div></div>
+          <div style="padding:9px 14px"><div class="num" style="font-size:9px;margin-bottom:3px">19:30</div><div style="font-weight:700;font-size:11.5px;line-height:1.1">Кинопоказ с обсуждением</div></div>
+        </div>
+        <div class="tabs t"><span class="tab"><i></i>Лента</span><span class="tab"><i></i>Подбор</span><span class="tab on"><i></i>Календарь</span><span class="tab"><i></i>Я</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- U5 MAP -->
+<div style="padding:0 48px 56px;max-width:1360px;margin:0 auto">
+  <div class="badge">U5 · Карта</div>
+  <p class="note">Карта настоящая и обесцвеченная под систему. Слева — пронумерованный список, номера совпадают с пинами; сверху счётчики области.</p>
+  <div class="row2">
+    <div>
+      <div class="lbl">Desktop</div>
+      <div class="d" style="height:500px">
+        <div class="hd"><span class="wm">PRESENCE</span><span class="nv"><span>События</span><span>Подбор</span><span>Календарь</span><b>Карта</b></span></div>
+        <div class="t b" style="display:grid;grid-template-columns:repeat(4,1fr);flex:none">
+          <div class="r cell"><div class="cap">Всего</div><div class="val num">42</div></div>
+          <div class="r cell"><div class="cap">Радиус</div><div class="val num">5 км</div></div>
+          <div class="r cell"><div class="cap">Бесплатно</div><div class="val num">31</div></div>
+          <div class="cell"><div class="cap">Сегодня</div><div class="val num">6</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:230px 1fr;flex:1;min-height:0">
+          <div class="r" style="display:flex;flex-direction:column">
+            <div class="b" style="padding:8px 14px;display:flex;gap:5px"><span class="chip on" style="font-size:8px">Все</span><span class="chip" style="font-size:8px">Рядом</span><span class="chip" style="font-size:8px">Free</span></div>
+            <div class="b" style="padding:9px 14px"><div style="display:flex;gap:8px"><span class="num" style="font-size:10px">01</span><span><span style="font-weight:700;font-size:12px;line-height:1.1;display:block">Летний фестиваль медиаискусства</span><span class="cap">Гараж · 0.8 км</span></span></div></div>
+            <div class="b" style="padding:9px 14px"><div style="display:flex;gap:8px"><span class="num" style="font-size:10px">02</span><span><span style="font-weight:700;font-size:12px;line-height:1.1;display:block">Медиация в залах старых мастеров</span><span class="cap">ГМИИ · 2.1 км</span></span></div></div>
+            <div class="b" style="padding:9px 14px"><div style="display:flex;gap:8px"><span class="num" style="font-size:10px">03</span><span><span style="font-weight:700;font-size:12px;line-height:1.1;display:block">Русский авангард</span><span class="cap">Третьяковка · 1.2 км</span></span></div></div>
+            <div style="padding:9px 14px"><div style="display:flex;gap:8px"><span class="num" style="font-size:10px">04</span><span><span style="font-weight:700;font-size:12px;line-height:1.1;display:block">Академическая музыка</span><span class="cap">Винзавод · 4.6 км</span></span></div></div>
+          </div>
+          <div style="position:relative">
+            <iframe src="./map-embed.html?lat=55.7420&lng=37.6180&z=12&label=%D0%93%D0%90%D0%A0%D0%90%D0%96&bg=%23f2f0ec&note=OPENSTREETMAP" style="display:block;width:100%;height:100%;border:0" loading="lazy" title="Карта событий"></iframe>
+            <span style="position:absolute;left:50%;top:12px;transform:translateX(-50%);background:#f2f0ec;border:1px solid #111;padding:6px 12px;font-size:9px;font-weight:700;letter-spacing:.1em;z-index:500;width:max-content">ИСКАТЬ В ЭТОЙ ОБЛАСТИ</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="lbl">Mobile</div>
+      <div class="m" style="height:500px">
+        <div class="hdm"><span class="wm" style="font-size:11px">PRESENCE</span><span class="cap">СПИСКОМ</span></div>
+        <div class="t b" style="display:grid;grid-template-columns:1fr 1fr;flex:none">
+          <div class="r cell" style="padding:8px 12px"><div class="cap">Всего</div><div class="val num" style="font-size:11px">42</div></div>
+          <div class="cell" style="padding:8px 12px"><div class="cap">Радиус</div><div class="val num" style="font-size:11px">5 км</div></div>
+        </div>
+        <div class="b" style="flex:1;min-height:0"><iframe src="./map-embed.html?lat=55.7420&lng=37.6180&z=11&label=%D0%93%D0%90%D0%A0%D0%90%D0%96&bg=%23f2f0ec&sm=1" style="display:block;width:100%;height:100%;border:0" loading="lazy" title="Карта событий"></iframe></div>
+        <div class="b" style="padding:11px 14px;flex:none">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span class="num" style="font-size:10px">01 · 0.8 КМ</span><span style="font-weight:900;font-size:11px">FREE</span></div>
+          <div style="font-weight:700;font-size:13px;line-height:1.05">Летний фестиваль медиаискусства</div>
+        </div>
+        <div class="tabs"><span class="tab"><i></i>Лента</span><span class="tab"><i></i>Подбор</span><span class="tab on"><i></i>Карта</span><span class="tab"><i></i>Я</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- U6 PROFILE -->
+<div style="padding:0 48px 56px;max-width:1360px;margin:0 auto">
+  <div class="badge">U6 · Мои записи и профиль</div>
+  <p class="note">Профиль — это таблица фактов, а не карточки. Записи разделены на предстоящие и прошедшие, статус вынесен в ячейку справа.</p>
+  <div class="row2">
+    <div>
+      <div class="lbl">Desktop</div>
+      <div class="d" style="height:480px">
+        <div class="hd"><span class="wm">PRESENCE</span><span class="nv"><span>События</span><span>Подбор</span><span>Календарь</span><b>Профиль</b></span></div>
+        <div class="t b" style="display:grid;grid-template-columns:1fr 200px;flex:none">
+          <div class="r" style="padding:16px 20px">
+            <div class="cap" style="margin-bottom:6px">Участник с марта 2026</div>
+            <h3 class="ttl" style="font-size:30px">Анна Ковалёва</h3>
+          </div>
+          <div style="display:grid;grid-template-rows:1fr 1fr">
+            <div class="b cell"><div class="cap">Посещено</div><div class="val num" style="font-size:15px">14</div></div>
+            <div class="cell"><div class="cap">Подписки</div><div class="val num" style="font-size:15px">5</div></div>
+          </div>
+        </div>
+        <div class="b" style="padding:9px 20px;display:flex;gap:6px;flex:none"><span class="chip on">Предстоящие · 2</span><span class="chip">Прошедшие · 14</span><span class="chip">Избранное · 7</span><span class="chip">Подписки · 5</span></div>
+        <div style="flex:1;min-height:0">
+          <div class="b" style="display:grid;grid-template-columns:56px 1fr 118px 134px;align-items:center">
+            <div class="r cell num" style="font-size:11px;text-align:center">12.07</div>
+            <div class="r cell"><div style="font-weight:700;font-size:13px;line-height:1.1">Медиация в залах старых мастеров</div><div class="cap" style="margin-top:3px">ГМИИ · 16:00</div></div>
+            <div class="r cell"><div class="cap">Организатор</div><div class="val" style="font-size:11px">ГМИИ ✓</div></div>
+            <div class="cell" style="text-align:center;padding:10px 8px"><span class="chip on" style="font-size:8px;display:inline-block;padding:3px 7px">Подтверждено</span></div>
+          </div>
+          <div class="b" style="display:grid;grid-template-columns:56px 1fr 118px 134px;align-items:center">
+            <div class="r cell num" style="font-size:11px;text-align:center">25.07</div>
+            <div class="r cell"><div style="font-weight:700;font-size:13px;line-height:1.1">Летний фестиваль медиаискусства</div><div class="cap" style="margin-top:3px">Гараж · 12:00</div></div>
+            <div class="r cell"><div class="cap">Организатор</div><div class="val" style="font-size:11px">Гараж ✓</div></div>
+            <div class="cell" style="text-align:center;padding:10px 8px"><span class="chip" style="font-size:8px;display:inline-block;padding:3px 7px;border-color:#e2231a;color:#e2231a">Ожидает</span></div>
+          </div>
+          <div style="padding:16px 20px;text-align:center">
+            <div class="cap" style="margin-bottom:8px">Больше записей пока нет</div>
+            <span class="chip">Найти события →</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="lbl">Mobile</div>
+      <div class="m" style="height:480px">
+        <div class="hdm"><span class="wm" style="font-size:11px">PRESENCE</span><span class="cap">НАСТРОЙКИ</span></div>
+        <div class="t b" style="padding:13px 14px;flex:none"><div class="cap" style="margin-bottom:5px">Участник с марта 2026</div><h3 class="ttl" style="font-size:20px">Анна Ковалёва</h3></div>
+        <div class="b" style="display:grid;grid-template-columns:1fr 1fr 1fr;flex:none">
+          <div class="r cell" style="padding:8px 10px"><div class="cap">Посещено</div><div class="val num" style="font-size:12px">14</div></div>
+          <div class="r cell" style="padding:8px 10px"><div class="cap">Избранное</div><div class="val num" style="font-size:12px">7</div></div>
+          <div class="cell" style="padding:8px 10px"><div class="cap">Подписки</div><div class="val num" style="font-size:12px">5</div></div>
+        </div>
+        <div class="b" style="padding:8px 14px;display:flex;gap:5px;flex:none"><span class="chip on" style="font-size:8px">Предстоящие</span><span class="chip" style="font-size:8px">Прошедшие</span></div>
+        <div style="flex:1;min-height:0">
+          <div class="b" style="padding:10px 14px"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span class="num" style="font-size:10px">12.07 · 16:00</span><span class="chip on" style="font-size:7px;padding:2px 5px">ОК</span></div><div style="font-weight:700;font-size:12px;line-height:1.1">Медиация в залах старых мастеров</div></div>
+          <div style="padding:10px 14px"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span class="num" style="font-size:10px">25.07 · 12:00</span><span class="chip" style="font-size:7px;padding:2px 5px;border-color:#e2231a;color:#e2231a">ЖДЁМ</span></div><div style="font-weight:700;font-size:12px;line-height:1.1">Летний фестиваль медиаискусства</div></div>
+        </div>
+        <div class="tabs t"><span class="tab"><i></i>Лента</span><span class="tab"><i></i>Подбор</span><span class="tab"><i></i>Карта</span><span class="tab on"><i></i>Я</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- U7 AUTH -->
+<div style="padding:0 48px 56px;max-width:1360px;margin:0 auto">
+  <div class="badge">U7 · Вход и регистрация</div>
+  <p class="note">Вход — это тоже часть системы: половина экрана отдана типографике и обещанию продукта, половина — форме. Поля без скруглений, метка над полем.</p>
+  <div class="row2">
+    <div>
+      <div class="lbl">Desktop</div>
+      <div class="d" style="height:420px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;flex:1;min-height:0">
+          <div class="r" style="background:#111;color:#f2f0ec;padding:26px 24px;display:flex;flex-direction:column">
+            <span class="wm" style="font-size:13px">PRESENCE</span>
+            <h3 class="ttl" style="font-size:34px;margin-top:auto">Медиации,<br>лекции<br>и разговоры<br>об искусстве</h3>
+            <div class="cap" style="color:#8a857c;margin-top:14px">42 события в Москве · июль 2026</div>
+          </div>
+          <div style="padding:26px 24px;display:flex;flex-direction:column">
+            <div class="cap" style="margin-bottom:6px">Вход</div>
+            <h4 class="ttl" style="font-size:22px;margin-bottom:18px">С возвращением</h4>
+            <div class="cap" style="margin-bottom:4px">Почта</div>
+            <div class="b" style="border:1px solid #111;padding:9px 11px;font-size:12px;margin-bottom:12px;color:#6b665e">anna@example.com</div>
+            <div class="cap" style="margin-bottom:4px">Пароль</div>
+            <div style="border:1px solid #111;padding:9px 11px;font-size:12px;margin-bottom:16px;color:#6b665e">••••••••</div>
+            <span class="cta">ВОЙТИ</span>
+            <div style="display:flex;justify-content:space-between;margin-top:auto;padding-top:14px"><span class="cap">Нет аккаунта?</span><span class="cap" style="color:#111;border-bottom:1px solid #111">Регистрация</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="lbl">Mobile</div>
+      <div class="m" style="height:420px">
+        <div style="background:#111;color:#f2f0ec;padding:18px 16px;flex:none">
+          <span class="wm" style="font-size:11px">PRESENCE</span>
+          <h3 class="ttl" style="font-size:22px;margin-top:14px">Медиации и разговоры об искусстве</h3>
+        </div>
+        <div style="padding:18px 16px;display:flex;flex-direction:column;flex:1">
+          <div class="cap" style="margin-bottom:4px">Почта</div>
+          <div style="border:1px solid #111;padding:9px 11px;font-size:11.5px;margin-bottom:11px;color:#6b665e">anna@example.com</div>
+          <div class="cap" style="margin-bottom:4px">Пароль</div>
+          <div style="border:1px solid #111;padding:9px 11px;font-size:11.5px;margin-bottom:14px;color:#6b665e">••••••••</div>
+          <span class="cta">ВОЙТИ</span>
+          <span class="cta gh" style="margin-top:8px">СОЗДАТЬ АККАУНТ</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- U8 STATES -->
+<div style="padding:0 48px 56px;max-width:1360px;margin:0 auto">
+  <div class="badge">U8 · Состояния</div>
+  <p class="note">Сегодня пустые и защищённые экраны отдают белый лист. Каждое состояние должно быть спроектировано и всегда предлагать следующий шаг.</p>
+  <div class="row2">
+    <div>
+      <div class="lbl">Пусто</div>
+      <div class="d" style="width:326px;height:250px">
+        <div class="hd"><span class="wm" style="font-size:11px">PRESENCE</span><span class="cap">КАЛЕНДАРЬ</span></div>
+        <div class="t" style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:20px">
+          <div class="num" style="font-size:38px;font-weight:700;line-height:1">00</div>
+          <div style="font-weight:900;font-size:17px;letter-spacing:-.02em;margin:6px 0 8px;line-height:1.05">Записей пока нет</div>
+          <p style="font-size:11.5px;color:#4f4a42;margin:0 0 14px;line-height:1.4">Сохранённые события появятся здесь и синхронизируются с календарём.</p>
+          <span class="cta" style="align-self:flex-start;padding:9px 16px">НАЙТИ СОБЫТИЕ</span>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="lbl">Нужен вход</div>
+      <div class="d" style="width:326px;height:250px">
+        <div class="hd"><span class="wm" style="font-size:11px">PRESENCE</span><span class="cap">МОИ СОБЫТИЯ</span></div>
+        <div class="t" style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:20px">
+          <div class="cap" style="margin-bottom:8px">Доступ</div>
+          <div style="font-weight:900;font-size:17px;letter-spacing:-.02em;margin-bottom:8px;line-height:1.05">Войдите, чтобы видеть свои записи</div>
+          <p style="font-size:11.5px;color:#4f4a42;margin:0 0 14px;line-height:1.4">Лента и карта доступны без входа.</p>
+          <div style="display:flex;gap:8px"><span class="cta" style="padding:9px 16px">ВОЙТИ</span><span class="cta gh" style="padding:9px 16px">К ЛЕНТЕ</span></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="lbl">404</div>
+      <div class="d" style="width:326px;height:250px;background:#111;color:#f2f0ec">
+        <div class="hd"><span class="wm" style="font-size:11px">PRESENCE</span><span class="cap" style="color:#8a857c">ОШИБКА</span></div>
+        <div style="border-top:1px solid #f2f0ec;flex:1;display:flex;flex-direction:column;justify-content:center;padding:20px">
+          <div class="num" style="font-size:44px;font-weight:700;line-height:1;letter-spacing:-.04em">404</div>
+          <div style="font-weight:900;font-size:17px;letter-spacing:-.02em;margin:6px 0 8px;line-height:1.05">Событие не найдено</div>
+          <p style="font-size:11.5px;color:#a8a299;margin:0 0 14px;line-height:1.4">Возможно, организатор снял его с публикации.</p>
+          <span style="align-self:flex-start;background:#f2f0ec;color:#111;padding:9px 16px;font-size:11px;font-weight:700;letter-spacing:.07em">ВЕРНУТЬСЯ К ЛЕНТЕ</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ORGANIZER ============ -->
+<div style="padding:40px 48px 20px;max-width:1360px;margin:0 auto;border-top:2px solid #111">
+  <div class="kick" style="margin-bottom:10px">Часть 2</div>
+  <h2 class="sechd" style="font-size:42px">Организатор</h2>
+  <p class="note">Пять экранов: кабинет с приоритетами, создание события с живым превью, управление, заявки и верификация.</p>
+</div>
+
+<!-- O1 DASHBOARD -->
+<div style="padding:20px 48px 56px;max-width:1360px;margin:0 auto">
+  <div class="badge">O1 · Кабинет</div>
+  <p class="note">Вместо трёх одинаковых ссылок — приборная панель: цифры по статусам, красный сигнал на том, что требует действия, и ближайшее событие.</p>
+  <div class="row2">
+    <div>
+      <div class="lbl">Desktop</div>
+      <div class="d" style="height:480px">
+        <div class="hd"><span class="wm">PRESENCE</span><span class="nv"><b>Кабинет</b><span>Мои события</span><span>Заявки</span><span>Профиль</span></span></div>
+        <div class="t b" style="display:grid;grid-template-columns:1fr 190px;flex:none">
+          <div class="r" style="padding:16px 20px"><div class="cap" style="margin-bottom:6px">Организатор · Студия «Лиа» ✓</div><h3 class="ttl" style="font-size:30px">Кабинет</h3></div>
+          <div style="padding:16px 18px;display:flex;align-items:flex-end"><span class="cta" style="width:100%">+ СОЗДАТЬ СОБЫТИЕ</span></div>
+        </div>
+        <div class="b" style="display:grid;grid-template-columns:repeat(4,1fr);flex:none">
+          <div class="r cell" style="padding:14px"><div class="cap">Опубликовано</div><div class="num" style="font-size:26px;font-weight:700">03</div></div>
+          <div class="r cell" style="padding:14px;background:#111;color:#fff"><div class="cap" style="color:#a8a299">На модерации</div><div class="num" style="font-size:26px;font-weight:700">02</div></div>
+          <div class="r cell" style="padding:14px"><div class="cap">Черновики</div><div class="num" style="font-size:26px;font-weight:700">01</div></div>
+          <div class="cell" style="padding:14px"><div class="cap">Всего записей</div><div class="num" style="font-size:26px;font-weight:700">86</div></div>
+        </div>
+        <div class="b" style="padding:12px 20px;display:flex;align-items:center;gap:14px;flex:none;border-left:4px solid #e2231a">
+          <span class="num" style="font-size:22px;font-weight:700;color:#e2231a">05</span>
+          <span style="flex:1;font-size:12.5px;font-weight:700">новых заявок ждут подтверждения</span>
+          <span class="chip">Смотреть →</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;flex:1;min-height:0">
+          <div class="r" style="padding:14px 20px;display:flex;flex-direction:column">
+            <div class="cap" style="margin-bottom:8px">Ближайшее событие</div>
+            <div style="font-weight:900;font-size:17px;letter-spacing:-.02em;line-height:1.05;margin-bottom:6px">Медиация в залах старых мастеров</div>
+            <div class="cap">12 июля · 16:00 · ГМИИ</div>
+            <div style="margin-top:auto">
+              <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:4px"><span class="cap">Заполнено</span><span class="num" style="font-weight:700">28 / 40</span></div>
+              <div style="height:8px;border:1px solid #111"><span style="display:block;height:100%;width:70%;background:#111"></span></div>
+            </div>
+          </div>
+          <div style="padding:14px 20px">
+            <div class="cap" style="margin-bottom:8px">Последнее</div>
+            <div style="display:flex;justify-content:space-between;font-size:11.5px;padding:5px 0;border-bottom:1px solid #ddd"><span>Заявка · Анна К.</span><span class="cap">2 ч назад</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:11.5px;padding:5px 0;border-bottom:1px solid #ddd"><span>Событие одобрено</span><span class="cap">вчера</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:11.5px;padding:5px 0"><span>Профиль верифицирован</span><span class="cap">3 дня</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="lbl">Mobile</div>
+      <div class="m" style="height:480px">
+        <div class="hdm"><span class="wm" style="font-size:11px">PRESENCE</span><span class="cap">КАБИНЕТ</span></div>
+        <div class="t b" style="padding:12px 14px;flex:none"><div class="cap" style="margin-bottom:5px">Студия «Лиа» ✓</div><h3 class="ttl" style="font-size:20px">Кабинет</h3></div>
+        <div class="b" style="display:grid;grid-template-columns:1fr 1fr 1fr;flex:none">
+          <div class="r cell" style="padding:9px 10px"><div class="cap">Опубл.</div><div class="num" style="font-size:16px;font-weight:700">03</div></div>
+          <div class="r cell" style="padding:9px 10px;background:#111;color:#fff"><div class="cap" style="color:#a8a299">Модер.</div><div class="num" style="font-size:16px;font-weight:700">02</div></div>
+          <div class="cell" style="padding:9px 10px"><div class="cap">Черн.</div><div class="num" style="font-size:16px;font-weight:700">01</div></div>
+        </div>
+        <div class="b" style="padding:10px 14px;display:flex;align-items:center;gap:10px;flex:none;border-left:4px solid #e2231a"><span class="num" style="font-size:17px;font-weight:700;color:#e2231a">05</span><span style="font-size:11px;font-weight:700;flex:1">заявок ждут ответа</span><span class="cap">→</span></div>
+        <div style="padding:12px 14px;flex:1;min-height:0">
+          <div class="cap" style="margin-bottom:6px">Ближайшее</div>
+          <div style="font-weight:700;font-size:13px;line-height:1.1;margin-bottom:5px">Медиация в залах старых мастеров</div>
+          <div class="cap" style="margin-bottom:10px">12 июля · 16:00</div>
+          <div style="display:flex;justify-content:space-between;font-size:9px;margin-bottom:3px"><span class="cap">Заполнено</span><span class="num" style="font-weight:700">28 / 40</span></div>
+          <div style="height:7px;border:1px solid #111"><span style="display:block;height:100%;width:70%;background:#111"></span></div>
+        </div>
+        <div style="padding:0 14px 12px;flex:none"><span class="cta" style="display:block">+ СОЗДАТЬ СОБЫТИЕ</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- O2 CREATE -->
+<div style="padding:0 48px 56px;max-width:1360px;margin:0 auto">
+  <div class="badge">O2 · Создание события</div>
+  <p class="note">Форма разбита на четыре шага с видимым прогрессом, справа — живое превью карточки в ленте. Организатор сразу видит результат и понимает, что дальше модерация.</p>
+  <div class="row2">
+    <div>
+      <div class="lbl">Desktop</div>
+      <div class="d" style="height:520px">
+        <div class="hd"><span class="wm">PRESENCE</span><span class="cap">ЧЕРНОВИК СОХРАНЁН · 14:22</span></div>
+        <div class="t b" style="display:grid;grid-template-columns:repeat(4,1fr);flex:none">
+          <div class="r cell" style="background:#111;color:#fff"><div class="cap" style="color:#a8a299">Шаг 01</div><div class="val">Основное</div></div>
+          <div class="r cell"><div class="cap">Шаг 02</div><div class="val">Когда и где</div></div>
+          <div class="r cell"><div class="cap">Шаг 03</div><div class="val">Билеты</div></div>
+          <div class="cell"><div class="cap">Шаг 04</div><div class="val">Публикация</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 240px;flex:1;min-height:0">
+          <div class="r" style="padding:16px 20px;display:flex;flex-direction:column;gap:11px">
+            <div><div class="cap" style="margin-bottom:4px">Название</div><div style="border:1px solid #111;padding:9px 11px;font-size:12.5px;font-weight:700">Летний фестиваль медиаискусства</div></div>
+            <div><div class="cap" style="margin-bottom:4px">Категория</div><div style="display:flex;gap:5px;flex-wrap:wrap"><span class="chip on">01 Фестивали</span><span class="chip">02 Медиации</span><span class="chip">03 Лекции</span><span class="chip">04 Кино</span></div></div>
+            <div><div class="cap" style="margin-bottom:4px">Описание</div><div style="border:1px solid #111;padding:9px 11px;font-size:11.5px;color:#6b665e;line-height:1.4;height:52px">Два дня медиаинсталляций, перформансов и разговоров с художниками…</div></div>
+            <div><div class="cap" style="margin-bottom:4px">Обложка</div><div style="height:62px;border:1px solid #111"><image-slot id="sg-new-cover" shape="rect" fit="cover" src="https://presence.tarski.ru/covers/festival.jpg" placeholder="Перетащите обложку · 3:2"></image-slot></div></div>
+            <div style="display:flex;gap:8px;margin-top:auto"><span class="cta" style="flex:1">ДАЛЕЕ · КОГДА И ГДЕ</span><span class="cta gh" style="flex:none;padding:11px 16px">ЧЕРНОВИК</span></div>
+          </div>
+          <div style="padding:14px 16px;display:flex;flex-direction:column">
+            <div class="cap" style="margin-bottom:8px">Превью в ленте</div>
+            <div style="border:1px solid #111;padding:11px 12px;background:#fff">
+              <div style="display:flex;justify-content:space-between;margin-bottom:7px"><span class="num" style="font-size:10px">01</span><span class="cap">Фестивали</span></div>
+              <div style="font-weight:900;font-size:14px;letter-spacing:-.02em;line-height:1.02;margin-bottom:7px">Летний фестиваль медиаискусства</div>
+              <div class="cap" style="margin-bottom:8px">Музей «Гараж»</div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid #ddd;padding-top:7px"><span class="num" style="font-size:10px">25–26.07</span><span style="font-weight:900;font-size:11px">FREE</span></div>
+            </div>
+            <div style="margin-top:auto;border-top:1px solid #111;padding-top:10px">
+              <div class="cap" style="margin-bottom:5px">После отправки</div>
+              <p style="font-size:10.5px;line-height:1.45;margin:0;color:#4f4a42">Модерация занимает до 24 часов. Событие появится в ленте после одобрения.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="lbl">Mobile</div>
+      <div class="m" style="height:520px">
+        <div class="hdm"><span class="cap">←</span><span class="wm" style="font-size:11px">НОВОЕ СОБЫТИЕ</span><span class="cap">01/04</span></div>
+        <div class="t b" style="display:flex;flex:none"><span style="flex:1;height:5px;background:#111"></span><span style="flex:1;height:5px;background:#dcd8d0;border-left:1px solid #111"></span><span style="flex:1;height:5px;background:#dcd8d0;border-left:1px solid #111"></span><span style="flex:1;height:5px;background:#dcd8d0;border-left:1px solid #111"></span></div>
+        <div style="padding:13px 14px;display:flex;flex-direction:column;gap:10px;flex:1;min-height:0">
+          <div><div class="cap" style="margin-bottom:4px">Название</div><div style="border:1px solid #111;padding:8px 10px;font-size:11.5px;font-weight:700;line-height:1.2">Летний фестиваль медиаискусства</div></div>
+          <div><div class="cap" style="margin-bottom:4px">Категория</div><div style="display:flex;gap:5px;flex-wrap:wrap"><span class="chip on" style="font-size:8px">01 Фестивали</span><span class="chip" style="font-size:8px">03 Лекции</span></div></div>
+          <div><div class="cap" style="margin-bottom:4px">Обложка</div><div style="height:70px;border:1px solid #111"><image-slot id="sg-new-cover-m" shape="rect" fit="cover" src="https://presence.tarski.ru/covers/festival.jpg" placeholder="Обложка"></image-slot></div></div>
+          <div style="margin-top:auto"><div class="cap" style="margin-bottom:5px">Модерация до 24 часов</div><span class="cta" style="display:block">ДАЛЕЕ</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- O3 MY EVENTS -->
+<div style="padding:0 48px 56px;max-width:1360px;margin:0 auto">
+  <div class="badge">O3 · Мои события</div>
+  <p class="note">Таблица-каталог: статус, заполненность и действия в одной строке. Вкладки со счётчиками заменяют скроллинг вслепую.</p>
+  <div class="row2">
+    <div>
+      <div class="lbl">Desktop</div>
+      <div class="d" style="height:440px">
+        <div class="hd"><span class="wm">PRESENCE</span><span class="nv"><span>Кабинет</span><b>Мои события</b><span>Заявки</span><span>Профиль</span></span></div>
+        <div class="t b" style="padding:14px 20px;display:flex;justify-content:space-between;align-items:baseline;flex:none"><h3 class="ttl" style="font-size:26px">Мои события</h3><span class="cta" style="padding:8px 16px">+ СОЗДАТЬ</span></div>
+        <div class="b" style="padding:9px 20px;display:flex;gap:6px;flex:none"><span class="chip on">Все · 6</span><span class="chip">Опубликовано · 3</span><span class="chip" style="border-color:#e2231a;color:#e2231a">Модерация · 2</span><span class="chip">Черновики · 1</span></div>
+        <div class="b" style="display:grid;grid-template-columns:56px 1fr 96px 110px 92px;flex:none;background:#e6e3dc">
+          <span class="r cap" style="padding:6px 8px;text-align:center">Дата</span><span class="r cap" style="padding:6px 12px">Событие</span><span class="r cap" style="padding:6px 8px">Записи</span><span class="r cap" style="padding:6px 8px">Статус</span><span class="cap" style="padding:6px 8px">Действия</span>
+        </div>
+        <div style="flex:1;min-height:0">
+          <sc-for list="{{ orgEvents }}" as="e" hint-placeholder-count="4">
+            <div class="b" style="display:grid;grid-template-columns:56px 1fr 96px 110px 92px;align-items:center">
+              <span class="r num" style="padding:10px 6px;font-size:10px;text-align:center">{{ e.d }}</span>
+              <span class="r" style="padding:9px 12px"><span style="font-weight:700;font-size:12.5px;line-height:1.1;display:block">{{ e.t }}</span><span class="cap" style="margin-top:2px;display:block">{{ e.v }}</span></span>
+              <span class="r" style="padding:9px 8px"><span class="num" style="font-size:11px;font-weight:700">{{ e.seats }}</span><span style="display:block;height:5px;border:1px solid #111;margin-top:4px"><span style="display:block;height:100%;background:#111;width:{{ e.pct }}"></span></span></span>
+              <span class="r" style="padding:9px 8px"><span class="chip {{ e.cls }}" style="font-size:8px;padding:3px 6px">{{ e.st }}</span></span>
+              <span class="cap" style="padding:9px 8px;line-height:1.7">Ред.<br>Копия</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="lbl">Mobile</div>
+      <div class="m" style="height:440px">
+        <div class="hdm"><span class="wm" style="font-size:11px">МОИ СОБЫТИЯ</span><span class="cap">+</span></div>
+        <div class="t b" style="padding:8px 14px;display:flex;gap:5px;flex:none;overflow:hidden"><span class="chip on" style="font-size:8px">Все · 6</span><span class="chip" style="font-size:8px">Опубл · 3</span><span class="chip" style="font-size:8px;border-color:#e2231a;color:#e2231a">Мод · 2</span></div>
+        <div style="flex:1;min-height:0">
+          <sc-for list="{{ orgEvents }}" as="e" hint-placeholder-count="4">
+            <div class="b" style="padding:10px 14px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px"><span class="num" style="font-size:10px">{{ e.d }}</span><span class="chip {{ e.cls }}" style="font-size:7px;padding:2px 5px">{{ e.st }}</span></div>
+              <div style="font-weight:700;font-size:12px;line-height:1.1;margin-bottom:5px">{{ e.t }}</div>
+              <div style="display:flex;align-items:center;gap:8px"><span class="num" style="font-size:9.5px">{{ e.seats }}</span><span style="flex:1;height:5px;border:1px solid #111"><span style="display:block;height:100%;background:#111;width:{{ e.pct }}"></span></span></div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- O4 APPLICATIONS -->
+<div style="padding:0 48px 56px;max-width:1360px;margin:0 auto">
+  <div class="badge">O4 · Заявки участников</div>
+  <p class="note">Строка на человека с контекстом: сколько раз приходил, когда подал заявку. Действия — прямо в строке, плюс массовое подтверждение и счётчик мест.</p>
+  <div class="row2">
+    <div>
+      <div class="lbl">Desktop</div>
+      <div class="d" style="height:440px">
+        <div class="hd"><span class="wm">PRESENCE</span><span class="nv"><span>Кабинет</span><span>Мои события</span><b>Заявки</b><span>Профиль</span></span></div>
+        <div class="t b" style="display:grid;grid-template-columns:1fr 200px;flex:none">
+          <div class="r" style="padding:14px 20px"><div class="cap" style="margin-bottom:5px">Событие · 12 июля</div><h3 class="ttl" style="font-size:22px">Медиация в залах старых мастеров</h3></div>
+          <div style="padding:14px 18px"><div class="cap">Заполнено</div><div class="num" style="font-size:22px;font-weight:700">28 / 40</div><div style="height:6px;border:1px solid #111;margin-top:5px"><span style="display:block;height:100%;width:70%;background:#111"></span></div></div>
+        </div>
+        <div class="b" style="padding:8px 20px;display:flex;justify-content:space-between;align-items:center;flex:none"><span style="display:flex;gap:6px"><span class="chip on">Новые · 5</span><span class="chip">Принятые · 28</span><span class="chip">Отклонённые · 2</span></span><span class="cap">Выбрать все</span></div>
+        <div style="flex:1;min-height:0">
+          <sc-for list="{{ apps }}" as="a" hint-placeholder-count="4">
+            <div class="b" style="display:grid;grid-template-columns:26px 1fr 120px 150px;align-items:center">
+              <span class="r" style="padding:11px 0;text-align:center"><span style="display:inline-block;width:11px;height:11px;border:1px solid #111"></span></span>
+              <span class="r" style="padding:9px 12px"><span style="font-weight:700;font-size:12.5px;display:block">{{ a.name }}</span><span class="cap" style="margin-top:2px;display:block">{{ a.meta }}</span></span>
+              <span class="r cell"><span class="cap">Заявка</span><span class="val num" style="font-size:11px">{{ a.when }}</span></span>
+              <span style="padding:8px 10px;display:flex;gap:6px"><span class="cta" style="flex:1;padding:7px 4px;font-size:9px">ПРИНЯТЬ</span><span class="cta gh" style="flex:1;padding:7px 4px;font-size:9px">ОТКЛОНИТЬ</span></span>
+            </div>
+          </sc-for>
+        </div>
+        <div class="t" style="padding:9px 20px;display:flex;justify-content:space-between;align-items:center;flex:none"><span class="cap">Выбрано: 0</span><span class="cta" style="padding:7px 16px;font-size:9px">ПРИНЯТЬ ВЫБРАННЫЕ</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="lbl">Mobile</div>
+      <div class="m" style="height:440px">
+        <div class="hdm"><span class="wm" style="font-size:11px">ЗАЯВКИ</span><span class="cap">5 НОВЫХ</span></div>
+        <div class="t b" style="padding:10px 14px;flex:none"><div class="cap" style="margin-bottom:4px">Медиация · 12 июля</div><div style="display:flex;justify-content:space-between;align-items:baseline"><span class="num" style="font-size:15px;font-weight:700">28 / 40</span><span class="cap">заполнено</span></div><div style="height:6px;border:1px solid #111;margin-top:5px"><span style="display:block;height:100%;width:70%;background:#111"></span></div></div>
+        <div style="flex:1;min-height:0">
+          <sc-for list="{{ apps }}" as="a" hint-placeholder-count="4">
+            <div class="b" style="padding:9px 14px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px"><span style="font-weight:700;font-size:12px">{{ a.name }}</span><span class="num cap">{{ a.when }}</span></div>
+              <div class="cap" style="margin-bottom:6px">{{ a.meta }}</div>
+              <div style="display:flex;gap:6px"><span class="cta" style="flex:1;padding:6px 4px;font-size:9px">ПРИНЯТЬ</span><span class="cta gh" style="flex:1;padding:6px 4px;font-size:9px">ОТКЛОНИТЬ</span></div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- O5 ORG PROFILE -->
+<div style="padding:0 48px 56px;max-width:1360px;margin:0 auto">
+  <div class="badge">O5 · Профиль и верификация</div>
+  <p class="note">Верификация — отслеживаемый статус, а не поле. Слева форма, справа — публичное превью, которое видит зритель.</p>
+  <div class="row2">
+    <div>
+      <div class="lbl">Desktop · редактирование</div>
+      <div class="d" style="height:440px">
+        <div class="hd"><span class="wm">PRESENCE</span><span class="nv"><span>Кабинет</span><span>Мои события</span><span>Заявки</span><b>Профиль</b></span></div>
+        <div class="t b" style="display:flex;flex:none">
+          <div style="flex:1;padding:11px 20px;display:flex;align-items:center;gap:10px;background:#111;color:#fff"><span class="num" style="font-size:11px">01</span><span style="font-size:11px;font-weight:700">Заявка подана</span></div>
+          <div style="flex:1;padding:11px 20px;display:flex;align-items:center;gap:10px;background:#111;color:#fff;border-left:1px solid #f2f0ec"><span class="num" style="font-size:11px">02</span><span style="font-size:11px;font-weight:700">Документы проверены</span></div>
+          <div class="r" style="flex:1;padding:11px 20px;display:flex;align-items:center;gap:10px;border-left:1px solid #111;background:#f2f0ec"><span class="num" style="font-size:11px">03</span><span style="font-size:11px;font-weight:700">Верифицирован ✓</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 250px;flex:1;min-height:0">
+          <div class="r" style="padding:16px 20px;display:flex;flex-direction:column;gap:11px">
+            <div><div class="cap" style="margin-bottom:4px">Название</div><div style="border:1px solid #111;padding:9px 11px;font-size:12.5px;font-weight:700">Студия «Лиа»</div></div>
+            <div><div class="cap" style="margin-bottom:4px">Описание</div><div style="border:1px solid #111;padding:9px 11px;font-size:11.5px;color:#6b665e;line-height:1.4;height:46px">Независимая студия медиаций и разговоров об искусстве. Встречи в маленьких группах.</div></div>
+            <div style="display:flex;gap:10px">
+              <div style="flex:none"><div class="cap" style="margin-bottom:4px">Логотип</div><div style="width:62px;height:62px;border:1px solid #111"><image-slot id="sg-org-logo" shape="rect" fit="cover" placeholder="Лого"></image-slot></div></div>
+              <div style="flex:1"><div class="cap" style="margin-bottom:4px">Контакты</div><div style="border:1px solid #111;padding:9px 11px;font-size:11.5px;color:#6b665e;margin-bottom:6px">lia@studio.ru</div><div style="border:1px solid #111;padding:9px 11px;font-size:11.5px;color:#6b665e">t.me/liastudio</div></div>
+            </div>
+            <span class="cta" style="margin-top:auto">СОХРАНИТЬ</span>
+          </div>
+          <div style="padding:14px 16px;display:flex;flex-direction:column">
+            <div class="cap" style="margin-bottom:8px">Публичный профиль</div>
+            <div style="border:1px solid #111;background:#fff;padding:13px 14px;flex:1;display:flex;flex-direction:column">
+              <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px"><span style="width:34px;height:34px;background:#111;flex:none"></span><span><span style="font-weight:900;font-size:14px;letter-spacing:-.02em;display:block">Студия «Лиа» ✓</span><span class="cap">Проверенный организатор</span></span></div>
+              <p style="font-size:10.5px;line-height:1.45;margin:0 0 10px;color:#4f4a42">Независимая студия медиаций и разговоров об искусстве.</p>
+              <div style="display:flex;gap:14px;border-top:1px solid #ddd;padding-top:8px;margin-top:auto"><span><span class="cap" style="display:block">Событий</span><span class="num" style="font-weight:700;font-size:13px">08</span></span><span><span class="cap" style="display:block">Подписчиков</span><span class="num" style="font-weight:700;font-size:13px">142</span></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="lbl">Mobile · публичный вид</div>
+      <div class="m" style="height:440px">
+        <div class="hdm"><span class="cap">←</span><span class="wm" style="font-size:11px">PRESENCE</span><span class="cap">↗</span></div>
+        <div class="t b" style="padding:14px;flex:none">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span style="width:40px;height:40px;background:#111;flex:none"></span><span><span style="font-weight:900;font-size:16px;letter-spacing:-.02em;display:block;line-height:1.05">Студия «Лиа» ✓</span><span class="cap">Проверенный организатор</span></span></div>
+          <p style="font-size:11px;line-height:1.45;margin:0">Независимая студия медиаций и разговоров об искусстве. Встречи в маленьких группах.</p>
+        </div>
+        <div class="b" style="display:grid;grid-template-columns:1fr 1fr;flex:none">
+          <div class="r cell" style="padding:9px 12px"><div class="cap">Событий</div><div class="num" style="font-size:15px;font-weight:700">08</div></div>
+          <div class="cell" style="padding:9px 12px"><div class="cap">Подписчиков</div><div class="num" style="font-size:15px;font-weight:700">142</div></div>
+        </div>
+        <div style="flex:1;min-height:0">
+          <div class="b" style="padding:9px 14px"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span class="num" style="font-size:9.5px">15.08</span><span class="cap">Лекции</span></div><div style="font-weight:700;font-size:12px;line-height:1.1">Лаборатория медиаций</div></div>
+          <div class="b" style="padding:9px 14px"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span class="num" style="font-size:9.5px">12.07</span><span class="cap">Медиации</span></div><div style="font-weight:700;font-size:12px;line-height:1.1">Медиация в залах старых мастеров</div></div>
+        </div>
+        <div style="padding:11px 14px;flex:none"><span class="cta" style="display:block">ПОДПИСАТЬСЯ</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ADMIN ============ -->
+<div style="padding:40px 48px 20px;max-width:1360px;margin:0 auto;border-top:2px solid #111">
+  <div class="kick" style="margin-bottom:10px">Часть 3 · бонус</div>
+  <h2 class="sechd" style="font-size:42px">Админ-панель</h2>
+  <p class="note">Та же сетка, инвертированная в чёрное — внутренний инструмент нельзя перепутать с публичным сайтом. Плотные таблицы, моноширинные числа, действия в строке.</p>
+</div>
+
+<!-- A1 OVERVIEW -->
+<div style="padding:20px 48px 56px;max-width:1360px;margin:0 auto">
+  <div class="badge">A1 · Обзор</div>
+  <p class="note">Первый экран показывает не красивые графики, а очередь работы: что ждёт модерации и верификации прямо сейчас.</p>
+  <div class="row2">
+    <div>
+      <div class="lbl">Desktop</div>
+      <div class="d" style="height:440px;background:#111;color:#f2f0ec">
+        <div class="hd" style="border-bottom:1px solid #f2f0ec"><span class="wm">PRESENCE / ADMIN</span><span class="nv" style="color:#f2f0ec"><b style="border-color:#f2f0ec">Обзор</b><span>Модерация</span><span>Организаторы</span><span>Пользователи</span></span></div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);flex:none;border-bottom:1px solid #f2f0ec">
+          <div style="border-right:1px solid #f2f0ec;padding:14px"><div class="cap" style="color:#8a857c">Событий всего</div><div class="num" style="font-size:26px;font-weight:700">142</div></div>
+          <div style="border-right:1px solid #f2f0ec;padding:14px;background:#e2231a"><div class="cap" style="color:#ffd9d6">Ждут модерации</div><div class="num" style="font-size:26px;font-weight:700;color:#fff">07</div></div>
+          <div style="border-right:1px solid #f2f0ec;padding:14px"><div class="cap" style="color:#8a857c">Организаторов</div><div class="num" style="font-size:26px;font-weight:700">38</div></div>
+          <div style="padding:14px"><div class="cap" style="color:#8a857c">Пользователей</div><div class="num" style="font-size:26px;font-weight:700">2 914</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;flex:1;min-height:0">
+          <div style="border-right:1px solid #f2f0ec;display:flex;flex-direction:column">
+            <div style="padding:10px 16px;border-bottom:1px solid #3a3733"><span class="cap" style="color:#8a857c">Очередь модерации</span></div>
+            <div style="padding:9px 16px;border-bottom:1px solid #3a3733;display:flex;justify-content:space-between"><span style="font-size:11.5px;font-weight:700">Летний фестиваль медиаискусства</span><span class="cap num" style="color:#8a857c">2 ч</span></div>
+            <div style="padding:9px 16px;border-bottom:1px solid #3a3733;display:flex;justify-content:space-between"><span style="font-size:11.5px;font-weight:700">Лаборатория медиаций</span><span class="cap num" style="color:#8a857c">6 ч</span></div>
+            <div style="padding:9px 16px;border-bottom:1px solid #3a3733;display:flex;justify-content:space-between"><span style="font-size:11.5px;font-weight:700">Читательская группа: Беньямин</span><span class="cap num" style="color:#8a857c">1 д</span></div>
+            <div style="padding:10px 16px;margin-top:auto"><span style="display:block;background:#f2f0ec;color:#111;padding:9px;font-size:10px;font-weight:700;text-align:center;letter-spacing:.07em">ОТКРЫТЬ ОЧЕРЕДЬ</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column">
+            <div style="padding:10px 16px;border-bottom:1px solid #3a3733"><span class="cap" style="color:#8a857c">Заявки на верификацию · 3</span></div>
+            <div style="padding:9px 16px;border-bottom:1px solid #3a3733;display:flex;justify-content:space-between"><span style="font-size:11.5px;font-weight:700">Электротеатр</span><span class="cap num" style="color:#8a857c">4 ч</span></div>
+            <div style="padding:9px 16px;border-bottom:1px solid #3a3733;display:flex;justify-content:space-between"><span style="font-size:11.5px;font-weight:700">Винзавод</span><span class="cap num" style="color:#8a857c">1 д</span></div>
+            <div style="padding:10px 16px;margin-top:auto"><div class="cap" style="color:#8a857c;margin-bottom:5px">Сигналы</div><div style="font-size:11px;color:#e2231a;font-weight:700">2 события с тестовыми данными</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="lbl">Mobile · дежурный режим</div>
+      <div class="m" style="height:440px;background:#111;color:#f2f0ec">
+        <div class="hdm" style="border-bottom:1px solid #f2f0ec"><span class="wm" style="font-size:11px">ADMIN</span><span class="cap" style="color:#8a857c">ОБЗОР</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;flex:none;border-bottom:1px solid #f2f0ec">
+          <div style="border-right:1px solid #f2f0ec;padding:11px;background:#e2231a"><div class="cap" style="color:#ffd9d6">Модерация</div><div class="num" style="font-size:20px;font-weight:700;color:#fff">07</div></div>
+          <div style="padding:11px"><div class="cap" style="color:#8a857c">Верификация</div><div class="num" style="font-size:20px;font-weight:700">03</div></div>
+        </div>
+        <div style="flex:1;min-height:0">
+          <div style="padding:10px 14px;border-bottom:1px solid #3a3733"><div class="cap" style="color:#8a857c;margin-bottom:3px">2 ч · Гараж</div><div style="font-size:11.5px;font-weight:700;line-height:1.1">Летний фестиваль медиаискусства</div></div>
+          <div style="padding:10px 14px;border-bottom:1px solid #3a3733"><div class="cap" style="color:#8a857c;margin-bottom:3px">6 ч · Студия «Лиа»</div><div style="font-size:11.5px;font-weight:700;line-height:1.1">Лаборатория медиаций</div></div>
+          <div style="padding:10px 14px"><div class="cap" style="color:#8a857c;margin-bottom:3px">1 д · QA Block8</div><div style="font-size:11.5px;font-weight:700;line-height:1.1;color:#e2231a">Тестовое событие — удалить</div></div>
+        </div>
+        <div style="padding:11px 14px;flex:none"><span style="display:block;background:#f2f0ec;color:#111;padding:10px;font-size:10px;font-weight:700;text-align:center;letter-spacing:.07em">ОТКРЫТЬ ОЧЕРЕДЬ</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- A2 MODERATION -->
+<div style="padding:0 48px 56px;max-width:1360px;margin:0 auto">
+  <div class="badge">A2 · Модерация событий</div>
+  <p class="note">Модерация — это конвейер: слева очередь, справа карточка с полями события и причинами отклонения в один клик.</p>
+  <div class="row2">
+    <div>
+      <div class="lbl">Desktop</div>
+      <div class="d" style="width:900px;height:460px;background:#111;color:#f2f0ec">
+        <div class="hd" style="border-bottom:1px solid #f2f0ec"><span class="wm">PRESENCE / ADMIN</span><span class="nv" style="color:#f2f0ec"><span>Обзор</span><b style="border-color:#f2f0ec">Модерация</b><span>Организаторы</span><span>Пользователи</span></span></div>
+        <div style="display:grid;grid-template-columns:250px 1fr;flex:1;min-height:0">
+          <div style="border-right:1px solid #f2f0ec;display:flex;flex-direction:column">
+            <div style="padding:9px 14px;border-bottom:1px solid #f2f0ec;display:flex;gap:5px"><span class="chip" style="font-size:8px;border-color:#f2f0ec;background:#f2f0ec;color:#111">Ждут · 7</span><span class="chip" style="font-size:8px;border-color:#8a857c;color:#8a857c">Все</span></div>
+            <sc-for list="{{ modQueue }}" as="q" hint-placeholder-count="5">
+              <div style="padding:10px 14px;border-bottom:1px solid #3a3733;background:{{ q.bg }}">
+                <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span class="num" style="font-size:9.5px;color:#8a857c">{{ q.id }}</span><span class="cap" style="color:#8a857c">{{ q.ago }}</span></div>
+                <div style="font-size:11.5px;font-weight:700;line-height:1.1;color:{{ q.fg }}">{{ q.t }}</div>
+                <div class="cap" style="color:#8a857c;margin-top:3px">{{ q.org }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column">
+            <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #f2f0ec;flex:none">
+              <div style="border-right:1px solid #f2f0ec;height:120px"><image-slot id="sg-mod-cover" shape="rect" fit="cover" src="https://presence.tarski.ru/covers/festival.jpg" placeholder="Обложка на проверке"></image-slot></div>
+              <div style="padding:14px 16px">
+                <div class="cap" style="color:#8a857c;margin-bottom:5px">EV-1042 · подано 2 ч назад</div>
+                <h3 class="ttl" style="font-size:20px;margin-bottom:6px">Летний фестиваль медиаискусства</h3>
+                <div class="cap" style="color:#8a857c">Музей «Гараж» ✓ · Фестивали</div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid #f2f0ec;flex:none">
+              <div style="border-right:1px solid #3a3733;padding:9px 12px"><div class="cap" style="color:#8a857c">Дата</div><div class="val" style="font-size:11px">25–26.07</div></div>
+              <div style="border-right:1px solid #3a3733;padding:9px 12px"><div class="cap" style="color:#8a857c">Цена</div><div class="val" style="font-size:11px">Бесплатно</div></div>
+              <div style="border-right:1px solid #3a3733;padding:9px 12px"><div class="cap" style="color:#8a857c">Мест</div><div class="val num" style="font-size:11px">40</div></div>
+              <div style="padding:9px 12px"><div class="cap" style="color:#8a857c">Формат</div><div class="val" style="font-size:11px">Очно</div></div>
+            </div>
+            <div style="padding:12px 16px;border-bottom:1px solid #3a3733;flex:none">
+              <div class="cap" style="color:#8a857c;margin-bottom:5px">Описание</div>
+              <p style="font-size:11.5px;line-height:1.45;margin:0;color:#cfcabf">Два дня медиаинсталляций, перформансов и разговоров с художниками. Свободный вход по регистрации.</p>
+            </div>
+            <div style="padding:12px 16px;flex:1">
+              <div class="cap" style="color:#8a857c;margin-bottom:6px">Причина отклонения</div>
+              <div style="display:flex;gap:5px;flex-wrap:wrap"><span class="chip" style="font-size:8px;border-color:#8a857c;color:#8a857c">Тестовые данные</span><span class="chip" style="font-size:8px;border-color:#8a857c;color:#8a857c">Нет описания</span><span class="chip" style="font-size:8px;border-color:#8a857c;color:#8a857c">Обложка низкого качества</span><span class="chip" style="font-size:8px;border-color:#8a857c;color:#8a857c">Дубликат</span></div>
+            </div>
+            <div style="padding:11px 16px;border-top:1px solid #f2f0ec;display:flex;gap:8px;flex:none">
+              <span style="flex:1;background:#f2f0ec;color:#111;padding:10px;font-size:10px;font-weight:700;text-align:center;letter-spacing:.07em">ОДОБРИТЬ</span>
+              <span style="flex:1;background:#e2231a;color:#fff;padding:10px;font-size:10px;font-weight:700;text-align:center;letter-spacing:.07em">ОТКЛОНИТЬ</span>
+              <span style="flex:none;border:1px solid #8a857c;color:#8a857c;padding:10px 16px;font-size:10px;font-weight:700;letter-spacing:.07em">НА ДОРАБОТКУ</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- A3 ORGANIZERS -->
+<div style="padding:0 48px 56px;max-width:1360px;margin:0 auto">
+  <div class="badge">A3 · Организаторы и верификация</div>
+  <p class="note">Реестр организаторов со статусом проверки, числом событий и жалобами. Верификация подтверждается прямо из таблицы.</p>
+  <div class="row2">
+    <div>
+      <div class="lbl">Desktop</div>
+      <div class="d" style="width:900px;height:400px;background:#111;color:#f2f0ec">
+        <div class="hd" style="border-bottom:1px solid #f2f0ec"><span class="wm">PRESENCE / ADMIN</span><span class="nv" style="color:#f2f0ec"><span>Обзор</span><span>Модерация</span><b style="border-color:#f2f0ec">Организаторы</b><span>Пользователи</span></span></div>
+        <div style="padding:11px 20px;border-bottom:1px solid #f2f0ec;display:flex;justify-content:space-between;align-items:center;flex:none">
+          <span style="display:flex;gap:6px"><span class="chip" style="font-size:8px;background:#f2f0ec;color:#111;border-color:#f2f0ec">Все · 38</span><span class="chip" style="font-size:8px;border-color:#e2231a;color:#e2231a">На проверке · 3</span><span class="chip" style="font-size:8px;border-color:#8a857c;color:#8a857c">Верифицированы · 29</span><span class="chip" style="font-size:8px;border-color:#8a857c;color:#8a857c">С жалобами · 2</span></span>
+          <span class="cap" style="color:#8a857c">Поиск ⌕</span>
+        </div>
+        <div style="display:grid;grid-template-columns:44px 1fr 110px 90px 90px 170px;border-bottom:1px solid #f2f0ec;flex:none;background:#1c1a18">
+          <span class="cap" style="padding:6px 8px;color:#8a857c;text-align:center">ID</span><span class="cap" style="padding:6px 12px;color:#8a857c">Организатор</span><span class="cap" style="padding:6px 8px;color:#8a857c">Статус</span><span class="cap" style="padding:6px 8px;color:#8a857c">Событий</span><span class="cap" style="padding:6px 8px;color:#8a857c">Жалоб</span><span class="cap" style="padding:6px 8px;color:#8a857c">Действия</span>
+        </div>
+        <div style="flex:1;min-height:0">
+          <sc-for list="{{ orgs }}" as="o" hint-placeholder-count="5">
+            <div style="display:grid;grid-template-columns:44px 1fr 110px 90px 90px 170px;align-items:center;border-bottom:1px solid #3a3733">
+              <span class="num" style="padding:9px 6px;font-size:9.5px;color:#8a857c;text-align:center">{{ o.id }}</span>
+              <span style="padding:8px 12px"><span style="font-weight:700;font-size:12px;display:block;color:{{ o.fg }}">{{ o.name }}</span><span class="cap" style="color:#8a857c;margin-top:2px;display:block">{{ o.email }}</span></span>
+              <span style="padding:8px"><span class="chip" style="font-size:7.5px;padding:2px 6px;border-color:{{ o.stc }};color:{{ o.stc }}">{{ o.st }}</span></span>
+              <span class="num" style="padding:8px;font-size:11px;font-weight:700">{{ o.ev }}</span>
+              <span class="num" style="padding:8px;font-size:11px;font-weight:700;color:{{ o.cfg }}">{{ o.complaints }}</span>
+              <span style="padding:7px 8px;display:flex;gap:5px"><span style="flex:1;background:#f2f0ec;color:#111;padding:5px 4px;font-size:8px;font-weight:700;text-align:center;letter-spacing:.05em">{{ o.act }}</span><span style="flex:none;border:1px solid #8a857c;color:#8a857c;padding:5px 8px;font-size:8px;font-weight:700">···</span></span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- A4 USERS -->
+<div style="padding:0 48px 70px;max-width:1360px;margin:0 auto">
+  <div class="badge">A4 · Пользователи и контент-гигиена</div>
+  <p class="note">Реестр пользователей плюс отдельный блок «гигиены» — тестовые данные, дубликаты и подозрительные цены, которые сегодня утекают в продакшн.</p>
+  <div class="row2">
+    <div>
+      <div class="lbl">Desktop</div>
+      <div class="d" style="width:900px;height:400px;background:#111;color:#f2f0ec">
+        <div class="hd" style="border-bottom:1px solid #f2f0ec"><span class="wm">PRESENCE / ADMIN</span><span class="nv" style="color:#f2f0ec"><span>Обзор</span><span>Модерация</span><span>Организаторы</span><b style="border-color:#f2f0ec">Пользователи</b></span></div>
+        <div style="display:grid;grid-template-columns:1fr 300px;flex:1;min-height:0">
+          <div style="border-right:1px solid #f2f0ec;display:flex;flex-direction:column">
+            <div style="display:grid;grid-template-columns:44px 1fr 96px 84px 96px;border-bottom:1px solid #f2f0ec;flex:none;background:#1c1a18">
+              <span class="cap" style="padding:6px 8px;color:#8a857c;text-align:center">ID</span><span class="cap" style="padding:6px 12px;color:#8a857c">Пользователь</span><span class="cap" style="padding:6px 8px;color:#8a857c">Регистрация</span><span class="cap" style="padding:6px 8px;color:#8a857c">Записей</span><span class="cap" style="padding:6px 8px;color:#8a857c">Роль</span>
+            </div>
+            <sc-for list="{{ users }}" as="u" hint-placeholder-count="5">
+              <div style="display:grid;grid-template-columns:44px 1fr 96px 84px 96px;align-items:center;border-bottom:1px solid #3a3733">
+                <span class="num" style="padding:9px 6px;font-size:9.5px;color:#8a857c;text-align:center">{{ u.id }}</span>
+                <span style="padding:8px 12px"><span style="font-weight:700;font-size:12px;display:block;color:{{ u.fg }}">{{ u.name }}</span><span class="cap" style="color:#8a857c;margin-top:2px;display:block">{{ u.email }}</span></span>
+                <span class="num" style="padding:8px;font-size:10px;color:#cfcabf">{{ u.reg }}</span>
+                <span class="num" style="padding:8px;font-size:11px;font-weight:700">{{ u.n }}</span>
+                <span style="padding:8px"><span class="chip" style="font-size:7.5px;padding:2px 6px;border-color:#8a857c;color:#8a857c">{{ u.role }}</span></span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column">
+            <div style="padding:11px 16px;border-bottom:1px solid #f2f0ec"><span class="cap" style="color:#e2231a;font-weight:700">Гигиена контента · 4</span></div>
+            <div style="padding:10px 16px;border-bottom:1px solid #3a3733"><div class="cap" style="color:#8a857c;margin-bottom:3px">Тестовые данные</div><div style="font-size:11px;font-weight:700;line-height:1.2">«QA Тур в Геленджик (Блок 8)»</div><div class="cap" style="color:#8a857c;margin-top:3px">организатор QA Block8</div></div>
+            <div style="padding:10px 16px;border-bottom:1px solid #3a3733"><div class="cap" style="color:#8a857c;margin-bottom:3px">Тестовые данные</div><div style="font-size:11px;font-weight:700;line-height:1.2">«bla bla meet»</div><div class="cap" style="color:#8a857c;margin-top:3px">организатор kornkorn10</div></div>
+            <div style="padding:10px 16px;border-bottom:1px solid #3a3733"><div class="cap" style="color:#8a857c;margin-bottom:3px">Подозрительная цена</div><div style="font-size:11px;font-weight:700;line-height:1.2">от 100 500 ₽</div></div>
+            <div style="padding:11px 16px;margin-top:auto"><span style="display:block;background:#e2231a;color:#fff;padding:9px;font-size:10px;font-weight:700;text-align:center;letter-spacing:.07em">СКРЫТЬ ВСЁ ИЗ ЛЕНТЫ</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="padding:0 48px 100px;max-width:1360px;margin:0 auto">
+  <div style="background:#111;color:#f2f0ec;padding:40px 44px">
+    <div class="kick" style="color:#8a857c;margin-bottom:12px">Что дальше</div>
+    <h2 class="sechd" style="font-size:32px;color:#f2f0ec;max-width:24ch">Система готова к сборке</h2>
+    <p style="font-family:'Space Grotesk',sans-serif;font-size:14px;line-height:1.55;color:#cfcabf;max-width:64ch;margin:0 0 26px">17 экранов на одной сетке и одной гарнитуре. Всё, что нужно разработке — токены, компоненты и состояния — уже зафиксировано в блоке 00.</p>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid #f2f0ec">
+      <div style="border-right:1px solid #f2f0ec;padding:20px"><div class="num" style="font-size:22px;font-weight:700;margin-bottom:8px">01</div><div style="font-size:13px;font-weight:700;margin-bottom:6px">Гигиена</div><p style="font-size:11.5px;line-height:1.45;margin:0;color:#a8a299">Убрать тестовые данные и dev-заглушку, дополнить категории. Дни работы.</p></div>
+      <div style="border-right:1px solid #f2f0ec;padding:20px"><div class="num" style="font-size:22px;font-weight:700;margin-bottom:8px">02</div><div style="font-size:13px;font-weight:700;margin-bottom:6px">Ядро системы</div><p style="font-size:11.5px;line-height:1.45;margin:0;color:#a8a299">Сетка, типографика, модуль события. Поднимает ленту, карту и календарь разом.</p></div>
+      <div style="padding:20px"><div class="num" style="font-size:22px;font-weight:700;margin-bottom:8px">03</div><div style="font-size:13px;font-weight:700;margin-bottom:6px">Кабинеты</div><p style="font-size:11.5px;line-height:1.45;margin:0;color:#a8a299">Организатор и админ — таблицы, статусы, очереди. Последний слой.</p></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const marks = { 12: "02", 15: "03", 18: "05", 20: "04", 25: "01" };
+    const days = [];
+    for (let i = 0; i < 2; i++) days.push({ n: "", bg: "#eceae4", fg: "transparent", dot: false, tag: "" });
+    for (let d = 1; d <= 31; d++) {
+      const tag = marks[d];
+      days.push({ n: String(d), dot: !!tag, tag: tag || "", bg: tag ? "#111" : "transparent", fg: tag ? "#fff" : "#111" });
+    }
+    while (days.length < 35) days.push({ n: "", bg: "#eceae4", fg: "transparent", dot: false, tag: "" });
+    return {
+      dow: ["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"],
+      days,
+      six: [1, 2, 3, 4, 5, 6],
+      modQueue: [
+        { id: "EV-1042", t: "Летний фестиваль медиаискусства", org: "Музей «Гараж» ✓", ago: "2 ч", bg: "#f2f0ec", fg: "#111" },
+        { id: "EV-1041", t: "Лаборатория медиаций", org: "Студия «Лиа» ✓", ago: "6 ч", bg: "transparent", fg: "#f2f0ec" },
+        { id: "EV-1040", t: "Читательская группа: Беньямин", org: "Дом культуры", ago: "1 д", bg: "transparent", fg: "#f2f0ec" },
+        { id: "EV-1039", t: "QA Тур в Геленджик (Блок 8)", org: "QA Block8", ago: "1 д", bg: "transparent", fg: "#e2231a" },
+        { id: "EV-1038", t: "bla bla meet", org: "kornkorn10", ago: "2 д", bg: "transparent", fg: "#e2231a" }
+      ],
+      orgs: [
+        { id: "38", name: "Электротеатр «Станиславский»", email: "info@electrotheatre.ru", st: "На проверке", stc: "#e2231a", ev: "04", complaints: "0", cfg: "#f2f0ec", act: "ПРОВЕРИТЬ", fg: "#f2f0ec" },
+        { id: "37", name: "Центр «Винзавод»", email: "events@winzavod.ru", st: "На проверке", stc: "#e2231a", ev: "11", complaints: "0", cfg: "#f2f0ec", act: "ПРОВЕРИТЬ", fg: "#f2f0ec" },
+        { id: "21", name: "Музей «Гараж»", email: "info@garagemca.org", st: "Верифицирован", stc: "#8a857c", ev: "23", complaints: "0", cfg: "#f2f0ec", act: "ОТКРЫТЬ", fg: "#f2f0ec" },
+        { id: "14", name: "Студия «Лиа»", email: "lia@studio.ru", st: "Верифицирован", stc: "#8a857c", ev: "08", complaints: "1", cfg: "#e2231a", act: "ОТКРЫТЬ", fg: "#f2f0ec" },
+        { id: "09", name: "QA Block8", email: "qa@block8.test", st: "Тестовый", stc: "#e2231a", ev: "02", complaints: "3", cfg: "#e2231a", act: "УДАЛИТЬ", fg: "#e2231a" }
+      ],
+      users: [
+        { id: "2914", name: "Анна Ковалёва", email: "anna@example.com", reg: "03.2026", n: "14", role: "Зритель", fg: "#f2f0ec" },
+        { id: "2913", name: "Дмитрий Орлов", email: "d.orlov@example.com", reg: "05.2026", n: "02", role: "Зритель", fg: "#f2f0ec" },
+        { id: "2890", name: "Мария Титова", email: "m.titova@example.com", reg: "01.2026", n: "27", role: "Зритель", fg: "#f2f0ec" },
+        { id: "2455", name: "Студия «Лиа»", email: "lia@studio.ru", reg: "11.2025", n: "08", role: "Организатор", fg: "#f2f0ec" },
+        { id: "0102", name: "kornkorn10", email: "rtyhnbvfg@gmail.com", reg: "тест", n: "01", role: "Тестовый", fg: "#e2231a" }
+      ],
+      orgEvents: [
+        { d: "25.07", t: "Летний фестиваль медиаискусства", v: "Музей «Гараж»", seats: "28 / 40", pct: "70%", st: "Опубликовано", cls: "on" },
+        { d: "15.08", t: "Лаборатория медиаций", v: "Парк Горького", seats: "06 / 20", pct: "30%", st: "Модерация", cls: "" },
+        { d: "12.07", t: "Медиация в залах старых мастеров", v: "ГМИИ им. Пушкина", seats: "40 / 40", pct: "100%", st: "Опубликовано", cls: "on" },
+        { d: "—", t: "Читательская группа: Беньямин", v: "Не выбрано", seats: "00 / 12", pct: "0%", st: "Черновик", cls: "" }
+      ],
+      apps: [
+        { name: "Анна Ковалёва", meta: "Была на 3 событиях · медиации", when: "2 ч" },
+        { name: "Дмитрий Орлов", meta: "Первая заявка", when: "5 ч" },
+        { name: "Мария Титова", meta: "Была на 7 событиях · лекции", when: "1 д" },
+        { name: "Илья Северов", meta: "Была отмена · 1 раз", when: "2 д" }
+      ],
+      feed: [
+        { i: "01", cat: "Фестивали", t: "Летний фестиваль медиаискусства", v: "Музей «Гараж»", d: "25–26.07", p: "FREE" },
+        { i: "02", cat: "Медиации", t: "Медиация в залах старых мастеров", v: "ГМИИ им. Пушкина", d: "12.07", p: "FREE" },
+        { i: "03", cat: "Лекции", t: "Лаборатория медиаций", v: "Парк Горького", d: "15.08", p: "FREE" },
+        { i: "04", cat: "Кино", t: "Кинопоказ с обсуждением", v: "Еврейский музей", d: "20.07", p: "FREE" },
+        { i: "05", cat: "Спектакли", t: "Лабораторная сцена", v: "Электротеатр", d: "18.07", p: "2 000 ₽" },
+        { i: "06", cat: "Концерты", t: "Академическая музыка XX века", v: "Винзавод", d: "15.07", p: "1 200 ₽" }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

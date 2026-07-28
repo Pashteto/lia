@@ -70,6 +70,7 @@ export const USER_NAV: NavItem[] = [
   { href: "/search", label: "Подбор" },
   { href: "/me/calendar", label: "Календарь" },
   { href: "/map", label: "Карта" },
+  { href: "/me", label: "Профиль" },
   { href: "/organizer", label: "Организаторам" },
 ];
 export const ORG_NAV: NavItem[] = [

@@ -116,3 +116,8 @@ export function attendanceShort(
     ? `${event.attendeeCount} / ${event.capacity}`
     : String(event.attendeeCount);
 }
+
+/** "12.07" — Moscow civil day, for the U6 date column. */
+export function formatShortDate(iso: string): string {
+  return shortDateFmt.format(new Date(iso));
+}

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Presence — venue map embed</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;700;900&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;height:100%;overflow:hidden}
+  #map{position:absolute;inset:0;background:#eae7e0;filter:grayscale(1) contrast(1.06);font-family:'Archivo',sans-serif}
+  .leaflet-control-attribution{font-size:8px;font-family:'Space Grotesk',sans-serif;background:rgba(255,255,255,.85)}
+  .vpin{background:#111;color:#fff;font-size:9px;font-weight:700;letter-spacing:.05em;padding:4px 7px;white-space:nowrap;
+        font-family:'Archivo',sans-serif;text-transform:uppercase;position:relative}
+  .vpin::after{content:"";position:absolute;left:9px;top:100%;width:2px;height:9px;background:#111}
+  .vpin.sm{font-size:8px;padding:3px 6px}
+  .src{position:absolute;left:8px;bottom:6px;z-index:600;font-family:'Space Grotesk',sans-serif;font-size:8px;
+       letter-spacing:.1em;color:#5f5a50;padding:2px 6px}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div class="src" id="src"></div>
+<script>
+  var q = new URLSearchParams(location.search);
+  var lat = parseFloat(q.get('lat') || '55.7351');
+  var lng = parseFloat(q.get('lng') || '37.6053');
+  var zoom = parseInt(q.get('z') || '15', 10);
+  var label = q.get('label') || 'ГАРАЖ';
+  var bg = q.get('bg') || '#ffffff';
+  var sm = q.get('sm') === '1';
+
+  document.getElementById('src').style.background = bg;
+  document.getElementById('src').textContent = q.get('note') || 'OPENSTREETMAP';
+
+  var map = L.map('map', { zoomControl: false, attributionControl: true, scrollWheelZoom: false })
+    .setView([lat, lng], zoom);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors', maxZoom: 19
+  }).addTo(map);
+  L.marker([lat, lng], {
+    icon: L.divIcon({
+      className: '',
+      html: '<div class="vpin' + (sm ? ' sm' : '') + '">' + label + '</div>',
+      iconSize: null, iconAnchor: [9, 30]
+    })
+  }).addTo(map);
+  setTimeout(function () { map.invalidateSize(); }, 60);
+</script>
+</body>
+</html>

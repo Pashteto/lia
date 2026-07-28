@@ -27,7 +27,7 @@ export interface ChipProps extends ButtonHTMLAttributes<HTMLButtonElement> {
  * Counters live inside the label: `Все · 6`. Interactive chips hover-invert. */
 export function Chip({ variant = "default", as = "button", className, children, ...props }: ChipProps) {
   const base = cn(
-    "inline-flex items-center whitespace-nowrap border px-[9px] py-[4px] font-alt text-[9px] uppercase tracking-[0.12em]",
+    "inline-flex items-center whitespace-nowrap border px-[9px] py-[4px] text-[9px] uppercase tracking-[0.12em]",
     VARIANTS[variant],
     as === "button" && "cursor-pointer swiss-focus hover-invert",
     className,

@@ -117,3 +117,53 @@ export function eventDayKeys(startsAt: string, endsAt: string | undefined): stri
   }
   return keys;
 }
+
+// Nominative month names for the U4 month title. Intl's ru-RU long month is
+// nominative too, but it renders the year as "2026 г." — the handoff does not.
+const MONTHS_NOMINATIVE = [
+  "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+  "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь",
+] as const;
+
+// "12 июля" — genitive day+month of a civil (UTC-midnight) date.
+const dayMonthCivilFmt = new Intl.DateTimeFormat("ru-RU", {
+  day: "numeric",
+  month: "long",
+  timeZone: "UTC",
+});
+const WEEKDAYS_LONG = [
+  "понедельник", "вторник", "среда", "четверг", "пятница", "суббота", "воскресенье",
+] as const;
+
+/** "Июль 2026" — the U4 month bar title (Archivo 900 / 26px, not mono). */
+export function monthTitle(anchor: Date): string {
+  return `${MONTHS_NOMINATIVE[anchor.getUTCMonth()]} ${anchor.getUTCFullYear()}`;
+}
+
+/** "ИЮЛЬ ’26" — mobile header caption. */
+export function monthCaption(anchor: Date): string {
+  return `${MONTHS_NOMINATIVE[anchor.getUTCMonth()].toUpperCase()} ’${String(
+    anchor.getUTCFullYear(),
+  ).slice(2)}`;
+}
+
+/** "12 июля, вс" — agenda rail header value. */
+export function selectedDayLabel(day: Date): string {
+  return `${dayMonthCivilFmt.format(day)}, ${WEEKDAY_LABELS[mondayIndex(day)].toLowerCase()}`;
+}
+
+/** "12 июля, воскресенье" — mobile selected-date caption strip. */
+export function selectedDayLabelLong(day: Date): string {
+  return `${dayMonthCivilFmt.format(day)}, ${WEEKDAYS_LONG[mondayIndex(day)]}`;
+}
+
+/**
+ * The month grid without a trailing week that lies entirely outside the anchor
+ * month. monthGrid() always returns 6 rows; months that fit in 5 would render an
+ * empty band of blanks, which the handoff's `repeat(7,1fr)` × 5 grid does not have.
+ */
+export function monthGridTrimmed(anchor: Date): Date[] {
+  const cells = monthGrid(anchor);
+  const lastWeek = cells.slice(35);
+  return lastWeek.some((c) => sameMonth(c, anchor)) ? cells : cells.slice(0, 35);
+}

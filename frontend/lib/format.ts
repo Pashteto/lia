@@ -80,3 +80,39 @@ export function formatAttendance(event: LiaEvent): string | null {
     ? `${event.attendeeCount} / ${event.capacity} участников`
     : `${event.attendeeCount} участников`;
 }
+
+// Compact numeric forms for the Swiss Grid modules — all numerals render in
+// JetBrains Mono at the call site. Moscow-pinned like everything above.
+const shortDateFmt = new Intl.DateTimeFormat("ru-RU", {
+  day: "2-digit",
+  month: "2-digit",
+  timeZone: "Europe/Moscow",
+});
+const shortTimeFmt = new Intl.DateTimeFormat("ru-RU", {
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "Europe/Moscow",
+});
+
+/** "16:00" — Moscow wall clock. */
+export function formatStartTime(iso: string): string {
+  return shortTimeFmt.format(new Date(iso));
+}
+
+/** "12.07 · 16:00" single-day; "15.08 – 17.08" across civil days. */
+export function formatModuleDate(startsAt: string, endsAt?: string): string {
+  const single = `${shortDateFmt.format(new Date(startsAt))} · ${formatStartTime(startsAt)}`;
+  if (!hasRealEnd(endsAt)) return single;
+  if (moscowDay(startsAt) === moscowDay(endsAt as string)) return single;
+  return `${shortDateFmt.format(new Date(startsAt))} – ${shortDateFmt.format(new Date(endsAt as string))}`;
+}
+
+/** "12 / 40" | "64" | "—" — mono seat counter for cells and module footers. */
+export function attendanceShort(
+  event: Pick<LiaEvent, "attendeeCount" | "capacity">,
+): string {
+  if (event.attendeeCount == null) return "—";
+  return event.capacity != null
+    ? `${event.attendeeCount} / ${event.capacity}`
+    : String(event.attendeeCount);
+}

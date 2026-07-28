@@ -603,6 +603,8 @@ export async function getMe(): Promise<{
   name: string;
   role: string;
   emailVerified: boolean;
+  /** RFC3339 registration timestamp; absent on older backends. */
+  createdAt?: string;
 } | null> {
   const res = await fetch(`${API_BASE}/auth/me`, { headers: authHeaders(), cache: "no-store" });
   if (!res.ok) return null;
@@ -613,6 +615,7 @@ export async function getMe(): Promise<{
     name: data.name,
     role: data.role,
     emailVerified: !!data.email_verified,
+    createdAt: typeof data.created_at === "string" ? data.created_at : undefined,
   };
 }
 

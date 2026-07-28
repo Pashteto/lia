@@ -98,6 +98,8 @@ func (h *handler) me(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{
 		"id": u.UUID.String(), "email": u.Email, "name": u.Name, "role": u.Role,
 		"email_verified": u.EmailVerified,
+		// Registration month for the profile identity strip (U6).
+		"created_at": u.CreatedAt,
 	})
 }
 

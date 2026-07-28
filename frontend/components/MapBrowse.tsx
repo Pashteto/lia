@@ -15,6 +15,7 @@ import { distanceLabel, haversineKm, type LatLon } from "@/lib/geo";
 import { createLatestRequestGate } from "@/lib/latest-request-gate";
 import { mapAreaStats } from "@/lib/map-stats";
 import { priceLabel } from "@/lib/price-label";
+import { createTimedResolver } from "@/lib/timed-resolver";
 import type { LiaEvent } from "@/lib/types";
 import type { MapPin, MapViewport } from "@/components/map/YandexMap";
 
@@ -27,6 +28,7 @@ const MOSCOW: LatLon = [55.742, 37.618];
 const SEARCH_LIMIT = 200;
 const PIN_CAP = 100;
 const NEAR_KM = 5;
+const GEOLOCATION_FALLBACK_MS = 6_000;
 const MOBILE_QUERY = "(max-width: 639px)";
 
 type Filter = "all" | "near" | "free";
@@ -95,21 +97,26 @@ export function MapBrowse() {
 
   // Open on the user's position when they allow it, Moscow otherwise.
   useEffect(() => {
+    const resolution = createTimedResolver(
+      () => void load(MOSCOW),
+      GEOLOCATION_FALLBACK_MS,
+    );
     if (!navigator.geolocation) {
-      queueMicrotask(() => void load(MOSCOW));
-      return;
+      queueMicrotask(() => resolution.resolve(() => void load(MOSCOW)));
+      return () => resolution.cancel();
     }
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const at: LatLon = [pos.coords.latitude, pos.coords.longitude];
-        setCenter(at);
-        void load(at);
-      },
-      () => void load(MOSCOW),
+      (pos) =>
+        resolution.resolve(() => {
+          const at: LatLon = [pos.coords.latitude, pos.coords.longitude];
+          setCenter(at);
+          void load(at);
+        }),
+      () => resolution.resolve(() => void load(MOSCOW)),
       { enableHighAccuracy: false, timeout: 10_000, maximumAge: 60_000 },
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    return () => resolution.cancel();
+  }, [load]);
 
   const visible = useMemo(() => {
     if (filter === "free") return events.filter((e) => e.priceType === "free");
@@ -152,7 +159,7 @@ export function MapBrowse() {
           variant={filter === f.key ? "active" : "default"}
           onClick={() => setFilter(f.key)}
           aria-pressed={filter === f.key}
-          className="text-[8px]"
+          className="text-[8px] max-sm:min-h-[44px]"
         >
           {f.label}
         </Chip>
@@ -284,7 +291,7 @@ export function MapBrowse() {
         <p className="border-b border-rule-inner px-[20px] py-[9px] text-[11.5px] text-signal">{error}</p>
       ) : null}
       {/* The list is the primary affordance on mobile too — below the card. */}
-      <div className="flex flex-col sm:hidden">{listRail}</div>
+      {mobile ? <div className="flex flex-col sm:hidden">{listRail}</div> : null}
     </main>
   );
 }

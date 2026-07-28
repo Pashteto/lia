@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import {
+  recenterMapPreservingZoom,
+  updateActivePinLayouts,
+} from "@/components/map/yandex-map-controls";
 import { radiusKmFromBounds, type LatLon, type MapBounds } from "@/lib/geo";
 
 export interface MapPin {
@@ -82,7 +86,10 @@ export function YandexMap({
   // ymaps objects are untyped (the JS API ships no bundled TS types).
   const mapRef = useRef<any>(null); // eslint-disable-line @typescript-eslint/no-explicit-any
   const markerRef = useRef<any>(null); // eslint-disable-line @typescript-eslint/no-explicit-any
-  const pinRefs = useRef<any[]>([]); // eslint-disable-line @typescript-eslint/no-explicit-any
+  const pinRefs = useRef<Map<string, any>>(new Map()); // eslint-disable-line @typescript-eslint/no-explicit-any
+  const pinLayoutsRef = useRef<{ normalLayout: any; activeLayout: any } | null>(null); // eslint-disable-line @typescript-eslint/no-explicit-any
+  const activePinIdRef = useRef(activePinId);
+  const previousActivePinIdRef = useRef<string | null>(activePinId);
   const onMoveRef = useRef(onMarkerMove);
   const onPinClickRef = useRef(onPinClick);
   const onViewportRef = useRef(onViewportChange);
@@ -90,8 +97,9 @@ export function YandexMap({
   const [ready, setReady] = useState(false);
   const hasPinClick = Boolean(onPinClick);
 
-  // Keep callbacks current without re-creating the map or its geo objects.
+  // Keep callbacks/selection current without re-creating the map or its geo objects.
   useEffect(() => {
+    activePinIdRef.current = activePinId;
     onMoveRef.current = onMarkerMove;
     onPinClickRef.current = onPinClick;
     onViewportRef.current = onViewportChange;
@@ -142,8 +150,8 @@ export function YandexMap({
   // recenter
   useEffect(() => {
     if (!ready) return;
-    mapRef.current?.setCenter(center, zoom);
-  }, [ready, center, zoom]);
+    if (mapRef.current) recenterMapPreservingZoom(mapRef.current, center);
+  }, [ready, center]);
 
   // single marker (static or draggable)
   useEffect(() => {
@@ -181,13 +189,14 @@ export function YandexMap({
       );
     const normalLayout = layoutFor(false);
     const activeLayout = layoutFor(true);
+    pinLayoutsRef.current = { normalLayout, activeLayout };
 
     pinRefs.current.forEach((pm) => map.geoObjects.remove(pm));
-    pinRefs.current = [];
+    pinRefs.current.clear();
     (pins ?? []).forEach((p) => {
       const label = escapeHtml(p.label ?? "");
       const balloon = p.href ? `<a href="${escapeHtml(p.href)}">${label}</a>` : label;
-      const isActive = p.id === activePinId;
+      const isActive = p.id === activePinIdRef.current;
       const pm = new ymaps.Placemark(
         [p.lat, p.lon],
         {
@@ -207,9 +216,23 @@ export function YandexMap({
       );
       pm.events.add("click", () => onPinClickRef.current?.(p.id));
       map.geoObjects.add(pm);
-      pinRefs.current.push(pm);
+      pinRefs.current.set(p.id, pm);
     });
-  }, [ready, pins, activePinId, hasPinClick]);
+    previousActivePinIdRef.current = activePinIdRef.current;
+  }, [ready, pins, hasPinClick]);
+
+  // Selection changes only swap the layouts of the old/new pins. The
+  // placemarks and their event handlers stay stable while the rail is hovered.
+  useEffect(() => {
+    if (!ready || !pinLayoutsRef.current) return;
+    updateActivePinLayouts(
+      pinRefs.current,
+      previousActivePinIdRef.current,
+      activePinId,
+      pinLayoutsRef.current,
+    );
+    previousActivePinIdRef.current = activePinId;
+  }, [ready, activePinId]);
 
   if (!KEY) {
     return (

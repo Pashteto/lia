@@ -3,9 +3,8 @@
 import { useState } from "react";
 import { sendInvitations, EMAIL_NOT_VERIFIED } from "@/lib/api";
 import { VerifyEmailInterstitial } from "@/components/VerifyEmailInterstitial";
-
-const inputClass =
-  "w-full rounded-control bg-fill px-3.5 py-2.5 text-[17px] text-label outline-none placeholder:text-label-secondary focus:ring-2 focus:ring-accent";
+import { Button } from "@/components/ui/Button";
+import { Textarea } from "@/components/ui/Field";
 
 export function InviteByEmailPanel({ eventId }: { eventId: string }) {
   const [raw, setRaw] = useState("");
@@ -31,17 +30,20 @@ export function InviteByEmailPanel({ eventId }: { eventId: string }) {
   }
 
   return (
-    <div className="rounded-card bg-bg-secondary p-3">
-      <p className="mb-1.5 block text-[13px] text-label-secondary">Пригласить по email (через запятую)</p>
-      <textarea className={inputClass} rows={2} value={raw}
-        onChange={(e) => setRaw(e.target.value)} placeholder="a@mail.ru, b@mail.ru" />
-      {error && <p className="mt-2 text-[14px] text-red-500">{error}</p>}
-      {msg && <p className="mt-2 text-[14px] text-green-600">{msg}</p>}
-      <button onClick={onSend} disabled={busy}
-        className="mt-2 rounded-capsule bg-accent px-4 py-2 text-white disabled:opacity-50">
+    <div className="flex flex-col gap-[10px]">
+      <Textarea
+        label="Пригласить по email (через запятую)"
+        rows={2}
+        value={raw}
+        onChange={(e) => setRaw(e.target.value)}
+        placeholder="a@mail.ru, b@mail.ru"
+        error={error || undefined}
+      />
+      {msg ? <p className="text-[11px] text-ink">{msg}</p> : null}
+      <Button type="button" variant="primary" className="w-full" onClick={onSend} disabled={busy}>
         Отправить приглашения
-      </button>
-      {showVerify && <VerifyEmailInterstitial onClose={() => setShowVerify(false)} />}
+      </Button>
+      {showVerify ? <VerifyEmailInterstitial onClose={() => setShowVerify(false)} /> : null}
     </div>
   );
 }

@@ -352,7 +352,7 @@ export function EventApplicationsPanel({
                       {rsvp.applicant?.name || "Участник"}
                     </span>
                     <span className="cap mt-[2px] block">
-                      {applicationMeta(rsvp.applicationAnswer)}
+                      {applicationMeta(rsvp.applicationAnswer, rsvp.status)}
                     </span>
                     {rowErrors[rsvp.id] ? (
                       <span className="mt-[2px] block text-[10px] text-signal">
@@ -401,7 +401,7 @@ export function EventApplicationsPanel({
                       {formatRelativeRu(rsvp.createdAt)}
                     </span>
                   </div>
-                  <p className="cap mb-[6px]">{applicationMeta(rsvp.applicationAnswer)}</p>
+                  <p className="cap mb-[6px]">{applicationMeta(rsvp.applicationAnswer, rsvp.status)}</p>
                   {rowErrors[rsvp.id] ? (
                     <p className="mb-[6px] text-[10px] text-signal">{rowErrors[rsvp.id]}</p>
                   ) : null}

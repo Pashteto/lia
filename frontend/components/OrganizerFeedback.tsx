@@ -18,7 +18,7 @@ export function OrganizerFeedback({ eventId }: { eventId: string }) {
   });
 
   if (isLoading) {
-    return <p className="mt-2 text-[13px] text-label-secondary">Загрузка отзывов…</p>;
+    return <p className="text-[11px] text-text-dim">Загрузка отзывов…</p>;
   }
 
   if (isError || !data) {
@@ -27,32 +27,29 @@ export function OrganizerFeedback({ eventId }: { eventId: string }) {
 
   if (data.count === 0) {
     return (
-      <p className="mt-2 text-[13px] text-label-secondary">
+      <p className="text-[11px] text-text-dim">
         Отзывы появятся после завершения события
       </p>
     );
   }
 
   return (
-    <div className="mt-3 space-y-2">
-      <p className="text-[13px] font-medium text-label-secondary">
-        <span className="text-accent">★ {data.average.toFixed(1)}</span>
+    <div className="flex flex-col gap-[10px]">
+      <p className="cap">
+        <span className="font-bold text-ink">★ {data.average.toFixed(1)}</span>
         {" · "}
         {data.count} {data.count === 1 ? "отзыв" : "отзывов"}
       </p>
       {data.items.map((item, idx) => (
-        <div
-          key={idx}
-          className="rounded-card bg-bg-secondary p-3 shadow-card-subtle"
-        >
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-[14px] font-medium text-label">{item.author_name}</span>
-            <span className="text-[13px] text-accent">{"★".repeat(item.rating)}</span>
+        <div key={idx} className="border border-ink p-[12px]">
+          <div className="flex items-baseline justify-between gap-[8px]">
+            <span className="text-[12.5px] font-bold text-ink">{item.author_name}</span>
+            <span className="cap shrink-0 text-ink">{"★".repeat(item.rating)}</span>
           </div>
-          {item.comment && (
-            <p className="mt-1 text-[14px] leading-snug text-label">{item.comment}</p>
-          )}
-          <p className="mt-1 text-[12px] text-label-secondary">
+          {item.comment ? (
+            <p className="mt-[6px] text-[12.5px] leading-snug text-ink">{item.comment}</p>
+          ) : null}
+          <p className="mt-[6px] font-mono text-[11px] text-text-dim">
             {new Date(item.created_at).toLocaleDateString("ru-RU", {
               day: "numeric",
               month: "short",

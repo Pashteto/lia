@@ -2,12 +2,27 @@ import { describe, expect, it, vi } from "vitest";
 import { applicationMeta, decideMany } from "../org-applications";
 
 describe("applicationMeta", () => {
-  it("uses trimmed answer or Первая заявка — never invents history", () => {
+  it("uses trimmed answer when present — never invents history", () => {
     expect(applicationMeta("  была на 3  ")).toBe("была на 3");
+    expect(applicationMeta("  была на 3  ", "accepted")).toBe("была на 3");
+    expect(applicationMeta("ok", "declined")).toBe("ok");
+  });
+
+  it("returns Первая заявка only for applied + empty answer", () => {
     expect(applicationMeta("")).toBe("Первая заявка");
     expect(applicationMeta("   ")).toBe("Первая заявка");
     expect(applicationMeta(undefined)).toBe("Первая заявка");
     expect(applicationMeta(null)).toBe("Первая заявка");
+    expect(applicationMeta("", "applied")).toBe("Первая заявка");
+  });
+
+  it("returns em dash for decided statuses with empty answer", () => {
+    expect(applicationMeta("", "accepted")).toBe("—");
+    expect(applicationMeta("   ", "declined")).toBe("—");
+    expect(applicationMeta(undefined, "going")).toBe("—");
+    expect(applicationMeta(null, "withdrawn")).toBe("—");
+    expect(applicationMeta("", "cancelled")).toBe("—");
+    expect(applicationMeta("", "waitlist")).toBe("—");
   });
 });
 

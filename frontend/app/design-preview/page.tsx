@@ -8,6 +8,7 @@ import { StatusChip } from "@/components/ui/StatusChip";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Stepper } from "@/components/ui/Stepper";
+import { ORG_VERIFY_STEPS, orgVerificationStep } from "@/lib/org-verification";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Input, Textarea } from "@/components/ui/Field";
 import { priceLabel } from "@/lib/price-label";
@@ -82,6 +83,12 @@ function Gallery() {
       </Section>
       <Section title="Stepper">
         <Stepper className="w-full" steps={["Основное", "Когда и где", "Билеты", "Публикация"]} current={1} />
+        <Stepper
+          className="w-full"
+          steps={[...ORG_VERIFY_STEPS]}
+          current={orgVerificationStep("verified")}
+          fillMode="exclusive"
+        />
       </Section>
       <Section title="Fields">
         <div className="grid w-full max-w-[400px] gap-[11px]">

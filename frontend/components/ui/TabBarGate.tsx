@@ -6,6 +6,7 @@ import { BottomTabBar } from "@/components/ui/BottomTabBar";
 const HIDDEN_PREFIXES = [
   "/admin",
   "/organizer",
+  "/me/organizer",
   "/events/new",
   "/events/mine",
   "/login",

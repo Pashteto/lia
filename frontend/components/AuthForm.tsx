@@ -6,12 +6,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Field";
 import { useAuth } from "@/lib/auth-context";
+import { safeNextPath } from "@/lib/safe-next";
 
-// App-internal ?next= only (single leading "/"): prevents open redirects.
 function currentNext(): string | null {
   if (typeof window === "undefined") return null;
   const next = new URLSearchParams(window.location.search).get("next");
-  return next && next.startsWith("/") && !next.startsWith("//") ? next : null;
+  return safeNextPath(next, window.location.origin);
 }
 
 export function AuthForm({

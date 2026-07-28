@@ -1,0 +1,80 @@
+:root{
+  /* colour */
+  --ink:#111111;
+  --paper:#F2F0EC;
+  --canvas:#DEDBD4;
+  --white:#FFFFFF;
+  --signal:#E2231A;
+  --signal-tint:#FFD9D6;
+  --muted:#7D786E;
+  --muted-2:#8A857C;
+  --body-dim:#4F4A42;
+  --field-text:#6B665E;
+  --rule-light:#DDDDDD;
+  --rule-grid:#E0DCD4;
+  --rule-dark:#3A3733;
+  --admin-head:#1C1A18;
+  --text-dim-dark:#CFCABF;
+  --text-dim-dark-2:#A8A299;
+  --inactive:#DCD8D0;
+  --table-head:#E6E3DC;
+  --cell-blank:#ECEAE4;
+
+  /* type */
+  --font-ui:'Archivo',sans-serif;
+  --font-alt:'Space Grotesk',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+
+  --fs-hero:60px;
+  --fs-section:42px;
+  --fs-title-xl:38px;
+  --fs-title-l:34px;
+  --fs-title-m:30px;
+  --fs-title-s:26px;
+  --fs-title-mobile:22px;
+  --fs-title-mobile-s:20px;
+  --fs-number-l:26px;
+  --fs-number-m:22px;
+  --fs-card:15px;
+  --fs-card-mobile:12.5px;
+  --fs-value:12px;
+  --fs-body:12.5px;
+  --fs-body-s:11.5px;
+  --fs-caption:9px;
+  --fs-label:10px;
+  --fs-kicker:11px;
+  --fs-chip:9px;
+  --fs-chip-s:8px;
+  --fs-button:11px;
+  --fs-button-s:9px;
+  --fs-nav:9px;
+
+  --track-tight:-0.03em;
+  --track-tight-2:-0.02em;
+  --track-button:0.07em;
+  --track-chip:0.12em;
+  --track-caption:0.13em;
+  --track-label:0.14em;
+  --track-kicker:0.18em;
+
+  --lh-display:0.94;
+  --lh-card:1.02;
+  --lh-tight:1.1;
+  --lh-value:1.25;
+  --lh-body:1.45;
+
+  /* space */
+  --s-1:2px; --s-2:4px; --s-3:5px; --s-4:6px; --s-5:8px; --s-6:10px;
+  --s-7:12px; --s-8:14px; --s-9:16px; --s-10:18px; --s-11:20px;
+  --s-12:26px; --s-13:40px; --s-14:48px; --s-15:56px;
+
+  /* geometry */
+  --radius:0;
+  --rule:1px;
+  --rule-strong:2px;
+  --signal-bar:4px;
+  --max-width:1360px;
+  --gutter:48px;
+  --gutter-narrow:20px;
+  --transition:120ms linear;
+}

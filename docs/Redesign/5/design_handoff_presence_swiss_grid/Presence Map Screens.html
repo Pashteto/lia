@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Presence — карта · 1a / 2b</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700;900&family=Space+Grotesk:wght@400;500;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#e9ddc8;font-family:'Figtree',sans-serif;padding:56px 48px 120px}
+  .kicker{font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#8a7d68;margin-bottom:14px}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:46px;font-weight:800;letter-spacing:-.02em;margin:0 0 14px;color:#201e1d;max-width:22ch}
+  .intro{font-size:16px;line-height:1.55;color:#5a5550;max-width:66ch;margin:0 0 44px}
+  .badge{display:inline-flex;align-items:center;gap:8px;font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#201e1d;background:#f5ead8;border:2px solid #201e1d;border-radius:999px;padding:5px 14px;margin-bottom:12px}
+  .screens{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start;margin-bottom:48px}
+  .lbl{font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8a7d68;margin-bottom:8px}
+  .desk{width:700px;height:520px;border-radius:14px;overflow:hidden;flex:none;display:flex;flex-direction:column;font-family:'Archivo',sans-serif;color:#111}
+  .mob{width:250px;height:520px;border-radius:26px;overflow:hidden;flex:none;border:8px solid #201e1d;box-shadow:0 10px 30px rgba(60,40,15,.22);display:flex;flex-direction:column;font-family:'Archivo',sans-serif;color:#111}
+  .mapbox{flex:1;min-height:0;position:relative}
+  .mapbox>div[id^="m-"]{position:absolute;inset:0}
+  .searchpill{position:absolute;z-index:500;right:auto;bottom:auto;width:max-content}
+  .swiss .leaflet-container{filter:grayscale(1) contrast(1.06)}
+  .grid2 .leaflet-container{filter:grayscale(1) contrast(1.04) brightness(1.03)}
+  .leaflet-container{background:#eae7e0;font-family:'Archivo',sans-serif}
+  .leaflet-control-attribution{font-size:8px;font-family:'Space Grotesk',sans-serif;background:rgba(255,255,255,.85)}
+  .pin{background:#111;color:#fff;font-size:9px;font-weight:700;letter-spacing:.05em;padding:4px 7px;white-space:nowrap;font-family:'Archivo',sans-serif;text-transform:uppercase;position:relative}
+  .pin::after{content:"";position:absolute;left:9px;top:100%;width:2px;height:9px;background:#111}
+  .pin.red{background:#e2231a}
+  .pin.red::after{background:#e2231a}
+  .cap{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#888}
+  .val{font-weight:700;font-size:12px}
+  .cta{background:#111;color:#fff;padding:11px;font-size:11px;font-weight:700;text-align:center;letter-spacing:.06em}
+  .chip{font-size:9px;letter-spacing:.12em;text-transform:uppercase;border:1px solid #111;padding:4px 9px;white-space:nowrap}
+  .chip.on{background:#111;color:#fff}
+  .row{display:grid;grid-template-columns:26px 1fr auto;gap:2px 12px;align-items:baseline;padding:11px 0;border-bottom:1px solid #ddd}
+</style>
+</head>
+<body>
+
+<div class="kicker">Turn 5 · Экран карты · настоящие данные</div>
+<h1>Карта событий — 1a и 2b</h1>
+<p class="intro">Страница <b>/map</b> в двух швейцарских вариантах. Карта настоящая и интерактивная (Leaflet + OpenStreetMap), тайлы обесцвечены под систему; пины стоят по реальным координатам площадок Москвы. Можно панорамировать и зумить.</p>
+
+<!-- 5a -->
+<span class="badge">5a · 1a Swiss · карта</span>
+<div class="screens swiss">
+  <div>
+    <div class="lbl">Desktop</div>
+    <div class="desk" style="background:#fff">
+      <div style="padding:14px 22px;border-bottom:1px solid #111;display:flex;justify-content:space-between;align-items:baseline;flex:none">
+        <span style="font-weight:900;font-size:13px">PRESENCE</span>
+        <span style="font-size:9px;letter-spacing:.14em">КАРТА · МОСКВА · 42</span>
+      </div>
+      <div style="display:flex;flex:1;min-height:0">
+        <div style="width:250px;flex:none;border-right:1px solid #111;display:flex;flex-direction:column">
+          <div style="padding:14px 16px;border-bottom:1px solid #111;display:flex;gap:6px;flex-wrap:wrap">
+            <span class="chip on">Все</span><span class="chip">Медиации</span><span class="chip">Лекции</span><span class="chip">Кино</span>
+          </div>
+          <div style="padding:12px 16px;overflow:hidden;flex:1">
+            <div class="row" style="padding-top:0"><span style="font-size:11px;font-weight:700">01</span><span style="font-weight:700;font-size:13px;line-height:1.1">Летний фестиваль медиаискусства</span><span style="font-size:10px;font-weight:700">FREE</span><span></span><span class="cap" style="letter-spacing:.05em">ГАРАЖ · 0.8 КМ</span><span></span></div>
+            <div class="row"><span style="font-size:11px;font-weight:700">02</span><span style="font-weight:700;font-size:13px;line-height:1.1">Медиация в залах старых мастеров</span><span style="font-size:10px;font-weight:700">FREE</span><span></span><span class="cap" style="letter-spacing:.05em">ГМИИ · 2.1 КМ</span><span></span></div>
+            <div class="row"><span style="font-size:11px;font-weight:700">03</span><span style="font-weight:700;font-size:13px;line-height:1.1">Лекция: русский авангард</span><span style="font-size:10px;font-weight:700">FREE</span><span></span><span class="cap" style="letter-spacing:.05em">ТРЕТЬЯКОВКА · 1.2 КМ</span><span></span></div>
+            <div class="row" style="border-bottom:none"><span style="font-size:11px;font-weight:700">04</span><span style="font-weight:700;font-size:13px;line-height:1.1">Концерт академической музыки</span><span style="font-size:10px;font-weight:700">1 200 ₽</span><span></span><span class="cap" style="letter-spacing:.05em">ВИНЗАВОД · 4.6 КМ</span><span></span></div>
+          </div>
+        </div>
+        <div class="mapbox"><div id="m-1a-desk"></div>
+          <div class="searchpill" style="left:50%;top:12px;transform:translateX(-50%);background:#fff;border:1px solid #111;padding:7px 14px;font-size:10px;font-weight:700;letter-spacing:.1em">ИСКАТЬ В ЭТОЙ ОБЛАСТИ</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="lbl">Mobile</div>
+    <div class="mob" style="background:#fff">
+      <div style="padding:12px 14px;border-bottom:1px solid #111;display:flex;justify-content:space-between;align-items:baseline;flex:none"><span style="font-weight:900;font-size:11px">PRESENCE</span><span style="font-size:8px;letter-spacing:.12em">СПИСОК</span></div>
+      <div style="padding:10px 14px;border-bottom:1px solid #111;display:flex;gap:5px;flex:none;overflow:hidden"><span class="chip on" style="font-size:8px">Все</span><span class="chip" style="font-size:8px">Медиации</span><span class="chip" style="font-size:8px">Кино</span></div>
+      <div class="mapbox"><div id="m-1a-mob"></div>
+        <div class="searchpill" style="left:50%;top:10px;transform:translateX(-50%);background:#fff;border:1px solid #111;padding:5px 10px;font-size:8px;font-weight:700;letter-spacing:.08em">ИСКАТЬ ЗДЕСЬ</div>
+      </div>
+      <div style="flex:none;border-top:1px solid #111;padding:12px 14px">
+        <div class="cap" style="margin-bottom:6px">01 · ФЕСТИВАЛЬ · 0.8 КМ</div>
+        <div style="font-weight:700;font-size:14px;line-height:1.05;margin-bottom:8px">Летний фестиваль медиаискусства</div>
+        <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-weight:900;font-size:15px">FREE</span><span class="cta" style="padding:8px 14px">ОТКРЫТЬ</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5b -->
+<span class="badge">5b · 2b Swiss grid · карта</span>
+<div class="screens grid2">
+  <div>
+    <div class="lbl">Desktop</div>
+    <div class="desk" style="background:#f2f0ec">
+      <div style="padding:13px 22px;display:flex;justify-content:space-between;align-items:baseline;flex:none"><span style="font-weight:900;font-size:13px">PRESENCE</span><span style="font-size:9px;letter-spacing:.14em">КАРТА / МСК ’26</span></div>
+      <div style="border-top:1px solid #111;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;flex:none">
+        <div style="border-right:1px solid #111;border-bottom:1px solid #111;padding:10px 14px"><div class="cap">Всего</div><div class="val">42 события</div></div>
+        <div style="border-right:1px solid #111;border-bottom:1px solid #111;padding:10px 14px"><div class="cap">Радиус</div><div class="val">5 км</div></div>
+        <div style="border-right:1px solid #111;border-bottom:1px solid #111;padding:10px 14px"><div class="cap">Бесплатно</div><div class="val">31</div></div>
+        <div style="border-bottom:1px solid #111;padding:10px 14px"><div class="cap">Сегодня</div><div class="val">6</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 240px;flex:1;min-height:0">
+        <div class="mapbox" style="border-right:1px solid #111"><div id="m-2b-desk"></div>
+          <div class="searchpill" style="left:12px;top:12px;background:#f2f0ec;border:1px solid #111;padding:6px 12px;font-size:9px;font-weight:700;letter-spacing:.1em">ИСКАТЬ В ЭТОЙ ОБЛАСТИ</div>
+        </div>
+        <div style="display:flex;flex-direction:column">
+          <div style="border-bottom:1px solid #111;padding:12px 14px">
+            <div class="cap" style="margin-bottom:6px">01 · Фестиваль</div>
+            <div style="font-weight:700;font-size:14px;line-height:1.05;margin-bottom:6px">Летний фестиваль медиаискусства</div>
+            <div style="font-size:10px;color:#666">Гараж · 0.8 км · 25.07</div>
+          </div>
+          <div style="border-bottom:1px solid #111;padding:12px 14px">
+            <div class="cap" style="margin-bottom:6px">02 · Медиация</div>
+            <div style="font-weight:700;font-size:14px;line-height:1.05;margin-bottom:6px">Медиация в залах старых мастеров</div>
+            <div style="font-size:10px;color:#666">ГМИИ · 2.1 км · 12.07</div>
+          </div>
+          <div style="padding:12px 14px;display:flex;flex-direction:column;flex:1">
+            <div class="cap" style="margin-bottom:6px">03 · Лекция</div>
+            <div style="font-weight:700;font-size:14px;line-height:1.05;margin-bottom:6px">Русский авангард</div>
+            <div style="font-size:10px;color:#666">Третьяковка · 1.2 км</div>
+            <div class="cta" style="margin-top:auto">СПИСКОМ</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="lbl">Mobile</div>
+    <div class="mob" style="background:#f2f0ec">
+      <div style="padding:12px 14px;display:flex;justify-content:space-between;align-items:baseline;flex:none"><span style="font-weight:900;font-size:11px">PRESENCE</span><span style="font-size:8px;letter-spacing:.12em">КАРТА</span></div>
+      <div style="border-top:1px solid #111;display:grid;grid-template-columns:1fr 1fr;flex:none">
+        <div style="border-right:1px solid #111;border-bottom:1px solid #111;padding:9px 12px"><div class="cap" style="font-size:8px">Всего</div><div class="val" style="font-size:11px">42</div></div>
+        <div style="border-bottom:1px solid #111;padding:9px 12px"><div class="cap" style="font-size:8px">Радиус</div><div class="val" style="font-size:11px">5 км</div></div>
+      </div>
+      <div class="mapbox"><div id="m-2b-mob"></div></div>
+      <div style="border-top:1px solid #111;flex:none;display:grid;grid-template-columns:1fr 1fr">
+        <div style="border-right:1px solid #111;padding:11px 12px"><div class="cap" style="font-size:8px;margin-bottom:4px">01 · Фестиваль</div><div style="font-weight:700;font-size:12px;line-height:1.05">Медиаискусство</div><div style="font-size:9px;color:#666;margin-top:3px">0.8 км</div></div>
+        <div style="padding:11px 12px"><div class="cap" style="font-size:8px;margin-bottom:4px">02 · Медиация</div><div style="font-weight:700;font-size:12px;line-height:1.05">Старые мастера</div><div style="font-size:9px;color:#666;margin-top:3px">2.1 км</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var VENUES = [
+    { n: "ГАРАЖ",        ll: [55.7285, 37.6013] },
+    { n: "ГМИИ",         ll: [55.7447, 37.6053] },
+    { n: "ТРЕТЬЯКОВКА",  ll: [55.7345, 37.6053] },
+    { n: "ПАРК ГОРЬКОГО",ll: [55.7238, 37.6005] },
+    { n: "ЭЛЕКТРОТЕАТР", ll: [55.7690, 37.6006] },
+    { n: "ВИНЗАВОД",     ll: [55.7545, 37.6647] },
+    { n: "ЕВР. МУЗЕЙ",   ll: [55.7910, 37.6115] }
+  ];
+
+  function build(id, zoom, red, pick, topPad) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var map = L.map(el, { zoomControl: false, attributionControl: true, scrollWheelZoom: false });
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors', maxZoom: 19
+    }).addTo(map);
+    var lls = [];
+    pick.forEach(function (idx, i) {
+      var v = VENUES[idx];
+      lls.push(v.ll);
+      var cls = 'pin' + (red && i === 0 ? ' red' : '');
+      L.marker(v.ll, {
+        icon: L.divIcon({
+          className: '', html: '<div class="' + cls + '">' + v.n + '</div>',
+          iconSize: null, iconAnchor: [9, 30]
+        })
+      }).addTo(map);
+    });
+    map.setView(lls[0], zoom);
+    setTimeout(function () {
+      map.invalidateSize();
+      // Frame to the actual marker set: labels extend up (30px anchor) and right (~90px),
+      // so pad generously and add extra top room on frames carrying the search pill.
+      map.fitBounds(L.latLngBounds(lls), {
+        paddingTopLeft: [24, topPad || 44],
+        paddingBottomRight: [96, 28],
+        maxZoom: 14
+      });
+    }, 80);
+  }
+
+  build('m-1a-desk', 12, false, [0, 1, 2, 3, 4, 5, 6], 62);
+  build('m-1a-mob', 11, false, [0, 1, 5, 6], 58);
+  build('m-2b-desk', 12, false, [0, 1, 2, 3, 4, 5, 6], 46);
+  build('m-2b-mob', 11, false, [0, 1, 5], 44);
+</script>
+</body>
+</html>

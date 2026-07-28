@@ -8,12 +8,12 @@ const TABS = [
   { href: "/", label: "Лента" },
   { href: "/search", label: "Подбор" },
   { href: "/map", label: "Карта" },
-  { href: "/me/practices", label: "Я" }, // → "/me" after Phase 3 builds U6
+  { href: "/me", label: "Я" },
 ] as const;
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
-  return pathname === href || pathname.startsWith(`${href}/`) || (href === "/me/practices" && pathname.startsWith("/me"));
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 /** Mobile-only 4-tab bar. Icons are plain squares by design — the system has

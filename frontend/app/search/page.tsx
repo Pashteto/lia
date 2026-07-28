@@ -1,13 +1,22 @@
-import { ComingSoon } from "@/components/ComingSoon";
+import { DiscoverBrowse } from "@/components/DiscoverBrowse";
+import { AppHeader, USER_NAV } from "@/components/ui/AppHeader";
+import { AuthNavControl } from "@/components/ui/AuthNavControl";
+import { fetchPublishedEvents, getCategories } from "@/lib/api";
+import { MOCK_EVENTS } from "@/lib/mock-events";
 
-// TODO: build from design/screens/ai-search.html
-// (curatorial NL query → assistant reply → result cards with "почему подошло").
-export default function AiSearchPage() {
+export const metadata = { title: "Подбор — PRESENCE" };
+
+// U3 · AI-подбор. Public route — deterministic smart-filter (LLM deferred).
+export default async function SearchPage() {
+  const [initialEvents, categories] = await Promise.all([
+    fetchPublishedEvents().catch(() => MOCK_EVENTS),
+    getCategories().catch(() => []),
+  ]);
+
   return (
-    <ComingSoon
-      kicker="AI-поиск"
-      title="Подобрать"
-      note="AI-ассистент подбора ещё не реализован в этом скаффолде. Смотри design/screens/ai-search.html."
-    />
+    <>
+      <AppHeader nav={USER_NAV} actions={<AuthNavControl />} mobileCaption="ПОДБОР" />
+      <DiscoverBrowse initialEvents={initialEvents} categories={categories} />
+    </>
   );
 }

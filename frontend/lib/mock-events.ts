@@ -67,24 +67,25 @@ export const MOCK_EVENTS: LiaEvent[] = [
     categories: [{ id: "cat-mediation", slug: "mediation", label: "Медиации" }],
     format: "offline",
     status: "published",
-    startsAt: "2026-06-13T19:00:00+03:00",
+    // Sat 2026-08-01 — upcoming weekend for U3 «Тихое в выходные» offline demos
+    startsAt: "2026-08-01T11:00:00+03:00",
     priceType: "free",
-    capacity: 18,
-    attendeeCount: 11,
+    capacity: 8,
+    attendeeCount: 5,
     coverUrl:
       "https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=1200&q=80&auto=format&fit=crop",
     organizer: { id: "org-garage", name: "Музей «Гараж»", affiliation: "Медиатека" },
-    venue: { id: "v-gorky", name: "Парк Горького", metro: "Парк культуры" },
+    venue: { id: "v-gorky", name: "Парк Горького", metro: "Парк культуры", lat: 55.731, lon: 37.601 },
   },
   {
     id: "evt-bumaga",
     title: "Бумага ручного отлива",
     description:
-      "Мастерская: делаем лист бумаги из вторсырья и растительных волокон. Уносим с собой.",
+      "Мастерская: делаем лист бумаги из вторсырья и растительных волокон. Уносим с собой. Семейный формат — можно с детьми.",
     categories: [{ id: "cat-workshop", slug: "workshop", label: "Мастер-классы" }],
     format: "offline",
     status: "published",
-    startsAt: "2026-06-14T14:00:00+03:00",
+    startsAt: "2026-08-02T14:00:00+03:00",
     priceType: "from",
     priceMin: 2500,
     capacity: 10,
@@ -92,7 +93,7 @@ export const MOCK_EVENTS: LiaEvent[] = [
     coverUrl:
       "https://images.unsplash.com/photo-1607344645866-009c320b63e0?w=1200&q=80&auto=format&fit=crop",
     organizer: { id: "org-tsekh", name: "Цех бумаги", affiliation: "Независимая мастерская" },
-    venue: { id: "v-winzavod", name: "Винзавод", metro: "Чкаловская" },
+    venue: { id: "v-winzavod", name: "Винзавод", metro: "Чкаловская", lat: 55.755, lon: 37.665 },
   },
   {
     id: "evt-smotret-vmeste",
@@ -102,7 +103,8 @@ export const MOCK_EVENTS: LiaEvent[] = [
     categories: [{ id: "cat-lecture", slug: "lecture", label: "Лекции" }],
     format: "online",
     status: "published",
-    startsAt: "2026-06-15T18:30:00+03:00",
+    // Weekday evening for U3 «Для двоих вечером»
+    startsAt: "2026-07-30T19:00:00+03:00",
     priceType: "free",
     attendeeCount: 64,
     coverUrl:
@@ -120,7 +122,7 @@ export const MOCK_EVENTS: LiaEvent[] = [
     ],
     format: "offline",
     status: "published",
-    startsAt: "2026-06-16T20:00:00+03:00",
+    startsAt: "2026-07-31T20:00:00+03:00",
     priceType: "from",
     priceMin: 500,
     capacity: 12,
@@ -128,6 +130,6 @@ export const MOCK_EVENTS: LiaEvent[] = [
     coverUrl:
       "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=1200&q=80&auto=format&fit=crop",
     organizer: { id: "org-poryadok", name: "Порядок слов", affiliation: "Книжный магазин" },
-    venue: { id: "v-poryadok", name: "Порядок слов", metro: "Маяковская" },
+    venue: { id: "v-poryadok", name: "Порядок слов", metro: "Маяковская", lat: 55.77, lon: 37.596 },
   },
 ];

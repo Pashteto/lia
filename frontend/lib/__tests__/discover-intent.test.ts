@@ -13,6 +13,12 @@ describe("DISCOVER_CHIPS", () => {
       "Для двоих вечером",
       "С детьми",
     ]);
+    expect(DISCOVER_CHIPS.map((c) => c.shortLabel)).toEqual([
+      "Тихое",
+      "Бесплатно",
+      "Вечер",
+      "С детьми",
+    ]);
   });
 });
 

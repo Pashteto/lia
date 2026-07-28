@@ -13,11 +13,16 @@ export interface DiscoverIntent {
   wantsNearby: boolean;
 }
 
-export const DISCOVER_CHIPS: readonly { id: DiscoverIntentId; label: string }[] = [
-  { id: "quiet_weekend", label: "Тихое в выходные" },
-  { id: "free_nearby", label: "Бесплатно рядом" },
-  { id: "evening_pair", label: "Для двоих вечером" },
-  { id: "with_kids", label: "С детьми" },
+export const DISCOVER_CHIPS: readonly {
+  id: DiscoverIntentId;
+  label: string;
+  /** Compact label for ≤430px (HTML U3 mobile frame). */
+  shortLabel: string;
+}[] = [
+  { id: "quiet_weekend", label: "Тихое в выходные", shortLabel: "Тихое" },
+  { id: "free_nearby", label: "Бесплатно рядом", shortLabel: "Бесплатно" },
+  { id: "evening_pair", label: "Для двоих вечером", shortLabel: "Вечер" },
+  { id: "with_kids", label: "С детьми", shortLabel: "С детьми" },
 ];
 
 export function intentFromChip(chipId: DiscoverIntentId): DiscoverIntent {

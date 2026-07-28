@@ -22,9 +22,24 @@ import type { LatLon } from "@/lib/geo";
 import type { LiaEvent } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 
 type Phase = "idle" | "loading" | "results" | "empty" | "error";
+
+const PLACEHOLDER_DESKTOP = "Хочу спокойный вечер с искусством и без толпы…";
+const PLACEHOLDER_MOBILE = "Спокойный вечер…";
+
+function subscribeMaxSm(onStoreChange: () => void) {
+  const mq = window.matchMedia("(max-width: 639px)");
+  mq.addEventListener("change", onStoreChange);
+  return () => mq.removeEventListener("change", onStoreChange);
+}
+function getMaxSmSnapshot() {
+  return window.matchMedia("(max-width: 639px)").matches;
+}
+function getMaxSmServerSnapshot() {
+  return false;
+}
 
 export function DiscoverBrowse({
   initialEvents,
@@ -34,6 +49,11 @@ export function DiscoverBrowse({
   categories: ApiCategory[];
 }) {
   const router = useRouter();
+  const isMaxSm = useSyncExternalStore(
+    subscribeMaxSm,
+    getMaxSmSnapshot,
+    getMaxSmServerSnapshot,
+  );
   const [draft, setDraft] = useState("");
   const [phase, setPhase] = useState<Phase>("idle");
   const [answer, setAnswer] = useState("");
@@ -95,19 +115,19 @@ export function DiscoverBrowse({
   }
 
   return (
-    <main className="mx-auto max-w-[1360px] pb-[64px] max-sm:pb-[88px]">
+    <main className="mx-auto flex max-w-[1360px] flex-col pb-[64px] max-sm:pb-[88px]">
       <div className="border-b border-ink px-[20px] py-[18px] max-sm:px-[14px] max-sm:py-[13px]">
         <p className="cap mb-[6px] hidden sm:block">AI-подбор</p>
         <h1 className="mb-[14px] text-[34px] font-black leading-[0.94] tracking-[-0.03em] max-sm:mb-[10px] max-sm:text-[20px]">
-          Что вам сейчас
-          <br className="max-sm:hidden" />{" "}
+          Что вам сейчас{" "}
+          <br className="max-sm:hidden" />
           откликается?
         </h1>
         <form onSubmit={onSubmit} className="flex border border-ink">
           <input
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder="Хочу спокойный вечер с искусством и без толпы…"
+            placeholder={isMaxSm ? PLACEHOLDER_MOBILE : PLACEHOLDER_DESKTOP}
             aria-label="Запрос для подбора"
             className="swiss-focus min-h-[44px] flex-1 bg-transparent px-[14px] py-[11px] text-[12px] text-field-text placeholder:text-field-text max-sm:px-[10px] max-sm:py-[9px] max-sm:text-[10.5px] max-sm:placeholder:text-[10.5px]"
           />
@@ -132,7 +152,8 @@ export function DiscoverBrowse({
                 void runIntent(intentFromChip(c.id), c.id);
               }}
             >
-              {c.label}
+              <span className="max-sm:hidden">{c.label}</span>
+              <span className="sm:hidden">{c.shortLabel}</span>
             </Chip>
           ))}
         </div>
@@ -165,53 +186,57 @@ export function DiscoverBrowse({
       ) : null}
 
       {phase === "empty" ? (
-        <EmptyState
-          numeral="00"
-          title="Ничего не нашлось"
-          text="Попробуйте другой запрос или соберите ленту вручную."
-          actions={
-            <Button
-              variant="ghost"
-              className="min-h-[44px]"
-              onClick={() => {
-                setPhase("idle");
-                setHits([]);
-                setAnswer("");
-                setActiveChip(null);
-                setDraft("");
-              }}
-            >
-              Сбросить
-            </Button>
-          }
-        />
+        <div className="border-b border-ink">
+          <EmptyState
+            numeral="00"
+            title="Ничего не нашлось"
+            text="Попробуйте другой запрос или соберите ленту вручную."
+            actions={
+              <Button
+                variant="ghost"
+                className="min-h-[44px]"
+                onClick={() => {
+                  setPhase("idle");
+                  setHits([]);
+                  setAnswer("");
+                  setActiveChip(null);
+                  setDraft("");
+                }}
+              >
+                Сбросить
+              </Button>
+            }
+          />
+        </div>
       ) : null}
 
       {phase === "error" ? (
-        <EmptyState
-          numeral="!"
-          title="Не удалось загрузить события"
-          text="Проверьте соединение и попробуйте ещё раз."
-          actions={
-            <Button
-              variant="ghost"
-              className="min-h-[44px]"
-              onClick={() => {
-                void (async () => {
-                  if (!lastIntent) return;
-                  const result = await refetch();
-                  await runIntent(
-                    lastIntent,
-                    activeChip,
-                    result.data ?? initialEvents,
-                  );
-                })();
-              }}
-            >
-              Повторить
-            </Button>
-          }
-        />
+        <div className="border-b border-ink">
+          <EmptyState
+            numeral="!"
+            title="Не удалось загрузить события"
+            text="Проверьте соединение и попробуйте ещё раз."
+            actions={
+              <Button
+                variant="ghost"
+                className="min-h-[44px]"
+                onClick={() => {
+                  void (async () => {
+                    if (!lastIntent) return;
+                    const result = await refetch();
+                    await runIntent(
+                      lastIntent,
+                      activeChip,
+                      result.data ?? initialEvents,
+                    );
+                  })();
+                }}
+              >
+                Повторить
+              </Button>
+            }
+          />
+        </div>
       ) : null}
 
       <div className="flex items-center justify-between gap-[12px] border-b border-ink px-[20px] py-[10px] max-sm:px-[14px]">

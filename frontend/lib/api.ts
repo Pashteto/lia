@@ -795,6 +795,8 @@ export async function getPublicOrganizer(id: string): Promise<{
   website_url: string;
   verified: boolean;
   is_following: boolean;
+  /** May be absent from public GET — UI uses ink square placeholder when missing. */
+  logo_url?: string;
 } | null> {
   // Send the token when present so the backend can compute is_following for the
   // current user; the endpoint stays public (no auth required).

@@ -12,6 +12,7 @@ import type { LiaEvent } from "@/lib/types";
 /** Diagonal gradient stops per category slug. Same category → same look. */
 const CATEGORY_GRADIENT: Record<string, { from: string; to: string }> = {
   lecture: { from: "#2b3a8f", to: "#5b6fd6" },
+  "reading-group": { from: "#2b3a8f", to: "#5b6fd6" },
   workshop: { from: "#b5552e", to: "#e0935f" },
   mediation: { from: "#1f6f6b", to: "#48b3a4" },
   concert: { from: "#5e2bb0", to: "#a85ad9" },

@@ -101,7 +101,17 @@ function OverflowExtras({ event }: { event: LiaEvent }) {
         {event.signupMode === "application" ? (
           <div>
             <p className="cap mb-[6px]">Заявки</p>
-            <EventApplicationsPanel eventId={event.id} />
+            <EventApplicationsPanel
+              eventId={event.id}
+              event={{
+                title: event.title,
+                startsAt: event.startsAt,
+                capacity: event.capacity,
+                seatsRemaining: event.seatsRemaining,
+                signupMode: event.signupMode,
+              }}
+              hideContext
+            />
           </div>
         ) : null}
         {event.status === "published" ? (

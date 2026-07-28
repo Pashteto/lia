@@ -2,8 +2,9 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 
+import { ResponsiveMapRegion } from "@/components/map/ResponsiveMapRegion";
 import { Cell, CellStrip } from "@/components/ui/Cell";
 import { Chip } from "@/components/ui/Chip";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -11,6 +12,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { fetchNearbyEvents } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { distanceLabel, haversineKm, type LatLon } from "@/lib/geo";
+import { createLatestRequestGate } from "@/lib/latest-request-gate";
 import { mapAreaStats } from "@/lib/map-stats";
 import { priceLabel } from "@/lib/price-label";
 import type { LiaEvent } from "@/lib/types";
@@ -25,6 +27,7 @@ const MOSCOW: LatLon = [55.742, 37.618];
 const SEARCH_LIMIT = 200;
 const PIN_CAP = 100;
 const NEAR_KM = 5;
+const MOBILE_QUERY = "(max-width: 639px)";
 
 type Filter = "all" | "near" | "free";
 
@@ -39,7 +42,27 @@ function numeralAt(index: number): string {
   return String(index + 1).padStart(2, "0");
 }
 
+function subscribeMobileViewport(onChange: () => void): () => void {
+  const media = window.matchMedia(MOBILE_QUERY);
+  media.addEventListener("change", onChange);
+  return () => media.removeEventListener("change", onChange);
+}
+
+function getMobileViewportSnapshot(): boolean {
+  return window.matchMedia(MOBILE_QUERY).matches;
+}
+
+function getServerMobileViewportSnapshot(): boolean {
+  return false;
+}
+
 export function MapBrowse() {
+  const mobile = useSyncExternalStore(
+    subscribeMobileViewport,
+    getMobileViewportSnapshot,
+    getServerMobileViewportSnapshot,
+  );
+  const requestGateRef = useRef(createLatestRequestGate());
   const [center, setCenter] = useState<LatLon>(MOSCOW);
   const [searchCenter, setSearchCenter] = useState<LatLon>(MOSCOW);
   const [viewport, setViewport] = useState<MapViewport | null>(null);
@@ -51,19 +74,22 @@ export function MapBrowse() {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async (at: LatLon) => {
+    const requestId = requestGateRef.current.begin();
     setLoading(true);
     setError(null);
     try {
       const all = await fetchNearbyEvents(at[0], at[1], SEARCH_LIMIT);
+      if (!requestGateRef.current.isLatest(requestId)) return;
       const withCoords = all.filter((e) => e.venue?.lat != null && e.venue?.lon != null);
       setTruncated(withCoords.length > PIN_CAP);
       setEvents(withCoords.slice(0, PIN_CAP));
       setSearchCenter(at);
       setActiveId(null);
     } catch {
+      if (!requestGateRef.current.isLatest(requestId)) return;
       setError("Не удалось загрузить события в этой области.");
     } finally {
-      setLoading(false);
+      if (requestGateRef.current.isLatest(requestId)) setLoading(false);
     }
   }, []);
 
@@ -234,16 +260,9 @@ export function MapBrowse() {
         <Cell caption="Радиус" value={stats.radius} mono valueClassName="text-[11px]" className="px-[12px] py-[8px]" />
       </CellStrip>
 
-      {/* Desktop: 230px rail + map */}
-      <div className="hidden h-[calc(100vh-160px)] min-h-[420px] grid-cols-[230px_1fr] border-b border-ink sm:grid">
-        <div className="flex flex-col overflow-y-auto border-r border-on-surface">{listRail}</div>
-        {mapPane(false)}
-      </div>
-
-      {/* Mobile: map → selected card */}
-      <div className="flex h-[calc(100vh-210px)] min-h-[360px] flex-col border-b border-ink sm:hidden">
-        {mapPane(true)}
-      </div>
+      {/* Only the active breakpoint's map is mounted; hidden maps would race
+          viewport callbacks and duplicate the Yandex API instance. */}
+      <ResponsiveMapRegion mobile={mobile} listRail={listRail} renderMap={mapPane} />
       {active ? (
         <Link
           href={`/events/${active.id}`}

@@ -54,7 +54,7 @@ export function AuthForm({
       } else {
         await loginPassword(email.trim(), password);
         onSuccess?.();
-        router.push(next ?? "/");
+        if (!onSuccess) router.push(next ?? "/");
       }
     } catch (err) {
       setError(

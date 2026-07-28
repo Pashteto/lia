@@ -7,9 +7,8 @@ import { AuthForm } from "@/components/AuthForm";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/lib/auth-context";
 
-// Nav auth control: "Войти" when signed out (opens a demo-login modal), or the
-// signed-in email + "Выйти" when authed. Demo-login takes just an email — no
-// password (see lib/auth.ts).
+// Nav auth control: "Войти" when signed out (opens login modal), or the
+// signed-in email + "Выйти" when authed.
 export function AuthButton() {
   const { email, isAuthed, ready, logout, role } = useAuth();
   const [open, setOpen] = useState(false);

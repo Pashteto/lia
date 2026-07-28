@@ -135,9 +135,10 @@ html {
 
 /* ——— Swiss type utilities ——— */
 
-/* Caption: 9px / 0.13em / uppercase / muted-2. The workhorse label. */
+/* Caption: 9px / 0.13em / uppercase / muted-2, primary face — the reference
+ * sets no font-family on .cap, so it inherits the body face. */
 @utility cap {
-  font-family: var(--font-alt);
+  font-family: var(--font-ui);
   font-size: 9px;
   font-weight: 400;
   letter-spacing: 0.13em;

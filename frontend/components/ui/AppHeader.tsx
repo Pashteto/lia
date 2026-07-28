@@ -43,7 +43,7 @@ export function AppHeader({ nav = [], admin, mobileCaption, actions }: AppHeader
       <Link href="/" className="swiss-focus text-[13px] font-black tracking-[-0.01em] max-sm:text-[11px]">
         PRESENCE{admin ? " / ADMIN" : ""}
       </Link>
-      <nav className="flex items-baseline gap-[14px] max-sm:hidden">
+      <nav aria-label="Основная навигация" className="flex items-baseline gap-[14px] max-sm:hidden">
         {nav.map((item) => (
           <Link
             key={item.href}

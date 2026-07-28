@@ -4,6 +4,7 @@ import type { ButtonHTMLAttributes } from "react";
 type Variant = "primary" | "ghost" | "inverted" | "destructive" | "dark-ghost";
 type Size = "md" | "sm";
 
+// On data-surface="ink", use "inverted"/"dark-ghost"/"destructive" — "primary"/"ghost" hard-code ink by design.
 const VARIANTS: Record<Variant, string> = {
   // Ink fill, white text; hover deepens to black.
   primary: "bg-ink text-white hover:bg-black",

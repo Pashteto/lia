@@ -8,6 +8,12 @@ describe('priceLabel', () => {
     expect(priceLabel(undefined)).toBe('FREE');
     expect(priceLabel(500, 'free')).toBe('FREE');
   });
+  it('negative price is treated as FREE', () => {
+    expect(priceLabel(-100)).toBe('FREE');
+  });
+  it('NaN price is treated as FREE', () => {
+    expect(priceLabel(NaN)).toBe('FREE');
+  });
   it('formats rubles with nbsp grouping', () => {
     expect(priceLabel(800)).toBe('800 ₽');
     expect(priceLabel(1500)).toBe(`1 500 ₽`);

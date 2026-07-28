@@ -10,16 +10,19 @@ export interface ProgressBarProps {
 
 /** Ink-bordered fill bar. No radius, no gradient, no animation. */
 export function ProgressBar({ value, max, thin, className }: ProgressBarProps) {
-  const pct = max > 0 ? Math.min(100, Math.max(0, (value / max) * 100)) : 0;
+  const pct =
+    Number.isFinite(value) && Number.isFinite(max) && max > 0
+      ? Math.min(100, Math.max(0, (value / max) * 100))
+      : 0;
   return (
     <div
       role="progressbar"
       aria-valuenow={value}
       aria-valuemin={0}
       aria-valuemax={max}
-      className={cn("w-full border border-ink", thin ? "h-[5px]" : "h-[8px]", className)}
+      className={cn("w-full border border-on-surface", thin ? "h-[5px]" : "h-[8px]", className)}
     >
-      <div className="h-full bg-ink" style={{ width: `${pct}%` }} />
+      <div className="h-full bg-on-surface" style={{ width: `${pct}%` }} />
     </div>
   );
 }

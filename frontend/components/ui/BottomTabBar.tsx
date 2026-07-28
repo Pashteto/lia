@@ -21,7 +21,7 @@ function isActive(pathname: string, href: string): boolean {
 export function BottomTabBar() {
   const pathname = usePathname();
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-ink bg-paper sm:hidden">
+    <nav aria-label="Вкладки" className="fixed inset-x-0 bottom-0 z-40 flex border-t border-ink bg-paper sm:hidden">
       {TABS.map((tab) => {
         const active = isActive(pathname, tab.href);
         return (

@@ -8,6 +8,7 @@ export type ChipVariant =
   | "dark-active" // paper fill, ink text (on ink surface)
   | "dark-muted"; // muted border + text (on ink surface)
 
+// On data-surface="ink", ink-filled "active" is invisible — callers use "dark-active"/"dark-muted" there.
 const VARIANTS: Record<ChipVariant, string> = {
   default: "border-current",
   active: "border-ink bg-ink text-paper",

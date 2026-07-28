@@ -65,13 +65,13 @@ function Gallery() {
           <EventModule
             numeral={categoryNumeral("lecture", CATS)}
             category="Лекции" title="Разговор о новой вещественности"
-            venue="ГМИИ им. Пушкина" date="15.07 · 19:00" price={priceLabel(80000)} href="/"
+            venue="ГМИИ им. Пушкина" date="15.07 · 19:00" price={priceLabel(800)} href="/"
             matchReason="тихое, вечером, вдвоём"
           />
           <EventModule
             numeral={categoryNumeral("mediation", CATS)}
             category="Медиации" title="Медиация по выставке «Свет»"
-            venue="Винзавод" date="18.07 · 12:00" price={priceLabel(150000)} href="/"
+            venue="Винзавод" date="18.07 · 12:00" price={priceLabel(1500)} href="/"
           />
         </div>
       </Section>

@@ -20,7 +20,7 @@ export function Cell({ caption, value, mono, roomy, invert, className }: CellPro
       className={cn(
         "flex min-w-0 flex-col gap-[4px]",
         roomy ? "px-[20px] py-[16px]" : "px-[14px] py-[10px]",
-        invert && "bg-ink text-paper",
+        invert && "bg-on-surface text-surface",
         className,
       )}
     >

@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { getToken } from "@/lib/auth";
 
@@ -40,19 +41,20 @@ export function PublishEventButton({ eventId }: { eventId: string }) {
   });
 
   return (
-    <div className="mt-1">
-      <button
+    <div>
+      <Button
         type="button"
+        variant="primary"
+        className="w-full"
         onClick={() => setConfirming(true)}
         disabled={mutation.isPending}
-        className="flex w-full items-center justify-center gap-1 rounded-control px-2 py-1.5 text-[13px] font-medium text-accent hover:bg-accent/8 transition disabled:opacity-50"
       >
         {mutation.isPending ? "Публикация…" : "Опубликовать"}
-      </button>
-      {mutation.isError && (
-        <p className="px-2 text-[12px] text-red-500">Не удалось опубликовать.</p>
-      )}
-      {confirming && (
+      </Button>
+      {mutation.isError ? (
+        <p className="mt-[6px] text-[11px] text-signal">Не удалось опубликовать.</p>
+      ) : null}
+      {confirming ? (
         <ConfirmModal
           title="Опубликовать событие?"
           body="После публикации изменить его будет нельзя."
@@ -63,7 +65,7 @@ export function PublishEventButton({ eventId }: { eventId: string }) {
           }}
           onClose={() => setConfirming(false)}
         />
-      )}
+      ) : null}
     </div>
   );
 }

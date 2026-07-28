@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-29  
 **Repo:** `Pashteto/lia`  
-**Branch tip on `main`:** (after push) Phase 4 U3 Подбор smart-filter merged  
+**Branch tip on `main`:** `37f769e` — Phase 4 U3 Подбор + HTML fidelity fixes  
 **Live product:** https://presence.tarski.ru (confirm deploy separately — merge ≠ deploy)
 
 ---

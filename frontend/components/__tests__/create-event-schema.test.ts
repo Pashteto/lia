@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { eventFormSchema } from "@/components/CreateEventForm";
+import { eventFormSchema, firstErrorStep } from "@/components/CreateEventForm";
 
 const base = {
   title: "Тур",
@@ -67,5 +67,34 @@ describe("eventFormSchema signup rules", () => {
         "Укажите дату и время",
       );
     }
+  });
+});
+
+describe("firstErrorStep (wizard jump)", () => {
+  it("maps title → step 0 and startsAt → step 1", () => {
+    expect(firstErrorStep({ title: { message: "x" } })).toBe(0);
+    expect(firstErrorStep({ startsAt: { message: "x" } })).toBe(1);
+  });
+
+  it("prefers earlier steps when several fields fail", () => {
+    expect(
+      firstErrorStep({
+        startsAt: { message: "date" },
+        title: { message: "title" },
+        curatorQuestion: { message: "q" },
+      }),
+    ).toBe(0);
+    expect(
+      firstErrorStep({
+        curatorQuestion: { message: "q" },
+        startsAt: { message: "date" },
+      }),
+    ).toBe(1);
+  });
+
+  it("maps tickets + status fields", () => {
+    expect(firstErrorStep({ capacity: { message: "x" } })).toBe(2);
+    expect(firstErrorStep({ externalRegistrationUrl: { message: "x" } })).toBe(2);
+    expect(firstErrorStep({ status: { message: "x" } })).toBe(3);
   });
 });

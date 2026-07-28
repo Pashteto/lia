@@ -30,7 +30,7 @@ import { priceLabel } from "@/lib/price-label";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { Controller, useForm, useWatch } from "react-hook-form";
+import { Controller, useForm, useWatch, type FieldErrors } from "react-hook-form";
 import { z } from "zod";
 
 export const eventFormSchema = z
@@ -96,6 +96,73 @@ const NEXT_LABELS = [
   "СОХРАНИТЬ",
 ] as const;
 
+/** RHF field → wizard step (cover is outside the schema). */
+const FIELD_STEP: Record<string, number> = {
+  title: 0,
+  categoryIds: 0,
+  description: 0,
+  format: 1,
+  venueId: 1,
+  startsAt: 1,
+  endsAt: 1,
+  isFree: 2,
+  priceMin: 2,
+  capacity: 2,
+  signupMode: 2,
+  curatorQuestion: 2,
+  externalRegistrationUrl: 2,
+  status: 3,
+};
+
+const STEP_FIELDS: Record<number, (keyof FormValues)[]> = {
+  0: ["title", "categoryIds", "description"],
+  1: ["format", "venueId", "startsAt", "endsAt"],
+  2: [
+    "isFree",
+    "priceMin",
+    "capacity",
+    "signupMode",
+    "curatorQuestion",
+    "externalRegistrationUrl",
+  ],
+  3: ["status"],
+};
+
+const FIELD_ORDER = [
+  "title",
+  "categoryIds",
+  "description",
+  "format",
+  "venueId",
+  "startsAt",
+  "endsAt",
+  "isFree",
+  "priceMin",
+  "capacity",
+  "signupMode",
+  "curatorQuestion",
+  "externalRegistrationUrl",
+  "status",
+] as const;
+
+/** First wizard step that owns a present RHF / Zod error path. */
+export function firstErrorStep(
+  errors: Partial<Record<string, unknown>> | undefined,
+): number {
+  if (!errors) return 0;
+  for (const key of FIELD_ORDER) {
+    if (errors[key]) return FIELD_STEP[key] ?? 0;
+  }
+  return 0;
+}
+
+function firstErrorStepFromZodPaths(paths: string[]): number {
+  for (const key of FIELD_ORDER) {
+    if (paths.includes(key)) return FIELD_STEP[key] ?? 0;
+  }
+  return 0;
+}
+
 const DT_BOX =
   "border border-on-surface bg-transparent px-[11px] py-[9px] text-[12.5px] text-on-surface swiss-focus";
 
@@ -155,6 +222,7 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
   const [step, setStep] = useState(0);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [venueName, setVenueName] = useState(initial?.venueName ?? "");
+  const [showCheckBanner, setShowCheckBanner] = useState(false);
   const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const {
@@ -286,6 +354,7 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
   };
 
   const onSubmit = (v: FormValues) => {
+    setShowCheckBanner(false);
     const input = valuesToInput(v, coverFileId);
 
     if (mode === "edit") {
@@ -303,13 +372,34 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
     mutation.mutate(input);
   };
 
+  /** Jump to the first step that owns a validation error so messages aren't hidden. */
+  const revealFieldErrors = (errs: FieldErrors<FormValues>) => {
+    setStep(firstErrorStep(errs));
+    setShowCheckBanner(true);
+  };
+
+  const goNext = async () => {
+    const fields = STEP_FIELDS[step] ?? [];
+    const ok = await trigger(fields);
+    if (!ok) {
+      setShowCheckBanner(true);
+      return;
+    }
+    setShowCheckBanner(false);
+    setStep((s) => Math.min(3, s + 1));
+  };
+
   const saveDraftGhost = async () => {
     const v = { ...getValues(), status: "draft" as const };
     const parsed = eventFormSchema.safeParse(v);
     if (!parsed.success) {
       await trigger();
+      const paths = parsed.error.issues.map((i) => String(i.path[0] ?? ""));
+      setStep(firstErrorStepFromZodPaths(paths));
+      setShowCheckBanner(true);
       return;
     }
+    setShowCheckBanner(false);
     draftMutation.mutate(valuesToInput(v, coverFileId));
   };
 
@@ -392,13 +482,21 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
       </div>
 
       <form
-        onSubmit={handleSubmit(onSubmit)}
+        onSubmit={handleSubmit(onSubmit, revealFieldErrors)}
         onBlurCapture={() => flushAutosave()}
         className="mx-auto max-w-[1360px] pb-[64px] max-sm:pb-[88px]"
       >
         <div className="grid grid-cols-1 sm:grid-cols-[1fr_240px]">
           {/* Left: step fields */}
           <div className="flex flex-col gap-[11px] border-b border-ink px-[20px] py-[16px] max-sm:px-[14px] max-sm:py-[13px] sm:border-r sm:border-b-0">
+            {showCheckBanner ? (
+              <p
+                role="alert"
+                className="border border-signal bg-signal-tint px-[11px] py-[8px] text-[12.5px] font-bold text-signal"
+              >
+                Проверьте поля
+              </p>
+            ) : null}
             {/* 01 Основное — keep mounted */}
             <div hidden={step !== 0} className="flex flex-col gap-[11px]">
               <Input
@@ -716,7 +814,7 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
                 <Button
                   type="button"
                   className="min-h-[44px] flex-1"
-                  onClick={() => setStep((s) => Math.min(3, s + 1))}
+                  onClick={() => void goNext()}
                 >
                   {NEXT_LABELS[step]}
                 </Button>
@@ -731,7 +829,7 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
                   variant="ghost"
                   className="min-h-[44px] max-sm:w-full sm:flex-none sm:px-[16px]"
                   disabled={draftMutation.isPending}
-                  onClick={saveDraftGhost}
+                  onClick={() => void saveDraftGhost()}
                 >
                   {draftMutation.isPending ? "Сохранение…" : "ЧЕРНОВИК"}
                 </Button>
@@ -740,7 +838,10 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
                   type="button"
                   variant="ghost"
                   className="min-h-[44px] max-sm:w-full sm:flex-none sm:px-[16px]"
-                  onClick={() => setStep((s) => Math.max(0, s - 1))}
+                  onClick={() => {
+                    setShowCheckBanner(false);
+                    setStep((s) => Math.max(0, s - 1));
+                  }}
                 >
                   Назад
                 </Button>

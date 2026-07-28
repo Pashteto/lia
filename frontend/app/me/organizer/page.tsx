@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { AuthGate } from "@/components/ui/AuthGate";
 import { ImageUpload } from "@/components/ui/ImageUpload";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { useAuth } from "@/lib/auth-context";
 import {
   getMyOrganizer,
@@ -59,22 +61,16 @@ export default function MyOrganizerPage() {
   }, [ready, isAuthed]);
 
   if (!ready) {
-    return <div className="min-h-screen bg-bg-grouped" />;
+    return (
+      <div className="px-[20px] py-[26px]">
+        <Skeleton className="h-[120px] w-full" />
+      </div>
+    );
   }
 
   if (!isAuthed) {
     return (
-      <main className="mx-auto max-w-3xl px-4 py-16">
-        <Link href="/" className="inline-flex items-center text-[17px] text-accent">
-          ‹ События
-        </Link>
-        <div className="mt-8 text-center">
-          <h1 className="text-[28px] font-bold tracking-[-0.022em]">Профиль организатора</h1>
-          <p className="mt-3 text-label-secondary">
-            Войдите, чтобы создать профиль организатора.
-          </p>
-        </div>
-      </main>
+      <AuthGate title="Войдите, чтобы создать профиль организатора" />
     );
   }
 

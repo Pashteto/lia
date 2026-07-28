@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 
 import { EventApplicationsPanel } from "@/components/EventApplicationsPanel";
+import { AuthGate } from "@/components/ui/AuthGate";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { fetchMyEvents } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import type { LiaEvent } from "@/lib/types";
@@ -18,14 +20,17 @@ export default function OrganizerApplicationsPage() {
     enabled: ready && isAuthed,
   });
 
-  if (!ready) return <div className="min-h-screen bg-bg-grouped" />;
+  if (!ready) {
+    return (
+      <div className="px-[20px] py-[26px]">
+        <Skeleton className="h-[120px] w-full" />
+      </div>
+    );
+  }
 
   if (!isAuthed) {
     return (
-      <main className="mx-auto max-w-3xl px-4 py-16">
-        <h1 className="text-[28px] font-bold tracking-[-0.022em]">Заявки участников</h1>
-        <p className="mt-2 text-label-secondary">Войдите, чтобы видеть заявки на ваши события.</p>
-      </main>
+      <AuthGate title="Войдите, чтобы видеть заявки на ваши события" />
     );
   }
 

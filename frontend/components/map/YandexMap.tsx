@@ -88,6 +88,7 @@ export function YandexMap({
   const onViewportRef = useRef(onViewportChange);
   const viewportTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [ready, setReady] = useState(false);
+  const hasPinClick = Boolean(onPinClick);
 
   // Keep callbacks current without re-creating the map or its geo objects.
   useEffect(() => {
@@ -201,14 +202,14 @@ export function YandexMap({
           // so a 22px square is comfortably clickable. Verify in Step 3.
           iconShape: { type: "Rectangle", coordinates: [[-9, -31], [15, -7]] },
           // The balloon is redundant when the caller handles selection itself.
-          openBalloonOnClick: !onPinClickRef.current,
+          openBalloonOnClick: !hasPinClick,
         },
       );
       pm.events.add("click", () => onPinClickRef.current?.(p.id));
       map.geoObjects.add(pm);
       pinRefs.current.push(pm);
     });
-  }, [ready, pins, activePinId]);
+  }, [ready, pins, activePinId, hasPinClick]);
 
   if (!KEY) {
     return (

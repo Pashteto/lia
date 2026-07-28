@@ -119,6 +119,9 @@ export function CalendarView() {
   const selectedKey = civilKey(selected);
   const dayEvents = byDay.get(selectedKey) ?? [];
   const icsEvent = dayEvents.find((e) => e.attending) ?? dayEvents[0];
+  const monthEventDays = cells.filter(
+    (cell) => sameMonth(cell, anchor) && (byDay.get(civilKey(cell))?.length ?? 0) > 0,
+  );
 
   function go(delta: number) {
     const next = shiftMonth(anchor, delta);
@@ -194,25 +197,23 @@ export function CalendarView() {
           </div>
         ) : mode === "list" ? (
           /* «Список» — flat month agenda */
-          events.length === 0 ? (
+          monthEventDays.length === 0 ? (
             <EmptyState
               title="В этом месяце ничего нет"
               text="Записи и события ваших подписок появятся здесь."
             />
           ) : (
             <div className="flex flex-col">
-              {cells
-                .filter((c) => sameMonth(c, anchor) && (byDay.get(civilKey(c))?.length ?? 0) > 0)
-                .map((c) => (
-                  <section key={civilKey(c)}>
-                    <p className="cap border-b border-on-surface bg-surface-head px-[14px] py-[6px]">
-                      {selectedDayLabel(c)}
-                    </p>
-                    {(byDay.get(civilKey(c)) ?? []).map((ev) => (
-                      <AgendaBlock key={`${civilKey(c)}-${ev.id}`} event={ev} categories={categories} dense />
-                    ))}
-                  </section>
-                ))}
+              {monthEventDays.map((c) => (
+                <section key={civilKey(c)}>
+                  <p className="cap border-b border-on-surface bg-surface-head px-[14px] py-[6px]">
+                    {selectedDayLabel(c)}
+                  </p>
+                  {(byDay.get(civilKey(c)) ?? []).map((ev) => (
+                    <AgendaBlock key={`${civilKey(c)}-${ev.id}`} event={ev} categories={categories} dense />
+                  ))}
+                </section>
+              ))}
             </div>
           )
         ) : (
@@ -262,11 +263,9 @@ export function CalendarView() {
                       className={cn(
                         cellClass,
                         "swiss-focus",
-                        // One background class only — twMerge would otherwise have
-                        // to arbitrate between bg-ink and bg-cell-blank.
-                        filled && "bg-ink text-paper",
-                        isSelected && "outline-2 -outline-offset-2 outline",
-                        isSelected && (filled ? "outline-paper" : "outline-ink"),
+                        filled && !isSelected && "bg-ink text-paper",
+                        isSelected &&
+                          "bg-paper text-ink outline outline-2 -outline-offset-2 outline-ink",
                       )}
                     >
                       <span className="font-mono text-[10px] font-bold max-sm:text-[9px]">

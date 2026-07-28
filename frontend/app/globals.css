@@ -184,3 +184,46 @@ html {
     }
   }
 }
+
+/* ——— Map marker ———
+ * Yandex injects placemark markup outside React, so these rules cannot be
+ * Tailwind utilities. Square, ink-filled, numbered in mono, with the 2px stem
+ * and left:9px anchor geometry of docs/Redesign/5/.../map-embed.html (.vpin);
+ * the numeral (not a venue label) per README → Maps. Selection inverts to
+ * paper; it is never red (red means "needs attention"). */
+.swiss-pin {
+  /* Yandex puts the layout's top-left corner on the coordinate, so shift the
+   * box up by its own height plus the stem to land the stem tip on the point.
+   * −9px on x matches .vpin's iconAnchor x. */
+  position: relative;
+  display: inline-block;
+  transform: translate(-9px, calc(-100% - 9px));
+  min-width: 22px;
+  padding: 4px 6px;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.swiss-pin::after {
+  content: "";
+  position: absolute;
+  left: 9px;
+  top: 100%;
+  width: 2px;
+  height: 9px;
+  background: var(--ink);
+}
+
+/* Selected pin: paper fill, ink numeral, ink stem. */
+.swiss-pin--on {
+  background: var(--paper);
+  color: var(--ink);
+}

@@ -53,7 +53,9 @@ function LogoSlot({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={previewUrl} alt="" className="h-full w-full object-cover" />
         ) : (
-          <span className="absolute inset-0 flex items-center justify-center bg-ink" aria-hidden />
+          <span className="absolute inset-0 flex items-center justify-center bg-paper" aria-hidden>
+            <span className="cap">Лого</span>
+          </span>
         )}
         {uploading ? (
           <span className="absolute inset-0 flex items-center justify-center bg-paper/80 text-[9px] font-bold uppercase tracking-[0.07em]">

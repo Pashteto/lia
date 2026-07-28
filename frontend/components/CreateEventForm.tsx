@@ -464,7 +464,12 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
 
       {/* Desktop stepper */}
       <div className="mx-auto hidden max-w-[1360px] sm:block">
-        <Stepper steps={[...STEPS]} current={step} fillMode="inclusive" />
+        <Stepper
+          steps={[...STEPS]}
+          current={step}
+          fillMode="inclusive"
+          numeralPrefix="Шаг "
+        />
       </div>
 
       {/* Mobile 4-segment progress (ink / inactive) */}
@@ -503,6 +508,7 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
                 label="Название"
                 error={errors.title?.message}
                 placeholder="Например, «Читаем Зебальда»"
+                className="font-bold"
                 {...register("title")}
               />
               <div className="flex flex-col gap-[5px]">
@@ -546,7 +552,7 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
               <Textarea
                 label="Описание"
                 placeholder="О чём встреча, чего ждать участникам"
-                className="min-h-[52px]"
+                className="min-h-[52px] text-field-text"
                 {...register("description")}
               />
               <div className="flex flex-col gap-[5px]">
@@ -800,12 +806,9 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
                 </p>
               )}
 
-            {/* Mobile moderation note above CTAs */}
+            {/* Mobile moderation note above CTAs — denser than desktop rail */}
             <div className="mt-auto border-t border-ink pt-[10px] sm:hidden">
-              <p className="cap mb-[5px]">После отправки</p>
-              <p className="mb-[10px] text-[10.5px] leading-[1.45] text-text-dim">
-                Модерация занимает до 24 часов. Событие появится в ленте после одобрения.
-              </p>
+              <p className="cap mb-[5px]">Модерация до 24 часов</p>
             </div>
 
             {/* Actions */}
@@ -816,18 +819,24 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
                   className="min-h-[44px] flex-1"
                   onClick={() => void goNext()}
                 >
-                  {NEXT_LABELS[step]}
+                  <span className="sm:hidden">ДАЛЕЕ</span>
+                  <span className="hidden sm:inline">{NEXT_LABELS[step]}</span>
                 </Button>
               ) : (
                 <Button type="submit" className="min-h-[44px] flex-1" disabled={pending}>
-                  {pending ? "Сохранение…" : NEXT_LABELS[3]}
+                  {pending ? "Сохранение…" : (
+                    <>
+                      <span className="sm:hidden">СОХРАНИТЬ</span>
+                      <span className="hidden sm:inline">{NEXT_LABELS[3]}</span>
+                    </>
+                  )}
                 </Button>
               )}
               {mode === "create" ? (
                 <Button
                   type="button"
                   variant="ghost"
-                  className="min-h-[44px] max-sm:w-full sm:flex-none sm:px-[16px]"
+                  className="min-h-[44px] max-sm:hidden sm:flex-none sm:px-[16px]"
                   disabled={draftMutation.isPending}
                   onClick={() => void saveDraftGhost()}
                 >

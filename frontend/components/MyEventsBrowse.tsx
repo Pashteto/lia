@@ -92,11 +92,34 @@ function SeatsCell({ event, compact }: { event: LiaEvent; compact?: boolean }) {
   );
 }
 
-function OverflowExtras({ event }: { event: LiaEvent }) {
+function OverflowExtras({
+  event,
+  onDuplicate,
+  duplicating,
+}: {
+  event: LiaEvent;
+  onDuplicate?: () => void;
+  duplicating?: boolean;
+}) {
   return (
     <div className="border-b border-on-surface bg-paper px-[20px] py-[12px] max-sm:px-[14px]">
       <div className="flex flex-col gap-[10px] border border-ink p-[12px]">
         <p className="cap">Дополнительно</p>
+        <div className="cap flex gap-[14px] sm:hidden">
+          <Link href={`/events/${event.id}/edit`} className="swiss-focus hover-invert">
+            Ред.
+          </Link>
+          {onDuplicate ? (
+            <button
+              type="button"
+              onClick={onDuplicate}
+              disabled={duplicating}
+              className="swiss-focus cursor-pointer uppercase tracking-[0.13em] hover-invert disabled:opacity-50"
+            >
+              {duplicating ? "…" : "Копия"}
+            </button>
+          ) : null}
+        </div>
         {event.status === "draft" ? <PublishEventButton eventId={event.id} /> : null}
         {event.signupMode === "application" ? (
           <div>
@@ -165,7 +188,7 @@ function EventRow({
         <span className="border-r border-on-surface px-[8px] py-[9px]">
           <SeatsCell event={event} />
         </span>
-        <span className="flex items-center justify-center border-r border-on-surface px-[8px] py-[9px]">
+        <span className="flex items-center justify-start border-r border-on-surface px-[8px] py-[9px]">
           <StatusChip status={statusLabel} className="px-[6px] py-[3px] text-[8px]" />
         </span>
         <span className="cap flex flex-col items-start gap-[2px] px-[8px] py-[9px] leading-[1.7]">
@@ -200,23 +223,13 @@ function EventRow({
         </div>
         <p className="mb-[5px] text-[12px] font-bold leading-[1.1]">{event.title}</p>
         <SeatsCell event={event} compact />
-        <div className="cap mt-[8px] flex min-h-[44px] items-center gap-[14px]">
-          <Link href={`/events/${event.id}/edit`} className="swiss-focus hover-invert">
-            Ред.
-          </Link>
-          <button
-            type="button"
-            onClick={onDuplicate}
-            disabled={duplicating}
-            className="swiss-focus cursor-pointer uppercase tracking-[0.13em] hover-invert disabled:opacity-50"
-          >
-            {duplicating ? "…" : "Копия"}
-          </button>
+        {/* Mobile mock is date/status/title/seats; actions via ··· only */}
+        <div className="cap mt-[8px] flex min-h-[44px] items-center">
           <button
             type="button"
             onClick={onToggleExpand}
             aria-expanded={expanded}
-            aria-label="Дополнительные действия"
+            aria-label="Действия"
             className="swiss-focus cursor-pointer tracking-[0.2em] hover-invert"
           >
             ···
@@ -224,7 +237,13 @@ function EventRow({
         </div>
       </div>
 
-      {expanded ? <OverflowExtras event={event} /> : null}
+      {expanded ? (
+        <OverflowExtras
+          event={event}
+          onDuplicate={onDuplicate}
+          duplicating={duplicating}
+        />
+      ) : null}
     </div>
   );
 }
@@ -293,12 +312,12 @@ export function MyEventsBrowse() {
 
   return (
     <main className="mx-auto max-w-[1360px] pb-[64px] max-sm:pb-[88px]">
-      {/* Title bar */}
-      <div className="flex items-baseline justify-between border-b border-ink px-[20px] py-[14px] max-sm:px-[14px] max-sm:py-[12px]">
-        <h1 className="text-[26px] font-black leading-[0.94] tracking-[-0.03em] max-sm:text-[20px]">
+      {/* Title bar — desktop only; mobile uses AppHeader caption + actions «+» */}
+      <div className="hidden items-baseline justify-between border-b border-ink px-[20px] py-[14px] sm:flex">
+        <h1 className="text-[26px] font-black leading-[0.94] tracking-[-0.03em]">
           Мои события
         </h1>
-        <CreateLink className="max-sm:hidden" />
+        <CreateLink />
       </div>
 
       {/* Filter chips */}
@@ -387,16 +406,6 @@ export function MyEventsBrowse() {
           ) : null}
         </>
       )}
-
-      {/* Mobile sticky create */}
-      <div className="sticky bottom-0 border-t border-ink bg-paper px-[14px] py-[12px] sm:hidden">
-        <Link
-          href="/events/new"
-          className="swiss-focus flex min-h-[44px] w-full items-center justify-center bg-ink px-[11px] py-[11px] text-[11px] font-bold uppercase tracking-[0.07em] text-white hover:bg-black"
-        >
-          + СОЗДАТЬ СОБЫТИЕ
-        </Link>
-      </div>
     </main>
   );
 }

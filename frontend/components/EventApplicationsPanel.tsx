@@ -327,7 +327,7 @@ export function EventApplicationsPanel({
               >
                 {/* Desktop row */}
                 <div className="hidden grid-cols-[26px_1fr_120px_150px] items-center sm:grid">
-                  <div className="py-[11px] text-center">
+                  <div className="border-r border-on-surface py-[11px] text-center">
                     {isPending ? (
                       <button
                         type="button"
@@ -347,7 +347,7 @@ export function EventApplicationsPanel({
                       <span className="inline-block h-[11px] w-[11px]" aria-hidden />
                     )}
                   </div>
-                  <div className="min-w-0 px-[12px] py-[9px]">
+                  <div className="min-w-0 border-r border-on-surface px-[12px] py-[9px]">
                     <span className="block text-[12.5px] font-bold leading-tight">
                       {rsvp.applicant?.name || "Участник"}
                     </span>
@@ -360,7 +360,7 @@ export function EventApplicationsPanel({
                       </span>
                     ) : null}
                   </div>
-                  <div className="border-l border-on-surface px-[12px] py-[9px]">
+                  <div className="border-r border-on-surface px-[14px] py-[10px]">
                     <span className="cap block">Заявка</span>
                     <span className="font-mono text-[11px]">
                       {formatRelativeRu(rsvp.createdAt)}

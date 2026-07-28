@@ -80,7 +80,7 @@ export function EventDetailView({ event }: { event: LiaEvent }) {
       </div>
 
       {/* Fact strip */}
-      <CellStrip cols={4} className="max-md:!grid-cols-2">
+      <CellStrip cols={4} className="max-md:grid-cols-2!">
         <Cell caption="Когда" value={formatEventRange(event)} />
         <Cell caption="Начало" value={formatStartTime(event.startsAt)} mono />
         <Cell caption="Места" value={attendanceShort(event)} mono />

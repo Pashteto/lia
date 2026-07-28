@@ -10,5 +10,8 @@ stitch_.zip
 # Visual companion working files
 .superpowers/
 
+# Isolated git worktrees (local checkouts)
+.worktrees/
+
 # Local secrets captured by browser-setup agent (never commit)
 *.local.md

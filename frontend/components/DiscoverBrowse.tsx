@@ -61,17 +61,23 @@ export function DiscoverBrowse({
     });
   }
 
-  async function runIntent(intent: DiscoverIntent, chipId: DiscoverIntentId | null) {
+  async function runIntent(
+    intent: DiscoverIntent,
+    chipId: DiscoverIntentId | null,
+    catalogueOverride?: LiaEvent[],
+  ) {
     setLastIntent(intent);
     setActiveChip(chipId);
     setPhase("loading");
     try {
-      if (isError && events.length === 0) {
+      // Skip stale isError/events gate when retry supplies fresh refetch data.
+      if (catalogueOverride === undefined && isError && events.length === 0) {
         setPhase("error");
         return;
       }
       const userLatLon = await resolveGeo(intent.wantsNearby);
-      const catalogue = events.length > 0 ? events : initialEvents;
+      const catalogue =
+        catalogueOverride ?? (events.length > 0 ? events : initialEvents);
       const ranking = rankDiscover(catalogue, intent, { now, userLatLon });
       setAnswer(ranking.answer);
       setHits(ranking.hits);
@@ -164,6 +170,7 @@ export function DiscoverBrowse({
           actions={
             <Button
               variant="ghost"
+              className="min-h-[44px]"
               onClick={() => {
                 setPhase("idle");
                 setHits([]);
@@ -186,10 +193,17 @@ export function DiscoverBrowse({
           actions={
             <Button
               variant="ghost"
+              className="min-h-[44px]"
               onClick={() => {
-                void refetch().then(() => {
-                  if (lastIntent) void runIntent(lastIntent, activeChip);
-                });
+                void (async () => {
+                  if (!lastIntent) return;
+                  const result = await refetch();
+                  await runIntent(
+                    lastIntent,
+                    activeChip,
+                    result.data ?? initialEvents,
+                  );
+                })();
               }}
             >
               Повторить

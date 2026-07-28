@@ -1,21 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-import { LoginModal } from "@/components/AuthButton";
 import { Button } from "@/components/ui/Button";
-import { DateTimeField } from "@/components/ui/DateTimeField";
+import { Chip } from "@/components/ui/Chip";
+import { EventModule } from "@/components/ui/EventModule";
+import { Input, Textarea } from "@/components/ui/Field";
 import { ImageUpload } from "@/components/ui/ImageUpload";
-import { Segmented } from "@/components/ui/Segmented";
-import { Switch } from "@/components/ui/Switch";
+import { AppHeader, ORG_NAV } from "@/components/ui/AppHeader";
+import { AuthGate } from "@/components/ui/AuthGate";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { Stepper } from "@/components/ui/Stepper";
+import { joinLocal, splitLocal } from "@/components/ui/DateTimeField";
 import { VenuePicker } from "@/components/VenuePicker";
 import { VerifyEmailInterstitial } from "@/components/VerifyEmailInterstitial";
-import { createEvent, EMAIL_NOT_VERIFIED, getCategories, patchEvent, type CreateEventInput, uploadFile } from "@/lib/api";
+import {
+  createEvent,
+  EMAIL_NOT_VERIFIED,
+  getCategories,
+  patchEvent,
+  type CreateEventInput,
+  uploadFile,
+} from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { categoryNumeral } from "@/lib/category-numerals";
 import { cn } from "@/lib/cn";
+import { formatModuleDate } from "@/lib/format";
+import { priceLabel } from "@/lib/price-label";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
@@ -75,8 +88,48 @@ export function toDatetimeLocalValue(iso: string): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-const inputCls =
-  "w-full rounded-control bg-fill px-3.5 py-2.5 text-[17px] text-label outline-none placeholder:text-label-secondary focus:ring-2 focus:ring-accent";
+const STEPS = ["Основное", "Когда и где", "Билеты", "Публикация"] as const;
+const NEXT_LABELS = [
+  "ДАЛЕЕ · КОГДА И ГДЕ",
+  "ДАЛЕЕ · БИЛЕТЫ",
+  "ДАЛЕЕ · ПУБЛИКАЦИЯ",
+  "СОХРАНИТЬ",
+] as const;
+
+const DT_BOX =
+  "border border-on-surface bg-transparent px-[11px] py-[9px] text-[12.5px] text-on-surface swiss-focus";
+
+const mskClock = new Intl.DateTimeFormat("ru-RU", {
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+  timeZone: "Europe/Moscow",
+});
+
+function valuesToInput(v: FormValues, coverFileId?: string): CreateEventInput {
+  return {
+    title: v.title,
+    description: v.description || undefined,
+    category_ids: v.categoryIds && v.categoryIds.length > 0 ? v.categoryIds : undefined,
+    venue_id: v.venueId || undefined,
+    format: v.format,
+    status: v.status,
+    price_type: v.isFree ? "free" : "from",
+    price_min: v.isFree ? undefined : Number(v.priceMin) || 0,
+    starts_at: new Date(v.startsAt).toISOString(),
+    ends_at: v.endsAt ? new Date(v.endsAt).toISOString() : undefined,
+    cover_file_id: coverFileId,
+    signup_mode: v.signupMode,
+    capacity:
+      v.signupMode !== "external" && v.capacity != null && String(v.capacity) !== ""
+        ? Number(v.capacity)
+        : undefined,
+    curator_question:
+      v.signupMode === "application" ? v.curatorQuestion?.trim() || undefined : undefined,
+    external_registration_url:
+      v.signupMode === "external" ? v.externalRegistrationUrl?.trim() || undefined : undefined,
+  };
+}
 
 export interface CreateEventFormProps {
   /** Default "create". "edit" reuses this form to PATCH an existing event. */
@@ -84,7 +137,11 @@ export interface CreateEventFormProps {
   /** Required in edit mode: the event being edited. */
   eventId?: string;
   /** Seed values in edit mode, mapped from the fetched event (incl. the cover). */
-  initial?: Partial<FormValues> & { coverFileId?: string; coverPreviewUrl?: string };
+  initial?: Partial<FormValues> & {
+    coverFileId?: string;
+    coverPreviewUrl?: string;
+    venueName?: string;
+  };
 }
 
 export function CreateEventForm({ mode = "create", eventId, initial }: CreateEventFormProps) {
@@ -95,11 +152,19 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
   // change) — lock the control client-side too so submits don't fail.
   const isPublishedEdit = mode === "edit" && initial?.status === "published";
 
+  const [step, setStep] = useState(0);
+  const [savedAt, setSavedAt] = useState<Date | null>(null);
+  const [venueName, setVenueName] = useState(initial?.venueName ?? "");
+  const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const {
     register,
     handleSubmit,
     control,
-    formState: { errors },
+    getValues,
+    reset,
+    trigger,
+    formState: { errors, isDirty },
   } = useForm<FormValues>({
     resolver: zodResolver(eventFormSchema),
     defaultValues: {
@@ -126,7 +191,12 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
   const isFree = useWatch({ control, name: "isFree" });
   const signupMode = useWatch({ control, name: "signupMode" });
   const startsAt = useWatch({ control, name: "startsAt" });
+  const endsAt = useWatch({ control, name: "endsAt" });
   const venueId = useWatch({ control, name: "venueId" });
+  const title = useWatch({ control, name: "title" });
+  const categoryIds = useWatch({ control, name: "categoryIds" });
+  const format = useWatch({ control, name: "format" });
+  const priceMin = useWatch({ control, name: "priceMin" });
 
   const [coverFileId, setCoverFileId] = useState<string | undefined>(initial?.coverFileId);
   const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | undefined>(
@@ -150,6 +220,22 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
     onSuccess: (event) => router.push(`/events/${event.id}`),
   });
 
+  /** Create-mode ghost ЧЕРНОВИК — explicit first save, then edit route. */
+  const draftMutation = useMutation({
+    mutationFn: (input: CreateEventInput) => createEvent({ ...input, status: "draft" }),
+    onSuccess: (event) => router.push(`/events/${event.id}/edit`),
+  });
+
+  /** Edit-mode silent autosave — must not navigate. */
+  const autosaveMutation = useMutation({
+    mutationFn: (patch: Partial<CreateEventInput>) => patchEvent(eventId as string, patch),
+    onSuccess: () => {
+      setSavedAt(new Date());
+      reset(getValues());
+    },
+  });
+  const autosaveMutate = autosaveMutation.mutate;
+
   // Non-blocking heads-up: changing the start time or venue on an already-
   // published event doesn't notify anyone automatically (no re-moderation,
   // no participant email) — the organizer has to do that themselves.
@@ -158,6 +244,31 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
     ((initial?.startsAt != null && startsAt !== initial.startsAt) ||
       (initial?.venueId != null && venueId !== initial.venueId));
 
+  const flushAutosave = useCallback(
+    (opts?: { force?: boolean; coverId?: string }) => {
+      if (mode !== "edit" || !eventId) return;
+      if (!opts?.force && !isDirty) return;
+      if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
+      const coverId = opts?.coverId ?? coverFileId;
+      autosaveTimer.current = setTimeout(() => {
+        const v = getValues();
+        const parsed = eventFormSchema.safeParse(v);
+        if (!parsed.success) return;
+        const input = valuesToInput(v, coverId);
+        const patch: Partial<CreateEventInput> = { ...input };
+        if (isPublishedEdit) delete patch.signup_mode;
+        autosaveMutate(patch);
+      }, 700);
+    },
+    [mode, eventId, isDirty, getValues, coverFileId, isPublishedEdit, autosaveMutate],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
+    };
+  }, []);
+
   const handleCoverFile = async (file: File) => {
     setCoverError(undefined);
     setCoverUploading(true);
@@ -165,6 +276,8 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
       const { id, url } = await uploadFile(file);
       setCoverFileId(id);
       setCoverPreviewUrl(url);
+      // Cover lives outside RHF dirty tracking — force edit-mode patch with new id.
+      flushAutosave({ force: true, coverId: id });
     } catch (err) {
       setCoverError(err instanceof Error ? err.message : "Ошибка загрузки");
     } finally {
@@ -173,28 +286,7 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
   };
 
   const onSubmit = (v: FormValues) => {
-    const input: CreateEventInput = {
-      title: v.title,
-      description: v.description || undefined,
-      category_ids: v.categoryIds && v.categoryIds.length > 0 ? v.categoryIds : undefined,
-      venue_id: v.venueId || undefined,
-      format: v.format,
-      status: v.status,
-      price_type: v.isFree ? "free" : "from",
-      price_min: v.isFree ? undefined : Number(v.priceMin) || 0,
-      starts_at: new Date(v.startsAt).toISOString(),
-      ends_at: v.endsAt ? new Date(v.endsAt).toISOString() : undefined,
-      cover_file_id: coverFileId,
-      signup_mode: v.signupMode,
-      capacity:
-        v.signupMode !== "external" && v.capacity != null && String(v.capacity) !== ""
-          ? Number(v.capacity)
-          : undefined,
-      curator_question:
-        v.signupMode === "application" ? v.curatorQuestion?.trim() || undefined : undefined,
-      external_registration_url:
-        v.signupMode === "external" ? v.externalRegistrationUrl?.trim() || undefined : undefined,
-    };
+    const input = valuesToInput(v, coverFileId);
 
     if (mode === "edit") {
       // Once published, signup_mode is locked server-side (422 to change it) —
@@ -211,376 +303,533 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
     mutation.mutate(input);
   };
 
+  const saveDraftGhost = async () => {
+    const v = { ...getValues(), status: "draft" as const };
+    const parsed = eventFormSchema.safeParse(v);
+    if (!parsed.success) {
+      await trigger();
+      return;
+    }
+    draftMutation.mutate(valuesToInput(v, coverFileId));
+  };
+
+  const firstCat = categories.find((c) => (categoryIds ?? []).includes(c.id));
+  const previewDate =
+    startsAt && String(startsAt).length > 0
+      ? formatModuleDate(
+          new Date(startsAt).toISOString(),
+          endsAt && String(endsAt).length > 0 ? new Date(endsAt).toISOString() : undefined,
+        )
+      : "—";
+  const previewVenue =
+    format === "online" ? "Онлайн" : venueName.trim() || "—";
+  const previewPrice = priceLabel(isFree ? 0 : Number(priceMin) || 0, isFree ? "free" : "from");
+  const savedChip = savedAt ? `ЧЕРНОВИК СОХРАНЁН · ${mskClock.format(savedAt)}` : null;
+  const stepCounter = `${String(step + 1).padStart(2, "0")}/04`;
+
+  const pending =
+    mode === "edit"
+      ? editMutation.isPending
+      : mutation.isPending || draftMutation.isPending;
+
+  const headerActions = (
+    <>
+      <span className="font-mono text-[9px] font-bold tracking-[0.12em] sm:hidden">
+        {stepCounter}
+      </span>
+      {savedChip ? <span className="cap max-sm:hidden">{savedChip}</span> : null}
+    </>
+  );
+
   // Gate: creating an event requires a signed-in user (backend returns 401
   // otherwise). Avoid flashing the form before the session is read.
   if (!ready) {
-    return <div className="min-h-screen bg-bg-grouped" />;
+    return (
+      <>
+        <AppHeader nav={ORG_NAV} mobileCaption="НОВОЕ СОБЫТИЕ" />
+        <Skeleton className="h-[48px] w-full border-x-0 border-t-0" />
+        <Skeleton className="h-[320px] w-full border-x-0 border-t-0" />
+      </>
+    );
   }
   if (!isAuthed) {
-    return <CreateEventGate />;
+    return (
+      <>
+        <AppHeader nav={ORG_NAV} mobileCaption="НОВОЕ СОБЫТИЕ" />
+        <AuthGate
+          title="Войдите, чтобы создать событие"
+          reassurance="Создание событий доступно авторизованным пользователям. Лента и карта доступны без входа."
+        />
+      </>
+    );
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="min-h-screen bg-bg-grouped pb-16">
-      {/* Glass nav with Cancel / Save */}
-      <header className="glass sticky top-0 z-10 border-b border-separator">
-        <div className="mx-auto flex max-w-2xl items-center justify-between px-5 py-3">
-          <Link
-            href={mode === "edit" && eventId ? `/events/${eventId}` : "/"}
-            className="text-[17px] text-accent"
-          >
-            Отмена
-          </Link>
-          <span className="text-[17px] font-semibold">
-            {mode === "edit" ? "Редактирование события" : "Новое событие"}
-          </span>
-          <Button
-            type="submit"
-            variant="ghost"
-            disabled={mode === "edit" ? editMutation.isPending : mutation.isPending}
-          >
-            {(mode === "edit" ? editMutation.isPending : mutation.isPending)
-              ? "Сохранение…"
-              : "Сохранить"}
-          </Button>
-        </div>
-      </header>
+    <>
+      <AppHeader
+        nav={ORG_NAV}
+        mobileCaption={mode === "edit" ? "РЕДАКТИРОВАНИЕ" : "НОВОЕ СОБЫТИЕ"}
+        actions={headerActions}
+      />
 
-      <div className="mx-auto max-w-2xl px-5 pt-5">
-        <div className="mb-6">
-          <label className="block">
-            <span className="mb-1.5 block text-[13px] text-label-secondary">Обложка</span>
-            <ImageUpload
-              label="обложку"
-              previewUrl={coverPreviewUrl}
-              uploading={coverUploading}
-              error={coverError}
-              onFile={handleCoverFile}
-            />
-          </label>
-        </div>
+      {/* Desktop stepper */}
+      <div className="mx-auto hidden max-w-[1360px] sm:block">
+        <Stepper steps={[...STEPS]} current={step} fillMode="inclusive" />
+      </div>
 
-        <Section title="Основное">
-          <Field label="Название" error={errors.title?.message}>
-            <input
-              className={inputCls}
-              placeholder="Например, «Читаем Зебальда»"
-              {...register("title")}
-            />
-          </Field>
-          <Field label="Описание">
-            <textarea
-              className={cn(inputCls, "min-h-[96px] resize-y")}
-              placeholder="О чём встреча, чего ждать участникам"
-              {...register("description")}
-            />
-          </Field>
-          <Field label="Категории">
-            <Controller
-              control={control}
-              name="categoryIds"
-              render={({ field }) => {
-                const selected = field.value ?? [];
-                const toggle = (id: string) =>
-                  field.onChange(
-                    selected.includes(id)
-                      ? selected.filter((s) => s !== id)
-                      : [...selected, id],
-                  );
-                return (
-                  <div className="flex flex-wrap gap-2">
-                    {categories.length === 0 && (
-                      <span className="text-[13px] text-label-secondary">
-                        Категории недоступны (бэкенд офлайн)
-                      </span>
-                    )}
-                    {categories.map((c) => {
-                      const on = selected.includes(c.id);
-                      return (
-                        <button
-                          key={c.id}
-                          type="button"
-                          onClick={() => toggle(c.id)}
-                          className={cn(
-                            "rounded-full px-3 py-1.5 text-[15px] transition",
-                            on ? "bg-accent text-white" : "bg-fill text-label",
-                          )}
-                        >
-                          {c.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                );
-              }}
-            />
-          </Field>
-        </Section>
-
-        <Section title="Формат">
-          <Field label="Формат">
-            <Controller
-              control={control}
-              name="format"
-              render={({ field }) => (
-                <Segmented
-                  options={[
-                    { value: "offline", label: "Очно" },
-                    { value: "online", label: "Онлайн" },
-                  ]}
-                  value={field.value}
-                  onChange={field.onChange}
-                />
-              )}
-            />
-          </Field>
-        </Section>
-
-        <Section title="Место и время">
-          <Field label="Место">
-            <Controller
-              control={control}
-              name="venueId"
-              render={({ field }) => (
-                <VenuePicker value={field.value ?? ""} onChange={field.onChange} />
-              )}
-            />
-          </Field>
-          <Field label="Начало" error={errors.startsAt?.message}>
-            <Controller
-              control={control}
-              name="startsAt"
-              render={({ field }) => (
-                <DateTimeField value={field.value ?? ""} onChange={field.onChange} />
-              )}
-            />
-          </Field>
-          <Field label="Окончание">
-            <Controller
-              control={control}
-              name="endsAt"
-              render={({ field }) => (
-                <DateTimeField value={field.value ?? ""} onChange={field.onChange} />
-              )}
-            />
-          </Field>
-          {showChangeNotice && (
-            <p className="text-[13px] text-label-secondary">
-              Участники уже записаны — предупредите их об изменении самостоятельно.
-            </p>
-          )}
-        </Section>
-
-        <Section title="Запись">
-          <Field label="Как записываются">
-            <Controller
-              control={control}
-              name="signupMode"
-              render={({ field }) => (
-                <Segmented
-                  options={[
-                    { value: "open", label: "Открытая" },
-                    { value: "application", label: "По заявке" },
-                    { value: "external", label: "Внешняя ссылка" },
-                  ]}
-                  value={field.value}
-                  onChange={field.onChange}
-                  disabled={isPublishedEdit}
-                />
-              )}
-            />
-            {isPublishedEdit && (
-              <span className="mt-1.5 block text-[13px] text-label-secondary">
-                Режим записи зафиксирован после публикации
-              </span>
-            )}
-          </Field>
-
-          {signupMode !== "external" && (
-            <Field label="Лимит мест" error={errors.capacity?.message}>
-              <input
-                type="number"
-                min={1}
-                className={inputCls}
-                placeholder="Оставьте пустым — без ограничения"
-                {...register("capacity")}
-              />
-            </Field>
-          )}
-
-          {signupMode === "application" && (
-            <Field label="Вопрос кандидату" error={errors.curatorQuestion?.message}>
-              <textarea
-                className={cn(inputCls, "min-h-[72px] resize-y")}
-                placeholder="Покажется в форме заявки. Например: «Над чем работаете?»"
-                {...register("curatorQuestion")}
-              />
-            </Field>
-          )}
-
-          {signupMode === "external" && (
-            <Field label="Ссылка для регистрации" error={errors.externalRegistrationUrl?.message}>
-              <input
-                type="url"
-                className={inputCls}
-                placeholder="https://…"
-                {...register("externalRegistrationUrl")}
-              />
-            </Field>
-          )}
-        </Section>
-
-        <Section title="Участники и цена">
-          <Controller
-            control={control}
-            name="isFree"
-            render={({ field }) => (
-              <div className="flex items-center justify-between">
-                <span className="text-[17px]">Бесплатно</span>
-                <Switch checked={field.value} onChange={field.onChange} />
-              </div>
+      {/* Mobile 4-segment progress (ink / inactive) */}
+      <div className="flex border-b border-ink sm:hidden" aria-hidden>
+        {STEPS.map((_, i) => (
+          <div
+            key={STEPS[i]}
+            className={cn(
+              "h-[5px] flex-1",
+              i <= step ? "bg-ink" : "bg-inactive",
+              i > 0 && "border-l border-ink",
             )}
           />
-          {!isFree && (
-            <Field label="Цена от, ₽">
-              <input
-                type="number"
-                min={0}
-                className={inputCls}
-                placeholder="2500"
-                {...register("priceMin")}
+        ))}
+      </div>
+
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        onBlurCapture={() => flushAutosave()}
+        className="mx-auto max-w-[1360px] pb-[64px] max-sm:pb-[88px]"
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-[1fr_240px]">
+          {/* Left: step fields */}
+          <div className="flex flex-col gap-[11px] border-b border-ink px-[20px] py-[16px] max-sm:px-[14px] max-sm:py-[13px] sm:border-r sm:border-b-0">
+            {/* 01 Основное — keep mounted */}
+            <div hidden={step !== 0} className="flex flex-col gap-[11px]">
+              <Input
+                label="Название"
+                error={errors.title?.message}
+                placeholder="Например, «Читаем Зебальда»"
+                {...register("title")}
               />
-            </Field>
-          )}
-        </Section>
-
-        <Section title="Публикация">
-          <Field label="Статус">
-            <Controller
-              control={control}
-              name="status"
-              render={({ field }) => (
-                <Segmented
-                  options={[
-                    { value: "draft", label: "Черновик" },
-                    { value: "published", label: "Опубликовать" },
-                  ]}
-                  value={field.value}
-                  onChange={field.onChange}
+              <div className="flex flex-col gap-[5px]">
+                <span className="cap">Категория</span>
+                <Controller
+                  control={control}
+                  name="categoryIds"
+                  render={({ field }) => {
+                    const selected = field.value ?? [];
+                    const toggle = (id: string) =>
+                      field.onChange(
+                        selected.includes(id)
+                          ? selected.filter((s) => s !== id)
+                          : [...selected, id],
+                      );
+                    return (
+                      <div className="flex flex-wrap gap-[5px]">
+                        {categories.length === 0 && (
+                          <span className="text-[11px] text-text-dim">
+                            Категории недоступны (бэкенд офлайн)
+                          </span>
+                        )}
+                        {categories.map((c) => {
+                          const on = selected.includes(c.id);
+                          const numeral = categoryNumeral(c.slug, categories);
+                          return (
+                            <Chip
+                              key={c.id}
+                              variant={on ? "active" : "default"}
+                              onClick={() => toggle(c.id)}
+                            >
+                              {numeral} {c.label}
+                            </Chip>
+                          );
+                        })}
+                      </div>
+                    );
+                  }}
                 />
+              </div>
+              <Textarea
+                label="Описание"
+                placeholder="О чём встреча, чего ждать участникам"
+                className="min-h-[52px]"
+                {...register("description")}
+              />
+              <div className="flex flex-col gap-[5px]">
+                <span className="cap">Обложка</span>
+                {/* ImageUpload still liquid-glass internally — Swiss outer frame */}
+                <div className="min-h-[62px] border border-ink [&_.rounded-card]:rounded-none [&_.rounded-card]:bg-transparent [&_.rounded-card]:p-2 [&_.rounded-card]:shadow-none [&_button]:rounded-none">
+                  <ImageUpload
+                    label="обложку"
+                    previewUrl={coverPreviewUrl}
+                    uploading={coverUploading}
+                    error={coverError}
+                    onFile={handleCoverFile}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 02 Когда и где */}
+            <div hidden={step !== 1} className="flex flex-col gap-[11px]">
+              <div className="flex flex-col gap-[5px]">
+                <span className="cap">Формат</span>
+                <Controller
+                  control={control}
+                  name="format"
+                  render={({ field }) => (
+                    <div className="flex flex-wrap gap-[5px]">
+                      {(
+                        [
+                          ["offline", "Очно"],
+                          ["online", "Онлайн"],
+                        ] as const
+                      ).map(([value, label]) => (
+                        <Chip
+                          key={value}
+                          variant={field.value === value ? "active" : "default"}
+                          onClick={() => field.onChange(value)}
+                        >
+                          {label}
+                        </Chip>
+                      ))}
+                    </div>
+                  )}
+                />
+              </div>
+              <div className="flex flex-col gap-[5px]">
+                <span className="cap">Место</span>
+                {/* VenuePicker still liquid-glass — Swiss outer frame + input restyle */}
+                <div className="border border-ink p-[1px] [&_input]:rounded-none [&_input]:border-0 [&_input]:bg-transparent [&_input]:px-[11px] [&_input]:py-[9px] [&_input]:text-[12.5px] [&_input]:shadow-none [&_input]:ring-0 [&_input]:outline-none [&_input]:swiss-focus">
+                  <Controller
+                    control={control}
+                    name="venueId"
+                    render={({ field }) => (
+                      <VenuePicker
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                        onLabelChange={setVenueName}
+                        initialLabel={initial?.venueName}
+                      />
+                    )}
+                  />
+                </div>
+              </div>
+              <Controller
+                control={control}
+                name="startsAt"
+                render={({ field }) => (
+                  <SwissDateTime
+                    label="Начало"
+                    error={errors.startsAt?.message}
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
+              <Controller
+                control={control}
+                name="endsAt"
+                render={({ field }) => (
+                  <SwissDateTime
+                    label="Окончание"
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
+              {showChangeNotice && (
+                <p className="text-[11px] text-text-dim">
+                  Участники уже записаны — предупредите их об изменении самостоятельно.
+                </p>
               )}
-            />
-          </Field>
-        </Section>
+            </div>
 
-        {mode === "create" &&
-          mutation.isError &&
-          !(mutation.error instanceof Error && mutation.error.message === EMAIL_NOT_VERIFIED) && (
-            <p className="mt-4 text-[15px] text-red-500">
-              {mutation.error instanceof Error && mutation.error.message.includes("429")
-                ? "Достигнут лимит: 10 событий в месяц. Лимит обновится 1-го числа."
-                : "Не удалось сохранить событие. Проверьте, что бэкенд запущен."}
-            </p>
-          )}
+            {/* 03 Билеты */}
+            <div hidden={step !== 2} className="flex flex-col gap-[11px]">
+              <div className="flex flex-col gap-[5px]">
+                <span className="cap">Цена</span>
+                <Controller
+                  control={control}
+                  name="isFree"
+                  render={({ field }) => (
+                    <div className="flex flex-wrap gap-[5px]">
+                      <Chip
+                        variant={field.value ? "active" : "default"}
+                        onClick={() => field.onChange(true)}
+                      >
+                        Бесплатно
+                      </Chip>
+                      <Chip
+                        variant={!field.value ? "active" : "default"}
+                        onClick={() => field.onChange(false)}
+                      >
+                        Платно
+                      </Chip>
+                    </div>
+                  )}
+                />
+              </div>
+              <div hidden={!!isFree}>
+                <Input
+                  label="Цена от, ₽"
+                  type="number"
+                  min={0}
+                  placeholder="2500"
+                  {...register("priceMin")}
+                />
+              </div>
 
-        {mode === "edit" &&
-          editMutation.isError &&
-          !(editMutation.error instanceof Error && editMutation.error.message === EMAIL_NOT_VERIFIED) && (
-            <p className="mt-4 text-[15px] text-red-500">
-              {editMutation.error instanceof Error && editMutation.error.message.includes("409")
-                ? /occupied|capacity/i.test(editMutation.error.message)
-                  ? "Нельзя уменьшить лимит мест ниже числа уже записавшихся"
-                  : "Это событие нельзя редактировать в текущем статусе"
-                : "Не удалось сохранить изменения. Проверьте, что бэкенд запущен."}
-            </p>
-          )}
+              <div className="flex flex-col gap-[5px]">
+                <span className="cap">Как записываются</span>
+                <Controller
+                  control={control}
+                  name="signupMode"
+                  render={({ field }) => (
+                    <div className="flex flex-wrap gap-[5px]">
+                      {(
+                        [
+                          ["open", "Открытая"],
+                          ["application", "По заявке"],
+                          ["external", "Внешняя ссылка"],
+                        ] as const
+                      ).map(([value, label]) => (
+                        <Chip
+                          key={value}
+                          variant={field.value === value ? "active" : "default"}
+                          disabled={isPublishedEdit}
+                          onClick={() => {
+                            if (!isPublishedEdit) field.onChange(value);
+                          }}
+                        >
+                          {label}
+                        </Chip>
+                      ))}
+                    </div>
+                  )}
+                />
+                {isPublishedEdit && (
+                  <span className="text-[11px] text-text-dim">
+                    Режим записи зафиксирован после публикации
+                  </span>
+                )}
+              </div>
+
+              <div hidden={signupMode === "external"}>
+                <Input
+                  label="Лимит мест"
+                  type="number"
+                  min={1}
+                  error={errors.capacity?.message}
+                  placeholder="Оставьте пустым — без ограничения"
+                  {...register("capacity")}
+                />
+              </div>
+              <div hidden={signupMode !== "application"}>
+                <Textarea
+                  label="Вопрос кандидату"
+                  error={errors.curatorQuestion?.message}
+                  placeholder="Покажется в форме заявки. Например: «Над чем работаете?»"
+                  {...register("curatorQuestion")}
+                />
+              </div>
+              <div hidden={signupMode !== "external"}>
+                <Input
+                  label="Ссылка для регистрации"
+                  type="url"
+                  error={errors.externalRegistrationUrl?.message}
+                  placeholder="https://…"
+                  {...register("externalRegistrationUrl")}
+                />
+              </div>
+            </div>
+
+            {/* 04 Публикация */}
+            <div hidden={step !== 3} className="flex flex-col gap-[11px]">
+              <div className="flex flex-col gap-[5px]">
+                <span className="cap">Статус</span>
+                <Controller
+                  control={control}
+                  name="status"
+                  render={({ field }) => (
+                    <div className="flex flex-wrap gap-[5px]">
+                      <Chip
+                        variant={field.value === "draft" ? "active" : "default"}
+                        onClick={() => field.onChange("draft")}
+                      >
+                        Черновик
+                      </Chip>
+                      <Chip
+                        variant={field.value === "published" ? "active" : "default"}
+                        onClick={() => field.onChange("published")}
+                      >
+                        Опубликовать
+                      </Chip>
+                    </div>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* Errors */}
+            {mode === "create" &&
+              mutation.isError &&
+              !(mutation.error instanceof Error && mutation.error.message === EMAIL_NOT_VERIFIED) && (
+                <p className="text-[12.5px] text-signal">
+                  {mutation.error instanceof Error && mutation.error.message.includes("429")
+                    ? "Достигнут лимит: 10 событий в месяц. Лимит обновится 1-го числа."
+                    : "Не удалось сохранить событие. Проверьте, что бэкенд запущен."}
+                </p>
+              )}
+            {mode === "create" &&
+              draftMutation.isError &&
+              !(
+                draftMutation.error instanceof Error &&
+                draftMutation.error.message === EMAIL_NOT_VERIFIED
+              ) && (
+                <p className="text-[12.5px] text-signal">
+                  Не удалось сохранить черновик. Проверьте, что бэкенд запущен.
+                </p>
+              )}
+            {mode === "edit" &&
+              editMutation.isError &&
+              !(
+                editMutation.error instanceof Error &&
+                editMutation.error.message === EMAIL_NOT_VERIFIED
+              ) && (
+                <p className="text-[12.5px] text-signal">
+                  {editMutation.error instanceof Error && editMutation.error.message.includes("409")
+                    ? /occupied|capacity/i.test(editMutation.error.message)
+                      ? "Нельзя уменьшить лимит мест ниже числа уже записавшихся"
+                      : "Это событие нельзя редактировать в текущем статусе"
+                    : "Не удалось сохранить изменения. Проверьте, что бэкенд запущен."}
+                </p>
+              )}
+
+            {/* Mobile moderation note above CTAs */}
+            <div className="mt-auto border-t border-ink pt-[10px] sm:hidden">
+              <p className="cap mb-[5px]">После отправки</p>
+              <p className="mb-[10px] text-[10.5px] leading-[1.45] text-text-dim">
+                Модерация занимает до 24 часов. Событие появится в ленте после одобрения.
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="mt-auto flex gap-[8px] max-sm:flex-col">
+              {step < 3 ? (
+                <Button
+                  type="button"
+                  className="min-h-[44px] flex-1"
+                  onClick={() => setStep((s) => Math.min(3, s + 1))}
+                >
+                  {NEXT_LABELS[step]}
+                </Button>
+              ) : (
+                <Button type="submit" className="min-h-[44px] flex-1" disabled={pending}>
+                  {pending ? "Сохранение…" : NEXT_LABELS[3]}
+                </Button>
+              )}
+              {mode === "create" ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="min-h-[44px] max-sm:w-full sm:flex-none sm:px-[16px]"
+                  disabled={draftMutation.isPending}
+                  onClick={saveDraftGhost}
+                >
+                  {draftMutation.isPending ? "Сохранение…" : "ЧЕРНОВИК"}
+                </Button>
+              ) : step > 0 ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="min-h-[44px] max-sm:w-full sm:flex-none sm:px-[16px]"
+                  onClick={() => setStep((s) => Math.max(0, s - 1))}
+                >
+                  Назад
+                </Button>
+              ) : null}
+            </div>
+          </div>
+
+          {/* Right rail — desktop preview + moderation note */}
+          <aside className="hidden flex-col border-b border-ink px-[16px] py-[14px] sm:flex">
+            <p className="cap mb-[8px]">Превью в ленте</p>
+            <div className="border border-ink bg-white">
+              <EventModule
+                numeral={firstCat ? categoryNumeral(firstCat.slug, categories) : "—"}
+                category={firstCat?.label ?? "—"}
+                title={title?.trim() || "Без названия"}
+                venue={previewVenue}
+                date={previewDate}
+                price={previewPrice}
+                href={mode === "edit" && eventId ? `/events/${eventId}` : "#"}
+              />
+            </div>
+            <div className="mt-auto border-t border-ink pt-[10px]">
+              <p className="cap mb-[5px]">После отправки</p>
+              <p className="text-[10.5px] leading-[1.45] text-text-dim">
+                Модерация занимает до 24 часов. Событие появится в ленте после одобрения.
+              </p>
+            </div>
+          </aside>
+        </div>
 
         {((mode === "create" &&
-          mutation.isError &&
-          mutation.error instanceof Error &&
-          mutation.error.message === EMAIL_NOT_VERIFIED) ||
+          ((mutation.isError &&
+            mutation.error instanceof Error &&
+            mutation.error.message === EMAIL_NOT_VERIFIED) ||
+            (draftMutation.isError &&
+              draftMutation.error instanceof Error &&
+              draftMutation.error.message === EMAIL_NOT_VERIFIED))) ||
           (mode === "edit" &&
-            editMutation.isError &&
-            editMutation.error instanceof Error &&
-            editMutation.error.message === EMAIL_NOT_VERIFIED)) && (
+            ((editMutation.isError &&
+              editMutation.error instanceof Error &&
+              editMutation.error.message === EMAIL_NOT_VERIFIED) ||
+              (autosaveMutation.isError &&
+                autosaveMutation.error instanceof Error &&
+                autosaveMutation.error.message === EMAIL_NOT_VERIFIED)))) && (
           <VerifyEmailInterstitial
             onClose={() => {
               mutation.reset();
               editMutation.reset();
+              draftMutation.reset();
+              autosaveMutation.reset();
             }}
           />
         )}
-      </div>
-    </form>
+      </form>
+    </>
   );
 }
 
-// Shown when an unauthenticated user reaches /events/new. Prompts for demo-login
-// rather than rendering a form that would 401 on submit.
-function CreateEventGate() {
-  const [showLogin, setShowLogin] = useState(false);
-  return (
-    <div className="min-h-screen bg-bg-grouped">
-      <header className="glass sticky top-0 z-10 border-b border-separator">
-        <div className="mx-auto flex max-w-2xl items-center justify-between px-5 py-3">
-          <Link href="/" className="text-[17px] text-accent">
-            Отмена
-          </Link>
-          <span className="text-[17px] font-semibold">Новое событие</span>
-          <span className="w-16" />
-        </div>
-      </header>
-      <div className="mx-auto max-w-md px-5 pt-16 text-center">
-        <div className="mb-4 text-[40px]" aria-hidden>
-          🔐
-        </div>
-        <h1 className="mb-2 text-[22px] font-bold tracking-[-0.022em]">
-          Войдите, чтобы создать событие
-        </h1>
-        <p className="mb-6 text-[15px] text-label-secondary">
-          Создание событий доступно авторизованным пользователям. Демо-вход
-          занимает пару секунд — нужен только email.
-        </p>
-        <Button onClick={() => setShowLogin(true)}>Войти</Button>
-      </div>
-      {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
-    </div>
-  );
-}
-
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="mb-6">
-      <h2 className="mb-2 px-1 text-[13px] font-semibold uppercase tracking-[0.03em] text-label-secondary">
-        {title}
-      </h2>
-      <div className="space-y-4 rounded-card bg-bg-secondary p-4 shadow-card-subtle">
-        {children}
-      </div>
-    </section>
-  );
-}
-
-function Field({
+function SwissDateTime({
   label,
   error,
-  children,
+  value,
+  onChange,
 }: {
   label: string;
   error?: string;
-  children: React.ReactNode;
+  value: string;
+  onChange: (v: string) => void;
 }) {
+  const { date, time } = splitLocal(value);
   return (
-    <label className="block">
-      <span className="mb-1.5 block text-[13px] text-label-secondary">{label}</span>
-      {children}
-      {error && <span className="mt-1 block text-[13px] text-red-500">{error}</span>}
-    </label>
+    <div className="flex flex-col gap-[5px]">
+      <span className={cn("cap", error && "text-signal")}>{label}</span>
+      <div className="flex flex-wrap items-center gap-[8px]">
+        <input
+          type="date"
+          className={DT_BOX}
+          value={date}
+          onChange={(e) => onChange(joinLocal(e.target.value, time))}
+        />
+        <input
+          type="time"
+          className={DT_BOX}
+          value={time}
+          onChange={(e) => onChange(joinLocal(date, e.target.value))}
+        />
+        <span className="cap">Мск</span>
+      </div>
+      {error ? <p className="text-[11px] text-signal">{error}</p> : null}
+    </div>
   );
 }

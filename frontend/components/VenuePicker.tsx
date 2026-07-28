@@ -22,12 +22,18 @@ export function VenuePicker({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   value: _value,
   onChange,
+  onLabelChange,
+  initialLabel,
 }: {
   /** Current venue id ("" = none). Kept in interface for controlled-component API. */
   value: string;
   onChange: (id: string) => void;
+  /** Optional: surface the selected venue name for live preview chrome. */
+  onLabelChange?: (name: string) => void;
+  /** Seed the typeahead text (edit mode). */
+  initialLabel?: string;
 }) {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialLabel ?? "");
   const [debounced, setDebounced] = useState("");
   const [selected, setSelected] = useState<ApiVenue | null>(null);
   const [open, setOpen] = useState(false);
@@ -68,6 +74,7 @@ export function VenuePicker({
     onSuccess: (venue) => {
       setSelected(venue);
       onChange(venue.id);
+      onLabelChange?.(venue.name);
       setQuery(venue.name);
       setOpen(false);
     },
@@ -77,6 +84,7 @@ export function VenuePicker({
   const pick = (v: ApiVenue) => {
     setSelected(v);
     onChange(v.id);
+    onLabelChange?.(v.name);
     setQuery(v.name);
     setOpen(false);
   };
@@ -98,6 +106,7 @@ export function VenuePicker({
           if (selected) {
             setSelected(null);
             onChange("");
+            onLabelChange?.("");
           }
         }}
         onFocus={() => setOpen(true)}

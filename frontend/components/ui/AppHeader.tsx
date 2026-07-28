@@ -59,7 +59,12 @@ export function AppHeader({ nav = [], admin, mobileCaption, actions }: AppHeader
         ))}
         {actions}
       </nav>
-      {mobileCaption ? <span className="cap sm:hidden">{mobileCaption}</span> : null}
+      {(mobileCaption || actions) ? (
+        <div className="flex items-baseline gap-[12px] sm:hidden">
+          {mobileCaption ? <span className="cap">{mobileCaption}</span> : null}
+          {actions}
+        </div>
+      ) : null}
     </header>
   );
 }

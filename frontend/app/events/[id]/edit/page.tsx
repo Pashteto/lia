@@ -4,6 +4,8 @@ import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 
 import { CreateEventForm, toDatetimeLocalValue, type FormValues } from "@/components/CreateEventForm";
+import { AppHeader, ORG_NAV } from "@/components/ui/AppHeader";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { fetchEventWithAuth } from "@/lib/api";
 
 /**
@@ -27,25 +29,37 @@ export default function EditEventPage() {
   });
 
   if (isLoading) {
-    return <div className="min-h-screen bg-bg-grouped" />;
+    return (
+      <>
+        <AppHeader nav={ORG_NAV} mobileCaption="РЕДАКТИРОВАНИЕ" />
+        <Skeleton className="h-[48px] w-full border-x-0 border-t-0" />
+        <Skeleton className="h-[320px] w-full border-x-0 border-t-0" />
+      </>
+    );
   }
 
   if (isError || !event) {
     return (
-      <main className="mx-auto max-w-2xl px-5 py-16 text-center">
-        <p className="text-[17px] text-label-secondary">
-          Событие не найдено или недоступно.
-        </p>
-      </main>
+      <>
+        <AppHeader nav={ORG_NAV} mobileCaption="РЕДАКТИРОВАНИЕ" />
+        <main className="mx-auto max-w-[1360px] px-[20px] py-[40px]">
+          <p className="text-[12.5px] text-text-dim">Событие не найдено или недоступно.</p>
+        </main>
+      </>
     );
   }
 
-  const initial: Partial<FormValues> & { coverFileId?: string; coverPreviewUrl?: string } = {
+  const initial: Partial<FormValues> & {
+    coverFileId?: string;
+    coverPreviewUrl?: string;
+    venueName?: string;
+  } = {
     title: event.title,
     description: event.description,
     categoryIds: event.categories.map((c) => c.id),
     format: event.format,
     venueId: event.venue?.id ?? "",
+    venueName: event.venue?.name,
     startsAt: toDatetimeLocalValue(event.startsAt),
     endsAt: event.endsAt ? toDatetimeLocalValue(event.endsAt) : undefined,
     isFree: event.priceType === "free",

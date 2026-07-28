@@ -1,16 +1,31 @@
 "use client";
 
-import { EventCard } from "@/components/ui/EventCard";
-import { FilterChip } from "@/components/ui/FilterChip";
-import { SearchField } from "@/components/ui/SearchField";
-import { fetchNearbyEvents, fetchPublishedEvents } from "@/lib/api";
-import { FILTERS } from "@/lib/mock-events";
+import { Button } from "@/components/ui/Button";
+import { Chip } from "@/components/ui/Chip";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { EventModule } from "@/components/ui/EventModule";
+import { Skeleton } from "@/components/ui/Skeleton";
+import {
+  fetchNearbyEvents,
+  fetchPublishedEvents,
+  type ApiCategory,
+} from "@/lib/api";
+import { eventToModuleProps } from "@/lib/event-module";
+import { todayRange, weekendRange } from "@/lib/mock-events";
+import { pluralRu } from "@/lib/plural";
 import type { LiaEvent } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
+const TIME_FILTERS = [
+  { slug: "all", label: "Все" },
+  { slug: "today", label: "Сегодня", dateRange: todayRange },
+  { slug: "weekend", label: "Выходные", dateRange: weekendRange },
+  { slug: "free", label: "Бесплатно" },
+] as const;
+
 /**
- * Discovery feed: large title, search field, capsule filter row, event grid.
+ * Discovery feed: title block, Swiss filter bar, search field, event grid.
  *
  * Data comes from the backend `GET /api/v1/events?status=published`. The server
  * component fetches the initial list (SSR) and passes it as `initialEvents`;
@@ -24,10 +39,13 @@ import { useMemo, useState } from "react";
  */
 export function DiscoveryFeed({
   initialEvents,
+  categories,
 }: {
   initialEvents: LiaEvent[];
+  categories: ApiCategory[];
 }) {
   const [active, setActive] = useState("all");
+  const [activeCat, setActiveCat] = useState<string | null>(null);
   const [query, setQuery] = useState("");
 
   // Nearby state — null means "normal mode", array means "near-me mode".
@@ -42,11 +60,11 @@ export function DiscoveryFeed({
   // Date chips (today/weekend) resolve to a [from, to) window, computed once per
   // active-chip change so the server query and the client filter agree on it.
   const dateRange = useMemo(() => {
-    const f = FILTERS.find((x) => x.slug === active);
-    return f?.dateRange?.(new Date());
+    const f = TIME_FILTERS.find((x) => x.slug === active);
+    return f && "dateRange" in f ? f.dateRange(new Date()) : undefined;
   }, [active]);
 
-  const { data: allEvents = [], isError } = useQuery({
+  const { data: allEvents = [], isError, isPending } = useQuery({
     // Each window is its own cache entry; the unfiltered list keeps its SSR seed.
     queryKey: [
       "events",
@@ -63,20 +81,23 @@ export function DiscoveryFeed({
       let matchesFilter: boolean;
       if (active === "all") {
         matchesFilter = true;
+      } else if (active === "free") {
+        matchesFilter = e.priceType === "free";
       } else if (dateRange) {
         // The backend already narrowed to the window; re-check client-side so
         // the offline mock fallback narrows too (same range → consistent).
         const t = new Date(e.startsAt).getTime();
         matchesFilter =
           t >= dateRange.from.getTime() && t < dateRange.to.getTime();
-      } else {
-        matchesFilter = e.categories.some((c) => c.slug === active);
-      }
+      } else matchesFilter = true;
+      const matchesCategory =
+        activeCat === null ||
+        e.categories.some((c) => c.slug === activeCat);
       const matchesQuery =
         query.trim() === "" ||
         e.title.toLowerCase().includes(query.toLowerCase()) ||
         (e.organizer?.name ?? "").toLowerCase().includes(query.toLowerCase());
-      return matchesFilter && matchesQuery;
+      return matchesFilter && matchesCategory && matchesQuery;
     });
     // Lead with upcoming events (soonest first); demote past events below them
     // (most-recent past first). The backend returns no particular order, so the
@@ -90,7 +111,7 @@ export function DiscoveryFeed({
       if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1;
       return aUpcoming ? ta - tb : tb - ta;
     });
-  }, [allEvents, active, dateRange, query, now]);
+  }, [allEvents, active, activeCat, dateRange, query, now]);
 
   const enableNearby = () => {
     if (!navigator.geolocation) {
@@ -141,152 +162,117 @@ export function DiscoveryFeed({
   // Which list to render and whether to show a distance badge per card.
   const displayEvents = nearby ?? events;
   const isNearbyMode = nearby !== null;
+  const count = displayEvents.length;
 
   return (
-    <main className="mx-auto max-w-5xl px-5 pb-28 pt-6">
-      <h1 className="mb-4 text-[34px] font-bold tracking-[-0.022em]">События</h1>
+    <main className="mx-auto max-w-[1360px] pb-[64px] max-sm:pb-[88px]">
+      {/* Title block */}
+      <div className="border-b border-ink px-[20px] py-[18px]">
+        <p className="cap">
+          Москва · <span className="font-mono">{count}</span>{" "}
+          {pluralRu(count, ["событие", "события", "событий"])}
+        </p>
+        <h1 className="mt-[8px] max-w-[14ch] text-[38px] font-black leading-[0.94] tracking-[-0.03em] max-sm:text-[22px]">
+          Лента событий
+        </h1>
+      </div>
 
-      <SearchField
-        placeholder="Поиск по названию, месту, ведущему"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        className="mb-4"
-      />
+      {/* Filter bar: time+near-me left, categories (API-ordered) right */}
+      <div className="flex items-center justify-between gap-[10px] overflow-x-auto border-b border-ink px-[20px] py-[9px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex shrink-0 items-center gap-[6px]">
+          {TIME_FILTERS.map((f) => (
+            <Chip
+              key={f.slug}
+              variant={active === f.slug ? "active" : "default"}
+              onClick={() => setActive(f.slug)}
+            >
+              {f.label}
+            </Chip>
+          ))}
+          <Chip
+            variant={isNearbyMode ? "active" : "default"}
+            disabled={geoLoading}
+            onClick={isNearbyMode ? resetNearby : enableNearby}
+            aria-label={isNearbyMode ? "Сбросить фильтр по расстоянию" : "Показать события рядом со мной"}
+          >
+            {geoLoading ? "Определяем…" : "Рядом со мной"}
+          </Chip>
+        </div>
+        <div className="flex shrink-0 items-center gap-[6px]">
+          {categories.map((c) => (
+            <Chip
+              key={c.id}
+              variant={activeCat === c.slug ? "active" : "default"}
+              onClick={() => setActiveCat(activeCat === c.slug ? null : c.slug)}
+            >
+              {c.label}
+            </Chip>
+          ))}
+        </div>
+      </div>
 
-      {/* Filter row: category chips, then the location toggle set apart by a
-          hairline — the divider encodes that "рядом со мной" filters by a
-          different axis (distance) than the category chips beside it. */}
-      <div className="-mx-5 mb-6 flex items-center gap-2 overflow-x-auto px-5 py-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {FILTERS.map((f) => (
-          <FilterChip
-            key={f.slug}
-            label={f.label}
-            active={active === f.slug}
-            onClick={() => setActive(f.slug)}
-          />
-        ))}
-
-        <span
-          className="mx-1 h-6 w-px shrink-0 self-center bg-separator"
-          aria-hidden
-        />
-
-        <FilterChip
-          label={geoLoading ? "Определяем…" : "Рядом со мной"}
-          active={isNearbyMode}
-          disabled={geoLoading}
-          onClick={isNearbyMode ? resetNearby : enableNearby}
-          aria-label={isNearbyMode ? "Сбросить фильтр по расстоянию" : "Показать события рядом со мной"}
-          icon={geoLoading ? <SpinnerGlyph /> : <PinGlyph />}
-          trailing={isNearbyMode ? <ClearGlyph /> : undefined}
+      {/* Search (retained feature, Swiss field) */}
+      <div className="border-b border-rule-inner px-[20px] py-[9px]">
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Поиск по названию, месту, ведущему"
+          aria-label="Поиск событий"
+          className="swiss-focus w-full bg-transparent text-[12.5px] text-on-surface placeholder:text-field-text"
         />
       </div>
 
-      {geoError && (
-        <p className="-mt-4 mb-6 text-[13px] text-label-secondary">{geoError}</p>
-      )}
+      {geoError && <p className="border-b border-rule-inner px-[20px] py-[9px] text-[11.5px] text-signal">{geoError}</p>}
 
-      {isError && allEvents.length === 0 ? (
-        <p className="py-16 text-center text-[15px] text-label-secondary">
-          Не удалось загрузить события. Проверьте, что бэкенд запущен.
-        </p>
-      ) : displayEvents.length > 0 ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {displayEvents.map((e) => (
-            <EventCard
-              key={e.id}
-              event={e}
-              distanceBadge={
-                isNearbyMode && e.distanceM != null ? (
-                  <span className="text-[12px] text-label-secondary">
-                    ≈ {(e.distanceM / 1000).toFixed(1)} км
-                  </span>
-                ) : undefined
-              }
-            />
+      {/* Catalogue grid */}
+      {isPending && allEvents.length === 0 ? (
+        <div className="grid grid-cols-3 border-b border-ink max-sm:grid-cols-1">
+          {Array.from({ length: 6 }, (_, index) => (
+            <Skeleton key={index} className="h-[140px]" />
           ))}
         </div>
+      ) : isError && allEvents.length === 0 ? (
+        <EmptyState
+          numeral="!"
+          title="Не удалось загрузить события"
+          text="Проверьте соединение и попробуйте обновить страницу."
+        />
+      ) : count > 0 ? (
+        <div className="grid grid-cols-3 border-b border-ink max-sm:grid-cols-1 [&>a]:border-b [&>a]:border-r [&>a]:border-rule-inner max-sm:[&>a]:border-r-0">
+          {displayEvents.map((e) => {
+            const m = eventToModuleProps(e, categories);
+            return (
+              <EventModule
+                key={e.id}
+                {...m}
+                venue={
+                  isNearbyMode && e.distanceM != null
+                    ? `${m.venue} · ${(e.distanceM / 1000).toFixed(1)} км`
+                    : m.venue
+                }
+              />
+            );
+          })}
+        </div>
       ) : (
-        <p className="py-16 text-center text-[15px] text-label-secondary">
-          {isNearbyMode
-            ? "Событий рядом не найдено."
-            : "Ничего не нашлось. Попробуйте другой фильтр."}
-        </p>
+        <EmptyState
+          title={isNearbyMode ? "Событий рядом нет" : "Ничего не нашлось"}
+          text={isNearbyMode ? "Попробуйте расширить поиск или сбросить фильтр." : "Попробуйте другой фильтр или сбросьте поиск."}
+          actions={
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setActive("all");
+                setActiveCat(null);
+                setQuery("");
+                resetNearby();
+              }}
+            >
+              Сбросить фильтры
+            </Button>
+          }
+        />
       )}
     </main>
-  );
-}
-
-/** Location pin — marks the near-me chip as a distance filter, not a category. */
-function PinGlyph() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      className="shrink-0"
-      aria-hidden
-    >
-      <path
-        d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11Z"
-        fill="currentColor"
-        fillOpacity="0.18"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
-      <circle cx="12" cy="10" r="2.5" fill="currentColor" />
-    </svg>
-  );
-}
-
-/** × affordance shown on the active near-me chip to signal it clears the filter. */
-function ClearGlyph() {
-  return (
-    <svg
-      width="13"
-      height="13"
-      viewBox="0 0 24 24"
-      fill="none"
-      className="-mr-1 shrink-0 opacity-80"
-      aria-hidden
-    >
-      <path
-        d="m7 7 10 10M17 7 7 17"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-/** Spinner shown while geolocation resolves. */
-function SpinnerGlyph() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      className="shrink-0 animate-spin motion-reduce:animate-none"
-      aria-hidden
-    >
-      <circle
-        cx="12"
-        cy="12"
-        r="9"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeOpacity="0.25"
-      />
-      <path
-        d="M21 12a9 9 0 0 0-9-9"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-      />
-    </svg>
   );
 }

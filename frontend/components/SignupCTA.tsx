@@ -22,8 +22,8 @@ function SeatsCounter({ event }: { event: LiaEvent }) {
   if (event.capacity == null) return null;
   const remaining = event.seatsRemaining ?? event.capacity;
   return (
-    <span className="text-[13px] text-label-secondary">
-      Осталось мест: {remaining}
+    <span className="text-[11.5px] text-text-dim">
+      Осталось мест: <span className="font-mono">{remaining}</span>
     </span>
   );
 }
@@ -51,13 +51,13 @@ function ApplicationSheet({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-sm rounded-card bg-bg p-5"
+        className="w-full max-w-sm border border-ink bg-paper p-[20px]"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="mb-1 text-[17px] font-semibold">Подать заявку</h2>
-        <p className="mb-3 text-[15px] text-label">{question}</p>
+        <h2 className="mb-1 text-[22px] font-black tracking-[-0.02em]">Подать заявку</h2>
+        <p className="mb-3 text-[12.5px]">{question}</p>
         <textarea
-          className="w-full rounded-control bg-fill px-3.5 py-2.5 text-[17px] text-label outline-none placeholder:text-label-secondary focus:ring-2 focus:ring-accent"
+          className="w-full border border-on-surface bg-transparent px-[11px] py-[9px] text-[12.5px] text-on-surface outline-none placeholder:text-field-text swiss-focus"
           rows={4}
           placeholder="Ваш ответ…"
           value={answer}
@@ -65,17 +65,17 @@ function ApplicationSheet({
           disabled={busy}
         />
         {error && (
-          <p className="mt-2 text-[14px] text-red-500">{error}</p>
+          <p className="mt-2 text-[11px] text-signal">{error}</p>
         )}
         <div className="mt-4 flex items-center justify-end gap-2">
-          <button
+          <Button
             type="button"
-            className="px-3 py-2 text-[15px] text-label"
+            variant="ghost"
             onClick={onClose}
             disabled={busy}
           >
             Отмена
-          </button>
+          </Button>
           <Button
             type="button"
             onClick={() => onSubmit(answer.trim())}
@@ -207,7 +207,7 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
       <a
         href={calendarUrl}
         download
-        className="text-[13px] font-medium text-accent hover:opacity-70"
+        className="swiss-focus text-[11.5px] text-text-dim underline underline-offset-2"
       >
         В календарь
       </a>
@@ -215,7 +215,7 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
         href={googleCalendarUrl(event)}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-[13px] font-medium text-accent hover:opacity-70"
+        className="swiss-focus text-[11.5px] text-text-dim underline underline-offset-2"
       >
         В Google
       </a>
@@ -243,7 +243,7 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
   if (closed) {
     return (
       <div className="flex flex-col items-end gap-2">
-        <span className="text-[15px] font-semibold text-label-secondary">{closed}</span>
+        <span className="cap">{closed}</span>
         {footer}
       </div>
     );
@@ -262,11 +262,11 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
           href={event.externalRegistrationUrl ?? "#"}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-control bg-accent px-8 py-2.5 text-[15px] font-semibold text-white transition select-none hover:opacity-90 active:scale-[0.97] active:opacity-80"
+          className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap bg-ink px-8 py-[11px] text-[11px] font-bold uppercase tracking-[0.07em] text-white transition-colors duration-[120ms] ease-linear select-none hover:bg-black swiss-focus"
         >
           Записаться на сайте организатора
         </a>
-        <span className="text-[13px] text-label-secondary">
+        <span className="text-[11.5px] text-text-dim">
           Запись ведёт организатор
         </span>
         {footer}
@@ -284,7 +284,7 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
       return (
         <div className="flex flex-col items-end gap-2">
           <div className="flex items-center gap-2">
-            <span className="text-[15px] font-semibold text-accent">
+            <span className="cap">
               Вы записаны
             </span>
             <Button
@@ -296,7 +296,7 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
               {busy ? "…" : "Отписаться"}
             </Button>
           </div>
-          {error && <p className="text-[13px] text-red-500">{error}</p>}
+          {error && <p className="text-[11px] text-signal">{error}</p>}
           {footer}
         </div>
       );
@@ -306,7 +306,7 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
       return (
         <div className="flex flex-col items-end gap-2">
           <div className="flex items-center gap-2">
-            <span className="text-[15px] font-semibold text-label-secondary">
+            <span className="cap">
               Вы в листе ожидания
             </span>
             <Button
@@ -318,7 +318,7 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
               {busy ? "…" : "Покинуть лист"}
             </Button>
           </div>
-          {error && <p className="text-[13px] text-red-500">{error}</p>}
+          {error && <p className="text-[11px] text-signal">{error}</p>}
           {footer}
         </div>
       );
@@ -328,13 +328,14 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
     return (
       <div className="flex flex-col items-end gap-2">
         <Button
+          variant={isFull ? "ghost" : "primary"}
           className="px-8"
           disabled={busy}
           onClick={() => handleSignUp()}
         >
           {busy ? "…" : isFull ? "В лист ожидания" : "Записаться"}
         </Button>
-        {error && <p className="text-[13px] text-red-500">{error}</p>}
+        {error && <p className="text-[11px] text-signal">{error}</p>}
         {footer}
         {showLoginModal && (
           <LoginModal onClose={() => setShowLoginModal(false)} />
@@ -353,7 +354,7 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
       return (
         <div className="flex flex-col items-end gap-2">
           <div className="flex items-center gap-2">
-            <span className="text-[15px] font-semibold text-accent">
+            <span className="cap">
               Заявка отправлена
             </span>
             <Button
@@ -365,7 +366,7 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
               {busy ? "…" : "Отозвать заявку"}
             </Button>
           </div>
-          {error && <p className="text-[13px] text-red-500">{error}</p>}
+          {error && <p className="text-[11px] text-signal">{error}</p>}
           {footer}
         </div>
       );
@@ -374,7 +375,7 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
     if (localStatus === "accepted") {
       return (
         <div className="flex flex-col items-end gap-2">
-          <span className="text-[15px] font-semibold text-accent">
+          <span className="cap">
             Заявка принята
           </span>
           {footer}
@@ -385,7 +386,7 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
     if (localStatus === "declined") {
       return (
         <div className="flex flex-col items-end gap-2">
-          <span className="text-[15px] font-semibold text-label-secondary">
+          <span className="cap">
             Заявка отклонена
           </span>
           {footer}
@@ -409,7 +410,7 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
         >
           Подать заявку
         </Button>
-        {error && <p className="text-[13px] text-red-500">{error}</p>}
+        {error && <p className="text-[11px] text-signal">{error}</p>}
         {footer}
         {showLoginModal && (
           <LoginModal onClose={() => setShowLoginModal(false)} />

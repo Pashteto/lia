@@ -9,6 +9,7 @@ import {
   VERIFICATION_ATTEMPTS_EXCEEDED,
 } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { safeNextPath } from "@/lib/safe-next";
 
 const inputClass =
   "w-full rounded-control bg-fill px-3.5 py-2.5 text-[17px] text-label outline-none placeholder:text-label-secondary focus:ring-2 focus:ring-accent";
@@ -45,7 +46,7 @@ export default function VerifyPage() {
       // page) via ?next=; fall back to the feed. Only app-internal paths are
       // honored, to avoid an open-redirect.
       const next = new URLSearchParams(window.location.search).get("next");
-      const dest = next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
+      const dest = safeNextPath(next, window.location.origin) ?? "/";
       router.push(dest);
     } catch (err) {
       const m = err instanceof Error ? err.message : "";

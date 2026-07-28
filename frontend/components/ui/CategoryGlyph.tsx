@@ -14,6 +14,13 @@ const PATHS: Record<string, React.ReactNode> = {
       <path d="M2 20h20M12 16v4" />
     </>
   ),
+  // Читательские группы — reuse lecture glyph until Phase 7.
+  "reading-group": (
+    <>
+      <rect x="3" y="4" width="18" height="12" rx="2" />
+      <path d="M2 20h20M12 16v4" />
+    </>
+  ),
   // Мастер-классы — a potter's wheel (on-theme for ceramics et al.).
   workshop: (
     <>

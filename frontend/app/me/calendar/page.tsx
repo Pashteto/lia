@@ -4,7 +4,9 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 
+import { AuthGate } from "@/components/ui/AuthGate";
 import { Segmented } from "@/components/ui/Segmented";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { fetchCalendar } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/cn";
@@ -153,21 +155,17 @@ export default function CalendarPage() {
     else setAnchor((a) => addDays(a, delta));
   }
 
-  if (!ready) return <div className="min-h-screen bg-bg-grouped" />;
+  if (!ready) {
+    return (
+      <div className="px-[20px] py-[26px]">
+        <Skeleton className="h-[120px] w-full" />
+      </div>
+    );
+  }
 
   if (!isAuthed) {
     return (
-      <main className="mx-auto max-w-3xl px-4 py-16">
-        <Link href="/" className="inline-flex items-center text-[17px] text-accent">
-          ‹ События
-        </Link>
-        <div className="mt-8 text-center">
-          <h1 className="text-[28px] font-bold tracking-[-0.022em]">Календарь</h1>
-          <p className="mt-3 text-label-secondary">
-            Войдите, чтобы видеть события подписок и свои записи в календаре.
-          </p>
-        </div>
-      </main>
+      <AuthGate title="Войдите, чтобы видеть свой календарь" />
     );
   }
 

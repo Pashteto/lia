@@ -11,7 +11,7 @@ export type ChipVariant =
 // On data-surface="ink", ink-filled "active" is invisible — callers use "dark-active"/"dark-muted" there.
 const VARIANTS: Record<ChipVariant, string> = {
   default: "border-current",
-  active: "border-ink bg-ink text-paper",
+  active: "border-ink bg-ink text-white",
   signal: "border-signal text-signal",
   "dark-active": "border-paper bg-paper text-ink",
   "dark-muted": "border-muted-2 text-muted-2",

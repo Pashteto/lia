@@ -275,13 +275,13 @@ export function EventApplicationsPanel({
         {tab === "applied" && pendingInFilter.length > 0 ? (
           <button
             type="button"
-            className="cap shrink-0 swiss-focus hover:underline"
+            className="cap hidden shrink-0 swiss-focus hover:underline sm:inline"
             onClick={toggleSelectAll}
           >
             {allPendingSelected ? "Снять все" : "Выбрать все"}
           </button>
         ) : (
-          <span className="cap shrink-0 text-text-dim max-sm:hidden">Выбрать все</span>
+          <span className="cap hidden shrink-0 text-text-dim sm:inline">Выбрать все</span>
         )}
       </div>
 
@@ -433,13 +433,13 @@ export function EventApplicationsPanel({
         </ul>
       )}
 
-      {/* Bulk bar — desktop / always when on Новые */}
+      {/* Bulk bar — desktop only (O4 mobile mock: per-row actions, no multi-select) */}
       {tab === "applied" ? (
-        <div className="sticky bottom-0 flex items-center justify-between border-t border-on-surface bg-paper px-[20px] py-[9px] max-sm:px-[14px]">
+        <div className="sticky bottom-0 hidden items-center justify-between border-t border-on-surface bg-paper px-[20px] py-[9px] sm:flex">
           <span className="cap">Выбрано: {selected.size}</span>
           <Button
             size="sm"
-            className="min-h-[44px] px-[16px] sm:min-h-0"
+            className="px-[16px]"
             disabled={selected.size === 0 || bulkBusy}
             onClick={handleBulkAccept}
           >

@@ -4,7 +4,7 @@
 **Base:** `c3195b8` — Phase 6 tip (A2 filters fix)  
 **HEAD:** `5e09466`  
 **Date:** 2026-07-29  
-**Status:** Ready for merge + deploy (images-only; no migration)
+**Status:** Merged to `main` @ `c740cf5` and deployed (images-only)
 
 ---
 
@@ -113,7 +113,15 @@ cd frontend && pnpm build && pnpm test && pnpm lint
 
 ## Deploy
 
-Images-only (no `migrate up`). Backend + frontend rebuild for amd64 → `save|ssh|load` → cutover with all 4 compose files. Runbook: `docs/superpowers/runbooks/2026-07-23-qa-20-jul-deploy.md`.
+**LIVE 2026-07-29** — images-only; prod DB stayed at **020** (`dirty=f`).
+
+| Image | Tag |
+|---|---|
+| Backend | `lia-backend:swiss-p7-r1` → `backend-app:latest` |
+| Frontend | `lia-frontend:swiss-p7-r1` → `lia-frontend-presence:latest` |
+| Rollback | `backend-app:rollback-swiss-p7-20260729-142227`, `lia-frontend-presence:rollback-swiss-p7-20260729-142227` |
+
+Smoke: `/` `/admin/users` `/map` `/api/v1/events` → 200; `/api/v1/admin/users` + `/hygiene` → **401** (mounted, auth-gated). Font preload present (Golos/Manrope/JB Mono).
 
 ---
 

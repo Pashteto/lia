@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-29  
 **Repo:** `Pashteto/lia`  
-**Branch tip:** `redesign/swiss-grid-p7` @ `5e09466`  
+**Branch tip:** `main` @ `c740cf5` (was `redesign/swiss-grid-p7`)  
 **Live product:** https://presence.tarski.ru (deploy with P7 cutover)
 
 ---
@@ -17,7 +17,7 @@
 | **P4** U3 Подбор | `/search` deterministic smart-filter | Merged |
 | **P5** Organizer | O1–O5 Swiss suite | Merged |
 | **P6** Admin ink | A1–A3 + ink secondary | Merged (base of P7) |
-| **P7** Admin A4 + P7.3 sweep | Users registry + hygiene APIs + Liquid Glass deletion | Branch ready — merge/deploy |
+| **P7** Admin A4 + P7.3 sweep | Users registry + hygiene APIs + Liquid Glass deletion | Merged to main + deployed 2026-07-29 |
 
 **Not shipped (post–Swiss Grid):**
 

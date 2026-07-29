@@ -29,21 +29,23 @@ export default function AdminSettingsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold tracking-[-0.022em]">Настройки</h1>
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      <div className="glass space-y-3 rounded-card p-6">
-        <label className="flex items-start gap-3">
+    <div className="flex flex-col gap-[12px] px-[20px] py-[26px] max-sm:px-[14px]">
+      <h1 className="text-[17px] font-black leading-[1.05] tracking-[-0.02em]">Настройки</h1>
+      {error ? (
+        <p className="border-b border-rule-inner py-[8px] text-[11px] text-signal">{error}</p>
+      ) : null}
+      <div className="space-y-[12px] border border-rule-inner p-[14px]">
+        <label className="flex items-start gap-[12px]">
           <input
             type="checkbox"
             checked={!!settings[AUTO_VERIFY_ALL]}
             disabled={busy}
             onChange={() => toggle(AUTO_VERIFY_ALL)}
-            className="mt-1"
+            className="mt-[4px] swiss-focus"
           />
           <span>
-            <span className="font-medium">Авто-подтверждение всех организаторов</span>
-            <span className="block text-sm text-label-secondary">
+            <span className="text-[12px] font-bold">Авто-подтверждение всех организаторов</span>
+            <span className="mt-[4px] block text-[11.5px] text-text-dim">
               Когда включено, каждая отправленная заявка организатора подтверждается автоматически,
               минуя очередь модерации. Включайте, если нет доступных модераторов.
             </span>

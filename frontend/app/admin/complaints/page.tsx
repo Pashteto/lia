@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
+import { Button } from "@/components/ui/Button";
+import { Chip } from "@/components/ui/Chip";
+import { Skeleton } from "@/components/ui/Skeleton";
 import {
   COMPLAINT_CATEGORIES,
   listComplaints,
@@ -10,7 +13,6 @@ import {
   type ComplaintCategory,
   type ComplaintGroup,
 } from "@/lib/api";
-import { Button } from "@/components/ui/Button";
 
 const CATEGORY_LABEL = new Map(COMPLAINT_CATEGORIES.map((c) => [c.value, c.label]));
 
@@ -18,7 +20,7 @@ export default function ComplaintsInbox() {
   const [items, setItems] = useState<ComplaintGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [tick, setTick] = useState(0);
-  const [pending, setPending] = useState<ComplaintGroup | null>(null); // takedown target
+  const [pending, setPending] = useState<ComplaintGroup | null>(null);
   const [reason, setReason] = useState("");
   const [error, setError] = useState("");
   const [acting, setActing] = useState(false);
@@ -59,7 +61,6 @@ export default function ComplaintsInbox() {
       reload();
     } catch (err) {
       if (err instanceof Error && err.message.includes("409")) {
-        // Event already taken down — the mutation effectively happened, refetch quietly.
         setError("");
         setPending(null);
         setReason("");
@@ -81,7 +82,6 @@ export default function ComplaintsInbox() {
       reload();
     } catch (err) {
       if (err instanceof Error && err.message.includes("409")) {
-        // Already resolved — the mutation effectively happened, refetch quietly.
         setError("");
         reload();
       } else {
@@ -93,60 +93,66 @@ export default function ComplaintsInbox() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-6">
-      <Link href="/admin" className="mb-4 inline-flex items-center text-[17px] text-accent">
-        ‹ Админ
+    <div className="flex flex-col gap-[12px] px-[20px] py-[26px] max-sm:px-[14px]">
+      <Link
+        href="/admin"
+        className="swiss-focus inline-flex min-h-[44px] items-center text-[11px] font-bold uppercase tracking-[0.07em] text-muted-2"
+      >
+        ‹ К обзору
       </Link>
-      <h1 className="mb-6 text-2xl font-semibold">Жалобы</h1>
+      <h1 className="text-[17px] font-black leading-[1.05] tracking-[-0.02em]">Жалобы</h1>
 
-      {error ? <p className="mb-4 text-[13px] text-red-500">{error}</p> : null}
+      {error ? (
+        <p className="border-b border-rule-inner py-[8px] text-[11px] text-signal">{error}</p>
+      ) : null}
 
       {loading ? (
-        <p className="text-[15px] text-label-secondary">Загрузка…</p>
+        <div className="flex flex-col gap-[8px]">
+          <Skeleton className="h-[72px] w-full" />
+          <Skeleton className="h-[72px] w-full" />
+        </div>
       ) : items.length === 0 ? (
-        <p className="text-[15px] text-label-secondary">Жалоб нет.</p>
+        <p className="text-[11.5px] text-text-dim">Жалоб нет.</p>
       ) : (
-        <ul className="space-y-3">
+        <ul className="flex flex-col">
           {items.map((g) => (
             <li
               key={g.event_id}
-              className="flex items-start justify-between gap-4 rounded-card bg-bg-secondary p-4 shadow-card-subtle"
+              className="flex items-start justify-between gap-[16px] border-b border-rule-inner py-[14px]"
             >
-              <div className="min-w-0 flex-1 space-y-1">
+              <div className="min-w-0 flex-1 space-y-[6px]">
                 <Link
                   href={`/events/${g.event_id}`}
-                  className="text-[16px] font-semibold leading-snug hover:underline"
+                  className="text-[12px] font-bold leading-snug hover:underline"
                 >
                   {g.event_title}
                 </Link>
-                <div className="text-[13px] text-label-secondary">
+                <div className="font-mono text-[11px] text-muted-2">
                   {g.report_count} жалоб · статус: {g.event_status}
                 </div>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-[6px]">
                   {Object.entries(g.categories).map(([cat, n]) => (
-                    <span
-                      key={cat}
-                      className="rounded-full bg-bg-tertiary px-2 py-0.5 text-[12px] text-label-secondary"
-                    >
+                    <Chip key={cat} variant="dark-muted" as="span">
                       {CATEGORY_LABEL.get(cat as ComplaintCategory) ?? cat}: {n}
-                    </span>
+                    </Chip>
                   ))}
                 </div>
                 {g.latest_note ? (
-                  <div className="text-[13px] text-label-secondary">«{g.latest_note}»</div>
+                  <div className="text-[11.5px] text-text-dim">«{g.latest_note}»</div>
                 ) : null}
               </div>
-              <div className="flex shrink-0 flex-col gap-2">
+              <div className="flex shrink-0 flex-col gap-[8px]">
                 {g.event_status === "published" ? (
-                  <Button
-                    variant="ghost"
-                    onClick={() => setPending(g)}
-                    className="text-red-500 hover:bg-red-500/10"
-                  >
+                  <Button variant="destructive" size="sm" onClick={() => setPending(g)}>
                     Снять
                   </Button>
                 ) : null}
-                <Button variant="ghost" disabled={acting} onClick={() => onDismiss(g.event_id)}>
+                <Button
+                  variant="dark-ghost"
+                  size="sm"
+                  disabled={acting}
+                  onClick={() => onDismiss(g.event_id)}
+                >
                   Отклонить
                 </Button>
               </div>
@@ -157,29 +163,32 @@ export default function ComplaintsInbox() {
 
       {pending ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-[16px]"
           onClick={() => setPending(null)}
         >
           <div
-            className="w-full max-w-md rounded-card bg-bg-secondary p-5 shadow-card"
+            className="w-full max-w-md border border-paper bg-surface-head p-[14px]"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="mb-3 text-[18px] font-semibold">Снять «{pending.event_title}»</h2>
+            <h2 className="mb-[12px] text-[14px] font-black leading-[1.05] tracking-[-0.02em]">
+              Снять «{pending.event_title}»
+            </h2>
             <textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="Причина снятия (обязательно)"
               rows={3}
-              className="w-full rounded-control bg-bg-tertiary p-3 text-[15px]"
+              className="swiss-focus w-full border border-muted-2 bg-transparent px-[10px] py-[8px] text-[12px] text-on-surface outline-none"
             />
-            <div className="mt-4 flex justify-end gap-2">
-              <Button variant="ghost" onClick={() => setPending(null)}>
+            <div className="mt-[12px] flex justify-end gap-[8px]">
+              <Button variant="dark-ghost" size="sm" onClick={() => setPending(null)}>
                 Отмена
               </Button>
               <Button
+                variant="destructive"
+                size="sm"
                 onClick={confirmTakedown}
                 disabled={acting || !reason.trim()}
-                className="text-red-500"
               >
                 {acting ? "Снимаем…" : "Снять и закрыть жалобы"}
               </Button>

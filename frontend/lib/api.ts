@@ -924,6 +924,64 @@ export async function setOrganizerAutoVerify(id: string, enabled: boolean): Prom
   if (!res.ok) throw new Error(`auto-verify: ${res.status}`);
 }
 
+export type AdminUser = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  created_at: string;
+  bookings: number;
+  is_organizer: boolean;
+};
+
+export type HygieneKind = "test_data" | "suspicious_price";
+
+export type HygieneIssue = {
+  kind: HygieneKind;
+  event_id: string;
+  title: string;
+  organizer_name?: string;
+  price_rub?: number;
+};
+
+/** A4 registry page. Server clamps limit to 500 and sorts created_at DESC. */
+export async function listAdminUsers(
+  opts: { q?: string; limit?: number; offset?: number } = {},
+): Promise<AdminUser[]> {
+  const params = new URLSearchParams();
+  if (opts.q) params.set("q", opts.q);
+  if (opts.limit != null) params.set("limit", String(opts.limit));
+  if (opts.offset) params.set("offset", String(opts.offset));
+  const qs = params.toString();
+  const res = await fetch(`${API_V1}/admin/users${qs ? `?${qs}` : ""}`, {
+    headers: authHeaders(),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`admin users: ${res.status}`);
+  return res.json();
+}
+
+/** A4 hygiene rail: test data / suspicious prices currently in the feed. */
+export async function listHygieneIssues(): Promise<HygieneIssue[]> {
+  const res = await fetch(`${API_V1}/admin/hygiene`, {
+    headers: authHeaders(),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`hygiene: ${res.status}`);
+  const body: { issues?: HygieneIssue[] } = await res.json();
+  return body.issues ?? [];
+}
+
+/** Destructive: takes down every detected event (published → rejected). */
+export async function hideAllHygiene(): Promise<{ hidden: number; skipped: number }> {
+  const res = await fetch(`${API_V1}/admin/hygiene/hide-all`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(`hygiene hide-all: ${res.status}`);
+  return res.json();
+}
+
 export async function getAdminSettings(): Promise<Record<string, boolean>> {
   const res = await fetch(`${API_V1}/admin/settings`, { headers: authHeaders(), cache: "no-store" });
   if (!res.ok) throw new Error(`settings: ${res.status}`);

@@ -24,6 +24,7 @@ import (
 	grpcclientmod "github.com/Pashteto/lia/internal/grpcclient"
 	httpmod "github.com/Pashteto/lia/internal/http"
 	authpkg "github.com/Pashteto/lia/internal/http/auth"
+	"github.com/Pashteto/lia/internal/hygiene"
 	invitationsdomain "github.com/Pashteto/lia/internal/invitations"
 	"github.com/Pashteto/lia/internal/moderation"
 	"github.com/Pashteto/lia/internal/module"
@@ -275,6 +276,9 @@ func (app *App) registerModules() error {
 			httpModule.SetAdminUsers(
 				adminusers.NewService(adminusers.NewRepository(repoModule.DB())),
 			)
+			if app.eventsSvc != nil {
+				httpModule.SetHygiene(hygiene.NewService(app.eventsSvc, modSvc))
+			}
 			httpModule.SetFeedback(
 				feedback.NewService(feedback.NewRepository(repoModule.DB())),
 			)

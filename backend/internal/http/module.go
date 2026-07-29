@@ -38,6 +38,7 @@ import (
 	httpserver "github.com/Pashteto/lia/internal/http/server"
 	"github.com/Pashteto/lia/internal/http/server/operations"
 	"github.com/Pashteto/lia/internal/http/uploads"
+	hygienedomain "github.com/Pashteto/lia/internal/hygiene"
 	invitationsdomain "github.com/Pashteto/lia/internal/invitations"
 	"github.com/Pashteto/lia/internal/moderation"
 	organizersdomain "github.com/Pashteto/lia/internal/organizers"
@@ -66,6 +67,7 @@ type Module struct {
 	follows            followsdomain.Service
 	complaints         complaintsdomain.Service
 	adminUsers         adminusersdomain.Service
+	hygiene            hygienedomain.Service
 	feedback           fbdomain.Service
 	settings           settingsdomain.Service
 	invitations        invitationsdomain.Service
@@ -145,6 +147,9 @@ func (m *Module) SetComplaints(svc complaintsdomain.Service) { m.complaints = sv
 
 // SetAdminUsers injects the staff-only user registry service (A4). Call before Init.
 func (m *Module) SetAdminUsers(svc adminusersdomain.Service) { m.adminUsers = svc }
+
+// SetHygiene injects the content-hygiene service (A4 rail). Call before Init.
+func (m *Module) SetHygiene(svc hygienedomain.Service) { m.hygiene = svc }
 
 // SetFeedback injects the post-event feedback domain service. Call before Init.
 func (m *Module) SetFeedback(svc fbdomain.Service) { m.feedback = svc }
@@ -336,6 +341,7 @@ func (m *Module) initAPI() error {
 		Settings:     m.settings,
 		Complaints:   m.complaints,
 		Users:        m.adminUsers,
+		Hygiene:      m.hygiene,
 	})
 
 	// Build the organizers handler (user-facing /me/organizer + public

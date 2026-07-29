@@ -15,6 +15,7 @@ import (
 	adminusers "github.com/Pashteto/lia/internal/adminusers"
 	complaints "github.com/Pashteto/lia/internal/complaints"
 	eventsdomain "github.com/Pashteto/lia/internal/events"
+	hygiene "github.com/Pashteto/lia/internal/hygiene"
 	domain "github.com/Pashteto/lia/internal/models"
 	"github.com/Pashteto/lia/internal/moderation"
 	"github.com/Pashteto/lia/internal/organizers"
@@ -31,6 +32,7 @@ type Deps struct {
 	Settings     settings.Service
 	Complaints   complaints.Service
 	Users        adminusers.Service
+	Hygiene      hygiene.Service
 }
 
 type handler struct {
@@ -50,6 +52,8 @@ func NewHandler(deps Deps) http.Handler {
 	h.mux.HandleFunc("GET /api/v1/admin/organizers", h.staff(h.searchOrganizers))
 	h.mux.HandleFunc("GET /api/v1/admin/organizers/{id}", h.staff(h.organizerDetail))
 	h.mux.HandleFunc("GET /api/v1/admin/users", h.staff(h.listUsers))
+	h.mux.HandleFunc("GET /api/v1/admin/hygiene", h.staff(h.listHygiene))
+	h.mux.HandleFunc("POST /api/v1/admin/hygiene/hide-all", h.staff(h.hideAllHygiene))
 	h.mux.HandleFunc("POST /api/v1/admin/moderation/organizers/{id}/verify", h.staff(h.verifyOrganizer))
 	h.mux.HandleFunc("POST /api/v1/admin/moderation/organizers/{id}/reject", h.staff(h.rejectOrganizer))
 	h.mux.HandleFunc("POST /api/v1/admin/moderation/organizers/{id}/revoke", h.staff(h.revokeOrganizer))
@@ -575,4 +579,38 @@ func (h *handler) listUsers(w http.ResponseWriter, r *http.Request, _ *domain.Us
 		})
 	}
 	writeJSON(w, http.StatusOK, out)
+}
+
+// listHygiene serves the A4 «Гигиена контента» rail: detected test data and
+// nonsense prices currently visible in the public feed.
+func (h *handler) listHygiene(w http.ResponseWriter, r *http.Request, _ *domain.User) {
+	if h.deps.Hygiene == nil {
+		writeErr(w, http.StatusServiceUnavailable, "hygiene service not available")
+		return
+	}
+	issues, err := h.deps.Hygiene.List(r.Context())
+	if err != nil {
+		writeErr(w, http.StatusInternalServerError, "hygiene list failed")
+		return
+	}
+	if issues == nil {
+		issues = []hygiene.Issue{}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"issues": issues, "count": len(issues)})
+}
+
+// hideAllHygiene takes down every currently detected event (published →
+// rejected, audit-logged per event). Events whose status already moved are
+// reported as skipped, not failed.
+func (h *handler) hideAllHygiene(w http.ResponseWriter, r *http.Request, u *domain.User) {
+	if h.deps.Hygiene == nil {
+		writeErr(w, http.StatusServiceUnavailable, "hygiene service not available")
+		return
+	}
+	res, err := h.deps.Hygiene.HideAll(r.Context(), u.UUID)
+	if err != nil {
+		writeErr(w, http.StatusInternalServerError, "hygiene hide-all failed")
+		return
+	}
+	writeJSON(w, http.StatusOK, res)
 }

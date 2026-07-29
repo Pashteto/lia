@@ -13,6 +13,7 @@ import (
 
 	adminusers "github.com/Pashteto/lia/internal/adminusers"
 	complaintsdomain "github.com/Pashteto/lia/internal/complaints"
+	hygiene "github.com/Pashteto/lia/internal/hygiene"
 	domain "github.com/Pashteto/lia/internal/models"
 	"github.com/Pashteto/lia/internal/moderation"
 )
@@ -300,6 +301,98 @@ func TestAdminUsers_200Shape(t *testing.T) {
 
 func TestAdminUsers_503WhenUnwired(t *testing.T) {
 	r := httptest.NewRequest(http.MethodGet, "/api/v1/admin/users", nil)
+	r.Header.Set("Authorization", "Bearer x")
+	w := httptest.NewRecorder()
+	NewHandler(Deps{Authenticate: authFn("admin")}).ServeHTTP(w, r)
+	if w.Code != http.StatusServiceUnavailable {
+		t.Fatalf("status = %d, want 503", w.Code)
+	}
+}
+
+type stubHygiene struct {
+	issues  []hygiene.Issue
+	result  hygiene.Result
+	hideErr error
+	actor   uuid.UUID
+}
+
+func (s *stubHygiene) List(context.Context) ([]hygiene.Issue, error) { return s.issues, nil }
+
+func (s *stubHygiene) HideAll(_ context.Context, actorID uuid.UUID) (hygiene.Result, error) {
+	s.actor = actorID
+	return s.result, s.hideErr
+}
+
+func TestHygiene_403ForCommon(t *testing.T) {
+	r := httptest.NewRequest(http.MethodGet, "/api/v1/admin/hygiene", nil)
+	r.Header.Set("Authorization", "Bearer x")
+	w := httptest.NewRecorder()
+	NewHandler(Deps{Authenticate: authFn("common"), Hygiene: &stubHygiene{}}).ServeHTTP(w, r)
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("status = %d, want 403", w.Code)
+	}
+}
+
+func TestHygiene_200ShapeIncludesCount(t *testing.T) {
+	eid := uuid.Must(uuid.NewV4())
+	stub := &stubHygiene{issues: []hygiene.Issue{{
+		Kind: hygiene.KindTestData, EventID: eid, Title: "QA Тур", OrganizerName: "QA Block8",
+	}}}
+	r := httptest.NewRequest(http.MethodGet, "/api/v1/admin/hygiene", nil)
+	r.Header.Set("Authorization", "Bearer x")
+	w := httptest.NewRecorder()
+	NewHandler(Deps{Authenticate: authFn("admin"), Hygiene: stub}).ServeHTTP(w, r)
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200", w.Code)
+	}
+	var body struct {
+		Issues []map[string]any `json:"issues"`
+		Count  int              `json:"count"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &body); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if body.Count != 1 || len(body.Issues) != 1 || body.Issues[0]["kind"] != "test_data" {
+		t.Fatalf("body = %+v", body)
+	}
+	if body.Issues[0]["event_id"] != eid.String() {
+		t.Fatalf("event_id = %v", body.Issues[0]["event_id"])
+	}
+}
+
+func TestHygieneHideAll_200ReturnsCounts(t *testing.T) {
+	stub := &stubHygiene{result: hygiene.Result{Hidden: 3, Skipped: 1}}
+	r := httptest.NewRequest(http.MethodPost, "/api/v1/admin/hygiene/hide-all", nil)
+	r.Header.Set("Authorization", "Bearer x")
+	w := httptest.NewRecorder()
+	NewHandler(Deps{Authenticate: authFn("admin"), Hygiene: stub}).ServeHTTP(w, r)
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200", w.Code)
+	}
+	var body map[string]int
+	if err := json.Unmarshal(w.Body.Bytes(), &body); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if body["hidden"] != 3 || body["skipped"] != 1 {
+		t.Fatalf("body = %v", body)
+	}
+	if stub.actor == uuid.Nil {
+		t.Fatalf("actor id not passed through")
+	}
+}
+
+func TestHygieneHideAll_403ForCommon(t *testing.T) {
+	r := httptest.NewRequest(http.MethodPost, "/api/v1/admin/hygiene/hide-all", nil)
+	r.Header.Set("Authorization", "Bearer x")
+	w := httptest.NewRecorder()
+	NewHandler(Deps{Authenticate: authFn("common"), Hygiene: &stubHygiene{}}).ServeHTTP(w, r)
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("status = %d, want 403", w.Code)
+	}
+}
+
+func TestHygiene_503WhenUnwired(t *testing.T) {
+	r := httptest.NewRequest(http.MethodGet, "/api/v1/admin/hygiene", nil)
 	r.Header.Set("Authorization", "Bearer x")
 	w := httptest.NewRecorder()
 	NewHandler(Deps{Authenticate: authFn("admin")}).ServeHTTP(w, r)

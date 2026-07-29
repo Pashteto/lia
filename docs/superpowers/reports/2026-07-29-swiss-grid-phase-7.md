@@ -2,9 +2,9 @@
 
 **Branch:** `redesign/swiss-grid-p7`  
 **Base:** `c3195b8` — Phase 6 tip (A2 filters fix)  
-**HEAD:** `fe8c4dd`  
+**HEAD:** `5e09466`  
 **Date:** 2026-07-29  
-**Status:** Ready for merge (deploy **not** run this task — deferred pending human request)
+**Status:** Ready for merge + deploy (images-only; no migration)
 
 ---
 
@@ -16,6 +16,7 @@
 | **Users API** | `GET /api/v1/admin/users` | Aggregate registry over users ⟕ RSVPs ⟕ organizers; `q`/`limit`/`offset` |
 | **Hygiene list** | `GET /api/v1/admin/hygiene` | `{issues,count}` over published events (`test_data` / `suspicious_price`) |
 | **Hygiene hide** | `POST /api/v1/admin/hygiene/hide-all` | Bulk `moderation.Takedown`; `{hidden,skipped}` |
+| **P7.3 sweep** | — | Deleted `GlassNav`, `TabBar`, `CategoryGlyph`, `EventCard`; flattened `EventCover` (no gradients); removed `@utility glass` / `--color-glass` / `--shadow-glass`; README → Swiss Grid |
 
 **Backend packages:** `internal/adminusers`, `internal/hygiene` — wired via `SetAdminUsers` / `SetHygiene`, 503 when unwired.
 
@@ -53,7 +54,9 @@
 | Per-user ban/role/impersonate | Out of scope |
 | Duplicates detector | Mock prose only — not claimed in UI |
 | Live pixel QA / admin session | Code + unit pass; live verify after deploy |
-| Production deploy | Deferred pending human request |
+| Production deploy | In progress / see Deploy section |
+| Full `text-[Npx]` → named utilities | **325** intentional Swiss-scale sizes remain (fidelity contracts + handoff). Not Apple-HIG leftovers. Migrating every hit to `cap`/`lbl`/`kick` is a follow-up, not a P7.3 blocker. |
+| Lighthouse / CLS score | Run against live after deploy; `next/font` already self-hosts Golos 900 + JB Mono 700 |
 
 ---
 
@@ -103,12 +106,14 @@ cd frontend && pnpm build && pnpm test && pnpm lint
 | `b721b8f` | feat(frontend): A4 admin users and hygiene api client and helpers |
 | `8523be7` | feat(frontend): Swiss Grid A4 user registry and hygiene rail |
 | `fe8c4dd` | docs: Phase 7 A4 plan, report, and handoff |
+| `085bbd6` | docs: pin Phase 7 report HEAD to docs commit |
+| `5e09466` | chore(frontend): P7.3 final Swiss Grid sweep — drop Liquid Glass leftovers |
 
 ---
 
 ## Deploy
 
-**Not run.** When requested: images-only (no `migrate up`); rebuild backend + frontend with both `NEXT_PUBLIC_*` build-args; follow `docs/superpowers/runbooks/2026-07-23-qa-20-jul-deploy.md`; prune Docker after.
+Images-only (no `migrate up`). Backend + frontend rebuild for amd64 → `save|ssh|load` → cutover with all 4 compose files. Runbook: `docs/superpowers/runbooks/2026-07-23-qa-20-jul-deploy.md`.
 
 ---
 

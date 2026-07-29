@@ -2,8 +2,8 @@
 
 **Date:** 2026-07-29  
 **Repo:** `Pashteto/lia`  
-**Branch tip:** `redesign/swiss-grid-p7` @ `8523be7` (merge to `main` separately)  
-**Live product:** https://presence.tarski.ru (confirm deploy separately — merge ≠ deploy; **Phase 7 deploy deferred pending human request**)
+**Branch tip:** `redesign/swiss-grid-p7` @ `5e09466`  
+**Live product:** https://presence.tarski.ru (deploy with P7 cutover)
 
 ---
 
@@ -17,17 +17,16 @@
 | **P4** U3 Подбор | `/search` deterministic smart-filter | Merged |
 | **P5** Organizer | O1–O5 Swiss suite | Merged |
 | **P6** Admin ink | A1–A3 + ink secondary | Merged (base of P7) |
-| **P7** Admin A4 | Users registry + content hygiene + 3 admin APIs | Branch ready — merge/deploy pending |
+| **P7** Admin A4 + P7.3 sweep | Users registry + hygiene APIs + Liquid Glass deletion | Branch ready — merge/deploy |
 
-**Not shipped (master-plan 7.3+):**
+**Not shipped (post–Swiss Grid):**
 
 | Item | Notes |
 |---|---|
-| Final sweep | Delete dead Liquid Glass, ThemeSwitch, `lib/covers.ts` gradients, decorative CategoryGlyph |
-| Typography cleanup | Zero remaining ad-hoc `text-[Npx]` where tokens cover; font preload |
-| Perf | Lighthouse / CLS pass |
-| A1 users tile | Still `—` — wire count in a later phase |
+| Named type-utility migration | ~325 intentional `text-[Npx]` remain; optional cleanup |
+| A1 users tile | Still `—` |
 | A4 search UI | API `q` ready; UI deferred |
+| Lighthouse budget enforcement | Smoke after deploy |
 
 ---
 
@@ -87,9 +86,9 @@ cd docs/Redesign/5/design_handoff_presence_swiss_grid && python3 -m http.server 
 
 ## Recommended next work
 
-1. Merge `redesign/swiss-grid-p7` → `main`, then deploy images-only (backend + frontend).
-2. Live-verify `/admin/users` against badge A4; optional real hide-all with operator consent.
-3. Master-plan **7.3** final sweep (dead Liquid Glass / ThemeSwitch / covers / CategoryGlyph / Lighthouse).
+1. Live-verify `/admin/users` against badge A4 after deploy.
+2. Optional: migrate remaining `text-[Npx]` to named utilities; wire A1 users tile; A4 search UI.
+3. Product backlog beyond Swiss Grid roadmap.
 
 ---
 

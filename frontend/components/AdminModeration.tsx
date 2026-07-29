@@ -258,24 +258,6 @@ export function AdminModeration() {
     );
   }
 
-  if (queue.length === 0) {
-    return (
-      <EmptyState
-        numeral="00"
-        title="Очередь пуста"
-        text="Сейчас нет событий на проверку."
-        actions={
-          <Link
-            href="/admin"
-            className="swiss-focus inline-flex min-h-[44px] items-center justify-center bg-paper px-[11px] py-[11px] text-[11px] font-bold uppercase tracking-[0.07em] text-ink"
-          >
-            К обзору
-          </Link>
-        }
-      />
-    );
-  }
-
   const selected = queue.find((e) => e.id === selectedId) ?? null;
   const coverSrc = shownDetail?.coverUrl || selected?.cover_url;
   const ageIso = selected?.starts_at ?? shownDetail?.startsAt;
@@ -287,7 +269,7 @@ export function AdminModeration() {
 
   return (
     <div className="grid min-h-[360px] grid-cols-[250px_1fr]">
-      {/* Queue */}
+      {/* Queue — filter chips stay mounted even when empty so staff can switch to «Все» */}
       <div className="flex flex-col border-r border-paper">
         <div className="flex gap-[5px] border-b border-paper px-[14px] py-[9px]">
           <Chip
@@ -370,9 +352,23 @@ export function AdminModeration() {
         </div>
       </div>
 
-      {/* Record */}
+      {/* Record — EmptyState only replaces this pane when queue is empty */}
       <div className="flex min-w-0 flex-col">
-        {!selected ? (
+        {queue.length === 0 ? (
+          <EmptyState
+            numeral="00"
+            title="Очередь пуста"
+            text="Сейчас нет событий на проверку."
+            actions={
+              <Link
+                href="/admin"
+                className="swiss-focus inline-flex min-h-[44px] items-center justify-center bg-paper px-[11px] py-[11px] text-[11px] font-bold uppercase tracking-[0.07em] text-ink"
+              >
+                К обзору
+              </Link>
+            }
+          />
+        ) : !selected ? (
           <p className="cap px-[16px] py-[14px]">Выберите событие</p>
         ) : (
           <>

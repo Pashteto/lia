@@ -1,15 +1,26 @@
 "use client";
 
 import { useEffect } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
+import { AppHeader, ADMIN_NAV } from "@/components/ui/AppHeader";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { useAuth } from "@/lib/auth-context";
-import { cn } from "@/lib/cn";
+
+function adminMobileCaption(pathname: string): string {
+  if (pathname === "/admin") return "ОБЗОР";
+  if (pathname.startsWith("/admin/moderation")) return "МОДЕРАЦИЯ";
+  if (pathname.startsWith("/admin/organizers")) return "ОРГАНИЗАТОРЫ";
+  if (pathname.startsWith("/admin/users")) return "ПОЛЬЗОВАТЕЛИ";
+  if (pathname.startsWith("/admin/settings")) return "НАСТРОЙКИ";
+  if (pathname.startsWith("/admin/complaints")) return "ЖАЛОБЫ";
+  return "ОБЗОР";
+}
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { ready, isAuthed, role, roleResolved } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     // State 2: no session at all — redirect immediately, no need to wait for role.
@@ -27,65 +38,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!ready) return null;
   // State 2: no session — redirect in effect above; render nothing while it lands.
   if (!isAuthed) return null;
-  // State 3: session exists but role fetch still in flight — show loading indicator.
+  // State 3: session exists but role fetch still in flight — ink Skeleton gate.
   if (!roleResolved)
     return (
-      <div className="flex min-h-screen items-center justify-center bg-bg-grouped">
-        <p className="text-label-secondary">Загрузка…</p>
+      <div data-surface="ink" className="min-h-screen bg-surface text-on-surface">
+        <div className="mx-auto flex max-w-[1360px] flex-col gap-[12px] px-[20px] py-[26px]">
+          <Skeleton className="h-[40px] w-full" />
+          <Skeleton className="h-[120px] w-full" />
+          <Skeleton className="h-[120px] w-full" />
+        </div>
       </div>
     );
   // State 4 (non-admin): redirect in effect above; render nothing while it lands.
   if (role !== "admin") return null;
 
   return (
-    <div className="min-h-screen bg-bg-grouped">
-      {/* Floating glass nav bar */}
-      <header className="sticky top-0 z-10 px-3 pt-3">
-        <nav
-          className={cn(
-            "glass mx-auto flex max-w-5xl items-center gap-6 rounded-card px-5 py-3",
-            "ring-1 ring-inset ring-black/5 dark:ring-white/10",
-          )}
-        >
-          <span className="shrink-0 text-[17px] font-bold tracking-[-0.022em]">
-            Lia Admin
-          </span>
-          <div className="flex items-center gap-4 text-[15px] font-medium">
-            <Link
-              href="/admin"
-              className="text-accent transition-opacity hover:opacity-70"
-            >
-              Обзор
-            </Link>
-            <Link
-              href="/admin/moderation/events"
-              className="text-label-secondary transition-opacity hover:opacity-70"
-            >
-              Модерация событий
-            </Link>
-            <Link
-              href="/admin/moderation/organizers"
-              className="text-label-secondary transition-opacity hover:opacity-70"
-            >
-              Модерация организаторов
-            </Link>
-            <Link
-              href="/admin/organizers"
-              className="text-label-secondary transition-opacity hover:opacity-70"
-            >
-              Организаторы
-            </Link>
-            <Link
-              href="/admin/settings"
-              className="text-label-secondary transition-opacity hover:opacity-70"
-            >
-              Настройки
-            </Link>
-          </div>
-        </nav>
-      </header>
-
-      <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+    <div data-surface="ink" className="min-h-screen bg-surface text-on-surface">
+      <div className="mx-auto max-w-[1360px]">
+        <AppHeader admin nav={ADMIN_NAV} mobileCaption={adminMobileCaption(pathname)} />
+        <main>{children}</main>
+      </div>
     </div>
   );
 }

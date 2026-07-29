@@ -40,8 +40,18 @@ export function AppHeader({ nav = [], admin, mobileCaption, actions }: AppHeader
         admin ? "border-paper" : "border-ink",
       )}
     >
-      <Link href="/" className="swiss-focus text-[13px] font-black tracking-[-0.01em] max-sm:text-[11px]">
-        PRESENCE{admin ? " / ADMIN" : ""}
+      <Link
+        href={admin ? "/admin" : "/"}
+        className="swiss-focus text-[13px] font-black tracking-[-0.01em] max-sm:text-[11px]"
+      >
+        {admin ? (
+          <>
+            <span className="sm:hidden">ADMIN</span>
+            <span className="hidden sm:inline">PRESENCE / ADMIN</span>
+          </>
+        ) : (
+          "PRESENCE"
+        )}
       </Link>
       <nav aria-label="Основная навигация" className="flex items-baseline gap-[14px] max-sm:hidden">
         {nav.map((item) => (

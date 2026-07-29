@@ -2,7 +2,7 @@
 
 **Branch:** `redesign/swiss-grid-p7`  
 **Base:** `c3195b8` — Phase 6 tip (A2 filters fix)  
-**HEAD:** `8523be7`  
+**HEAD:** `fe8c4dd`  
 **Date:** 2026-07-29  
 **Status:** Ready for merge (deploy **not** run this task — deferred pending human request)
 
@@ -102,6 +102,7 @@ cd frontend && pnpm build && pnpm test && pnpm lint
 | `c399614` | feat(backend): content hygiene detection and bulk hide for A4 |
 | `b721b8f` | feat(frontend): A4 admin users and hygiene api client and helpers |
 | `8523be7` | feat(frontend): Swiss Grid A4 user registry and hygiene rail |
+| `fe8c4dd` | docs: Phase 7 A4 plan, report, and handoff |
 
 ---
 

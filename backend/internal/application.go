@@ -12,6 +12,7 @@ import (
 	"github.com/gofrs/uuid"
 
 	"github.com/Pashteto/lia/config"
+	"github.com/Pashteto/lia/internal/adminusers"
 	categoriesdomain "github.com/Pashteto/lia/internal/categories"
 	cleanupmod "github.com/Pashteto/lia/internal/cleanup"
 	"github.com/Pashteto/lia/internal/complaints"
@@ -270,6 +271,9 @@ func (app *App) registerModules() error {
 			)
 			httpModule.SetComplaints(
 				complaints.NewService(complaints.NewRepository(repoModule.DB()), modSvc),
+			)
+			httpModule.SetAdminUsers(
+				adminusers.NewService(adminusers.NewRepository(repoModule.DB())),
 			)
 			httpModule.SetFeedback(
 				feedback.NewService(feedback.NewRepository(repoModule.DB())),

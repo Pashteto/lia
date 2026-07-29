@@ -7,10 +7,12 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gofrs/uuid"
 
+	adminusers "github.com/Pashteto/lia/internal/adminusers"
 	complaints "github.com/Pashteto/lia/internal/complaints"
 	eventsdomain "github.com/Pashteto/lia/internal/events"
 	domain "github.com/Pashteto/lia/internal/models"
@@ -28,6 +30,7 @@ type Deps struct {
 	Organizers   organizers.Service
 	Settings     settings.Service
 	Complaints   complaints.Service
+	Users        adminusers.Service
 }
 
 type handler struct {
@@ -46,6 +49,7 @@ func NewHandler(deps Deps) http.Handler {
 	h.mux.HandleFunc("GET /api/v1/admin/moderation/organizers", h.staff(h.listOrganizers))
 	h.mux.HandleFunc("GET /api/v1/admin/organizers", h.staff(h.searchOrganizers))
 	h.mux.HandleFunc("GET /api/v1/admin/organizers/{id}", h.staff(h.organizerDetail))
+	h.mux.HandleFunc("GET /api/v1/admin/users", h.staff(h.listUsers))
 	h.mux.HandleFunc("POST /api/v1/admin/moderation/organizers/{id}/verify", h.staff(h.verifyOrganizer))
 	h.mux.HandleFunc("POST /api/v1/admin/moderation/organizers/{id}/reject", h.staff(h.rejectOrganizer))
 	h.mux.HandleFunc("POST /api/v1/admin/moderation/organizers/{id}/revoke", h.staff(h.revokeOrganizer))
@@ -533,4 +537,42 @@ func (h *handler) putSettings(w http.ResponseWriter, r *http.Request, u *domain.
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]bool{body.Key: body.Enabled})
+}
+
+type adminUserJSON struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Email       string `json:"email"`
+	Role        string `json:"role"`
+	CreatedAt   string `json:"created_at"`
+	Bookings    int    `json:"bookings"`
+	IsOrganizer bool   `json:"is_organizer"`
+}
+
+// listUsers serves the A4 registry. Pagination is bounded by the service
+// (DefaultLimit / MaxLimit); q matches name or email.
+func (h *handler) listUsers(w http.ResponseWriter, r *http.Request, _ *domain.User) {
+	if h.deps.Users == nil {
+		writeErr(w, http.StatusServiceUnavailable, "users service not available")
+		return
+	}
+	q := r.URL.Query()
+	limit, _ := strconv.Atoi(q.Get("limit"))
+	offset, _ := strconv.Atoi(q.Get("offset"))
+	rows, err := h.deps.Users.List(r.Context(), adminusers.Filter{
+		Query: q.Get("q"), Limit: limit, Offset: offset,
+	})
+	if err != nil {
+		writeErr(w, http.StatusInternalServerError, "users list failed")
+		return
+	}
+	out := make([]adminUserJSON, 0, len(rows))
+	for _, u := range rows {
+		out = append(out, adminUserJSON{
+			ID: u.ID.String(), Name: u.Name, Email: u.Email, Role: u.Role,
+			CreatedAt: u.CreatedAt.UTC().Format("2006-01-02T15:04:05Z07:00"),
+			Bookings:  u.Bookings, IsOrganizer: u.IsOrganizer,
+		})
+	}
+	writeJSON(w, http.StatusOK, out)
 }

@@ -15,6 +15,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/Pashteto/lia/config"
+	adminusersdomain "github.com/Pashteto/lia/internal/adminusers"
 	categoriesdomain "github.com/Pashteto/lia/internal/categories"
 	complaintsdomain "github.com/Pashteto/lia/internal/complaints"
 	eventsdomain "github.com/Pashteto/lia/internal/events"
@@ -64,6 +65,7 @@ type Module struct {
 	organizers         organizersdomain.Service
 	follows            followsdomain.Service
 	complaints         complaintsdomain.Service
+	adminUsers         adminusersdomain.Service
 	feedback           fbdomain.Service
 	settings           settingsdomain.Service
 	invitations        invitationsdomain.Service
@@ -140,6 +142,9 @@ func (m *Module) SetSettings(svc settingsdomain.Service) { m.settings = svc }
 
 // SetComplaints injects the complaints domain service. Call before Init.
 func (m *Module) SetComplaints(svc complaintsdomain.Service) { m.complaints = svc }
+
+// SetAdminUsers injects the staff-only user registry service (A4). Call before Init.
+func (m *Module) SetAdminUsers(svc adminusersdomain.Service) { m.adminUsers = svc }
 
 // SetFeedback injects the post-event feedback domain service. Call before Init.
 func (m *Module) SetFeedback(svc fbdomain.Service) { m.feedback = svc }
@@ -330,6 +335,7 @@ func (m *Module) initAPI() error {
 		Organizers:   m.organizers,
 		Settings:     m.settings,
 		Complaints:   m.complaints,
+		Users:        m.adminUsers,
 	})
 
 	// Build the organizers handler (user-facing /me/organizer + public

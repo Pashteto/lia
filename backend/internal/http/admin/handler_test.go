@@ -7,9 +7,11 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gofrs/uuid"
 
+	adminusers "github.com/Pashteto/lia/internal/adminusers"
 	complaintsdomain "github.com/Pashteto/lia/internal/complaints"
 	domain "github.com/Pashteto/lia/internal/models"
 	"github.com/Pashteto/lia/internal/moderation"
@@ -245,5 +247,63 @@ func TestOverview_IncludesComplaintsOpen(t *testing.T) {
 	newHandlerWithComplaints("admin", stubComplaints{openCount: 4}).ServeHTTP(w, r)
 	if w.Code != http.StatusOK || !strings.Contains(w.Body.String(), `"complaints_open":4`) {
 		t.Fatalf("status=%d body=%s", w.Code, w.Body.String())
+	}
+}
+
+type stubUsers struct {
+	got  adminusers.Filter
+	rows []adminusers.Row
+}
+
+func (s *stubUsers) List(_ context.Context, f adminusers.Filter) ([]adminusers.Row, error) {
+	s.got = f
+	return s.rows, nil
+}
+
+func TestAdminUsers_403ForCommon(t *testing.T) {
+	r := httptest.NewRequest(http.MethodGet, "/api/v1/admin/users", nil)
+	r.Header.Set("Authorization", "Bearer x")
+	w := httptest.NewRecorder()
+	NewHandler(Deps{Authenticate: authFn("common"), Users: &stubUsers{}}).ServeHTTP(w, r)
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("status = %d, want 403", w.Code)
+	}
+}
+
+func TestAdminUsers_200Shape(t *testing.T) {
+	id := uuid.Must(uuid.NewV4())
+	users := &stubUsers{rows: []adminusers.Row{{
+		ID: id, Name: "Анна", Email: "anna@example.com", Role: "common",
+		CreatedAt: time.Date(2026, 3, 4, 10, 0, 0, 0, time.UTC), Bookings: 14, IsOrganizer: false,
+	}}}
+	r := httptest.NewRequest(http.MethodGet, "/api/v1/admin/users?q=%20анна%20&limit=7&offset=3", nil)
+	r.Header.Set("Authorization", "Bearer x")
+	w := httptest.NewRecorder()
+	NewHandler(Deps{Authenticate: authFn("admin"), Users: users}).ServeHTTP(w, r)
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200", w.Code)
+	}
+	var got []map[string]any
+	if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if len(got) != 1 || got[0]["id"] != id.String() || got[0]["bookings"].(float64) != 14 {
+		t.Fatalf("body = %v", got)
+	}
+	if got[0]["created_at"] != "2026-03-04T10:00:00Z" {
+		t.Fatalf("created_at = %v, want RFC3339 UTC", got[0]["created_at"])
+	}
+	if users.got.Limit != 7 || users.got.Offset != 3 || users.got.Query != " анна " {
+		t.Fatalf("filter = %+v (query is trimmed by the service, not the handler)", users.got)
+	}
+}
+
+func TestAdminUsers_503WhenUnwired(t *testing.T) {
+	r := httptest.NewRequest(http.MethodGet, "/api/v1/admin/users", nil)
+	r.Header.Set("Authorization", "Bearer x")
+	w := httptest.NewRecorder()
+	NewHandler(Deps{Authenticate: authFn("admin")}).ServeHTTP(w, r)
+	if w.Code != http.StatusServiceUnavailable {
+		t.Fatalf("status = %d, want 503", w.Code)
 	}
 }

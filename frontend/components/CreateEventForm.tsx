@@ -557,7 +557,6 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
               />
               <div className="flex flex-col gap-[5px]">
                 <span className="cap">Обложка</span>
-                {/* ImageUpload still liquid-glass internally — Swiss outer frame */}
                 <div className="min-h-[62px] border border-ink [&_.rounded-card]:rounded-none [&_.rounded-card]:bg-transparent [&_.rounded-card]:p-2 [&_.rounded-card]:shadow-none [&_button]:rounded-none">
                   <ImageUpload
                     label="обложку"
@@ -599,7 +598,6 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
               </div>
               <div className="flex flex-col gap-[5px]">
                 <span className="cap">Место</span>
-                {/* VenuePicker still liquid-glass — Swiss outer frame + input restyle */}
                 <div className="border border-ink p-[1px] [&_input]:rounded-none [&_input]:border-0 [&_input]:bg-transparent [&_input]:px-[11px] [&_input]:py-[9px] [&_input]:text-[12.5px] [&_input]:shadow-none [&_input]:ring-0 [&_input]:outline-none [&_input]:swiss-focus">
                   <Controller
                     control={control}

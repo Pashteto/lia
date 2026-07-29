@@ -7,9 +7,8 @@
  * all numerals in mono. Red = needs attention, never decorative.
  */
 
-/* TEMP Phase-1 compat: dark mode is retired; keep `dark:` utilities inert
- * (without this, Tailwind's default prefers-color-scheme dark variant fires).
- * remove in Phase 7 (final sweep). */
+/* Dark mode is retired; keep `dark:` utilities inert (without this, Tailwind's
+ * default prefers-color-scheme dark variant fires). */
 @custom-variant dark (&:where([data-theme="__retired__"], [data-theme="__retired__"] *));
 
 :root {
@@ -89,7 +88,9 @@
   --radius-*: initial;
   --shadow-*: initial;
 
-  /* TEMP Phase-1 compat: legacy radii/shadows resolve to nothing (flat). remove in Phase 7 (final sweep). */
+  /* Flat aliases for leftover classnames still used by a few unconverted
+   * surfaces (invites, feedback, image upload). Values are zero — Swiss Grid
+   * has no radius/shadow; these only prevent unknown-utility warnings. */
   --radius-control: 0px;
   --radius-card-sm: 0px;
   --radius-card: 0px;
@@ -100,10 +101,8 @@
   --shadow-card: 0 0 #0000;
   --shadow-card-subtle: 0 0 #0000;
   --shadow-phone: 0 0 #0000;
-  --shadow-glass: 0 0 #0000;
 
-  /* TEMP Phase-1 compat — old Apple-HIG color tokens still referenced by ~40
-   * unconverted consumer files. remove in Phase 7 (final sweep). */
+  /* Semantic aliases for leftover Apple-HIG classnames → Swiss palette. */
   --color-bg: var(--paper);
   --color-bg-grouped: var(--paper);
   --color-bg-secondary: var(--white);
@@ -115,7 +114,6 @@
   --color-fill: var(--cell-blank);
   --color-accent: var(--ink);
   --color-success: var(--ink);
-  --color-glass: var(--paper);
 }
 
 html {
@@ -124,13 +122,6 @@ html {
   font-family: var(--font-ui);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-}
-
-/* TEMP Phase-1 compat: `glass` is referenced as a plain class name by GlassNav,
- * TabBar, AuthButton, ConfirmModal, admin/layout.tsx. remove in Phase 7 (final sweep). */
-@utility glass {
-  background: var(--paper);
-  border-bottom: 1px solid var(--ink);
 }
 
 /* ——— Swiss type utilities ——— */

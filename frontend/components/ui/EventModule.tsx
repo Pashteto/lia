@@ -50,7 +50,7 @@ export function EventModule({
           className="flex-none border-b border-rule-inner"
           fallback={
             <div className="flex h-full items-center justify-between px-[14px]">
-              <span className="font-mono text-[26px] font-bold tracking-[-0.02em]">
+              <span className="font-mono text-[26px] font-bold tracking-[-0.02em] text-ink">
                 {numeral}
               </span>
               <span className="cap">{category}</span>
@@ -87,7 +87,7 @@ export function EventModule({
           className="row-span-2 self-start border border-ink"
           fallback={
             <div className="flex h-full items-center justify-center">
-              <span className="font-mono text-[10px] font-bold">{numeral}</span>
+              <span className="font-mono text-[10px] font-bold text-ink">{numeral}</span>
             </div>
           }
         />

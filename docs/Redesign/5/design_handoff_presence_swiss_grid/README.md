@@ -207,7 +207,15 @@ Six modules shown; real feed paginates or infinite-scrolls in the same grid.
 **Mobile:** header (wordmark + `МСК · 42`) → title 22px → one horizontal filter row
 (3 chips, overflow hidden — make it a scrollable row) → stacked `EventModule` mobile rows →
 `BottomTabBar` with Лента active.
-**Data:** `{ i, cat, t, v, d, p }` — index numeral, category, title, venue, date, price string.
+**Data:** `{ i, cat, t, v, d, p, img }` — index numeral, category, title, venue, date, price
+string, cover URL.
+**Covers:** desktop cells open on a full-bleed cover band, `aspect-ratio 5/2`, hairline
+`border-bottom`, content padding `11px 14px` below it. Mobile rows carry a `44×44` cover in a
+`1px` ink box as grid column one (`44px 1fr auto`, `row-span 2`), and the numeral moves into the
+caption (`NN · площадка · дата`). No photo → a blank-cell (`#eceae4`) plate: the category
+numeral in mono `26px/700` with the category name in caption caps on the desktop band, and the
+numeral alone in the mobile box. The mock's fixed `88px` band and its `«Обложка»` text
+placeholder are superseded — see `docs/superpowers/specs/2026-07-30-u1-feed-covers-design.md`.
 **Copy:** titles as in `feed` array of the prototype (real data replaces them).
 
 #### U2 · Страница события (event detail) — `/events/:id`
@@ -476,8 +484,9 @@ system. See `map-embed.html` for the exact treatment. Reimplement natively:
 
 ## Assets
 - **Event covers** — real photographs from `https://presence.tarski.ru/covers/*.jpg`
-  (`festival.jpg`, `mediation.jpg` used in the mocks). Production must serve properly sized,
-  cropped 3:2 images; covers are always `object-fit: cover`, never letterboxed.
+  (`festival.jpg`, `mediation.jpg` used in the mocks). Sources are 3:2. Crops per surface:
+  U1 feed `5:2`, U2 detail hero `3:1` (`3:2` below `md`), moderation record `120px` thumb.
+  Covers are always `object-fit: cover`, never letterboxed.
 - **Fonts** — Archivo, Space Grotesk, JetBrains Mono (Google Fonts, SIL Open Font License).
   Self-host in production; preload the Archivo 900 and JetBrains Mono 700 subsets.
 - **Icons** — the system deliberately has almost none. The tab bar uses plain squares; `✓`,

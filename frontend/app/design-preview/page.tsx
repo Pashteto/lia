@@ -62,12 +62,14 @@ function Gallery() {
             numeral={categoryNumeral("festival", CATS)}
             category="Фестивали" title="Летний фестиваль медиаискусства"
             venue="Музей «Гараж»" date="12.07 · 16:00" price={priceLabel(0)} href="/"
+            cover="/covers/festival.jpg"
           />
           <EventModule
             numeral={categoryNumeral("lecture", CATS)}
             category="Лекции" title="Разговор о новой вещественности"
             venue="ГМИИ им. Пушкина" date="15.07 · 19:00" price={priceLabel(800)} href="/"
             matchReason="тихое, вечером, вдвоём"
+            cover="/covers/lecture.jpg"
           />
           <EventModule
             numeral={categoryNumeral("mediation", CATS)}

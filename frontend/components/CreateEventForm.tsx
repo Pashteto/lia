@@ -867,6 +867,7 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
                 venue={previewVenue}
                 date={previewDate}
                 price={previewPrice}
+                cover={coverPreviewUrl}
                 href={mode === "edit" && eventId ? `/events/${eventId}` : "#"}
               />
             </div>

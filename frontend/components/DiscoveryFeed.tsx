@@ -228,7 +228,7 @@ export function DiscoveryFeed({
       {isPending && allEvents.length === 0 ? (
         <div className="grid grid-cols-3 border-b border-ink max-sm:grid-cols-1">
           {Array.from({ length: 6 }, (_, index) => (
-            <Skeleton key={index} className="h-[140px]" />
+            <Skeleton key={index} className="h-[290px] max-sm:h-[66px]" />
           ))}
         </div>
       ) : isError && allEvents.length === 0 ? (
@@ -238,7 +238,7 @@ export function DiscoveryFeed({
           text="Проверьте соединение и попробуйте обновить страницу."
         />
       ) : count > 0 ? (
-        <div className="grid grid-cols-3 border-b border-ink max-sm:grid-cols-1 [&>a]:border-b [&>a]:border-r [&>a]:border-rule-inner max-sm:[&>a]:border-r-0">
+        <div className="grid auto-rows-fr grid-cols-3 border-b border-ink max-sm:grid-cols-1 [&>a]:border-b [&>a]:border-r [&>a]:border-rule-inner max-sm:[&>a]:border-r-0">
           {displayEvents.map((e) => {
             const m = eventToModuleProps(e, categories);
             return (

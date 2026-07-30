@@ -168,13 +168,13 @@ export function DiscoverBrowse({
       {phase === "loading" ? (
         <div className="grid grid-cols-3 border-b border-ink max-sm:grid-cols-1">
           {Array.from({ length: 3 }, (_, i) => (
-            <Skeleton key={i} className="h-[140px]" />
+            <Skeleton key={i} className="h-[290px] max-sm:h-[66px]" />
           ))}
         </div>
       ) : null}
 
       {phase === "results" ? (
-        <div className="grid grid-cols-3 border-b border-ink max-sm:grid-cols-1 [&>a]:border-b [&>a]:border-r [&>a]:border-rule-inner max-sm:[&>a]:border-r-0">
+        <div className="grid auto-rows-fr grid-cols-3 border-b border-ink max-sm:grid-cols-1 [&>a]:border-b [&>a]:border-r [&>a]:border-rule-inner max-sm:[&>a]:border-r-0">
           {hits.map((h) => (
             <EventModule
               key={h.event.id}

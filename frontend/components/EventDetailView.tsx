@@ -10,6 +10,7 @@ import {
   formatEventRange,
   formatStartTime,
 } from "@/lib/format";
+import { coverPhoto } from "@/lib/covers";
 import { priceLabel } from "@/lib/price-label";
 import type { LiaEvent } from "@/lib/types";
 import Link from "next/link";
@@ -41,7 +42,7 @@ export function EventDetailView({ event }: { event: LiaEvent }) {
       {/* Cover strip (single cover — we have one image per event) */}
       <div className="border-b border-ink">
         <EventCover
-          event={event}
+          src={coverPhoto(event)}
           aspect="aspect-[3/1] max-md:aspect-[3/2]"
           sizes="(max-width: 768px) 100vw, 1360px"
           priority

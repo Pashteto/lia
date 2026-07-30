@@ -1,4 +1,5 @@
 import { categoryNumeral } from "./category-numerals";
+import { coverPhoto } from "./covers";
 import { formatModuleDate } from "./format";
 import { priceLabel } from "./price-label";
 import type { LiaEvent } from "./types";
@@ -11,6 +12,8 @@ export interface EventModuleData {
   date: string;
   price: string;
   href: string;
+  /** Resolved cover URL, or undefined → the module renders its numeral plate. */
+  cover?: string;
 }
 
 /** Adapts a backend event to the EventModule props. Numerals are positional
@@ -28,5 +31,6 @@ export function eventToModuleProps(
     date: formatModuleDate(event.startsAt, event.endsAt),
     price: priceLabel(event.priceMin, event.priceType),
     href: `/events/${event.id}`,
+    cover: coverPhoto(event),
   };
 }

@@ -24,7 +24,25 @@ describe("eventToModuleProps", () => {
       date: "12.07 · 16:00",
       price: "FREE",
       href: "/events/evt-1",
+      cover: undefined,
     });
+  });
+
+  it("a seeded event carries its curated category photo", () => {
+    const seeded = {
+      ...EVENT,
+      id: "b0000000-0000-0000-0000-000000000002",
+    } as LiaEvent;
+    expect(eventToModuleProps(seeded, CATS).cover).toBe("/covers/mediation.jpg");
+  });
+
+  it("an uploaded cover wins over the curated photo", () => {
+    const uploaded = {
+      ...EVENT,
+      id: "b0000000-0000-0000-0000-000000000002",
+      coverUrl: "https://api.example/f/abc",
+    } as LiaEvent;
+    expect(eventToModuleProps(uploaded, CATS).cover).toBe("https://api.example/f/abc");
   });
   it("venue name wins; online without venue → Онлайн; offline without venue → —", () => {
     expect(

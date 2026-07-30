@@ -46,7 +46,7 @@ design concern rather than an edge case.
 | D2 | Cover band is **`aspect-[5/2]`**, not the mock's fixed `88px` and not the README's `3:2` | At `max-w-[1360px]` a feed column is ~453px. Fixed 88px there is 5.1:1 and keeps only ~26% of a 3:2 source's height — photos of people get cut through the heads. `3:2` (302px) turns the catalogue into an image grid where text is under a third of the module. `5:2` (181px) keeps ~65% of the source frame and leaves the module text-led. |
 | D3 | Covers appear in **all three `EventModule` call sites** — feed, `/search`, and the create-event preview | One object, one card. `DiscoverBrowse` uses an identical `grid-cols-3`, so divergence would be arbitrary. The create-event rail is literally labelled «Превью в ленте»; omitting the cover there would make it lie to the organizer who just uploaded one. |
 | D4 | `EventCover` stops taking `event: LiaEvent` and takes `src?: string` + `fallback?: ReactNode` | The component needs a URL, not a domain model. Cover-resolution policy stays in `lib/covers.ts`, called from the adapters. Makes the component reusable across module / detail / preview. |
-| D5 | Double-download of the hidden layout is suppressed via media-conditioned `sizes`, not a layout rewrite | See §6. |
+| D5 | Double-download of the hidden layout is suppressed via media-conditioned, **px-only** `sizes`, not a layout rewrite | See §6 — measured against the real component; a `vw` unit anywhere in `sizes` makes the guard inert. |
 
 ---
 
@@ -178,8 +178,25 @@ it is the hidden one:
 
 | Instance | `sizes` |
 |---|---|
-| Desktop band | `(max-width: 639px) 1px, 33vw` |
+| Desktop band | `(max-width: 639px) 1px, (max-width: 1023px) 340px, 460px` |
 | Mobile thumbnail | `(min-width: 640px) 1px, 44px` |
+
+**Both strings must be entirely in `px`.** Measured on the real component with
+`renderToStaticMarkup` (Next 16.2.9): Next builds the srcset ladder from whether
+`sizes` contains a viewport unit. With any `vw` in the string the smallest
+candidate is `256w`; with px-only values the ladder starts at `32w`.
+
+| `sizes` | srcset widths |
+|---|---|
+| `33vw` | 256, 384, 640, … 3840 |
+| `(max-width: 639px) 1px, 33vw` | 256, 384, 640, … 3840 |
+| `44px` or `1px` | **32**, 48, 64, 96, 128, 256, … |
+
+So the `1px` guard is inert next to `33vw` — the phone picks `256w` either way.
+Expressed in px it is real: the hidden band resolves to `1px` and the browser
+takes `32w` (~1–2 KB) instead of `256w` (~20 KB). The desktop hints are px
+approximations of the same column — 460px at the `1360px` container, 340px below
+`1024px` — which land on the same ladder rung `33vw` would have chosen.
 
 `priority` is set on **no** module cover — the feed's LCP element is the H1, and
 covers load lazily by default. (The detail-page hero keeps its `priority`.)
@@ -190,6 +207,13 @@ new cell height so the loading → results transition doesn't shift layout.
 ---
 
 ## 7. Tests
+
+The repo has no jsdom and no Testing Library. Component tests follow the existing
+pattern in `components/__tests__/map-browse-control.test.tsx`: `renderToStaticMarkup`
+from `react-dom/server` plus string assertions on the markup. Verified by spike that
+both `next/link` and `next/image` render under it with no mocking — a cover with a
+photo emits `data-nimg="fill"`, `loading="lazy"`, the `sizes` string verbatim, and a
+`/_next/image?url=…` srcset.
 
 | File | Coverage |
 |---|---|

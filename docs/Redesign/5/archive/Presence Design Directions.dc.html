@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/organic-2f2fb316-4c7c-4c21-a749-77f6c48c9382/styles.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script src="./image-slot.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;600;800;900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Space+Grotesk:wght@400;500;700&family=Caprasimo&family=Figtree:wght@400;500;600;700&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  .opt-wrap{display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start}
+  .opt{width:400px;flex:none}
+  .opt-badge{display:inline-flex;align-items:center;gap:8px;font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#201e1d;background:#f5ead8;border:2px solid #201e1d;border-radius:999px;padding:5px 14px;margin-bottom:14px}
+  .opt-name{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;margin:0 0 4px;color:#201e1d}
+  .opt-desc{font-family:'Figtree',sans-serif;font-size:13px;line-height:1.5;color:#5a5550;margin:0 0 18px;max-width:44ch}
+  .frame{border-radius:14px;overflow:hidden;height:680px}
+  .screens{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start;margin-bottom:44px}
+  .fr-desk{width:600px;height:412px;border-radius:14px;overflow:hidden;flex:none}
+  .fr-mob{width:250px;height:500px;border-radius:26px;overflow:hidden;flex:none;border:8px solid #201e1d;box-shadow:0 10px 30px rgba(60,40,15,.22);display:flex;flex-direction:column}
+  .lbl{font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8a7d68;margin-bottom:8px}
+  .fr-desk-t{width:600px;height:660px;border-radius:14px;overflow:hidden;flex:none}
+  .fr-mob-t{width:250px;height:660px;border-radius:26px;overflow:hidden;flex:none;border:8px solid #201e1d;box-shadow:0 10px 30px rgba(60,40,15,.22);display:flex;flex-direction:column}
+  .ymap{position:relative;width:100%;height:100%;background:#eae7e0;overflow:hidden}
+  .ymap-road{position:absolute;background:#fff}
+  .ymap-park{position:absolute;background:#dbe6cf}
+  .ymap-water{position:absolute;background:#cfdfe8}
+</style>
+</helmet>
+<div style="background:#e9ddc8;min-height:100vh;padding:56px 48px 120px;font-family:'Figtree',sans-serif">
+
+  <div style="max-width:1280px;margin:0 auto 40px">
+    <div style="font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#8a7d68;margin-bottom:14px">Turn 4 · Изображения + карта</div>
+    <h1 style="font-family:'Space Grotesk',sans-serif;font-size:46px;font-weight:800;letter-spacing:-.02em;margin:0 0 14px;color:#201e1d;max-width:24ch">1a и 2b с фото событий и картой</h1>
+    <p style="font-size:16px;line-height:1.55;color:#5a5550;max-width:66ch;margin:0">Страница события в двух швейцарских вариантах — теперь с фотографией события и блоком карты проезда. Фото — настоящие обложки с сайта (<code>/covers/festival.jpg</code>, <code>/covers/mediation.jpg</code>); можно перетащить свои поверх. Карта настоящая и интерактивная (OpenStreetMap) по координатам площадки — в проде на этом месте iframe Яндекс.Карт.</p>
+  </div>
+
+  <div style="max-width:1280px;margin:0 auto 64px">
+
+    <!-- 4a — 1a WITH IMAGES + MAP -->
+    <div style="margin-bottom:8px"><span class="opt-badge">4a · 1a Swiss + фото + карта</span></div>
+    <div class="screens">
+      <div>
+        <div class="lbl">Desktop</div>
+        <div class="fr-desk-t" style="background:#fff;font-family:'Archivo',sans-serif;color:#111;display:flex;flex-direction:column">
+          <div style="padding:16px 24px;border-bottom:1px solid #111;display:flex;justify-content:space-between;align-items:baseline;flex:none"><span style="font-weight:900;font-size:13px">PRESENCE</span><span style="font-size:9px;letter-spacing:.14em">← НАЗАД К СОБЫТИЯМ</span></div>
+          <div style="height:200px;flex:none;border-bottom:1px solid #111;position:relative">
+            <image-slot id="sw-hero-desk" shape="rect" fit="cover" src="https://presence.tarski.ru/covers/festival.jpg" placeholder="Фото события · 3:2"></image-slot>
+          </div>
+          <div style="padding:20px 24px;flex:none;border-bottom:1px solid #111">
+            <div style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;margin-bottom:8px">Фестиваль · Очно</div>
+            <h3 style="font-weight:900;font-size:30px;line-height:.95;letter-spacing:-.03em;margin:0 0 14px">Летний фестиваль медиаискусства</h3>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+              <div><div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#888">Когда</div><div style="font-weight:700;font-size:12px">25–26 июля</div></div>
+              <div><div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#888">Где</div><div style="font-weight:700;font-size:12px">Гараж</div></div>
+              <div><div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#888">Места</div><div style="font-weight:700;font-size:12px">12 / 40</div></div>
+              <div><div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#888">Цена</div><div style="font-weight:900;font-size:12px">FREE</div></div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 240px;flex:1;min-height:0">
+            <div style="border-right:1px solid #111;position:relative">
+              <iframe src="./map-embed.html?lat=55.7351&lng=37.6053&z=15&label=ГАРАЖ&bg=%23ffffff" style="display:block;width:100%;height:100%;border:0" loading="lazy" title="Карта площадки"></iframe>
+            </div>
+            <div style="padding:18px 20px;display:flex;flex-direction:column">
+              <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#888;margin-bottom:6px">Адрес</div>
+              <div style="font-weight:700;font-size:12px;line-height:1.3;margin-bottom:4px">Крымский Вал, 9, стр. 32</div>
+              <div style="font-size:11px;color:#666;margin-bottom:14px">м. Парк культуры · 8 мин</div>
+              <div style="border:1px solid #111;padding:8px;font-size:10px;font-weight:700;text-align:center;letter-spacing:.05em;margin-bottom:8px">ПОСТРОИТЬ МАРШРУТ</div>
+              <div style="background:#111;color:#fff;padding:12px;font-size:12px;font-weight:700;text-align:center;letter-spacing:.06em;margin-top:auto">ЗАПИСАТЬСЯ</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="lbl">Mobile</div>
+        <div class="fr-mob-t" style="background:#fff;font-family:'Archivo',sans-serif;color:#111">
+          <div style="padding:12px 14px;border-bottom:1px solid #111;display:flex;justify-content:space-between;align-items:baseline;flex:none"><span style="font-size:9px">←</span><span style="font-weight:900;font-size:11px">PRESENCE</span><span style="width:9px"></span></div>
+          <div style="height:150px;flex:none;border-bottom:1px solid #111"><image-slot id="sw-hero-mob" shape="rect" fit="cover" src="https://presence.tarski.ru/covers/festival.jpg" placeholder="Фото"></image-slot></div>
+          <div style="padding:14px;flex:none;border-bottom:1px solid #111">
+            <div style="font-size:8px;letter-spacing:.18em;text-transform:uppercase;margin-bottom:6px">Фестиваль</div>
+            <h3 style="font-weight:900;font-size:21px;line-height:.95;letter-spacing:-.03em;margin:0 0 12px">Летний фестиваль медиаискусства</h3>
+            <div style="display:flex;flex-direction:column;gap:7px">
+              <div style="display:flex;justify-content:space-between"><span style="color:#888;letter-spacing:.1em;text-transform:uppercase;font-size:8px">Когда</span><span style="font-weight:700;font-size:11px">25–26 июля</span></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:#888;letter-spacing:.1em;text-transform:uppercase;font-size:8px">Места</span><span style="font-weight:700;font-size:11px">12 / 40</span></div>
+            </div>
+          </div>
+          <div style="flex:1;min-height:0;position:relative;border-bottom:1px solid #111">
+            <iframe src="./map-embed.html?lat=55.7351&lng=37.6053&z=15&label=ГАРАЖ&bg=%23ffffff&sm=1" style="display:block;width:100%;height:100%;border:0" loading="lazy" title="Карта площадки"></iframe>
+          </div>
+          <div style="padding:12px 14px 16px;flex:none;display:flex;justify-content:space-between;align-items:center"><span style="font-weight:900;font-size:18px">FREE</span><span style="background:#111;color:#fff;padding:10px 16px;font-size:11px;font-weight:700;letter-spacing:.06em">ЗАПИСАТЬСЯ</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4b — 2b WITH IMAGES + MAP -->
+    <div style="margin:36px 0 8px"><span class="opt-badge">4b · 2b Swiss grid + фото + карта</span></div>
+    <div class="screens">
+      <div>
+        <div class="lbl">Desktop</div>
+        <div class="fr-desk-t" style="background:#f2f0ec;font-family:'Archivo',sans-serif;color:#111;display:flex;flex-direction:column">
+          <div style="padding:14px 22px;display:flex;justify-content:space-between;align-items:baseline;flex:none"><span style="font-weight:900;font-size:13px">PRESENCE</span><span style="font-size:9px;letter-spacing:.14em">← СОБЫТИЯ</span></div>
+          <div style="border-top:1px solid #111;display:grid;grid-template-columns:1fr 1fr;flex:none">
+            <div style="border-right:1px solid #111;border-bottom:1px solid #111;height:210px"><image-slot id="grid-hero-a" shape="rect" fit="cover" src="https://presence.tarski.ru/covers/festival.jpg" placeholder="Фото 01"></image-slot></div>
+            <div style="border-bottom:1px solid #111;height:210px"><image-slot id="grid-hero-b" shape="rect" fit="cover" src="https://presence.tarski.ru/covers/mediation.jpg" placeholder="Фото 02"></image-slot></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 200px;border-bottom:1px solid #111;flex:none">
+            <div style="grid-column:1 / 3;border-right:1px solid #111;padding:16px 22px">
+              <div style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#888;margin-bottom:8px">01 · Фестиваль</div>
+              <h3 style="font-weight:900;font-size:26px;line-height:.92;letter-spacing:-.03em;margin:0">Летний фестиваль медиаискусства</h3>
+            </div>
+            <div style="padding:16px 18px;display:flex;flex-direction:column;justify-content:center">
+              <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#888">Цена</div>
+              <div style="font-weight:900;font-size:24px">FREE</div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 200px;border-bottom:1px solid #111;flex:none">
+            <div style="border-right:1px solid #111;padding:11px 22px"><div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#888">Когда</div><div style="font-weight:700;font-size:12px">25–26 июля</div></div>
+            <div style="border-right:1px solid #111;padding:11px 22px"><div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#888">Места</div><div style="font-weight:700;font-size:12px">12 / 40</div></div>
+            <div style="padding:11px 18px"><div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#888">Организатор</div><div style="font-weight:700;font-size:12px">Гараж ✓</div></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 200px;flex:1;min-height:0">
+            <div style="border-right:1px solid #111"><iframe src="./map-embed.html?lat=55.7351&lng=37.6053&z=15&label=ГАРАЖ&bg=%23f2f0ec" style="display:block;width:100%;height:100%;border:0" loading="lazy" title="Карта площадки"></iframe></div>
+            <div style="padding:16px 18px;display:flex;flex-direction:column">
+              <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#888;margin-bottom:5px">Адрес</div>
+              <div style="font-weight:700;font-size:12px;line-height:1.3">Крымский Вал, 9, стр. 32</div>
+              <div style="font-size:11px;color:#666;margin-bottom:12px">м. Парк культуры</div>
+              <div style="background:#111;color:#fff;padding:11px;font-size:11px;font-weight:700;text-align:center;letter-spacing:.06em;margin-top:auto">ЗАПИСАТЬСЯ</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="lbl">Mobile</div>
+        <div class="fr-mob-t" style="background:#f2f0ec;font-family:'Archivo',sans-serif;color:#111">
+          <div style="padding:12px 14px;display:flex;justify-content:space-between;align-items:baseline;flex:none"><span style="font-size:9px">←</span><span style="font-weight:900;font-size:11px">PRESENCE</span><span style="width:9px"></span></div>
+          <div style="border-top:1px solid #111;height:140px;flex:none"><image-slot id="grid-hero-mob" shape="rect" fit="cover" src="https://presence.tarski.ru/covers/festival.jpg" placeholder="Фото 01"></image-slot></div>
+          <div style="border-top:1px solid #111;padding:14px;flex:none">
+            <div style="font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:#888;margin-bottom:7px">01 · Фестиваль</div>
+            <h3 style="font-weight:900;font-size:20px;line-height:.92;letter-spacing:-.03em;margin:0">Летний фестиваль медиаискусства</h3>
+          </div>
+          <div style="border-top:1px solid #111;display:grid;grid-template-columns:1fr 1fr;flex:none">
+            <div style="border-right:1px solid #111;padding:10px 12px"><div style="font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#888">Когда</div><div style="font-weight:700;font-size:11px">25–26 июля</div></div>
+            <div style="padding:10px 12px"><div style="font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#888">Места</div><div style="font-weight:700;font-size:11px">12 / 40</div></div>
+          </div>
+          <div style="border-top:1px solid #111;flex:1;min-height:0"><iframe src="./map-embed.html?lat=55.7351&lng=37.6053&z=15&label=ГАРАЖ&bg=%23f2f0ec&sm=1" style="display:block;width:100%;height:100%;border:0" loading="lazy" title="Карта площадки"></iframe></div>
+          <div style="border-top:1px solid #111;padding:12px 14px 16px;flex:none;display:flex;justify-content:space-between;align-items:center"><span style="font-weight:900;font-size:18px">FREE</span><span style="background:#111;color:#fff;padding:10px 16px;font-size:11px;font-weight:700;letter-spacing:.06em">ЗАПИСАТЬСЯ</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="max-width:1280px;margin:0 auto 40px;border-top:1px dashed #b7a98d;padding-top:40px">
+    <div style="font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#8a7d68;margin-bottom:14px">Turn 3 · Second screen · desktop + mobile</div>
+    <h1 style="font-family:'Space Grotesk',sans-serif;font-size:46px;font-weight:800;letter-spacing:-.02em;margin:0 0 14px;color:#201e1d;max-width:24ch">Event detail in the four finalists</h1>
+    <p style="font-size:16px;line-height:1.55;color:#5a5550;max-width:66ch;margin:0"><b>1a</b>, <b>2a</b>, <b>2b</b> and <b>1b</b> applied to the event-detail page — each shown as a desktop layout and a mobile layout so you can judge how the direction holds across form factors.</p>
+  </div>
+
+  <div style="max-width:1280px;margin:0 auto">
+
+    <!-- 3-1a -->
+    <div style="margin-bottom:8px"><span class="opt-badge">1a · Swiss</span></div>
+    <div class="screens">
+      <div>
+        <div class="lbl">Desktop</div>
+        <div class="fr-desk" style="background:#fff;font-family:'Archivo',sans-serif;color:#111">
+          <div style="padding:16px 24px;border-bottom:1px solid #111;display:flex;justify-content:space-between;align-items:baseline"><span style="font-weight:900;font-size:13px">PRESENCE</span><span style="font-size:9px;letter-spacing:.14em">← НАЗАД К СОБЫТИЯМ</span></div>
+          <div style="display:grid;grid-template-columns:1fr 200px;height:calc(100% - 49px)">
+            <div style="padding:24px;border-right:1px solid #111">
+              <div style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#111;margin-bottom:8px">Фестиваль · Очно</div>
+              <h3 style="font-weight:900;font-size:32px;line-height:.95;letter-spacing:-.03em;margin:0 0 20px">Летний фестиваль медиаискусства</h3>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;border-top:1px solid #ddd;padding-top:16px">
+                <div><div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#888">Когда</div><div style="font-weight:700;font-size:13px">25–26 июля</div></div>
+                <div><div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#888">Где</div><div style="font-weight:700;font-size:13px">Музей «Гараж»</div></div>
+                <div><div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#888">Формат</div><div style="font-weight:700;font-size:13px">Очно</div></div>
+                <div><div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#888">Места</div><div style="font-weight:700;font-size:13px">12 / 40</div></div>
+              </div>
+              <p style="font-size:12px;line-height:1.5;color:#444;margin:18px 0 0">Два дня медиаинсталляций, перформансов и обсуждений с художниками.</p>
+            </div>
+            <div style="padding:24px 20px;display:flex;flex-direction:column">
+              <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#888">Цена</div>
+              <div style="font-weight:900;font-size:28px;letter-spacing:-.02em;margin-bottom:16px">FREE</div>
+              <div style="border:1px solid #111;padding:10px;font-size:11px;font-weight:700;text-align:center;letter-spacing:.06em;margin-bottom:8px">ГАРАЖ ✓</div>
+              <div style="background:#111;color:#fff;padding:12px;font-size:12px;font-weight:700;text-align:center;letter-spacing:.06em;margin-top:auto">ЗАПИСАТЬСЯ</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="lbl">Mobile</div>
+        <div class="fr-mob" style="background:#fff;font-family:'Archivo',sans-serif;color:#111">
+          <div style="padding:14px 16px;border-bottom:1px solid #111;display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:9px;letter-spacing:.12em">←</span><span style="font-weight:900;font-size:11px">PRESENCE</span><span style="width:9px"></span></div>
+          <div style="padding:18px 16px">
+            <div style="font-size:8px;letter-spacing:.18em;text-transform:uppercase;margin-bottom:6px">Фестиваль</div>
+            <h3 style="font-weight:900;font-size:24px;line-height:.95;letter-spacing:-.03em;margin:0 0 16px">Летний фестиваль медиаискусства</h3>
+            <div style="border-top:1px solid #ddd;padding-top:12px;display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:#888;letter-spacing:.1em;text-transform:uppercase;font-size:9px">Когда</span><span style="font-weight:700">25–26 июля</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:#888;letter-spacing:.1em;text-transform:uppercase;font-size:9px">Где</span><span style="font-weight:700">Музей «Гараж»</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:#888;letter-spacing:.1em;text-transform:uppercase;font-size:9px">Места</span><span style="font-weight:700">12 / 40</span></div>
+            </div>
+          </div>
+          <div style="position:absolute"></div>
+          <div style="margin:auto 16px 0;padding-bottom:18px">
+            <div style="border-top:1px solid #111;padding-top:12px;display:flex;justify-content:space-between;align-items:center"><span style="font-weight:900;font-size:20px">FREE</span><span style="background:#111;color:#fff;padding:10px 18px;font-size:11px;font-weight:700;letter-spacing:.06em">ЗАПИСАТЬСЯ</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3-2a -->
+    <div style="margin-bottom:8px"><span class="opt-badge">2a · Swiss red</span></div>
+    <div class="screens">
+      <div>
+        <div class="lbl">Desktop</div>
+        <div class="fr-desk" style="background:#fff;font-family:'Archivo',sans-serif;color:#111">
+          <div style="padding:16px 24px;border-bottom:2px solid #111;display:flex;justify-content:space-between;align-items:baseline"><span style="font-weight:900;font-size:13px">PRESENCE</span><span style="font-size:9px;letter-spacing:.14em;color:#e2231a">← НАЗАД К СОБЫТИЯМ</span></div>
+          <div style="display:grid;grid-template-columns:1fr 200px;height:calc(100% - 50px)">
+            <div style="padding:24px;border-right:1px solid #111">
+              <div style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#e2231a;margin-bottom:8px">Фестиваль · Очно</div>
+              <h3 style="font-weight:900;font-size:32px;line-height:.95;letter-spacing:-.03em;margin:0 0 20px">Летний фестиваль медиаискусства</h3>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;border-top:1px solid #ddd;padding-top:16px">
+                <div><div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#888">Когда</div><div style="font-weight:700;font-size:13px">25–26 июля</div></div>
+                <div><div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#888">Где</div><div style="font-weight:700;font-size:13px">Музей «Гараж»</div></div>
+                <div><div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#888">Формат</div><div style="font-weight:700;font-size:13px">Очно</div></div>
+                <div><div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#888">Места</div><div style="font-weight:700;font-size:13px;color:#e2231a">12 / 40</div></div>
+              </div>
+              <p style="font-size:12px;line-height:1.5;color:#444;margin:18px 0 0">Два дня медиаинсталляций, перформансов и обсуждений с художниками.</p>
+            </div>
+            <div style="padding:24px 20px;display:flex;flex-direction:column">
+              <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#888">Цена</div>
+              <div style="font-weight:900;font-size:28px;letter-spacing:-.02em;margin-bottom:16px;color:#e2231a">FREE</div>
+              <div style="border:1px solid #111;padding:10px;font-size:11px;font-weight:700;text-align:center;letter-spacing:.06em;margin-bottom:8px">ГАРАЖ ✓</div>
+              <div style="background:#e2231a;color:#fff;padding:12px;font-size:12px;font-weight:700;text-align:center;letter-spacing:.06em;margin-top:auto">ЗАПИСАТЬСЯ</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="lbl">Mobile</div>
+        <div class="fr-mob" style="background:#fff;font-family:'Archivo',sans-serif;color:#111">
+          <div style="padding:14px 16px;border-bottom:2px solid #111;display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:9px;color:#e2231a">←</span><span style="font-weight:900;font-size:11px">PRESENCE</span><span style="width:9px"></span></div>
+          <div style="padding:18px 16px">
+            <div style="font-size:8px;letter-spacing:.18em;text-transform:uppercase;margin-bottom:6px;color:#e2231a">Фестиваль</div>
+            <h3 style="font-weight:900;font-size:24px;line-height:.95;letter-spacing:-.03em;margin:0 0 16px">Летний фестиваль медиаискусства</h3>
+            <div style="border-top:1px solid #ddd;padding-top:12px;display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:#888;letter-spacing:.1em;text-transform:uppercase;font-size:9px">Когда</span><span style="font-weight:700">25–26 июля</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:#888;letter-spacing:.1em;text-transform:uppercase;font-size:9px">Где</span><span style="font-weight:700">Музей «Гараж»</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:#888;letter-spacing:.1em;text-transform:uppercase;font-size:9px">Места</span><span style="font-weight:700;color:#e2231a">12 / 40</span></div>
+            </div>
+          </div>
+          <div style="margin:auto 16px 0;padding-bottom:18px">
+            <div style="border-top:2px solid #111;padding-top:12px;display:flex;justify-content:space-between;align-items:center"><span style="font-weight:900;font-size:20px;color:#e2231a">FREE</span><span style="background:#e2231a;color:#fff;padding:10px 18px;font-size:11px;font-weight:700;letter-spacing:.06em">ЗАПИСАТЬСЯ</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3-2b -->
+    <div style="margin-bottom:8px"><span class="opt-badge">2b · Swiss grid</span></div>
+    <div class="screens">
+      <div>
+        <div class="lbl">Desktop</div>
+        <div class="fr-desk" style="background:#f2f0ec;font-family:'Archivo',sans-serif;color:#111">
+          <div style="padding:16px 24px;display:flex;justify-content:space-between;align-items:baseline"><span style="font-weight:900;font-size:13px">PRESENCE</span><span style="font-size:9px;letter-spacing:.14em">← СОБЫТИЯ</span></div>
+          <div style="border-top:1px solid #111;display:grid;grid-template-columns:1fr 1fr 200px;height:calc(100% - 51px)">
+            <div style="grid-column:1 / 3;border-right:1px solid #111;padding:18px 22px;border-bottom:1px solid #111">
+              <div style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#888;margin-bottom:10px">01 · Фестиваль</div>
+              <h3 style="font-weight:900;font-size:24px;line-height:.92;letter-spacing:-.03em;margin:0">Летний фестиваль медиаискусства</h3>
+            </div>
+            <div style="grid-row:1 / 3;padding:20px 18px;display:flex;flex-direction:column">
+              <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#888">Цена</div>
+              <div style="font-weight:900;font-size:26px;margin-bottom:14px">FREE</div>
+              <div style="border:1px solid #111;padding:8px;font-size:10px;font-weight:700;text-align:center;letter-spacing:.05em;margin-bottom:8px">ГАРАЖ ✓</div>
+              <div style="background:#111;color:#fff;padding:11px;font-size:11px;font-weight:700;text-align:center;letter-spacing:.06em;margin-top:auto">ЗАПИСАТЬСЯ</div>
+            </div>
+            <div style="border-right:1px solid #111;padding:12px 22px;display:flex;flex-direction:column;justify-content:center"><div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#888">Когда</div><div style="font-weight:700;font-size:13px">25–26 июля</div></div>
+            <div style="padding:12px 22px;display:flex;flex-direction:column;justify-content:center"><div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#888">Места</div><div style="font-weight:700;font-size:13px">12 / 40</div></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="lbl">Mobile</div>
+        <div class="fr-mob" style="background:#f2f0ec;font-family:'Archivo',sans-serif;color:#111">
+          <div style="padding:14px 16px;display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:9px">←</span><span style="font-weight:900;font-size:11px">PRESENCE</span><span style="width:9px"></span></div>
+          <div style="border-top:1px solid #111;padding:16px">
+            <div style="font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:#888;margin-bottom:8px">01 · Фестиваль</div>
+            <h3 style="font-weight:900;font-size:23px;line-height:.92;letter-spacing:-.03em;margin:0">Летний фестиваль медиаискусства</h3>
+          </div>
+          <div style="border-top:1px solid #111;display:grid;grid-template-columns:1fr 1fr">
+            <div style="border-right:1px solid #111;border-bottom:1px solid #111;padding:12px 14px"><div style="font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#888">Когда</div><div style="font-weight:700;font-size:12px">25–26 июля</div></div>
+            <div style="border-bottom:1px solid #111;padding:12px 14px"><div style="font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#888">Места</div><div style="font-weight:700;font-size:12px">12 / 40</div></div>
+          </div>
+          <div style="margin:auto 0 0;border-top:1px solid #111;padding:14px 16px 18px;display:flex;justify-content:space-between;align-items:center"><span style="font-weight:900;font-size:19px">FREE</span><span style="background:#111;color:#fff;padding:10px 18px;font-size:11px;font-weight:700;letter-spacing:.06em">ЗАПИСАТЬСЯ</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3-1b -->
+    <div style="margin-bottom:8px"><span class="opt-badge">1b · Neo-brutalism</span></div>
+    <div class="screens">
+      <div>
+        <div class="lbl">Desktop</div>
+        <div class="fr-desk" style="background:#ffe74c;font-family:'Space Grotesk',sans-serif;color:#111;padding:20px">
+          <div style="display:flex;justify-content:space-between;align-items:center;border:3px solid #111;background:#fff;padding:9px 14px;border-radius:12px;box-shadow:4px 4px 0 #111;margin-bottom:16px"><span style="font-weight:700;font-size:14px">presence<span style="color:#ff5a36">.</span></span><span style="font-size:11px;font-weight:700">← СОБЫТИЯ</span></div>
+          <div style="display:grid;grid-template-columns:1fr 190px;gap:16px">
+            <div style="border:3px solid #111;background:#fff;border-radius:14px;box-shadow:5px 5px 0 #111;padding:18px">
+              <span style="display:inline-block;background:#7ec4cf;border:2px solid #111;font-size:10px;font-weight:700;padding:3px 10px;border-radius:999px;margin-bottom:12px">ФЕСТИВАЛЬ · ОЧНО</span>
+              <h3 style="font-weight:700;font-size:28px;line-height:1;letter-spacing:-.02em;margin:0 0 16px">Летний фестиваль медиаискусства</h3>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <span style="border:2px solid #111;background:#fff;border-radius:10px;padding:6px 10px;font-size:11px;font-weight:600">📅 25–26 июля</span>
+                <span style="border:2px solid #111;background:#fff;border-radius:10px;padding:6px 10px;font-size:11px;font-weight:600">📍 Гараж</span>
+                <span style="border:2px solid #111;background:#c6f68d;border-radius:10px;padding:6px 10px;font-size:11px;font-weight:600">12/40 мест</span>
+              </div>
+            </div>
+            <div style="border:3px solid #111;background:#ff5a36;border-radius:14px;box-shadow:5px 5px 0 #111;padding:16px;display:flex;flex-direction:column;color:#fff">
+              <span style="font-size:11px;font-weight:700">Цена</span>
+              <span style="font-weight:700;font-size:26px;margin-bottom:14px">FREE</span>
+              <span style="background:#fff;color:#111;border:2px solid #111;border-radius:10px;padding:11px;font-size:12px;font-weight:700;text-align:center;margin-top:auto">ЗАПИСАТЬСЯ</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="lbl">Mobile</div>
+        <div class="fr-mob" style="background:#ffe74c;font-family:'Space Grotesk',sans-serif;color:#111;padding:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;border:2px solid #111;background:#fff;padding:8px 12px;border-radius:10px;box-shadow:3px 3px 0 #111;margin-bottom:14px"><span style="font-size:11px;font-weight:700">←</span><span style="font-weight:700;font-size:13px">presence<span style="color:#ff5a36">.</span></span><span style="width:9px"></span></div>
+          <div style="border:3px solid #111;background:#fff;border-radius:14px;box-shadow:4px 4px 0 #111;padding:14px;margin-bottom:12px">
+            <span style="display:inline-block;background:#7ec4cf;border:2px solid #111;font-size:9px;font-weight:700;padding:3px 8px;border-radius:999px;margin-bottom:10px">ФЕСТИВАЛЬ</span>
+            <h3 style="font-weight:700;font-size:21px;line-height:1;letter-spacing:-.02em;margin:0 0 12px">Летний фестиваль медиаискусства</h3>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <span style="border:2px solid #111;border-radius:8px;padding:5px 8px;font-size:10px;font-weight:600">📅 25–26 июля · Гараж</span>
+              <span style="border:2px solid #111;background:#c6f68d;border-radius:8px;padding:5px 8px;font-size:10px;font-weight:600">12/40 мест</span>
+            </div>
+          </div>
+          <div style="margin-top:auto;border:3px solid #111;background:#ff5a36;border-radius:14px;box-shadow:4px 4px 0 #111;padding:12px;display:flex;justify-content:space-between;align-items:center;color:#fff"><span style="font-weight:700;font-size:18px">FREE</span><span style="background:#fff;color:#111;border:2px solid #111;border-radius:8px;padding:8px 14px;font-size:11px;font-weight:700">ЗАПИСАТЬСЯ</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="max-width:1280px;margin:64px auto 0;border-top:1px dashed #b7a98d;padding-top:40px"></div>
+
+  <div style="max-width:1100px;margin:0 auto 40px">
+    <div style="font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#8a7d68;margin-bottom:14px">Turn 2 · Swiss family</div>
+    <h1 style="font-family:'Space Grotesk',sans-serif;font-size:46px;font-weight:800;letter-spacing:-.02em;margin:0 0 14px;color:#201e1d;max-width:22ch">Four Swiss variations</h1>
+    <p style="font-size:16px;line-height:1.55;color:#5a5550;max-width:64ch;margin:0"><b>1a</b> stays as the baseline (below). Three siblings in the same International-Typographic family, each shifting one lever — accent color, grid rhythm, or type scale.</p>
+  </div>
+
+  <div class="opt-wrap" style="max-width:1100px;margin:0 auto 72px">
+
+    <!-- 2a SWISS — RED ACCENT -->
+    <div class="opt" id="2a">
+      <div class="opt-badge">2a</div>
+      <h2 class="opt-name">Swiss · red accent</h2>
+      <p class="opt-desc">1a's discipline plus a single International-red signal — used only for the active filter, index numerals and price. One color, working hard.</p>
+      <div class="frame" style="background:#fff;font-family:'Archivo',sans-serif;color:#111">
+        <div style="padding:26px 26px 20px;border-bottom:2px solid #111">
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-weight:900;font-size:15px;letter-spacing:-.01em">PRESENCE</span><span style="font-size:10px;letter-spacing:.14em;color:#e2231a">МОСКВА / ИЮЛЬ</span></div>
+        </div>
+        <div style="padding:26px">
+          <div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#e2231a;margin-bottom:4px">События · 42</div>
+          <h3 style="font-weight:900;font-size:38px;line-height:.95;letter-spacing:-.03em;margin:0 0 22px">Что смотреть на этой неделе</h3>
+          <div style="display:flex;gap:16px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;border-bottom:1px solid #111;padding-bottom:10px"><span style="border-bottom:2px solid #e2231a;color:#e2231a;padding-bottom:8px;margin-bottom:-11px;font-weight:700">Все</span><span style="color:#888">Медиации</span><span style="color:#888">Лекции</span><span style="color:#888">Кино</span></div>
+          <div style="display:grid;grid-template-columns:34px 1fr auto;gap:2px 16px;align-items:baseline;padding:18px 0;border-bottom:1px solid #ddd">
+            <span style="font-size:11px;font-weight:700;color:#e2231a">01</span><span style="font-weight:700;font-size:16px;line-height:1.1">Летний фестиваль медиаискусства</span><span style="font-size:11px;font-weight:700;color:#e2231a">FREE</span>
+            <span></span><span style="font-size:11px;color:#666;letter-spacing:.04em">ГАРАЖ · 25 ИЮЛ · ФЕСТИВАЛЬ</span><span></span>
+          </div>
+          <div style="display:grid;grid-template-columns:34px 1fr auto;gap:2px 16px;align-items:baseline;padding:18px 0;border-bottom:1px solid #ddd">
+            <span style="font-size:11px;font-weight:700;color:#e2231a">02</span><span style="font-weight:700;font-size:16px;line-height:1.1">Медиация в залах старых мастеров</span><span style="font-size:11px;font-weight:700;color:#e2231a">FREE</span>
+            <span></span><span style="font-size:11px;color:#666;letter-spacing:.04em">ГМИИ · 12 ИЮЛ · МЕДИАЦИЯ</span><span></span>
+          </div>
+          <div style="display:grid;grid-template-columns:34px 1fr auto;gap:2px 16px;align-items:baseline;padding:18px 0;border-bottom:1px solid #ddd">
+            <span style="font-size:11px;font-weight:700;color:#e2231a">03</span><span style="font-weight:700;font-size:16px;line-height:1.1">Кинопоказ с обсуждением</span><span style="font-size:11px;font-weight:700;color:#e2231a">FREE</span>
+            <span></span><span style="font-size:11px;color:#666;letter-spacing:.04em">ЕВРЕЙСКИЙ МУЗЕЙ · 20 ИЮЛ · КИНО</span><span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2b SWISS — COLUMN GRID -->
+    <div class="opt" id="2b">
+      <div class="opt-badge">2b</div>
+      <h2 class="opt-name">Swiss · column grid</h2>
+      <p class="opt-desc">Same grotesque, but the feed becomes a visible two-column module grid with ruled cells — the strictest, most catalog-like reading of the system.</p>
+      <div class="frame" style="background:#f2f0ec;font-family:'Archivo',sans-serif;color:#111">
+        <div style="padding:22px 22px 16px;display:flex;justify-content:space-between;align-items:baseline"><span style="font-weight:900;font-size:15px;letter-spacing:-.01em">PRESENCE</span><span style="font-size:10px;letter-spacing:.14em">МСК ’26</span></div>
+        <div style="padding:0 22px 22px">
+          <h3 style="font-weight:900;font-size:30px;line-height:.95;letter-spacing:-.03em;margin:0 0 4px;border-top:2px solid #111;padding-top:14px">События<br>июля</h3>
+          <div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#111;margin:10px 0 0">42 записи</div>
+        </div>
+        <div style="border-top:1px solid #111;display:grid;grid-template-columns:1fr 1fr">
+          <div style="border-right:1px solid #111;border-bottom:1px solid #111;padding:14px;min-height:120px;display:flex;flex-direction:column">
+            <div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#888;margin-bottom:8px">01 · Фестиваль</div>
+            <div style="font-weight:700;font-size:15px;line-height:1.05;margin-bottom:auto">Летний фестиваль медиаискусства</div>
+            <div style="font-size:10px;letter-spacing:.05em;color:#666;margin-top:10px">ГАРАЖ · 25.07 · FREE</div>
+          </div>
+          <div style="border-bottom:1px solid #111;padding:14px;min-height:120px;display:flex;flex-direction:column">
+            <div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#888;margin-bottom:8px">02 · Медиация</div>
+            <div style="font-weight:700;font-size:15px;line-height:1.05;margin-bottom:auto">Медиация в залах старых мастеров</div>
+            <div style="font-size:10px;letter-spacing:.05em;color:#666;margin-top:10px">ГМИИ · 12.07 · FREE</div>
+          </div>
+          <div style="border-right:1px solid #111;border-bottom:1px solid #111;padding:14px;min-height:120px;display:flex;flex-direction:column">
+            <div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#888;margin-bottom:8px">03 · Кино</div>
+            <div style="font-weight:700;font-size:15px;line-height:1.05;margin-bottom:auto">Кинопоказ с обсуждением</div>
+            <div style="font-size:10px;letter-spacing:.05em;color:#666;margin-top:10px">ЕВР. МУЗЕЙ · 20.07 · FREE</div>
+          </div>
+          <div style="border-bottom:1px solid #111;padding:14px;min-height:120px;display:flex;flex-direction:column">
+            <div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#888;margin-bottom:8px">04 · Лекция</div>
+            <div style="font-weight:700;font-size:15px;line-height:1.05;margin-bottom:auto">Лаборатория медиаций</div>
+            <div style="font-size:10px;letter-spacing:.05em;color:#666;margin-top:10px">ПАРК ГОРЬКОГО · 15.08 · FREE</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2c SWISS — MONO / BLACK -->
+    <div class="opt" id="2c">
+      <div class="opt-badge">2c</div>
+      <h2 class="opt-name">Swiss · inverted mono</h2>
+      <p class="opt-desc">The same system flipped to a black ground with monospaced metadata against the grotesque titles. Nocturnal, precise — reads like a listings broadsheet.</p>
+      <div class="frame" style="background:#111;font-family:'Archivo',sans-serif;color:#f4f2ee">
+        <div style="padding:26px 26px 18px;border-bottom:1px solid #f4f2ee;display:flex;justify-content:space-between;align-items:baseline"><span style="font-weight:900;font-size:15px;letter-spacing:-.01em">PRESENCE</span><span style="font-family:'Space Grotesk',monospace;font-size:10px;letter-spacing:.1em;color:#9b968c">MSK/07.26</span></div>
+        <div style="padding:24px 26px">
+          <div style="font-family:'Space Grotesk',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#9b968c;margin-bottom:6px">42 EVENTS · LIVE</div>
+          <h3 style="font-weight:900;font-size:34px;line-height:.95;letter-spacing:-.03em;margin:0 0 22px">Что смотреть<br>на неделе</h3>
+          <div style="display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:baseline;padding:16px 0;border-top:1px solid #3a3730">
+            <span style="font-weight:700;font-size:16px;line-height:1.05">Летний фестиваль медиаискусства</span><span style="font-family:'Space Grotesk',monospace;font-size:11px;color:#9b968c">25.07</span>
+            <span style="font-family:'Space Grotesk',monospace;font-size:10px;letter-spacing:.06em;color:#9b968c;text-transform:uppercase">ГАРАЖ · ФЕСТИВАЛЬ · FREE</span><span></span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:baseline;padding:16px 0;border-top:1px solid #3a3730">
+            <span style="font-weight:700;font-size:16px;line-height:1.05">Медиация в залах старых мастеров</span><span style="font-family:'Space Grotesk',monospace;font-size:11px;color:#9b968c">12.07</span>
+            <span style="font-family:'Space Grotesk',monospace;font-size:10px;letter-spacing:.06em;color:#9b968c;text-transform:uppercase">ГМИИ · МЕДИАЦИЯ · FREE</span><span></span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:baseline;padding:16px 0;border-top:1px solid #3a3730;border-bottom:1px solid #3a3730">
+            <span style="font-weight:700;font-size:16px;line-height:1.05">Кинопоказ с обсуждением</span><span style="font-family:'Space Grotesk',monospace;font-size:11px;color:#9b968c">20.07</span>
+            <span style="font-family:'Space Grotesk',monospace;font-size:10px;letter-spacing:.06em;color:#9b968c;text-transform:uppercase">ЕВР. МУЗЕЙ · КИНО · FREE</span><span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="max-width:1100px;margin:0 auto 48px;border-top:1px dashed #b7a98d;padding-top:40px">
+    <div style="font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#8a7d68;margin-bottom:14px">Turn 1 · Aesthetic directions</div>
+    <h1 style="font-family:'Space Grotesk',sans-serif;font-size:46px;font-weight:800;letter-spacing:-.02em;margin:0 0 14px;color:#201e1d;max-width:20ch">Five ways Presence could look</h1>
+    <p style="font-size:16px;line-height:1.55;color:#5a5550;max-width:64ch;margin:0">The same event feed rendered in five distinct directions — all "strict but artistic modern," none of them liquid glass. Reference an option by its id in chat (e.g. <b>1a</b>) and I'll push it further or apply it across every Presence page.</p>
+  </div>
+
+  <div class="opt-wrap" style="max-width:1100px;margin:0 auto">
+
+    <!-- 1a SWISS -->
+    <div class="opt" id="1a">
+      <div class="opt-badge">1a</div>
+      <h2 class="opt-name">Swiss / International Typographic</h2>
+      <p class="opt-desc">Strict grid, one grotesque face, extreme type-size contrast, hairline rules, near-zero color. Reads like a gallery catalog — the art is the discipline.</p>
+      <div class="frame" style="background:#fff;font-family:'Archivo',sans-serif;color:#111">
+        <div style="padding:26px 26px 20px;border-bottom:1px solid #111">
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-weight:900;font-size:15px;letter-spacing:-.01em">PRESENCE</span><span style="font-size:10px;letter-spacing:.14em">МОСКВА / ИЮЛЬ</span></div>
+        </div>
+        <div style="padding:26px">
+          <div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#111;margin-bottom:4px">События · 42</div>
+          <h3 style="font-family:'Archivo',sans-serif;font-weight:900;font-size:38px;line-height:.95;letter-spacing:-.03em;margin:0 0 22px">Что смотреть на этой неделе</h3>
+          <div style="display:flex;gap:16px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;border-bottom:1px solid #111;padding-bottom:10px;margin-bottom:0"><span style="border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:-11px;font-weight:700">Все</span><span style="color:#888">Медиации</span><span style="color:#888">Лекции</span><span style="color:#888">Кино</span></div>
+          <div style="display:grid;grid-template-columns:34px 1fr auto;gap:2px 16px;align-items:baseline;padding:18px 0;border-bottom:1px solid #ddd">
+            <span style="font-size:11px;font-weight:700">01</span><span style="font-weight:700;font-size:16px;line-height:1.1">Летний фестиваль медиаискусства</span><span style="font-size:11px;font-weight:700">FREE</span>
+            <span></span><span style="font-size:11px;color:#666;letter-spacing:.04em">ГАРАЖ · 25 ИЮЛ · ФЕСТИВАЛЬ</span><span></span>
+          </div>
+          <div style="display:grid;grid-template-columns:34px 1fr auto;gap:2px 16px;align-items:baseline;padding:18px 0;border-bottom:1px solid #ddd">
+            <span style="font-size:11px;font-weight:700">02</span><span style="font-weight:700;font-size:16px;line-height:1.1">Медиация в залах старых мастеров</span><span style="font-size:11px;font-weight:700">FREE</span>
+            <span></span><span style="font-size:11px;color:#666;letter-spacing:.04em">ГМИИ · 12 ИЮЛ · МЕДИАЦИЯ</span><span></span>
+          </div>
+          <div style="display:grid;grid-template-columns:34px 1fr auto;gap:2px 16px;align-items:baseline;padding:18px 0;border-bottom:1px solid #ddd">
+            <span style="font-size:11px;font-weight:700">03</span><span style="font-weight:700;font-size:16px;line-height:1.1">Кинопоказ с обсуждением</span><span style="font-size:11px;font-weight:700">FREE</span>
+            <span></span><span style="font-size:11px;color:#666;letter-spacing:.04em">ЕВРЕЙСКИЙ МУЗЕЙ · 20 ИЮЛ · КИНО</span><span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1b NEO-BRUTALISM -->
+    <div class="opt" id="1b">
+      <div class="opt-badge">1b</div>
+      <h2 class="opt-name">Neo-brutalism</h2>
+      <p class="opt-desc">Thick black outlines, flat saturated blocks, blunt offset shadows, zero gradients. Loud, confident, unmistakably modern — high energy for a young audience.</p>
+      <div class="frame" style="background:#ffe74c;font-family:'Space Grotesk',sans-serif;color:#111;padding:22px">
+        <div style="display:flex;justify-content:space-between;align-items:center;border:3px solid #111;background:#fff;padding:10px 16px;border-radius:12px;box-shadow:4px 4px 0 #111;margin-bottom:18px">
+          <span style="font-weight:700;font-size:16px">presence<span style="color:#ff5a36">.</span></span><span style="font-size:11px;font-weight:700">МОСКВА ▾</span>
+        </div>
+        <h3 style="font-size:30px;font-weight:700;line-height:1;margin:0 0 16px;letter-spacing:-.02em">42 события рядом</h3>
+        <div style="display:flex;gap:8px;margin-bottom:18px">
+          <span style="border:2px solid #111;background:#ff5a36;color:#fff;font-weight:700;font-size:11px;padding:5px 12px;border-radius:999px;box-shadow:2px 2px 0 #111">Все</span>
+          <span style="border:2px solid #111;background:#fff;font-weight:700;font-size:11px;padding:5px 12px;border-radius:999px">Медиации</span>
+          <span style="border:2px solid #111;background:#fff;font-weight:700;font-size:11px;padding:5px 12px;border-radius:999px">Кино</span>
+        </div>
+        <div style="border:3px solid #111;background:#fff;border-radius:14px;box-shadow:5px 5px 0 #111;padding:14px;margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="background:#7ec4cf;border:2px solid #111;font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px">ФЕСТИВАЛЬ</span><span style="font-weight:700;font-size:13px">FREE</span></div>
+          <div style="font-weight:700;font-size:18px;line-height:1.05;margin-bottom:6px">Летний фестиваль медиаискусства</div>
+          <div style="font-size:12px;font-weight:500">Гараж · 25 июля</div>
+        </div>
+        <div style="border:3px solid #111;background:#c6f68d;border-radius:14px;box-shadow:5px 5px 0 #111;padding:14px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="background:#fff;border:2px solid #111;font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px">МЕДИАЦИЯ</span><span style="font-weight:700;font-size:13px">FREE</span></div>
+          <div style="font-weight:700;font-size:18px;line-height:1.05;margin-bottom:6px">Медиация в залах старых мастеров</div>
+          <div style="font-size:12px;font-weight:500">ГМИИ им. Пушкина · 12 июля</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1c WARM EDITORIAL (ORGANIC) -->
+    <div class="opt" id="1c">
+      <div class="opt-badge">1c · your bound system</div>
+      <h2 class="opt-name">Warm editorial — Organic</h2>
+      <p class="opt-desc">Cream ground, terracotta + sage accents, Caprasimo display over Figtree, 16px rounding, washed imagery. Strict via grid, artistic via warmth. Zero extra cost — it's your design system.</p>
+      <div class="frame" style="background:#f5ead8;color:#201e1d;padding:22px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+          <span style="font-family:'Caprasimo',serif;font-size:20px">Presence<span style="color:#c67139">.</span></span><span style="font-size:12px;color:#7a6f5e">Москва ▾</span>
+        </div>
+        <h3 style="font-family:'Caprasimo',serif;font-size:30px;line-height:1.02;margin:0 0 16px">Что вам сейчас откликается?</h3>
+        <div style="display:flex;gap:8px;margin-bottom:18px">
+          <span style="background:#c67139;color:#f5ead8;font-size:12px;padding:6px 15px;border-radius:999px">Все</span>
+          <span style="background:#e4d3b8;color:#5a4a33;font-size:12px;padding:6px 15px;border-radius:999px">Медиации</span>
+          <span style="background:#e4d3b8;color:#5a4a33;font-size:12px;padding:6px 15px;border-radius:999px">Лекции</span>
+        </div>
+        <div style="background:#fbf4e7;border-radius:16px;overflow:hidden;box-shadow:0 6px 18px rgba(80,50,20,.09);margin-bottom:16px">
+          <div style="height:104px;background:linear-gradient(135deg,#e0a878,#a8b485);filter:saturate(.8)"></div>
+          <div style="padding:14px">
+            <div style="display:flex;gap:6px;margin-bottom:8px"><span style="background:#eecaa8;color:#8a4a1e;font-size:10px;padding:3px 10px;border-radius:999px">Фестивали</span><span style="background:#d9dcc4;color:#4d5738;font-size:10px;padding:3px 10px;border-radius:999px">Очно</span></div>
+            <div style="font-family:'Caprasimo',serif;font-size:19px;line-height:1.1;margin-bottom:6px">Летний фестиваль медиаискусства</div>
+            <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;color:#7a6f5e">Музей «Гараж»</span><span style="font-family:'Caprasimo',serif;font-size:15px">Бесплатно</span></div>
+          </div>
+        </div>
+        <div style="background:#fbf4e7;border-radius:16px;overflow:hidden;box-shadow:0 6px 18px rgba(80,50,20,.09)">
+          <div style="height:104px;background:linear-gradient(135deg,#b3bd8f,#e5d3b3);filter:saturate(.8)"></div>
+          <div style="padding:14px">
+            <div style="display:flex;gap:6px;margin-bottom:8px"><span style="background:#d9dcc4;color:#4d5738;font-size:10px;padding:3px 10px;border-radius:999px">Медиации</span></div>
+            <div style="font-family:'Caprasimo',serif;font-size:19px;line-height:1.1;margin-bottom:6px">Медиация в залах старых мастеров</div>
+            <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;color:#7a6f5e">ГМИИ им. Пушкина</span><span style="font-family:'Caprasimo',serif;font-size:15px">Бесплатно</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1d QUIET LUXURY -->
+    <div class="opt" id="1d">
+      <div class="opt-badge">1d</div>
+      <h2 class="opt-name">Refined minimalism · quiet luxury</h2>
+      <p class="opt-desc">Near-monochrome, one restrained accent, a fine serif for titles, precise spacing and tiny type details. Strict by omission — calm, premium, gallery-adjacent.</p>
+      <div class="frame" style="background:#f4f2ee;color:#26241f;padding:26px;font-family:'Jost',sans-serif">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px">
+          <span style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:22px;letter-spacing:.02em">Presence</span><span style="font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#8c8578">Москва</span>
+        </div>
+        <div style="font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#a08c6a;margin-bottom:6px">Июль · 42 события</div>
+        <h3 style="font-family:'Cormorant Garamond',serif;font-weight:500;font-size:34px;line-height:1.05;margin:0 0 26px">Тихие встречи<br>с искусством</h3>
+        <div style="display:flex;gap:20px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8c8578;margin-bottom:24px"><span style="color:#26241f;border-bottom:1px solid #a08c6a;padding-bottom:6px">Все</span><span>Медиации</span><span>Лекции</span></div>
+        <div style="padding:0 0 20px;border-bottom:1px solid #dcd8d0;margin-bottom:20px">
+          <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#a08c6a;margin-bottom:8px">25 ИЮЛЯ · ФЕСТИВАЛЬ</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:23px;font-weight:500;line-height:1.1;margin-bottom:8px">Летний фестиваль медиаискусства</div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:#8c8578"><span>Музей «Гараж»</span><span style="letter-spacing:.1em">БЕСПЛАТНО</span></div>
+        </div>
+        <div style="padding:0 0 20px;border-bottom:1px solid #dcd8d0;margin-bottom:20px">
+          <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#a08c6a;margin-bottom:8px">12 ИЮЛЯ · МЕДИАЦИЯ</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:23px;font-weight:500;line-height:1.1;margin-bottom:8px">Медиация в залах старых мастеров</div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:#8c8578"><span>ГМИИ им. Пушкина</span><span style="letter-spacing:.1em">БЕСПЛАТНО</span></div>
+        </div>
+        <div>
+          <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#a08c6a;margin-bottom:8px">20 ИЮЛЯ · КИНО</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:23px;font-weight:500;line-height:1.1;margin-bottom:8px">Кинопоказ с обсуждением</div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:#8c8578"><span>Еврейский музей</span><span style="letter-spacing:.1em">БЕСПЛАТНО</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1e MAXIMAL TYPE -->
+    <div class="opt" id="1e">
+      <div class="opt-badge">1e</div>
+      <h2 class="opt-name">Structured maximal-type</h2>
+      <p class="opt-desc">Minimal color and imagery — oversized expressive typography carries everything. The event title <i>is</i> the artwork. Bold, contemporary, memorable.</p>
+      <div class="frame" style="background:#141210;color:#f3ede1;padding:24px;font-family:'Archivo',sans-serif">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px">
+          <span style="font-weight:900;font-size:15px;letter-spacing:-.01em">PRESENCE</span><span style="font-size:10px;letter-spacing:.16em;color:#8f877a">МСК · 42</span>
+        </div>
+        <div style="border-top:2px solid #f3ede1;padding-top:14px">
+          <div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:.14em;color:#c67139;margin-bottom:2px"><span>ФЕСТИВАЛЬ</span><span>25.07 · FREE</span></div>
+          <div style="font-family:'Anton',sans-serif;font-size:40px;line-height:.9;text-transform:uppercase;letter-spacing:-.01em;margin-bottom:4px">Медиа<br>искусство</div>
+          <div style="font-size:11px;color:#8f877a;margin-bottom:18px">Музей «Гараж»</div>
+        </div>
+        <div style="border-top:2px solid #f3ede1;padding-top:14px">
+          <div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:.14em;color:#7a8a5e;margin-bottom:2px"><span>МЕДИАЦИЯ</span><span>12.07 · FREE</span></div>
+          <div style="font-family:'Anton',sans-serif;font-size:40px;line-height:.9;text-transform:uppercase;letter-spacing:-.01em;margin-bottom:4px">Старые<br>мастера</div>
+          <div style="font-size:11px;color:#8f877a;margin-bottom:18px">ГМИИ им. Пушкина</div>
+        </div>
+        <div style="border-top:2px solid #f3ede1;border-bottom:2px solid #f3ede1;padding:14px 0">
+          <div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:.14em;color:#c67139;margin-bottom:2px"><span>КИНО</span><span>20.07 · FREE</span></div>
+          <div style="font-family:'Anton',sans-serif;font-size:40px;line-height:.9;text-transform:uppercase;letter-spacing:-.01em">Кинопоказ</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</x-dc>
+</body>
+</html>

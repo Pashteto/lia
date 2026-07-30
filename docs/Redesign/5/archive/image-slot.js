@@ -1,0 +1,1 @@
+../design_handoff_presence_swiss_grid/image-slot.js

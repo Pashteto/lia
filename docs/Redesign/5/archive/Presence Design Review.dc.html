@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/organic-2f2fb316-4c7c-4c21-a749-77f6c48c9382/styles.css">
+<script src="_ds/organic-2f2fb316-4c7c-4c21-a749-77f6c48c9382/_ds_bundle.js"></script>
+<style>
+  .rev-mock{border:1px solid var(--color-divider);border-radius:var(--radius-lg);background:var(--color-bg);overflow:hidden;box-shadow:var(--shadow-md)}
+  .rev-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:color-mix(in srgb,var(--color-text) 55%,transparent)}
+  .rev-num{width:38px;height:38px;border-radius:999px;background:var(--color-accent);color:var(--color-bg);display:inline-flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-size:18px;flex:none}
+  .rev-good::before{content:"";width:8px;height:8px;border-radius:999px;background:var(--color-accent-2-600);flex:none;margin-top:8px}
+  .rev-bad::before{content:"";width:8px;height:8px;border-radius:999px;background:var(--color-accent);flex:none;margin-top:8px}
+  .rev-li{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.5}
+</style>
+</helmet>
+<div style="max-width:1180px;margin:0 auto;padding:64px 24px 120px">
+
+  <header style="margin-bottom:64px">
+    <div class="rev-badge" style="margin-bottom:16px">Design review · Июль 2026</div>
+    <h1 style="font-size:56px;max-width:20ch;margin-bottom:20px">Presence.Tarski</h1>
+    <p style="font-size:19px;line-height:1.55;max-width:62ch;color:var(--color-text)">Discovery-платформа для участливых культурных практик — медиации, мастер-классы, лекции, читательские группы. Ниже — постраничный разбор с проблемами, конкретными багами и предложениями редизайна.</p>
+    <p class="text-muted" style="font-size:13px;max-width:62ch;margin-top:16px">Метод: разбор построен на живом содержимом и структуре сайта (текст, навигация, контент страниц). Скриншоты продакшн-визуала недоступны, поэтому макеты ниже — это предлагаемое направление в системе Organic, а не воспроизведение текущего вида. Критика на английском для точности; UI-копия — на русском. Могу перевести весь разбор на русский.</p>
+  </header>
+
+  <section style="margin-bottom:80px">
+    <div class="rev-badge" style="margin-bottom:12px">Executive summary</div>
+    <h2 style="font-size:34px;margin-bottom:28px;max-width:24ch">Six things that move the needle most</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px">
+      <sc-for list="{{ summary }}" as="item" hint-placeholder-count="6">
+        <div class="card elev-sm" style="gap:10px">
+          <div class="rev-num" style="width:32px;height:32px;font-size:15px">{{ item.n }}</div>
+          <div class="card-title" style="font-size:18px">{{ item.title }}</div>
+          <p class="card-body" style="font-size:13.5px;opacity:.85">{{ item.body }}</p>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="margin-bottom:80px;background:var(--color-accent-100);border-radius:var(--radius-lg);padding:40px">
+    <div class="rev-badge" style="margin-bottom:12px;color:var(--color-accent-700)">Bugs & content issues</div>
+    <h2 style="font-size:30px;margin-bottom:10px">You asked me to flag the bugs — here they are</h2>
+    <p style="max-width:62ch;margin-bottom:24px;color:var(--color-accent-900)">Concrete things visible to end users right now, pulled straight from the live pages.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px">
+      <sc-for list="{{ bugs }}" as="b" hint-placeholder-count="6">
+        <div style="background:var(--color-bg);border-radius:var(--radius-md);padding:18px 20px;display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:center;gap:8px"><span class="tag tag-outline" style="font-size:10px">{{ b.sev }}</span><span style="font-family:var(--font-heading);font-size:15px">{{ b.title }}</span></div>
+          <p style="font-size:13px;margin:0;color:color-mix(in srgb,var(--color-text) 78%,transparent)">{{ b.body }}</p>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="margin-bottom:40px">
+    <div class="rev-badge" style="margin-bottom:12px">Foundations · cross-cutting</div>
+    <h2 style="font-size:34px;max-width:22ch;margin-bottom:16px">Fix these once and every page improves</h2>
+    <p style="max-width:64ch;color:var(--color-text);font-size:16px">The single biggest issue is the absence of a visual system — the site reads as an unstyled scaffold. A warm, editorial identity (rounded shapes, one display face, a category color system) does most of the work before any page-level redesign.</p>
+  </section>
+
+</div>
+
+
+<div style="max-width:1180px;margin:0 auto;padding:0 24px 100px">
+
+  <!-- FOUNDATION: the event card -->
+  <section style="margin-bottom:72px">
+    <div style="display:flex;align-items:baseline;gap:14px;margin-bottom:8px"><span class="rev-num">A</span><h3 style="font-size:26px;margin:0">The event card — the atom of the whole product</h3></div>
+    <p style="max-width:64ch;margin:0 0 28px 62px;color:var(--color-text)">Every list, the map and the calendar are made of this card. Today it's a single run-on string; giving it structure, a category color, a thumbnail and a clear price is the single most repeated win.</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start">
+      <div>
+        <div class="rev-badge rev-bad" style="margin-bottom:10px;color:var(--color-accent-700)">Before</div>
+        <div class="rev-mock" style="padding:20px;box-shadow:none;background:var(--color-surface)">
+          <a href="#" style="color:var(--color-accent);text-decoration:underline;font-size:15px;line-height:1.5">ФестивалиОчноЛетний фестиваль медиаискусства25–26 июля · Музей «Гараж»Организатор: Музей «Гараж» ✓ ПроверенБесплатно</a>
+        </div>
+        <ul style="list-style:none;padding:0;margin:16px 0 0;display:flex;flex-direction:column;gap:10px">
+          <li class="rev-li rev-bad">Seven distinct facts collapsed into one unbroken link.</li>
+          <li class="rev-li rev-bad">No thumbnail, no scan path, price hides at the end.</li>
+          <li class="rev-li rev-bad">Category and format read as noise, not as filters.</li>
+        </ul>
+      </div>
+      <div>
+        <div class="rev-badge rev-good" style="margin-bottom:10px;color:var(--color-accent-2-700)">After</div>
+        <div class="rev-mock" style="padding:16px">
+          <a href="#" style="display:flex;gap:16px;text-decoration:none;color:inherit">
+            <div style="width:104px;height:104px;flex:none;border-radius:var(--radius-md);background:linear-gradient(135deg,var(--color-accent-200),var(--color-accent-2-200));position:relative">
+              <span class="tag" style="position:absolute;top:8px;left:8px;background:var(--color-bg);font-size:10px">25–26 ИЮЛ</span>
+            </div>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="tag tag-accent">Фестивали</span><span class="tag tag-neutral">Очно</span></div>
+              <div style="font-family:var(--font-heading);font-size:19px;line-height:1.15">Летний фестиваль медиаискусства</div>
+              <div class="text-muted" style="font-size:13px">Музей «Гараж» · Москва</div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto">
+                <span style="display:inline-flex;align-items:center;gap:5px;font-size:12.5px;color:var(--color-accent-2-700)">Музей «Гараж»<span style="display:inline-flex;width:15px;height:15px;border-radius:999px;background:var(--color-accent-2-600);color:var(--color-bg);align-items:center;justify-content:center;font-size:9px">✓</span></span>
+                <span style="font-family:var(--font-heading);font-size:16px">Бесплатно</span>
+              </div>
+            </div>
+          </a>
+        </div>
+        <ul style="list-style:none;padding:0;margin:16px 0 0;display:flex;flex-direction:column;gap:10px">
+          <li class="rev-li rev-good">Date badge on the thumbnail, price anchored bottom-right.</li>
+          <li class="rev-li rev-good">Category color + format tag read at a glance.</li>
+          <li class="rev-li rev-good">Verified organizer is a quiet trust mark, not inline text.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOUNDATION: category colors -->
+  <section style="margin-bottom:72px">
+    <div style="display:flex;align-items:baseline;gap:14px;margin-bottom:8px"><span class="rev-num">B</span><h3 style="font-size:26px;margin:0">A category color system</h3></div>
+    <p style="max-width:64ch;margin:0 0 24px 62px;color:var(--color-text)">Assign each category one persistent color from the Organic ramps. It makes lists scannable, ties the map pins to the legend, and lets a card telegraph its type before you read a word. Keep two accents doing the heavy lifting; use neutral for the calmer categories.</p>
+    <div style="margin-left:62px;display:flex;flex-wrap:wrap;gap:10px">
+      <sc-for list="{{ categories }}" as="c" hint-placeholder-count="7">
+        <span class="tag {{ c.cls }}" style="font-size:13px;padding:7px 16px">{{ c.name }}</span>
+      </sc-for>
+    </div>
+    <p class="text-muted" style="margin-left:62px;margin-top:14px;font-size:13px">Also: fold «Рядом со мной» out of this row — it's a location filter, not a category — and add the missing «Читательские группы» the meta description promises.</p>
+  </section>
+
+  <!-- FOUNDATION: navigation -->
+  <section style="margin-bottom:40px">
+    <div style="display:flex;align-items:baseline;gap:14px;margin-bottom:8px"><span class="rev-num">C</span><h3 style="font-size:26px;margin:0">Navigation with a spine</h3></div>
+    <p style="max-width:64ch;margin:0 0 24px 62px;color:var(--color-text)">Give the top bar a brand mark and a visible active state on desktop; on mobile, move primary destinations to a bottom tab bar within thumb reach.</p>
+    <div style="margin-left:62px;display:grid;grid-template-columns:1.6fr 1fr;gap:20px;align-items:start">
+      <div class="rev-mock" style="padding:0">
+        <div class="nav" style="padding:16px 22px">
+          <span class="nav-brand">Presence<span style="color:var(--color-accent)">.</span></span>
+          <a href="#" aria-current="page">События</a>
+          <a href="#">Подбор</a>
+          <a href="#">Календарь</a>
+          <a href="#">Карта</a>
+          <a href="#">Организаторам</a>
+          <span class="btn btn-primary" style="margin-left:8px">Войти</span>
+        </div>
+      </div>
+      <div class="rev-mock" style="max-width:260px;margin:0 auto">
+        <div style="height:150px;background:linear-gradient(180deg,var(--color-surface),var(--color-bg));display:grid;place-items:center;color:var(--color-neutral-500);font-size:12px">лента событий</div>
+        <div style="display:flex;justify-content:space-around;padding:10px 6px;border-top:1px solid var(--color-divider);background:var(--color-surface)">
+          <span style="display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:var(--color-accent)"><span style="width:20px;height:20px;border-radius:6px;background:var(--color-accent)"></span>Лента</span>
+          <span style="display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:var(--color-neutral-500)"><span style="width:20px;height:20px;border-radius:6px;background:var(--color-neutral-300)"></span>Подбор</span>
+          <span style="display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:var(--color-neutral-500)"><span style="width:20px;height:20px;border-radius:6px;background:var(--color-neutral-300)"></span>Карта</span>
+          <span style="display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:var(--color-neutral-500)"><span style="width:20px;height:20px;border-radius:6px;background:var(--color-neutral-300)"></span>Профиль</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div style="max-width:1180px;margin:0 auto;padding:0 24px 100px">
+  <div style="border-top:1px solid var(--color-divider);padding-top:56px;margin-bottom:48px">
+    <div class="rev-badge">Page-by-page</div>
+    <h2 style="font-size:40px;margin-top:12px;max-width:20ch">Every screen, reviewed</h2>
+  </div>
+
+  <!-- PAGE 1: HOME -->
+  <section style="margin-bottom:88px">
+    <div style="display:flex;align-items:baseline;gap:16px;margin-bottom:6px"><span class="rev-num">1</span><h3 style="font-size:28px;margin:0">События — лента (home)</h3></div>
+    <p class="text-muted" style="margin:0 0 26px 54px;font-size:14px">Current: a flat filter list above a single column of run-on text links, no imagery.</p>
+    <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:28px;align-items:start">
+      <div class="rev-mock">
+        <div class="nav" style="padding:14px 20px;font-size:13px"><span class="nav-brand" style="font-size:16px">Presence<span style="color:var(--color-accent)">.</span></span><a href="#" aria-current="page">События</a><a href="#">Подбор</a><a href="#">Карта</a></div>
+        <div style="padding:20px 20px 24px">
+          <h4 style="font-size:26px;margin-bottom:14px">События</h4>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+            <span class="tag tag-accent" style="padding:6px 14px">Все</span>
+            <span class="tag tag-neutral" style="padding:6px 14px">Сегодня</span>
+            <span class="tag tag-neutral" style="padding:6px 14px">Выходные</span>
+            <span class="tag tag-neutral" style="padding:6px 14px">Медиации</span>
+            <span class="tag tag-neutral" style="padding:6px 14px">Лекции</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><span class="text-muted" style="font-size:12px">42 события · Москва</span><span class="btn btn-secondary" style="font-size:12px">Сначала новые ▾</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <sc-for list="{{ events }}" as="c" hint-placeholder-count="6">
+              <div style="background:var(--color-surface);border-radius:var(--radius-md);overflow:hidden;box-shadow:var(--shadow-sm);display:flex;flex-direction:column">
+                <div style="height:92px;background:{{ c.grad }};position:relative">
+                  <span class="tag" style="position:absolute;top:8px;left:8px;background:var(--color-bg);font-size:9px;padding:3px 8px">{{ c.date }}</span>
+                  <span class="tag {{ c.cls }}" style="position:absolute;top:8px;right:8px;font-size:9px;padding:3px 8px">{{ c.cat }}</span>
+                </div>
+                <div style="padding:11px 12px;display:flex;flex-direction:column;gap:5px;flex:1">
+                  <div style="font-family:var(--font-heading);font-size:14px;line-height:1.18">{{ c.title }}</div>
+                  <div class="text-muted" style="font-size:11px">{{ c.venue }}</div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:6px">
+                    <span style="font-size:10.5px;color:var(--color-accent-2-700);display:inline-flex;gap:4px;align-items:center;min-width:0"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:90px">{{ c.org }}</span><sc-if value="{{ c.verified }}" hint-placeholder-val="{{ true }}"><span style="display:inline-flex;width:13px;height:13px;flex:none;border-radius:999px;background:var(--color-accent-2-600);color:var(--color-bg);align-items:center;justify-content:center;font-size:8px">✓</span></sc-if></span>
+                    <span style="font-family:var(--font-heading);font-size:12px;flex:none">{{ c.price }}</span>
+                  </div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="rev-badge rev-bad" style="color:var(--color-accent-700);margin-bottom:8px">Issues</div>
+        <ul style="list-style:none;padding:0;margin:0 0 22px;display:flex;flex-direction:column;gap:11px">
+          <li class="rev-li rev-bad">One column of undifferentiated text links — nothing to scan or compare.</li>
+          <li class="rev-li rev-bad">Filters mix time (Сегодня), category (Лекции) and location (Рядом со мной) on one row with no active state.</li>
+          <li class="rev-li rev-bad">No result count, no sort, no sense of «where/when» at a glance.</li>
+          <li class="rev-li rev-bad">Categories in cards (Кино, Концерты) aren't filterable.</li>
+        </ul>
+        <div class="rev-badge rev-good" style="color:var(--color-accent-2-700);margin-bottom:8px">Recommendations</div>
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:11px">
+          <li class="rev-li rev-good">A responsive card grid with thumbnail, date badge, category color and price.</li>
+          <li class="rev-li rev-good">Split filters into two rows: time/quick chips, then categories; show the active one filled.</li>
+          <li class="rev-li rev-good">Add a result count and a sort control; complete the category set.</li>
+          <li class="rev-li rev-good">Group by day («Сегодня», «Завтра», «На выходных») as an alternative to a flat list.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE 2: EVENT DETAIL -->
+  <section style="margin-bottom:88px">
+    <div style="display:flex;align-items:baseline;gap:16px;margin-bottom:6px"><span class="rev-num">2</span><h3 style="font-size:28px;margin:0">Страница события</h3></div>
+    <p class="text-muted" style="margin:0 0 26px 54px;font-size:14px">Current: gated / renders empty over plain fetch; the core conversion screen needs the most care.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start">
+      <div>
+        <div class="rev-badge rev-bad" style="color:var(--color-accent-700);margin-bottom:8px">Issues</div>
+        <ul style="list-style:none;padding:0;margin:0 0 22px;display:flex;flex-direction:column;gap:11px">
+          <li class="rev-li rev-bad">No clear hero, no single obvious «Записаться» action.</li>
+          <li class="rev-li rev-bad">Organizer trust (verified, past events) isn't surfaced where the decision happens.</li>
+          <li class="rev-li rev-bad">No add-to-calendar, share, map preview, or capacity/spots-left signal.</li>
+        </ul>
+        <div class="rev-badge rev-good" style="color:var(--color-accent-2-700);margin-bottom:8px">Recommendations</div>
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:11px">
+          <li class="rev-li rev-good">Washed hero image + title, then a sticky action block with price and CTA.</li>
+          <li class="rev-li rev-good">A compact organizer card with the verified mark and a follow action.</li>
+          <li class="rev-li rev-good">A facts strip (когда · где · формат · язык · места) and a small map.</li>
+          <li class="rev-li rev-good">«Похожие события» at the bottom to keep discovery going.</li>
+        </ul>
+      </div>
+      <div class="rev-mock">
+        <div style="height:150px;background:linear-gradient(135deg,var(--color-accent-200),var(--color-accent-2-200));position:relative">
+          <span class="btn btn-secondary" style="position:absolute;top:12px;left:12px;background:var(--color-bg);font-size:11px">‹ События</span>
+          <span class="tag tag-accent" style="position:absolute;bottom:12px;left:16px">Фестивали</span>
+        </div>
+        <div style="padding:18px">
+          <h4 style="font-size:22px;margin-bottom:8px">Летний фестиваль медиаискусства</h4>
+          <div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:16px">
+            <span style="font-size:12px"><span class="text-muted" style="display:block;font-size:10px">Когда</span>25–26 июля</span>
+            <span style="font-size:12px"><span class="text-muted" style="display:block;font-size:10px">Где</span>Музей «Гараж»</span>
+            <span style="font-size:12px"><span class="text-muted" style="display:block;font-size:10px">Формат</span>Очно</span>
+            <span style="font-size:12px"><span class="text-muted" style="display:block;font-size:10px">Места</span>12 из 40</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--color-surface);border-radius:var(--radius-md);margin-bottom:16px">
+            <span style="width:36px;height:36px;border-radius:999px;background:var(--color-accent-2-300);flex:none"></span>
+            <span style="flex:1;font-size:13px;display:flex;flex-direction:column"><span style="display:inline-flex;align-items:center;gap:5px;font-family:var(--font-heading)">Музей «Гараж»<span style="display:inline-flex;width:14px;height:14px;border-radius:999px;background:var(--color-accent-2-600);color:var(--color-bg);align-items:center;justify-content:center;font-size:8px">✓</span></span><span class="text-muted" style="font-size:11px">Проверенный организатор</span></span>
+            <span class="btn btn-secondary" style="font-size:11px">Подписаться</span>
+          </div>
+          <p style="font-size:12.5px;opacity:.8;margin-bottom:16px">Два дня медиаинсталляций, перформансов и обсуждений с художниками. Свободный вход по регистрации.</p>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span class="btn btn-primary btn-block" style="margin-top:0;font-size:13px">Записаться · Бесплатно</span>
+            <span class="btn btn-secondary btn-icon" style="width:40px;height:40px">♡</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div style="max-width:1180px;margin:0 auto;padding:0 24px 100px">
+
+  <!-- PAGE 3: AI ПОДБОР -->
+  <section style="margin-bottom:88px">
+    <div style="display:flex;align-items:baseline;gap:16px;margin-bottom:6px"><span class="rev-num">3</span><h3 style="font-size:28px;margin:0">Подбор — AI-ассистент</h3></div>
+    <p class="text-muted" style="margin:0 0 26px 54px;font-size:14px">Current: prints a developer placeholder with a source path. This is your strongest differentiator — design it for real.</p>
+    <div style="display:grid;grid-template-columns:1fr 1.3fr;gap:28px;align-items:start">
+      <div>
+        <div class="rev-badge rev-bad" style="color:var(--color-accent-700);margin-bottom:8px">Issues</div>
+        <ul style="list-style:none;padding:0;margin:0 0 22px;display:flex;flex-direction:column;gap:11px">
+          <li class="rev-li rev-bad">Shows «ещё не реализовано… Смотри design/screens/ai-search.html» to users.</li>
+          <li class="rev-li rev-bad">A dead end — no fallback to manual search, no example of what it can do.</li>
+          <li class="rev-li rev-bad">No entry point from the feed, where intent actually forms.</li>
+        </ul>
+        <div class="rev-badge rev-good" style="color:var(--color-accent-2-700);margin-bottom:8px">Recommendations</div>
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:11px">
+          <li class="rev-li rev-good">A conversational prompt with seed suggestions («тихое на выходных», «бесплатно рядом»).</li>
+          <li class="rev-li rev-good">Answer as a short sentence + real event cards, each explaining the match.</li>
+          <li class="rev-li rev-good">Always offer «точные фильтры» as a fallback so it's never a dead end.</li>
+          <li class="rev-li rev-good">Until the model ships, ship a smart filter form here — never a raw TODO.</li>
+        </ul>
+      </div>
+      <div class="rev-mock" style="padding:20px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="width:26px;height:26px;border-radius:999px;background:var(--color-accent);color:var(--color-bg);display:grid;place-items:center;font-size:13px">✦</span><span class="text-muted" style="font-size:12px">AI-подбор</span></div>
+        <h4 style="font-size:24px;margin-bottom:14px">Что вам сейчас откликается?</h4>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">
+          <span class="tag tag-outline" style="padding:7px 14px">Тихое в выходные</span>
+          <span class="tag tag-outline" style="padding:7px 14px">Бесплатно рядом</span>
+          <span class="tag tag-outline" style="padding:7px 14px">Для двоих вечером</span>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:20px"><span class="input" style="flex:1;display:flex;align-items:center;color:var(--color-neutral-500);font-size:13px">Хочу спокойный вечер с искусством и без толпы…</span><span class="btn btn-primary" style="flex:none">→</span></div>
+        <div style="background:var(--color-surface);border-radius:var(--radius-md);padding:14px;font-size:13px;margin-bottom:12px">Нашла три медиации в мини-группах на этой неделе — тихо и без спешки:</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <sc-for list="{{ picks }}" as="c" hint-placeholder-count="2">
+            <div style="background:var(--color-bg);border:1px solid var(--color-divider);border-radius:var(--radius-md);padding:11px;display:flex;flex-direction:column;gap:5px">
+              <span class="tag {{ c.cls }}" style="align-self:flex-start;font-size:9px">{{ c.cat }}</span>
+              <span style="font-family:var(--font-heading);font-size:13px;line-height:1.2">{{ c.title }}</span>
+              <span class="text-muted" style="font-size:10.5px">{{ c.venue }} · {{ c.date }}</span>
+              <span style="font-size:10.5px;color:var(--color-accent-2-700)">Совпало: маленькая группа</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE 4: CALENDAR -->
+  <section style="margin-bottom:88px">
+    <div style="display:flex;align-items:baseline;gap:16px;margin-bottom:6px"><span class="rev-num">4</span><h3 style="font-size:28px;margin:0">Календарь</h3></div>
+    <p class="text-muted" style="margin:0 0 26px 54px;font-size:14px">Current: gated page renders a blank shell — no login prompt, no empty state.</p>
+    <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:28px;align-items:start">
+      <div class="rev-mock" style="padding:20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><h4 style="font-size:20px;margin:0">Июль 2026</h4><span class="seg"><span class="seg-opt" style="background:var(--color-accent);color:var(--color-bg)">Месяц</span><span class="seg-opt">Список</span></span></div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px">
+          <sc-for list="{{ days }}" as="d" hint-placeholder-count="35">
+            <div style="aspect-ratio:1;border-radius:10px;background:{{ d.bg }};display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;color:{{ d.fg }};position:relative">{{ d.n }}<sc-if value="{{ d.dot }}" hint-placeholder-val="{{ false }}"><span style="width:5px;height:5px;border-radius:999px;background:var(--color-accent);position:absolute;bottom:5px"></span></sc-if></div>
+          </sc-for>
+        </div>
+        <div style="margin-top:16px;display:flex;gap:10px;align-items:center;background:var(--color-surface);border-radius:var(--radius-md);padding:12px"><div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--color-accent-2-300),var(--color-accent-2-100));flex:none;display:grid;place-items:center;font-size:11px;font-family:var(--font-heading)">12<br>ИЮЛ</div><div style="flex:1;font-size:12.5px"><div style="font-family:var(--font-heading)">Медиация в залах старых мастеров</div><div class="text-muted" style="font-size:11px">16:00 · ГМИИ им. Пушкина</div></div><span class="tag tag-accent-2" style="font-size:9px">Записан</span></div>
+      </div>
+      <div>
+        <div class="rev-badge rev-bad" style="color:var(--color-accent-700);margin-bottom:8px">Issues</div>
+        <ul style="list-style:none;padding:0;margin:0 0 22px;display:flex;flex-direction:column;gap:11px">
+          <li class="rev-li rev-bad">Blank when logged out — no «войдите, чтобы видеть календарь».</li>
+          <li class="rev-li rev-bad">No empty state for a user with zero saved events.</li>
+        </ul>
+        <div class="rev-badge rev-good" style="color:var(--color-accent-2-700);margin-bottom:8px">Recommendations</div>
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:11px">
+          <li class="rev-li rev-good">Month grid with dots on days that have saved events; tap a day → agenda.</li>
+          <li class="rev-li rev-good">Month / list toggle; each item shows time, venue and RSVP status.</li>
+          <li class="rev-li rev-good">Designed logged-out and empty states that point back to discovery.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE 5: MAP -->
+  <section style="margin-bottom:88px">
+    <div style="display:flex;align-items:baseline;gap:16px;margin-bottom:6px"><span class="rev-num">5</span><h3 style="font-size:28px;margin:0">Карта</h3></div>
+    <p class="text-muted" style="margin:0 0 26px 54px;font-size:14px">Current: a map area with only «Искать в этой области» — no legend, no result cards, no list fallback.</p>
+    <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:28px;align-items:start">
+      <div class="rev-mock" style="position:relative">
+        <div style="height:260px;background:radial-gradient(circle at 30% 30%,var(--color-accent-2-100),var(--color-neutral-200));position:relative">
+          <span class="btn btn-secondary" style="position:absolute;top:12px;left:50%;transform:translateX(-50%);background:var(--color-bg);font-size:11px">Искать в этой области</span>
+          <span style="position:absolute;top:70px;left:70px;width:22px;height:22px;border-radius:999px 999px 999px 2px;background:var(--color-accent);transform:rotate(45deg);box-shadow:var(--shadow-md)"></span>
+          <span style="position:absolute;top:120px;left:180px;width:22px;height:22px;border-radius:999px 999px 999px 2px;background:var(--color-accent-2-600);transform:rotate(45deg);box-shadow:var(--shadow-md)"></span>
+          <span style="position:absolute;top:160px;left:110px;width:22px;height:22px;border-radius:999px 999px 999px 2px;background:var(--color-neutral-500);transform:rotate(45deg);box-shadow:var(--shadow-md)"></span>
+          <span style="position:absolute;top:95px;left:250px;width:22px;height:22px;border-radius:999px 999px 999px 2px;background:var(--color-accent);transform:rotate(45deg);box-shadow:var(--shadow-md)"></span>
+          <div style="position:absolute;bottom:12px;left:12px;background:var(--color-bg);border-radius:var(--radius-md);padding:8px 12px;font-size:10px;display:flex;gap:12px;box-shadow:var(--shadow-sm)"><span style="display:inline-flex;align-items:center;gap:5px"><span style="width:9px;height:9px;border-radius:999px;background:var(--color-accent)"></span>Фестивали</span><span style="display:inline-flex;align-items:center;gap:5px"><span style="width:9px;height:9px;border-radius:999px;background:var(--color-accent-2-600)"></span>Медиации</span><span style="display:inline-flex;align-items:center;gap:5px"><span style="width:9px;height:9px;border-radius:999px;background:var(--color-neutral-500)"></span>Концерты</span></div>
+        </div>
+        <div style="padding:12px;display:flex;gap:10px;align-items:center;border-top:1px solid var(--color-divider)"><div style="width:48px;height:48px;border-radius:10px;background:linear-gradient(135deg,var(--color-accent-200),var(--color-accent-2-200));flex:none"></div><div style="flex:1;font-size:12.5px"><div style="font-family:var(--font-heading)">Летний фестиваль медиаискусства</div><div class="text-muted" style="font-size:11px">Музей «Гараж» · 0.8 км</div></div><span class="btn btn-primary" style="font-size:11px">Открыть</span></div>
+      </div>
+      <div>
+        <div class="rev-badge rev-bad" style="color:var(--color-accent-700);margin-bottom:8px">Issues</div>
+        <ul style="list-style:none;padding:0;margin:0 0 22px;display:flex;flex-direction:column;gap:11px">
+          <li class="rev-li rev-bad">Pins carry no category meaning; no legend to decode them.</li>
+          <li class="rev-li rev-bad">No card when a pin is tapped; no list view for browsing.</li>
+        </ul>
+        <div class="rev-badge rev-good" style="color:var(--color-accent-2-700);margin-bottom:8px">Recommendations</div>
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:11px">
+          <li class="rev-li rev-good">Category-colored pins with a small legend, matching the feed's colors.</li>
+          <li class="rev-li rev-good">Tapping a pin surfaces the event card with distance and CTA.</li>
+          <li class="rev-li rev-good">A map/list toggle and cluster counts when zoomed out.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div style="max-width:1180px;margin:0 auto;padding:0 24px 100px">
+
+  <!-- PAGE 6: ORGANIZER HUB -->
+  <section style="margin-bottom:88px">
+    <div style="display:flex;align-items:baseline;gap:16px;margin-bottom:6px"><span class="rev-num">6</span><h3 style="font-size:28px;margin:0">Организаторам — кабинет</h3></div>
+    <p class="text-muted" style="margin:0 0 26px 54px;font-size:14px">Current: a title, a create button and three text-only link rows; «Подписчики» marked «позже».</p>
+    <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:28px;align-items:start">
+      <div class="rev-mock" style="padding:20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><h4 style="font-size:22px;margin:0">Кабинет организатора</h4><span class="btn btn-primary" style="font-size:12px">+ Создать событие</span></div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+          <div style="background:var(--color-surface);border-radius:var(--radius-md);padding:14px"><div style="font-family:var(--font-heading);font-size:26px">3</div><div class="text-muted" style="font-size:11px">Опубликовано</div></div>
+          <div style="background:var(--color-accent-100);border-radius:var(--radius-md);padding:14px"><div style="font-family:var(--font-heading);font-size:26px;color:var(--color-accent-700)">2</div><div style="font-size:11px;color:var(--color-accent-700)">На модерации</div></div>
+          <div style="background:var(--color-surface);border-radius:var(--radius-md);padding:14px"><div style="font-family:var(--font-heading);font-size:26px">1</div><div class="text-muted" style="font-size:11px">Черновик</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;background:var(--color-accent-2-100);border-radius:var(--radius-md);padding:12px 14px"><span style="width:30px;height:30px;border-radius:999px;background:var(--color-accent-2-600);color:var(--color-bg);display:grid;place-items:center;font-family:var(--font-heading)">5</span><span style="flex:1;font-size:13px;color:var(--color-accent-2-800)">Новых заявок участников</span><span class="btn btn-secondary" style="font-size:11px;background:var(--color-bg)">Смотреть</span></div>
+      </div>
+      <div>
+        <div class="rev-badge rev-bad" style="color:var(--color-accent-700);margin-bottom:8px">Issues</div>
+        <ul style="list-style:none;padding:0;margin:0 0 22px;display:flex;flex-direction:column;gap:11px">
+          <li class="rev-li rev-bad">Three identical text links — no state, no numbers, no priority.</li>
+          <li class="rev-li rev-bad">Nothing signals pending applications that need action.</li>
+          <li class="rev-li rev-bad">«позже» visible to users reads as unfinished.</li>
+        </ul>
+        <div class="rev-badge rev-good" style="color:var(--color-accent-2-700);margin-bottom:8px">Recommendations</div>
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:11px">
+          <li class="rev-li rev-good">Turn it into a dashboard: counts by status and a pending-applications alert.</li>
+          <li class="rev-li rev-good">Lead with the primary action («Создать событие») and what needs attention.</li>
+          <li class="rev-li rev-good">Hide unbuilt sections rather than labelling them «позже».</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE 7: CREATE EVENT -->
+  <section style="margin-bottom:88px">
+    <div style="display:flex;align-items:baseline;gap:16px;margin-bottom:6px"><span class="rev-num">7</span><h3 style="font-size:28px;margin:0">Создание события</h3></div>
+    <p class="text-muted" style="margin:0 0 26px 54px;font-size:14px">Current: /events/new renders empty over plain fetch — the form is the organizer's core task and needs a clear structure.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start">
+      <div>
+        <div class="rev-badge rev-bad" style="color:var(--color-accent-700);margin-bottom:8px">Issues</div>
+        <ul style="list-style:none;padding:0;margin:0 0 22px;display:flex;flex-direction:column;gap:11px">
+          <li class="rev-li rev-bad">No visible structure, grouping or sense of length.</li>
+          <li class="rev-li rev-bad">No live preview of how the event will look in the feed.</li>
+          <li class="rev-li rev-bad">Moderation expectations aren't set anywhere.</li>
+        </ul>
+        <div class="rev-badge rev-good" style="color:var(--color-accent-2-700);margin-bottom:8px">Recommendations</div>
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:11px">
+          <li class="rev-li rev-good">Group into steps: Основное · Когда и где · Билеты · Публикация.</li>
+          <li class="rev-li rev-good">Show a live card preview so organizers see the result as they type.</li>
+          <li class="rev-li rev-good">Save-draft always available; state the moderation step up front.</li>
+        </ul>
+      </div>
+      <div class="rev-mock" style="padding:20px">
+        <div class="field" style="margin-bottom:12px"><label>Название</label><div class="input" style="color:var(--color-text)">Летний фестиваль медиаискусства</div></div>
+        <div class="field" style="margin-bottom:12px"><label>Категория</label><div style="display:flex;gap:6px;flex-wrap:wrap"><span class="tag tag-accent">Фестивали</span><span class="tag tag-neutral">Лекции</span><span class="tag tag-neutral">Медиации</span></div></div>
+        <div style="display:flex;gap:10px;margin-bottom:12px"><div class="field" style="flex:1"><label>Дата</label><div class="input text-muted">25 июля</div></div><div class="field" style="flex:1"><label>Цена</label><div class="input text-muted">Бесплатно</div></div></div>
+        <div class="field" style="margin-bottom:16px"><label>Место</label><div class="input text-muted">Музей «Гараж»</div></div>
+        <div style="display:flex;gap:8px"><span class="btn btn-primary" style="font-size:12px">Отправить на модерацию</span><span class="btn btn-secondary" style="font-size:12px">Сохранить черновик</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE 8: MY EVENTS / APPLICATIONS -->
+  <section style="margin-bottom:88px">
+    <div style="display:flex;align-items:baseline;gap:16px;margin-bottom:6px"><span class="rev-num">8</span><h3 style="font-size:28px;margin:0">Мои события · Заявки участников</h3></div>
+    <p class="text-muted" style="margin:0 0 26px 54px;font-size:14px">Current: gated blank; applications described only as «Подтвердить или отклонить запись».</p>
+    <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:28px;align-items:start">
+      <div class="rev-mock" style="padding:20px">
+        <div style="display:flex;gap:6px;margin-bottom:14px"><span class="tag tag-accent" style="padding:6px 12px">Опубликованные</span><span class="tag tag-neutral" style="padding:6px 12px">На модерации</span><span class="tag tag-neutral" style="padding:6px 12px">Черновики</span></div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
+          <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--color-surface);border-radius:var(--radius-md)"><div style="width:38px;height:38px;border-radius:8px;background:linear-gradient(135deg,var(--color-accent-200),var(--color-accent-2-200));flex:none"></div><div style="flex:1;font-size:12.5px"><div style="font-family:var(--font-heading)">Летний фестиваль медиаискусства</div><div class="text-muted" style="font-size:11px">25 июля · 28 записей</div></div><span class="tag tag-accent-2" style="font-size:9px">Опубликовано</span></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--color-surface);border-radius:var(--radius-md)"><div style="width:38px;height:38px;border-radius:8px;background:linear-gradient(135deg,var(--color-neutral-200),var(--color-accent-100));flex:none"></div><div style="flex:1;font-size:12.5px"><div style="font-family:var(--font-heading)">Лаборатория медиаций</div><div class="text-muted" style="font-size:11px">15 августа · черновик</div></div><span class="tag tag-outline" style="font-size:9px">Черновик</span></div>
+        </div>
+        <div class="text-muted" style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Заявки · 5 новых</div>
+        <div style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--color-divider);border-radius:var(--radius-md)"><span style="width:32px;height:32px;border-radius:999px;background:var(--color-accent-2-300);flex:none"></span><div style="flex:1;font-size:12.5px"><div style="font-family:var(--font-heading)">Анна К.</div><div class="text-muted" style="font-size:11px">Медиация · 12 июля</div></div><span class="btn btn-primary" style="font-size:11px;padding:5px 12px">Принять</span><span class="btn btn-secondary" style="font-size:11px;padding:5px 12px">Отклонить</span></div>
+      </div>
+      <div>
+        <div class="rev-badge rev-bad" style="color:var(--color-accent-700);margin-bottom:8px">Issues</div>
+        <ul style="list-style:none;padding:0;margin:0 0 22px;display:flex;flex-direction:column;gap:11px">
+          <li class="rev-li rev-bad">No status taxonomy or filtering across an organizer's events.</li>
+          <li class="rev-li rev-bad">Approvals lack per-applicant context or batch actions.</li>
+        </ul>
+        <div class="rev-badge rev-good" style="color:var(--color-accent-2-700);margin-bottom:8px">Recommendations</div>
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:11px">
+          <li class="rev-li rev-good">Tabs by status with a count and a colored status tag per row.</li>
+          <li class="rev-li rev-good">Applicant rows with accept/decline inline and a bulk action.</li>
+          <li class="rev-li rev-good">A capacity meter so organizers see spots filling in real time.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE 9: ORGANIZER PROFILE -->
+  <section style="margin-bottom:40px">
+    <div style="display:flex;align-items:baseline;gap:16px;margin-bottom:6px"><span class="rev-num">9</span><h3 style="font-size:28px;margin:0">Профиль организатора</h3></div>
+    <p class="text-muted" style="margin:0 0 26px 54px;font-size:14px">Current: described as «Название, описание, логотип, верификация» — verification flow and public view are unclear.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start">
+      <div>
+        <div class="rev-badge rev-bad" style="color:var(--color-accent-700);margin-bottom:8px">Issues</div>
+        <ul style="list-style:none;padding:0;margin:0 0 22px;display:flex;flex-direction:column;gap:11px">
+          <li class="rev-li rev-bad">Verification is a field, not a status the organizer can track.</li>
+          <li class="rev-li rev-bad">No preview of how the public profile appears to attendees.</li>
+        </ul>
+        <div class="rev-badge rev-good" style="color:var(--color-accent-2-700);margin-bottom:8px">Recommendations</div>
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:11px">
+          <li class="rev-li rev-good">Show verification as a clear status (не начата → на проверке → проверен).</li>
+          <li class="rev-li rev-good">A live public-profile preview beside the edit form.</li>
+          <li class="rev-li rev-good">The ✓ mark should read consistently everywhere it appears.</li>
+        </ul>
+      </div>
+      <div class="rev-mock" style="padding:22px">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px"><span style="width:56px;height:56px;border-radius:999px;background:linear-gradient(135deg,var(--color-accent-2-300),var(--color-accent-2-100));flex:none"></span><div><div style="display:flex;align-items:center;gap:6px;font-family:var(--font-heading);font-size:19px">Студия «Лиа»<span style="display:inline-flex;width:18px;height:18px;border-radius:999px;background:var(--color-accent-2-600);color:var(--color-bg);align-items:center;justify-content:center;font-size:10px">✓</span></div><div class="text-muted" style="font-size:12px">Проверенный организатор · 8 событий</div></div></div>
+        <p style="font-size:12.5px;opacity:.8;margin-bottom:16px">Независимая студия медиаций и разговоров об искусстве. Мы делаем встречи в маленьких группах.</p>
+        <div style="background:var(--color-surface);border-radius:var(--radius-md);padding:14px"><div class="text-muted" style="font-size:10px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px">Статус верификации</div><div style="display:flex;align-items:center;gap:8px;font-size:12px"><span style="width:16px;height:16px;border-radius:999px;background:var(--color-accent-2-600);color:var(--color-bg);display:grid;place-items:center;font-size:9px">✓</span>Заявка<span style="flex:1;height:2px;background:var(--color-accent-2-400)"></span><span style="width:16px;height:16px;border-radius:999px;background:var(--color-accent-2-600);color:var(--color-bg);display:grid;place-items:center;font-size:9px">✓</span>Проверка<span style="flex:1;height:2px;background:var(--color-accent-2-400)"></span><span style="width:16px;height:16px;border-radius:999px;background:var(--color-accent-2-600);color:var(--color-bg);display:grid;place-items:center;font-size:9px">✓</span>Готово</div></div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div style="max-width:1180px;margin:0 auto;padding:0 24px 120px">
+  <section style="background:var(--color-accent-2-100);border-radius:var(--radius-lg);padding:44px">
+    <div class="rev-badge" style="color:var(--color-accent-2-700);margin-bottom:12px">Where to start</div>
+    <h2 style="font-size:32px;margin-bottom:8px;max-width:22ch">A pragmatic order to work in</h2>
+    <p style="max-width:60ch;margin-bottom:28px;color:var(--color-accent-2-900)">You don't need everything at once. Ship in this order and each step makes the next cheaper.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px">
+      <div style="background:var(--color-bg);border-radius:var(--radius-md);padding:20px">
+        <div style="font-family:var(--font-heading);font-size:15px;margin-bottom:10px">1 · Hygiene (days)</div>
+        <p style="font-size:13px;margin:0;opacity:.82">Remove the dev note and QA/test events from production. Fix the filter taxonomy and add the missing category. Zero-cost credibility.</p>
+      </div>
+      <div style="background:var(--color-bg);border-radius:var(--radius-md);padding:20px">
+        <div style="font-family:var(--font-heading);font-size:15px;margin-bottom:10px">2 · The card + identity (1–2 wks)</div>
+        <p style="font-size:13px;margin:0;opacity:.82">Adopt the Organic system, rebuild the event card and category colors. This lifts the feed, map and calendar in one move.</p>
+      </div>
+      <div style="background:var(--color-bg);border-radius:var(--radius-md);padding:20px">
+        <div style="font-family:var(--font-heading);font-size:15px;margin-bottom:10px">3 · Detail + AI-подбор (2–4 wks)</div>
+        <p style="font-size:13px;margin:0;opacity:.82">Design the conversion screen and turn Подбор into a real flow (or a smart filter fallback). Then round out organizer tools and states.</p>
+      </div>
+    </div>
+    <p class="text-muted" style="font-size:13px;margin:26px 0 0">Want me to take any of these from critique to a build-ready screen? Say which page and I'll produce it as a full interactive mockup. I can also translate this review into Russian.</p>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const dotDays = [12, 15, 18, 20, 25];
+    const days = [];
+    for (let i = 0; i < 2; i++) days.push({ n: "", bg: "transparent", fg: "transparent", dot: false });
+    for (let d = 1; d <= 31; d++) {
+      const dot = dotDays.includes(d);
+      days.push({ n: String(d), dot, bg: dot ? "var(--color-accent-100)" : "transparent", fg: "var(--color-text)" });
+    }
+    while (days.length < 35) days.push({ n: "", bg: "transparent", fg: "transparent", dot: false });
+    return {
+      days,
+      picks: [
+        { cat: "Медиации", cls: "tag-accent-2", title: "Медиация в залах старых мастеров", venue: "ГМИИ им. Пушкина", date: "12 июл" },
+        { cat: "Лекции", cls: "tag-neutral", title: "Лаборатория медиаций", venue: "Парк Горького", date: "15 авг" }
+      ],
+      events: [
+        { cat: "Фестивали", cls: "tag-accent", title: "Летний фестиваль медиаискусства", venue: "Музей «Гараж»", date: "25–26 ИЮЛ", org: "Музей «Гараж»", verified: true, price: "Бесплатно", grad: "linear-gradient(135deg,var(--color-accent-200),var(--color-accent-2-200))" },
+        { cat: "Лекции", cls: "tag-neutral", title: "Лаборатория медиаций: как смотреть современное искусство", venue: "Парк Горького", date: "15–17 АВГ", org: "Студия «Лиа»", verified: true, price: "Бесплатно", grad: "linear-gradient(135deg,var(--color-neutral-200),var(--color-accent-100))" },
+        { cat: "Кино", cls: "tag-accent-2", title: "Кинопоказ с обсуждением", venue: "Еврейский музей", date: "20 ИЮЛ", org: "Еврейский музей", verified: false, price: "Бесплатно", grad: "linear-gradient(135deg,var(--color-accent-2-200),var(--color-neutral-200))" },
+        { cat: "Спектакли", cls: "tag-accent", title: "Спектакль: лабораторная сцена", venue: "Электротеатр «Станиславский»", date: "18 ИЮЛ", org: "Электротеатр", verified: false, price: "2 000 ₽", grad: "linear-gradient(135deg,var(--color-accent-300),var(--color-accent-100))" },
+        { cat: "Концерты", cls: "tag-neutral", title: "Концерт современной академической музыки", venue: "Центр «Винзавод»", date: "15 ИЮЛ", org: "Винзавод", verified: false, price: "1 200 ₽", grad: "linear-gradient(135deg,var(--color-neutral-300),var(--color-neutral-100))" },
+        { cat: "Медиации", cls: "tag-accent-2", title: "Медиация в залах старых мастеров", venue: "ГМИИ им. Пушкина", date: "12 ИЮЛ", org: "ГМИИ им. Пушкина", verified: true, price: "Бесплатно", grad: "linear-gradient(135deg,var(--color-accent-2-300),var(--color-accent-2-100))" }
+      ],
+      categories: [
+        { name: "Медиации", cls: "tag-accent-2" },
+        { name: "Мастер-классы", cls: "tag-accent" },
+        { name: "Лекции", cls: "tag-neutral" },
+        { name: "Кино", cls: "tag-accent-2" },
+        { name: "Спектакли", cls: "tag-accent" },
+        { name: "Концерты", cls: "tag-neutral" },
+        { name: "Фестивали", cls: "tag-accent" },
+        { name: "Читательские группы", cls: "tag-accent-2" }
+      ],
+      summary: [
+        { n: 1, title: "No visual identity", body: "The product reads as a raw scaffold — system fonts, unstyled lists, no imagery or color. A warm editorial system is the highest-leverage change." },
+        { n: 2, title: "Event cards are run-on text", body: "Category, format, date, venue, organizer, badge and price are dumped as one string. No hierarchy, no thumbnail, nothing to scan." },
+        { n: 3, title: "Filters are a flat word list", body: "No active state, no counts, no way to combine or clear. «Рядом со мной» sits next to categories though it's a different axis." },
+        { n: 4, title: "AI-\u043f\u043e\u0434\u0431\u043e\u0440 is a dead end", body: "The flagship discovery feature shows a developer placeholder. It's the strongest differentiator and deserves a real, designed flow." },
+        { n: 5, title: "Blank empty & auth states", body: "Calendar, My events and gated pages render empty shells. Every state needs a designed, on-brand moment." },
+        { n: 6, title: "Weak navigation", body: "No brand mark presence, no visible active state, no mobile pattern. Add a bottom tab bar on mobile and a clear current-page state." }
+      ],
+      bugs: [
+        { sev: "High", title: "Dev note shown to users", body: "The «Подбор» page prints: «AI-ассистент подбора ещё не реализован в этом скаффолде. Смотри design/screens/ai-search.html.» A source-code path is leaking to end users." },
+        { sev: "High", title: "QA/test data in production", body: "Live event list contains «QA Тур в Геленджик (Блок 8) — отредактировано», organizer «QA Block8», «bla bla meet» and organizer «kornkorn10»." },
+        { sev: "Med", title: "Placeholder price", body: "«bla bla meet» is priced «от 100 500 ₽» — clearly a test value surfacing publicly." },
+        { sev: "Med", title: "Filter taxonomy incomplete", body: "Filters offer Медиации / Мастер-классы / Лекции, but events also use Кино, Спектакли, Концерты, Фестивали — categories with no matching filter." },
+        { sev: "Med", title: "Missing category", body: "Meta description promises «читательские группы», but no such category or events appear anywhere in the list or filters." },
+        { sev: "Low", title: "Empty gated pages", body: "Calendar, «Мои события» and organizer sub-pages return blank shells rather than a login prompt or empty state." }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

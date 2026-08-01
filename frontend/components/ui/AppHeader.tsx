@@ -99,4 +99,6 @@ export const ADMIN_NAV: NavItem[] = [
   { href: "/admin/moderation/events", label: "Модерация" },
   { href: "/admin/organizers", label: "Организаторы" },
   { href: "/admin/users", label: "Пользователи" },
+  { href: "/admin/complaints", label: "Жалобы" },
+  { href: "/admin/settings", label: "Настройки" },
 ];

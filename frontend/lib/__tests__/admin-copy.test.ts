@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { complaintsSignalRu, submittedAgoRu, testDataSignalRu } from "../admin-copy";
+import {
+  complaintsCountRu,
+  complaintsSignalRu,
+  submittedAgoRu,
+  testDataSignalRu,
+} from "../admin-copy";
 
 /**
  * Admin copy defects from the 2026-07-31 sweep: the overview signal line
@@ -28,6 +33,15 @@ describe("complaintsSignalRu", () => {
     expect(complaintsSignalRu(1)).toBe("1 событие с жалобами");
     expect(complaintsSignalRu(2)).toBe("2 события с жалобами");
     expect(complaintsSignalRu(9)).toBe("9 событий с жалобами");
+  });
+});
+
+describe("complaintsCountRu", () => {
+  it("pluralizes жалоба, which the inbox row printed as a bare «жалоб»", () => {
+    expect(complaintsCountRu(1)).toBe("1 жалоба");
+    expect(complaintsCountRu(3)).toBe("3 жалобы");
+    expect(complaintsCountRu(11)).toBe("11 жалоб");
+    expect(complaintsCountRu(21)).toBe("21 жалоба");
   });
 });
 

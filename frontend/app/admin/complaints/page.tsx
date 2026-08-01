@@ -5,7 +5,11 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { complaintsCountRu } from "@/lib/admin-copy";
+import { orgEventStatusLabel } from "@/lib/org-event-status";
+import { padCount } from "@/lib/org-seats";
 import {
   COMPLAINT_CATEGORIES,
   listComplaints,
@@ -93,32 +97,45 @@ export default function ComplaintsInbox() {
   }
 
   return (
-    <div className="flex flex-col gap-[12px] px-[20px] py-[26px] max-sm:px-[14px]">
-      <Link
-        href="/admin"
-        className="swiss-focus inline-flex min-h-[44px] items-center text-[11px] font-bold uppercase tracking-[0.07em] text-muted-2"
-      >
-        ‹ К обзору
-      </Link>
-      <h1 className="text-[17px] font-black leading-[1.05] tracking-[-0.02em]">Жалобы</h1>
+    <div className="flex flex-col">
+      <div className="flex items-baseline justify-between gap-[12px] border-b border-paper px-[20px] py-[14px] max-sm:px-[14px]">
+        <h1 className="text-[17px] font-black leading-[1.05] tracking-[-0.02em]">Жалобы</h1>
+        <span className="cap text-muted-2">
+          {loading ? "Загрузка" : `Событий · ${padCount(items.length)}`}
+        </span>
+      </div>
 
       {error ? (
-        <p className="border-b border-rule-inner py-[8px] text-[11px] text-signal">{error}</p>
+        <p className="border-b border-rule-inner px-[20px] py-[8px] text-[11px] text-signal max-sm:px-[14px]">
+          {error}
+        </p>
       ) : null}
 
       {loading ? (
-        <div className="flex flex-col gap-[8px]">
+        <div className="flex flex-col gap-[8px] px-[20px] py-[16px] max-sm:px-[14px]">
           <Skeleton className="h-[72px] w-full" />
           <Skeleton className="h-[72px] w-full" />
         </div>
       ) : items.length === 0 ? (
-        <p className="text-[11.5px] text-text-dim">Жалоб нет.</p>
+        <EmptyState
+          numeral="00"
+          title="Жалоб нет"
+          text="Никто не пожаловался на события. Жалобы появятся здесь, как только придут."
+          actions={
+            <Link
+              href="/admin"
+              className="swiss-focus inline-flex min-h-[44px] items-center justify-center bg-paper px-[11px] py-[11px] text-[11px] font-bold uppercase tracking-[0.07em] text-ink"
+            >
+              К обзору
+            </Link>
+          }
+        />
       ) : (
         <ul className="flex flex-col">
           {items.map((g) => (
             <li
               key={g.event_id}
-              className="flex items-start justify-between gap-[16px] border-b border-rule-inner py-[14px]"
+              className="flex items-start justify-between gap-[16px] border-b border-rule-inner px-[20px] py-[14px] max-sm:px-[14px]"
             >
               <div className="min-w-0 flex-1 space-y-[6px]">
                 <Link
@@ -127,8 +144,8 @@ export default function ComplaintsInbox() {
                 >
                   {g.event_title}
                 </Link>
-                <div className="font-mono text-[11px] text-muted-2">
-                  {g.report_count} жалоб · статус: {g.event_status}
+                <div className="cap font-mono text-muted-2">
+                  {complaintsCountRu(g.report_count)} · {orgEventStatusLabel(g.event_status)}
                 </div>
                 <div className="flex flex-wrap gap-[6px]">
                   {Object.entries(g.categories).map(([cat, n]) => (

@@ -8,6 +8,11 @@ export function testDataSignalRu(n: number): string {
   return `${n} ${pluralRu(n, EVENT_FORMS)} с тестовыми данными`;
 }
 
+/** «3 жалобы» — the count on a complaints-inbox row. */
+export function complaintsCountRu(n: number): string {
+  return `${n} ${pluralRu(n, ["жалоба", "жалобы", "жалоб"])}`;
+}
+
 /** «3 события с жалобами» — the A1 complaints signal line. */
 export function complaintsSignalRu(n: number): string {
   return `${n} ${pluralRu(n, EVENT_FORMS)} с жалобами`;

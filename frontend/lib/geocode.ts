@@ -38,3 +38,40 @@ export async function searchPlaces(q: string): Promise<GeoResult[]> {
   if (!res.ok) throw new Error(`places failed: ${res.status}`);
   return (await res.json()) as GeoResult[];
 }
+
+/** Outcome of the paired name + address lookup behind the venue search box. */
+export interface VenueLookup {
+  /** Name hits first, then address hits; duplicate labels dropped. */
+  results: GeoResult[];
+  /** The Places proxy errored — name search is not running at all. */
+  nameSearchDown: boolean;
+  /** The geocoder proxy errored — address search is not running at all. */
+  addressSearchDown: boolean;
+}
+
+/**
+ * Merges the two settled lookups and says which of them is down.
+ *
+ * Both run in parallel and either can fail on its own (`/places` 503s whenever
+ * YANDEX_PLACES_KEY is unprovisioned). Silently keeping whatever came back made
+ * a dead name search indistinguishable from one that found nothing, so the
+ * caller has to be told.
+ */
+export function mergeVenueLookups(
+  places: PromiseSettledResult<GeoResult[]>,
+  addresses: PromiseSettledResult<GeoResult[]>,
+): VenueLookup {
+  const p = places.status === "fulfilled" ? places.value : [];
+  const a = addresses.status === "fulfilled" ? addresses.value : [];
+  const seen = new Set<string>();
+  const results = [...p, ...a].filter((r) => {
+    if (seen.has(r.label)) return false;
+    seen.add(r.label);
+    return true;
+  });
+  return {
+    results,
+    nameSearchDown: places.status === "rejected",
+    addressSearchDown: addresses.status === "rejected",
+  };
+}

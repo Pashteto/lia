@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import { geocodeAddress, searchPlaces, type GeoResult } from "@/lib/geocode";
+import {
+  geocodeAddress,
+  mergeVenueLookups,
+  searchPlaces,
+  type GeoResult,
+} from "@/lib/geocode";
 import { updateVenue, type ApiVenue } from "@/lib/api";
 
 const YandexMap = dynamic(
@@ -24,6 +29,10 @@ export function VenueGeoModal({
   const [q, setQ] = useState(venue.address ?? venue.name);
   const [debounced, setDebounced] = useState("");
   const [results, setResults] = useState<GeoResult[]>([]);
+  // Which of the two lookups is dead. `/places` 503s whenever the Yandex Places
+  // key is unprovisioned, and the address lookup alone still returns hits — so
+  // without this the search box looks like it works.
+  const [down, setDown] = useState({ name: false, address: false });
   const [pos, setPos] = useState<[number, number] | null>(
     venue.lat != null && venue.lon != null ? [venue.lat, venue.lon] : null,
   );
@@ -41,15 +50,9 @@ export function VenueGeoModal({
     Promise.allSettled([searchPlaces(debounced), geocodeAddress(debounced)]).then(
       ([places, addrs]) => {
         if (!live) return;
-        const p = places.status === "fulfilled" ? places.value : [];
-        const a = addrs.status === "fulfilled" ? addrs.value : [];
-        const seen = new Set<string>();
-        const merged = [...p, ...a].filter((r) => {
-          if (seen.has(r.label)) return false;
-          seen.add(r.label);
-          return true;
-        });
-        setResults(merged);
+        const lookup = mergeVenueLookups(places, addrs);
+        setResults(lookup.results);
+        setDown({ name: lookup.nameSearchDown, address: lookup.addressSearchDown });
       },
     );
     return () => {
@@ -86,6 +89,15 @@ export function VenueGeoModal({
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
+        {(down.name || down.address) && (
+          <p className="mb-2 text-[12px] text-signal">
+            {down.name && down.address
+              ? "Поиск недоступен — поставьте метку на карте вручную."
+              : down.name
+                ? "Поиск по названию недоступен — ищите по адресу или поставьте метку вручную."
+                : "Поиск по адресу недоступен — ищите по названию или поставьте метку вручную."}
+          </p>
+        )}
         {results.length > 0 && (
           <div className="mb-2 max-h-40 overflow-auto rounded-control bg-bg-secondary">
             {results.map((r, i) => (

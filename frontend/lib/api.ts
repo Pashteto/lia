@@ -70,6 +70,13 @@ export function apiEventToLia(e: ApiEvent): LiaEvent {
     signupMode: e.signup_mode,
     capacity: e.capacity,
     seatsRemaining: e.seats_remaining,
+    // The backend has no attendee count — it sends seats_remaining
+    // (= capacity − going, clamped at 0). Derive the count the «Места» cell
+    // needs; without a capacity there is nothing to derive from.
+    attendeeCount:
+      e.capacity != null && e.seats_remaining != null
+        ? Math.max(0, e.capacity - e.seats_remaining)
+        : undefined,
     myRsvpStatus: e.my_rsvp_status,
     curatorQuestion: e.curator_question,
     externalRegistrationUrl: e.external_registration_url,
@@ -154,19 +161,37 @@ export async function getCategories(): Promise<ApiCategory[]> {
 }
 
 /**
+ * Start of the local day — the default lower bound for discovery surfaces.
+ *
+ * Midnight rather than "now": an event that started earlier today may still be
+ * under way, and dropping it out of the feed mid-event would be worse than
+ * showing it. The feed's own sort demotes already-started events below the
+ * upcoming ones.
+ */
+export function feedWindowStart(now: Date = new Date()): Date {
+  const from = new Date(now);
+  from.setHours(0, 0, 0, 0);
+  return from;
+}
+
+/**
  * Fetches published events from the backend. Works on both server (SSR) and
  * client. Throws on network/HTTP error so callers can decide how to degrade.
  *
  * When `from` / `to` are given, the backend restricts to events whose start
  * time is in [from, to) — used by the today/weekend date chips so the filter
  * sees the whole dataset, not just the first page the list endpoint returns.
+ *
+ * With no `from`, discovery defaults to today onwards. The list endpoint orders
+ * by starts_at ASC under a row cap, so an unbounded query spends that cap on
+ * events that already happened and the feed opens on stale ones.
  */
 export async function fetchPublishedEvents(
   from?: Date,
   to?: Date,
 ): Promise<LiaEvent[]> {
   const params = new URLSearchParams({ status: "published" });
-  if (from) params.set("from", from.toISOString());
+  params.set("from", (from ?? feedWindowStart()).toISOString());
   if (to) params.set("to", to.toISOString());
   const res = await fetch(`${API_V1}/events?${params.toString()}`, {
     // Revalidate every 30s on the server; always fresh enough for discovery.

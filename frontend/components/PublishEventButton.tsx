@@ -57,7 +57,7 @@ export function PublishEventButton({ eventId }: { eventId: string }) {
       {confirming ? (
         <ConfirmModal
           title="Опубликовать событие?"
-          body="После публикации изменить его будет нельзя."
+          body="Событие сразу появится в ленте. Его можно будет отредактировать или вернуть в черновики."
           confirmLabel="Опубликовать"
           onConfirm={() => {
             setConfirming(false);

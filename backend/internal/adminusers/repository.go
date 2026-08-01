@@ -53,6 +53,17 @@ SELECT u.uuid                        AS id,
  ORDER BY u.created_at DESC, u.uuid DESC
  LIMIT ?2 OFFSET ?3`
 
+// Count returns every active user. Same population as listSQL's WHERE clause —
+// deleted users stay out of the registry, so they stay out of the tile too.
+func (r *pgRepository) Count(ctx context.Context) (int, error) {
+	var n int
+	if _, err := r.db.QueryOneContext(ctx, pg.Scan(&n),
+		`SELECT count(*) FROM users WHERE status = 'active'`); err != nil {
+		return 0, fmt.Errorf("count admin users: %w", err)
+	}
+	return n, nil
+}
+
 func (r *pgRepository) List(ctx context.Context, f Filter) ([]Row, error) {
 	var rows []row
 	like := "%" + f.Query + "%"

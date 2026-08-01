@@ -16,6 +16,8 @@ func (r *recordingRepo) List(_ context.Context, f Filter) ([]Row, error) {
 	return r.rows, r.err
 }
 
+func (r *recordingRepo) Count(context.Context) (int, error) { return len(r.rows), r.err }
+
 func TestList_DefaultsLimitAndTrimsQuery(t *testing.T) {
 	repo := &recordingRepo{}
 	if _, err := NewService(repo).List(context.Background(), Filter{Query: "  анна  "}); err != nil {

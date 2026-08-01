@@ -17,6 +17,7 @@ import (
 	hygiene "github.com/Pashteto/lia/internal/hygiene"
 	domain "github.com/Pashteto/lia/internal/models"
 	"github.com/Pashteto/lia/internal/moderation"
+	"github.com/Pashteto/lia/internal/organizers"
 )
 
 func authFn(role string) func(string) (*domain.User, error) {
@@ -447,5 +448,107 @@ func TestListEvents_CarriesPublishedAt(t *testing.T) {
 	}
 	if _, ok := got[1]["published_at"]; ok {
 		t.Fatalf("unpublished event must omit published_at, got %v", got[1]["published_at"])
+	}
+}
+
+// stubOrgs serves organizer counts for the overview tiles.
+type stubOrgs struct {
+	organizers.Service
+	counts organizers.Counts
+	orgs   []organizers.Organizer
+}
+
+func (s stubOrgs) Overview(context.Context) (organizers.Counts, error) { return s.counts, nil }
+
+func (s *stubUsers) Count(context.Context) (int, error) { return len(s.rows), nil }
+
+// «ОРГАНИЗАТОРОВ —» and «ПОЛЬЗОВАТЕЛЕЙ —» were permanently blank on the admin
+// overview: the payload carried neither total, despite 28 users in the DB.
+func TestOverview_IncludesOrganizerAndUserTotals(t *testing.T) {
+	users := &stubUsers{rows: []adminusers.Row{
+		{ID: uuid.Must(uuid.NewV4())}, {ID: uuid.Must(uuid.NewV4())}, {ID: uuid.Must(uuid.NewV4())},
+	}}
+	h := NewHandler(Deps{
+		Authenticate: authFn("admin"),
+		Moderation:   stubMod{},
+		Organizers:   stubOrgs{counts: organizers.Counts{OrganizersPending: 2, OrganizersTotal: 9}},
+		Users:        users,
+	})
+	r := httptest.NewRequest(http.MethodGet, "/api/v1/admin/overview", nil)
+	r.Header.Set("Authorization", "Bearer x")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, r)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200", w.Code)
+	}
+	var got map[string]int
+	if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if got["organizers_total"] != 9 {
+		t.Fatalf("organizers_total = %d, want 9", got["organizers_total"])
+	}
+	if got["users_total"] != 3 {
+		t.Fatalf("users_total = %d, want 3", got["users_total"])
+	}
+	if got["organizers_pending"] != 2 {
+		t.Fatalf("organizers_pending = %d, want 2 (existing field must survive)", got["organizers_pending"])
+	}
+}
+
+// The overview must still answer when the optional collaborators are unwired.
+func TestOverview_OmitsTotalsWhenUnwired(t *testing.T) {
+	r := httptest.NewRequest(http.MethodGet, "/api/v1/admin/overview", nil)
+	r.Header.Set("Authorization", "Bearer x")
+	w := httptest.NewRecorder()
+	newTestHandler("admin").ServeHTTP(w, r)
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200", w.Code)
+	}
+	var got map[string]int
+	if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if _, ok := got["users_total"]; ok {
+		t.Fatalf("users_total must be absent when Users is unwired, got %v", got["users_total"])
+	}
+}
+
+func (s stubOrgs) List(context.Context, organizers.ListFilter) ([]organizers.Organizer, error) {
+	return s.orgs, nil
+}
+
+// The organizer registry's «СОБЫТИЙ» and «ЖАЛОБ» columns rendered a hard-coded
+// dash — the payload carried neither count.
+func TestSearchOrganizers_CarriesCounts(t *testing.T) {
+	h := NewHandler(Deps{
+		Authenticate: authFn("admin"),
+		Moderation:   stubMod{},
+		Organizers: stubOrgs{orgs: []organizers.Organizer{{
+			ID: uuid.Must(uuid.NewV4()), Name: "Мастерская", VerificationStatus: "verified",
+			EventsCount: 12, ComplaintsCount: 3,
+		}}},
+	})
+	r := httptest.NewRequest(http.MethodGet, "/api/v1/admin/organizers", nil)
+	r.Header.Set("Authorization", "Bearer x")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, r)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200", w.Code)
+	}
+	var got []map[string]any
+	if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if len(got) != 1 {
+		t.Fatalf("len = %d, want 1", len(got))
+	}
+	if got[0]["events_count"] != float64(12) {
+		t.Fatalf("events_count = %v, want 12", got[0]["events_count"])
+	}
+	if got[0]["complaints_count"] != float64(3) {
+		t.Fatalf("complaints_count = %v, want 3", got[0]["complaints_count"])
 	}
 }

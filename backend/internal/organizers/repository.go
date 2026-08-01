@@ -226,7 +226,51 @@ func (r *pgRepository) List(ctx context.Context, f ListFilter) ([]Organizer, err
 	if _, err := r.db.QueryContext(ctx, &orgs, query, args...); err != nil {
 		return nil, fmt.Errorf("list organizers: %w", err)
 	}
+	if err := r.loadRegistryCounts(ctx, orgs); err != nil {
+		return nil, err
+	}
 	return orgs, nil
+}
+
+// loadRegistryCounts fills the «Событий» / «Жалоб» columns for the A3 registry
+// in one query (no N+1). Events belong to the organizer's OWNER user, which is
+// what events.organizer_id stores.
+func (r *pgRepository) loadRegistryCounts(ctx context.Context, orgs []Organizer) error {
+	if len(orgs) == 0 {
+		return nil
+	}
+	ids := make([]uuid.UUID, 0, len(orgs))
+	for _, o := range orgs {
+		ids = append(ids, o.ID)
+	}
+	var rows []struct {
+		ID              uuid.UUID `pg:"id"`
+		EventsCount     int       `pg:"events_count,use_zero"`
+		ComplaintsCount int       `pg:"complaints_count,use_zero"`
+	}
+	if _, err := r.db.QueryContext(ctx, &rows,
+		`SELECT o.id,
+		        (SELECT count(*) FROM events e
+		          WHERE e.organizer_id = o.owner_user_id) AS events_count,
+		        (SELECT count(*) FROM complaints c
+		           JOIN events e2 ON e2.id = c.target_id
+		          WHERE c.target_type = 'event' AND c.status = 'open'
+		            AND e2.organizer_id = o.owner_user_id) AS complaints_count
+		   FROM organizers o
+		  WHERE o.id IN (?)`, pg.In(ids)); err != nil {
+		return fmt.Errorf("load organizer registry counts: %w", err)
+	}
+	byID := make(map[uuid.UUID]int, len(rows)*2)
+	complaintsByID := make(map[uuid.UUID]int, len(rows))
+	for _, row := range rows {
+		byID[row.ID] = row.EventsCount
+		complaintsByID[row.ID] = row.ComplaintsCount
+	}
+	for i := range orgs {
+		orgs[i].EventsCount = byID[orgs[i].ID]
+		orgs[i].ComplaintsCount = complaintsByID[orgs[i].ID]
+	}
+	return nil
 }
 
 // prefixCols renders orgCols with a table alias for join queries.
@@ -253,10 +297,10 @@ func (r *pgRepository) History(ctx context.Context, id uuid.UUID) ([]HistoryEntr
 
 func (r *pgRepository) Counts(ctx context.Context) (Counts, error) {
 	var c Counts
-	_, err := r.db.QueryOneContext(ctx, pg.Scan(&c.OrganizersPending),
-		`SELECT count(*) FROM organizers WHERE verification_status = 'pending'`)
+	_, err := r.db.QueryOneContext(ctx, pg.Scan(&c.OrganizersPending, &c.OrganizersTotal),
+		`SELECT count(*) FILTER (WHERE verification_status = 'pending'), count(*) FROM organizers`)
 	if err != nil {
-		return Counts{}, fmt.Errorf("count pending organizers: %w", err)
+		return Counts{}, fmt.Errorf("count organizers: %w", err)
 	}
 	return c, nil
 }

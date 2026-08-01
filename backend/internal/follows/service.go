@@ -41,6 +41,9 @@ type Service interface {
 	// IsFollowing reports whether the user follows the organizer identified by its
 	// OWNER user id (the caller already holds it, e.g. the public org page).
 	IsFollowing(ctx context.Context, userID, ownerUserID uuid.UUID) (bool, error)
+	// CountFollowers returns how many users follow the organizer, addressed by
+	// its OWNER user id. Powers the «Подписчиков» cell, which had no source.
+	CountFollowers(ctx context.Context, ownerUserID uuid.UUID) (int, error)
 	// ListFollowed returns the verified organizer profiles the user follows.
 	ListFollowed(ctx context.Context, userID uuid.UUID) ([]FollowedOrganizer, error)
 	// ListEventsFromFollowed returns published events in [from, to) from every
@@ -97,6 +100,10 @@ func (s *service) IsFollowing(ctx context.Context, userID, ownerUserID uuid.UUID
 		return false, nil
 	}
 	return s.repo.IsFollowing(ctx, userID, ownerUserID)
+}
+
+func (s *service) CountFollowers(ctx context.Context, ownerUserID uuid.UUID) (int, error) {
+	return s.repo.CountFollowers(ctx, ownerUserID)
 }
 
 func (s *service) ListFollowed(ctx context.Context, userID uuid.UUID) ([]FollowedOrganizer, error) {

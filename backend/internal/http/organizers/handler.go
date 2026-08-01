@@ -5,6 +5,7 @@
 package organizers
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -63,9 +64,12 @@ type organizerJSON struct {
 	VerificationStatus string `json:"verification_status"`
 	AutoVerify         bool   `json:"auto_verify"`
 	LatestReason       string `json:"latest_reason,omitempty"`
+	// FollowersCount powers the «Подписчиков» cell, which rendered a hard-coded
+	// dash. nil when Follows is unwired — unknown, which is not the same as 0.
+	FollowersCount *int `json:"followers_count,omitempty"`
 }
 
-func (h *handler) toJSON(o *orgdomain.Organizer) organizerJSON {
+func (h *handler) toJSON(ctx context.Context, o *orgdomain.Organizer) organizerJSON {
 	j := organizerJSON{
 		ID:                 o.ID.String(),
 		Name:               o.Name,
@@ -74,6 +78,11 @@ func (h *handler) toJSON(o *orgdomain.Organizer) organizerJSON {
 		VerificationStatus: o.VerificationStatus,
 		AutoVerify:         o.AutoVerify,
 		LatestReason:       o.LatestReason,
+	}
+	if h.deps.Follows != nil {
+		if n, err := h.deps.Follows.CountFollowers(ctx, o.OwnerUserID); err == nil {
+			j.FollowersCount = &n
+		}
 	}
 	// logo_url resolution (logo_file_id -> files.storage_key -> URL) is a follow-up; the client holds the uploaded file id.
 	return j
@@ -94,7 +103,7 @@ func (h *handler) getMine(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusInternalServerError, "load failed")
 		return
 	}
-	writeJSON(w, http.StatusOK, h.toJSON(o))
+	writeJSON(w, http.StatusOK, h.toJSON(r.Context(), o))
 }
 
 func (h *handler) putMine(w http.ResponseWriter, r *http.Request) {
@@ -121,7 +130,7 @@ func (h *handler) putMine(w http.ResponseWriter, r *http.Request) {
 	})
 	switch err {
 	case nil:
-		writeJSON(w, http.StatusOK, h.toJSON(o))
+		writeJSON(w, http.StatusOK, h.toJSON(r.Context(), o))
 	case orgdomain.ErrNameRequired:
 		writeErr(w, http.StatusBadRequest, "Укажите название организатора")
 	default:
@@ -155,6 +164,8 @@ type publicOrganizerJSON struct {
 	WebsiteURL  string `json:"website_url"`
 	Verified    bool   `json:"verified"`
 	IsFollowing bool   `json:"is_following"`
+	// FollowersCount powers the «Подписчиков» cell on the public organizer page.
+	FollowersCount *int `json:"followers_count,omitempty"`
 }
 
 func (h *handler) getPublic(w http.ResponseWriter, r *http.Request) {
@@ -178,9 +189,16 @@ func (h *handler) getPublic(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+	var followers *int
+	if h.deps.Follows != nil {
+		if n, err := h.deps.Follows.CountFollowers(r.Context(), o.OwnerUserID); err == nil {
+			followers = &n
+		}
+	}
 	writeJSON(w, http.StatusOK, publicOrganizerJSON{
 		ID: o.ID.String(), Name: o.Name, Description: o.Description,
 		WebsiteURL: o.WebsiteURL, Verified: true, IsFollowing: isFollowing,
+		FollowersCount: followers,
 	})
 }
 

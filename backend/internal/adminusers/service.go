@@ -40,11 +40,14 @@ type Filter struct {
 // Repository reads registry rows.
 type Repository interface {
 	List(ctx context.Context, f Filter) ([]Row, error)
+	// Count returns every active user, unpaginated — the «Пользователей» tile.
+	Count(ctx context.Context) (int, error)
 }
 
 // Service is the registry use-case layer.
 type Service interface {
 	List(ctx context.Context, f Filter) ([]Row, error)
+	Count(ctx context.Context) (int, error)
 }
 
 type service struct{ repo Repository }
@@ -64,4 +67,8 @@ func (s *service) List(ctx context.Context, f Filter) ([]Row, error) {
 		f.Offset = 0
 	}
 	return s.repo.List(ctx, f)
+}
+
+func (s *service) Count(ctx context.Context) (int, error) {
+	return s.repo.Count(ctx)
 }

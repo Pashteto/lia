@@ -17,6 +17,7 @@ type fakeRepo struct {
 	added, removed [][2]uuid.UUID
 	ownerIDs       []uuid.UUID
 	following      bool
+	followers      int
 }
 
 func (f *fakeRepo) Add(_ context.Context, u, o uuid.UUID) error {
@@ -29,6 +30,9 @@ func (f *fakeRepo) Remove(_ context.Context, u, o uuid.UUID) error {
 }
 func (f *fakeRepo) IsFollowing(context.Context, uuid.UUID, uuid.UUID) (bool, error) {
 	return f.following, nil
+}
+func (f *fakeRepo) CountFollowers(context.Context, uuid.UUID) (int, error) {
+	return f.followers, nil
 }
 func (f *fakeRepo) ListFollowedOwnerIDs(context.Context, uuid.UUID) ([]uuid.UUID, error) {
 	return f.ownerIDs, nil

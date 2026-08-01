@@ -35,6 +35,9 @@ type Repository interface {
 	Add(ctx context.Context, userID, organizerUserID uuid.UUID) error
 	Remove(ctx context.Context, userID, organizerUserID uuid.UUID) error
 	IsFollowing(ctx context.Context, userID, organizerUserID uuid.UUID) (bool, error)
+	// CountFollowers returns how many users follow the organizer, addressed by
+	// its OWNER user id — the «Подписчиков» cell on the organizer surfaces.
+	CountFollowers(ctx context.Context, organizerUserID uuid.UUID) (int, error)
 	ListFollowedOwnerIDs(ctx context.Context, userID uuid.UUID) ([]uuid.UUID, error)
 	// ListFollowedOrganizers returns the verified organizer profiles the user
 	// follows, in a single JOIN (no N+1).
@@ -76,6 +79,16 @@ func (r *pgRepository) IsFollowing(ctx context.Context, userID, organizerUserID 
 		return false, fmt.Errorf("is following %s->%s: %w", userID, organizerUserID, err)
 	}
 	return count > 0, nil
+}
+
+func (r *pgRepository) CountFollowers(ctx context.Context, organizerUserID uuid.UUID) (int, error) {
+	count, err := r.db.ModelContext(ctx, (*Follow)(nil)).
+		Where("organizer_user_id = ?", organizerUserID).
+		Count()
+	if err != nil {
+		return 0, fmt.Errorf("count followers of %s: %w", organizerUserID, err)
+	}
+	return count, nil
 }
 
 func (r *pgRepository) ListFollowedOwnerIDs(ctx context.Context, userID uuid.UUID) ([]uuid.UUID, error) {

@@ -18,6 +18,7 @@ import {
 } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { padCount } from "@/lib/org-seats";
+import { tileCount } from "@/lib/tile-count";
 
 type OverviewCounts = Awaited<ReturnType<typeof getAdminOverview>>;
 
@@ -111,11 +112,15 @@ function DesktopOverview({ data }: { data: OverviewData }) {
         </div>
         <div className="border-r border-paper p-[14px]">
           <div className="cap">Организаторов</div>
-          <div className="font-mono text-[26px] font-bold leading-none">—</div>
+          <div className="font-mono text-[26px] font-bold leading-none">
+            {tileCount(overview.organizers_total)}
+          </div>
         </div>
         <div className="p-[14px]">
           <div className="cap">Пользователей</div>
-          <div className="font-mono text-[26px] font-bold leading-none">—</div>
+          <div className="font-mono text-[26px] font-bold leading-none">
+            {tileCount(overview.users_total)}
+          </div>
         </div>
       </div>
 

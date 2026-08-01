@@ -42,6 +42,9 @@ type Organizer struct {
 	AutoVerify         bool       `pg:"auto_verify,use_zero"`
 	VerifiedAt         *time.Time `pg:"verified_at"` // nullable; ORM scans NULL → nil
 	LatestReason       string     `pg:"-"`           // transient, not a column
+	// Registry columns «Событий» / «Жалоб». Transient, batch-loaded by List.
+	EventsCount     int `pg:"-"`
+	ComplaintsCount int `pg:"-"`
 }
 
 // Input is the editable subset of an organizer profile.
@@ -70,6 +73,9 @@ type ListFilter struct {
 // Counts is the admin overview summary contribution.
 type Counts struct {
 	OrganizersPending int `json:"organizers_pending"`
+	// OrganizersTotal is every organizer profile regardless of verification
+	// status — the «Организаторов» tile, which had nothing to render.
+	OrganizersTotal int `json:"organizers_total"`
 }
 
 // Repository persists organizers + verification transitions.

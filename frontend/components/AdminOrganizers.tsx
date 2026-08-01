@@ -22,6 +22,7 @@ import {
 } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { statusChipVariant } from "@/lib/status-chip";
+import { tileCount } from "@/lib/tile-count";
 
 type Filter = "all" | "pending" | "verified" | "complaints";
 type MenuMode = "menu" | "reject" | "revoke";
@@ -555,8 +556,17 @@ export function AdminOrganizers({ initialFilter }: { initialFilter?: string }) {
                   />
                 </span>
 
-                <span className="px-[8px] py-[8px] font-mono text-[11px] font-bold">—</span>
-                <span className="px-[8px] py-[8px] font-mono text-[11px] font-bold">—</span>
+                <span className="px-[8px] py-[8px] font-mono text-[11px] font-bold">
+                  {tileCount(org.events_count)}
+                </span>
+                <span
+                  className={cn(
+                    "px-[8px] py-[8px] font-mono text-[11px] font-bold",
+                    (org.complaints_count ?? 0) > 0 && "text-signal",
+                  )}
+                >
+                  {tileCount(org.complaints_count)}
+                </span>
 
                 <span className="flex gap-[5px] px-[8px] py-[7px]">
                   {kind ? (

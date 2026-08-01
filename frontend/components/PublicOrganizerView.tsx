@@ -18,6 +18,7 @@ import {
 import { useAuth } from "@/lib/auth-context";
 import { formatShortDate } from "@/lib/format";
 import { padCount } from "@/lib/org-seats";
+import { tileCount } from "@/lib/tile-count";
 import type { LiaEvent } from "@/lib/types";
 
 function EventRow({ event }: { event: LiaEvent }) {
@@ -177,7 +178,7 @@ export function PublicOrganizerView() {
         />
         <Cell
           caption="Подписчиков"
-          value="—"
+          value={tileCount(org.followers_count)}
           mono
           valueClassName="text-[15px] font-bold"
           className="px-[12px] py-[9px]"

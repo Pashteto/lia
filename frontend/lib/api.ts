@@ -675,6 +675,9 @@ export async function getAdminOverview(): Promise<{
   events_published: number;
   events_removed: number;
   organizers_pending?: number;
+  /** Absent when the collaborator is unwired; the tile then renders «—». */
+  organizers_total?: number;
+  users_total?: number;
   complaints_open?: number;
 }> {
   const res = await fetch(`${API_V1}/admin/overview`, { headers: authHeaders(), cache: "no-store" });
@@ -767,6 +770,11 @@ export interface Organizer {
   verification_status: VerificationStatus;
   auto_verify: boolean;
   latest_reason?: string;
+  /** A3 registry columns. Absent on the endpoints that don't compute them. */
+  events_count?: number;
+  complaints_count?: number;
+  /** Absent when the follows service is unwired — unknown, not zero. */
+  followers_count?: number;
 }
 
 export interface OrganizerHistory {
@@ -822,6 +830,8 @@ export async function getPublicOrganizer(id: string): Promise<{
   website_url: string;
   verified: boolean;
   is_following: boolean;
+  /** Absent when the follows service is unwired — unknown, not zero. */
+  followers_count?: number;
   /** May be absent from public GET — UI uses ink square placeholder when missing. */
   logo_url?: string;
 } | null> {

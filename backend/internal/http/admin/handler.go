@@ -129,6 +129,12 @@ func (h *handler) overview(w http.ResponseWriter, r *http.Request, _ *domain.Use
 	if h.deps.Organizers != nil {
 		if oc, oerr := h.deps.Organizers.Overview(r.Context()); oerr == nil {
 			resp["organizers_pending"] = oc.OrganizersPending
+			resp["organizers_total"] = oc.OrganizersTotal
+		}
+	}
+	if h.deps.Users != nil {
+		if n, uerr := h.deps.Users.Count(r.Context()); uerr == nil {
+			resp["users_total"] = n
 		}
 	}
 	if h.deps.Complaints != nil {
@@ -255,12 +261,16 @@ type adminOrganizerJSON struct {
 	VerificationStatus string `json:"verification_status"`
 	AutoVerify         bool   `json:"auto_verify"`
 	LatestReason       string `json:"latest_reason,omitempty"`
+	// A3 registry columns «Событий» / «Жалоб», which had no data to render.
+	EventsCount     int `json:"events_count"`
+	ComplaintsCount int `json:"complaints_count"`
 }
 
 func toAdminOrganizerJSON(o organizers.Organizer) adminOrganizerJSON {
 	return adminOrganizerJSON{
 		ID: o.ID.String(), Name: o.Name, Description: o.Description, WebsiteURL: o.WebsiteURL,
 		VerificationStatus: o.VerificationStatus, AutoVerify: o.AutoVerify, LatestReason: o.LatestReason,
+		EventsCount: o.EventsCount, ComplaintsCount: o.ComplaintsCount,
 	}
 }
 

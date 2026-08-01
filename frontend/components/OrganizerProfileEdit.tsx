@@ -20,6 +20,7 @@ import {
 import { useAuth } from "@/lib/auth-context";
 import { ORG_VERIFY_STEPS, orgVerificationStep } from "@/lib/org-verification";
 import { padCount } from "@/lib/org-seats";
+import { tileCount } from "@/lib/tile-count";
 
 function previewCaption(status: VerificationStatus | undefined): string {
   if (status === "verified") return "Проверенный организатор";
@@ -333,7 +334,9 @@ export function OrganizerProfileEdit() {
               </span>
               <span>
                 <span className="cap block">Подписчиков</span>
-                <span className="font-mono text-[13px] font-bold">—</span>
+                <span className="font-mono text-[13px] font-bold">
+                  {tileCount(org?.followers_count)}
+                </span>
               </span>
             </div>
           </div>

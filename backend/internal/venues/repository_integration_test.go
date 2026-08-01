@@ -189,6 +189,7 @@ func seedTranslitFixtures(t *testing.T, db *pg.DB) {
 		"Музей современного искусства «Артмуза»",
 		"ЦВЗ «Манеж»",
 		"Большой театр",
+		"Концертный зал «Зарядье»",
 		"Noôdome",
 	}
 	ids := make([]uuid.UUID, 0, len(rows))
@@ -200,4 +201,16 @@ func seedTranslitFixtures(t *testing.T, db *pg.DB) {
 		}
 	}
 	t.Cleanup(func() { _, _ = db.Exec(`DELETE FROM venues WHERE id IN (?)`, pg.In(ids)) })
+}
+
+// A short query against a long name is where plain similarity() collapses
+// («Зарядье» scores 0.217, under the 0.3 default) and word_similarity() does
+// not (0.714).
+func TestSearch_FindsShortQueryInLongName(t *testing.T) {
+	db := openTestDB(t)
+	seedTranslitFixtures(t, db)
+	got := names(t, NewRepository(db), "Zaryadye")
+	if !contains(got, "Концертный зал «Зарядье»") {
+		t.Fatalf("Search(\"Zaryadye\") = %v, want the Зарядье hall", got)
+	}
 }

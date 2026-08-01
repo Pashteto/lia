@@ -58,6 +58,24 @@ func searchPattern(q string) string {
 	return "%" + likeEscaper.Replace(strings.TrimSpace(q)) + "%"
 }
 
+// trigramThreshold is the cutoff for the fuzzy branch, applied to
+// word_similarity rather than plain similarity.
+//
+// similarity() compares whole strings, so it collapses as soon as the query is
+// short relative to the name: "эрарта" against «Музей современного искусства
+// «Эрарта»» scores 0.194, and "заряде" against «Концертный зал «Зарядье»»
+// scores 0.217 — both under the 0.3 default, both obviously the right answer.
+// word_similarity() scores the query against the best-matching extent of the
+// name instead, giving 1.000 and 0.714.
+//
+// 0.45 rather than the 0.6 word_similarity default: measured against the real
+// 174-row table, 0.6 drops both "nodom" → «Noôdome» and "bolshoy" → «Большой
+// театр» (each 0.500), while 0.45 keeps hit counts tight (1 and 4).
+//
+// Inlined as a literal, not a bind parameter, so the planner sees a constant.
+// It is a package constant and never user input.
+const trigramThreshold = "0.45"
+
 // Search matches q against the name, address and metro, all with diacritics
 // folded (unaccent), and falls back to trigram similarity on the name so a
 // near-miss spelling still finds the venue. Every branch is repeated for each
@@ -87,12 +105,12 @@ func (r *pgRepository) Search(q string, limit int) ([]*models.Venue, error) {
 				"unaccent(name) ILIKE unaccent(?)",
 				"unaccent(address) ILIKE unaccent(?)",
 				"unaccent(metro) ILIKE unaccent(?)",
-				"unaccent(name) % unaccent(?)",
+				"word_similarity(unaccent(?), unaccent(name)) > "+trigramThreshold,
 			)
 			matchArgs = append(matchArgs, pattern, pattern, pattern, v)
 			nameHit = append(nameHit, "unaccent(name) ILIKE unaccent(?)")
 			nameArgs = append(nameArgs, pattern)
-			sim = append(sim, "similarity(unaccent(name), unaccent(?))")
+			sim = append(sim, "word_similarity(unaccent(?), unaccent(name))")
 			simArgs = append(simArgs, v)
 		}
 		query = query.

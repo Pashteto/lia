@@ -395,3 +395,73 @@ func TestCancelAcceptedPromotesWaitlist(t *testing.T) {
 		t.Fatalf("want accepted->withdrawn on cancel, got %s", cancelled.Status)
 	}
 }
+
+// The /me/applications payload embedded a bare event — venue_id and
+// organizer_id only, categories empty — so the U6 application row rendered "—"
+// for venue and organizer. The rows now go through the same enrichment
+// GET /events uses.
+func TestMyApplications_EnrichesEvents(t *testing.T) {
+	eventID := uuid.Must(uuid.NewV4())
+	userID := uuid.Must(uuid.NewV4())
+	venueID := uuid.Must(uuid.NewV4())
+
+	f := newFake(&models.Event{ID: eventID})
+	f.rsvps[uuid.Must(uuid.NewV4())] = &models.Rsvp{
+		ID: uuid.Must(uuid.NewV4()), EventID: eventID, UserID: userID,
+		Status: models.RsvpApplied,
+		// What attachEvents loads: columns only, no joined read models.
+		Event: &models.Event{ID: eventID, Title: "Лаборатория медиаций", VenueID: venueID},
+	}
+
+	svc := NewService(f)
+	svc.SetEventEnricher(func(_ context.Context, ids []uuid.UUID) ([]*models.Event, error) {
+		if len(ids) != 1 || ids[0] != eventID {
+			t.Fatalf("enricher called with %v, want [%s]", ids, eventID)
+		}
+		return []*models.Event{{
+			ID: eventID, Title: "Лаборатория медиаций", VenueID: venueID,
+			Venue:      &models.Venue{ID: venueID, Name: "Дом Радио"},
+			Organizer:  &models.Organizer{UUID: uuid.Must(uuid.NewV4()), Name: "Мастерская"},
+			Categories: []*models.Category{{Slug: "mediation", Label: "Медиации"}},
+		}}, nil
+	})
+
+	rows, err := svc.MyApplications(context.Background(), userID, "")
+	if err != nil {
+		t.Fatalf("MyApplications: %v", err)
+	}
+	if len(rows) != 1 {
+		t.Fatalf("len = %d, want 1", len(rows))
+	}
+	got := rows[0].Event
+	if got == nil {
+		t.Fatal("event = nil, want the enriched event")
+	}
+	if got.Venue == nil || got.Venue.Name != "Дом Радио" {
+		t.Fatalf("venue = %+v, want the enriched venue", got.Venue)
+	}
+	if got.Organizer == nil || got.Organizer.Name != "Мастерская" {
+		t.Fatalf("organizer = %+v, want the enriched organizer", got.Organizer)
+	}
+	if len(got.Categories) != 1 {
+		t.Fatalf("categories = %d, want 1", len(got.Categories))
+	}
+}
+
+// Without an enricher wired (unit/test wiring), the rows still come back.
+func TestMyApplications_WorksWithoutEnricher(t *testing.T) {
+	eventID := uuid.Must(uuid.NewV4())
+	userID := uuid.Must(uuid.NewV4())
+	f := newFake(&models.Event{ID: eventID})
+	f.rsvps[uuid.Must(uuid.NewV4())] = &models.Rsvp{
+		ID: uuid.Must(uuid.NewV4()), EventID: eventID, UserID: userID,
+		Status: models.RsvpApplied, Event: &models.Event{ID: eventID, Title: "Без обогащения"},
+	}
+	rows, err := NewService(f).MyApplications(context.Background(), userID, "")
+	if err != nil {
+		t.Fatalf("MyApplications: %v", err)
+	}
+	if len(rows) != 1 || rows[0].Event.Title != "Без обогащения" {
+		t.Fatalf("rows = %+v, want the unenriched row preserved", rows)
+	}
+}

@@ -226,6 +226,14 @@ func (app *App) registerModules() error {
 		logger.Log().Info("events module wired to repository (no storage)")
 	}
 
+	// Wire the rsvp lists' event enrichment once events exists. The rsvp
+	// repository attaches events by columns only, so /me/applications and
+	// /me/practices would otherwise carry no venue, organizer or categories.
+	if app.rsvpSvc != nil && app.eventsSvc != nil {
+		app.rsvpSvc.SetEventEnricher(app.eventsSvc.GetEnriched)
+		logger.Log().Info("rsvp lists wired to events enrichment")
+	}
+
 	// Wire follows after events + organizers (it depends on both): resolves
 	// followed-organizer calendar events and gates follows on verified profiles.
 	if repoModule != nil && app.eventsSvc != nil && app.organizersSvc != nil {

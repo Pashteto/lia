@@ -44,12 +44,67 @@ type Service interface {
 	// StatusForUser returns the caller's RSVP status on an event, or "" when
 	// they have none. Used to render the correct join/apply state on reload.
 	StatusForUser(ctx context.Context, eventID, userID uuid.UUID) (models.RsvpStatus, error)
+	// SetEventEnricher wires a full-event loader (events.GetEnriched). The rsvp
+	// repository attaches events by columns only, so without it /me/practices
+	// and /me/applications carry no venue, organizer or categories. Optional —
+	// the lists still work unwired, just unenriched.
+	SetEventEnricher(fn EventEnricher)
 }
 
-type service struct{ repo Repository }
+// EventEnricher loads events with their venue, organizer and categories.
+// Satisfied by events.Service.GetEnriched.
+type EventEnricher func(ctx context.Context, ids []uuid.UUID) ([]*models.Event, error)
+
+type service struct {
+	repo   Repository
+	enrich EventEnricher
+}
 
 // NewService creates an RSVP service backed by the given repository.
 func NewService(repo Repository) Service { return &service{repo: repo} }
+
+func (s *service) SetEventEnricher(fn EventEnricher) { s.enrich = fn }
+
+// enrichEvents replaces each row's column-only Event with the fully loaded one.
+// Rows whose event the enricher does not return keep what they had, and an
+// enricher error is not fatal: an unenriched list beats no list.
+func (s *service) enrichEvents(ctx context.Context, rows []*models.Rsvp) {
+	if s.enrich == nil || len(rows) == 0 {
+		return
+	}
+	ids := make([]uuid.UUID, 0, len(rows))
+	seen := make(map[uuid.UUID]struct{}, len(rows))
+	for _, r := range rows {
+		if r.Event == nil {
+			continue
+		}
+		if _, dup := seen[r.Event.ID]; dup {
+			continue
+		}
+		seen[r.Event.ID] = struct{}{}
+		ids = append(ids, r.Event.ID)
+	}
+	if len(ids) == 0 {
+		return
+	}
+	full, err := s.enrich(ctx, ids)
+	if err != nil {
+		logger.Log().Errorf("enrich rsvp events: %s", err.Error())
+		return
+	}
+	byID := make(map[uuid.UUID]*models.Event, len(full))
+	for _, e := range full {
+		byID[e.ID] = e
+	}
+	for _, r := range rows {
+		if r.Event == nil {
+			continue
+		}
+		if e, ok := byID[r.Event.ID]; ok {
+			r.Event = e
+		}
+	}
+}
 
 func isNoRows(err error) bool { return errors.Is(err, pg.ErrNoRows) }
 
@@ -107,12 +162,13 @@ func (s *service) Cancel(_ context.Context, eventID, userID uuid.UUID) error {
 	return nil
 }
 
-func (s *service) MyPractices(_ context.Context, userID uuid.UUID, tab string) ([]*PracticeRow, error) {
+func (s *service) MyPractices(ctx context.Context, userID uuid.UUID, tab string) ([]*PracticeRow, error) {
 	rows, err := s.repo.ListByUser(userID,
 		[]models.RsvpStatus{models.RsvpGoing, models.RsvpWaitlist, models.RsvpAccepted})
 	if err != nil {
 		return nil, fmt.Errorf("my practices: %w", err)
 	}
+	s.enrichEvents(ctx, rows)
 	out := make([]*PracticeRow, 0, len(rows))
 	for _, r := range rows {
 		if r.Event == nil {
@@ -130,7 +186,7 @@ func (s *service) MyPractices(_ context.Context, userID uuid.UUID, tab string) (
 	return out, nil
 }
 
-func (s *service) MyApplications(_ context.Context, userID uuid.UUID, status string) ([]*models.Rsvp, error) {
+func (s *service) MyApplications(ctx context.Context, userID uuid.UUID, status string) ([]*models.Rsvp, error) {
 	want := []models.RsvpStatus{models.RsvpApplied, models.RsvpAccepted, models.RsvpDeclined, models.RsvpWithdrawn}
 	if status != "" {
 		want = []models.RsvpStatus{models.RsvpStatus(status)}
@@ -139,6 +195,7 @@ func (s *service) MyApplications(_ context.Context, userID uuid.UUID, status str
 	if err != nil {
 		return nil, fmt.Errorf("my applications: %w", err)
 	}
+	s.enrichEvents(ctx, rows)
 	return rows, nil
 }
 

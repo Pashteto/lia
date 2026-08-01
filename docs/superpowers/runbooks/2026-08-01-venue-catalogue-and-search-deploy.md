@@ -117,11 +117,63 @@ DB rollback is only needed if the image is reverted **and** something depends on
 deliberately leaves the extensions installed (they are database-wide and
 another module may adopt them).
 
+## Part 3 — Latin↔Cyrillic transliteration (`afc4cee`, `ab3d4e5`, `8647402`)
+
+Deployed on top of Part 2, image `backend-app:translit-r3`. No migration — pure
+Go plus a change of trigram function.
+
+`internal/venues/translit.go` expands the query into its transliterations and
+Search repeats every matching branch per variant. Two positional rules carry
+the frequent cases exactly:
+
+- word-initial `e` → `э` ("Erarta" → эрарта, "Ermitazh" → эрмитаж), because
+  `unaccent` does not fold `э` to `е` the way it folds `ё`
+- standalone `y` → `й` after a vowel, `ы` otherwise ("Sergey" → сергей,
+  "Krasny" → красны)
+
+Romanization is lossy — it drops the soft sign, so "Bolshoy" rebuilds as
+"болшой" and only reaches «Большой театр» through the fuzzy branch. Intended
+division of labour; the tests state it.
+
+**Two defects found by verifying on prod rather than trusting the unit tests:**
+
+1. `"Zaryadye"` returned nothing. `similarity()` compares whole strings, so it
+   collapses when a short query meets a long name — "заряде" vs «Концертный зал
+   «Зарядье»» is **0.217**, "эрарта" vs «Музей современного искусства «Эрарта»»
+   is **0.194**, both under the 0.3 default. «Эрарта» had been passing only via
+   the substring branch. Switched to **`word_similarity()`**, which scores
+   against the best-matching extent of the name: 0.714 and 1.000.
+   Threshold **0.45**, not the 0.6 `word_similarity` default — measured against
+   the real 174-row table, 0.6 drops both `nodom` → «Noôdome» and `bolshoy` →
+   «Большой театр» (0.500 each), while 0.45 keeps hit counts tight (1 and 4).
+   Written as an inline literal so the planner sees a constant.
+2. `"Технологический"` ranked Клуб «Космонавт» **third**, behind two venues that
+   merely cleared the trigram threshold. The ordering had only two tiers, so an
+   address/metro hit had nothing to sort on but an irrelevant name score. Added
+   a middle tier: any field literally containing the query outranks a purely
+   fuzzy match.
+
+Final live check (all correct, first result shown):
+
+| query | first result |
+|---|---|
+| `Erarta` | Музей современного искусства «Эрарта» |
+| `Zaryadye` | Концертный зал «Зарядье» |
+| `Garazh` | Кафе Музея «Гараж» |
+| `Ermitazh` | Государственный Эрмитаж |
+| `Bolshoy` | БДТ, then Большой театр, then Консерватория (Большой зал) |
+| `Tretyakovskaya` | Государственная Третьяковская галерея |
+| `Ноодоме` | Noôdome (reverse direction) |
+| `Технологический` | Клуб «Космонавт» — metro hit now leads |
+
+34 tests in `internal/venues` (unit + `-tags=integration`), full backend suite
+green, `go vet` and `gofmt` clean.
+
 ## Follow-ups
 
-- **Latin↔Cyrillic transliteration is still unhandled** — "Erarta" will not find
-  «Эрарта». Trigram similarity does not bridge alphabets. Needs either an alias
-  column or a transliteration map.
+- Transliteration is a mapping, not a language model. Irregular romanizations
+  ("Tsvetnoy" vs "Cvetnoy", "Gorkiy" vs "Gorky") lean entirely on the fuzzy
+  branch, and a bare Latin `c` is mapped to `к` on a guess.
 - `YANDEX_PLACES_KEY` deliberately left unprovisioned (explicit decision), so
   the Places fallback for venues outside the DB stays inert. Every new venue
   therefore still arrives via a seed batch or user input.

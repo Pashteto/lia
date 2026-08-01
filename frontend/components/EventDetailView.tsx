@@ -10,6 +10,7 @@ import {
   formatEventRange,
   formatStartTime,
 } from "@/lib/format";
+import { categoryNumeral } from "@/lib/category-numerals";
 import { coverPhoto } from "@/lib/covers";
 import { priceLabel } from "@/lib/price-label";
 import type { LiaEvent } from "@/lib/types";
@@ -17,10 +18,20 @@ import Link from "next/link";
 
 /** U2 · Страница события. Paper, hairline blocks, price+CTA rail on desktop,
  * sticky price+CTA footer on mobile. */
-export function EventDetailView({ event }: { event: LiaEvent }) {
+export function EventDetailView({
+  event,
+  categories,
+}: {
+  event: LiaEvent;
+  /** Ordered taxonomy, for the positional category numeral. Optional: the
+   * owner-draft path has no server fetch to piggyback on, and the plate still
+   * reads without it. */
+  categories?: ReadonlyArray<{ slug: string }>;
+}) {
   const ended = new Date(event.endsAt ?? event.startsAt) < new Date();
   const price = priceLabel(event.priceMin, event.priceType);
   const cat = event.categories[0];
+  const numeral = cat && categories ? categoryNumeral(cat.slug, categories) : "—";
   const routeHref =
     event.venue?.lat != null && event.venue?.lon != null
       ? `https://yandex.ru/maps/?rtext=~${event.venue.lat},${event.venue.lon}`
@@ -46,6 +57,17 @@ export function EventDetailView({ event }: { event: LiaEvent }) {
           aspect="aspect-[3/1] max-md:aspect-[3/2]"
           sizes="(max-width: 768px) 100vw, 1360px"
           priority
+          // Without this the coverless event rendered ~430px of empty paper.
+          // The feed already answers this case with a numeral plate; the
+          // detail hero uses the same one at hero scale.
+          fallback={
+            <div className="flex h-full items-end justify-between px-[20px] py-[16px]">
+              <span className="font-mono text-[64px] font-bold leading-none tracking-[-0.02em] text-ink max-md:text-[44px]">
+                {numeral}
+              </span>
+              <span className="cap">{cat?.label ?? "Событие"}</span>
+            </div>
+          }
         />
       </div>
 
@@ -124,7 +146,11 @@ export function EventDetailView({ event }: { event: LiaEvent }) {
         <div className="grid grid-cols-[1fr_200px] border-b border-ink max-md:grid-cols-1">
           <div className="p-[14px]">
             {event.venue.lat != null && event.venue.lon != null ? (
-              <VenueMap lat={event.venue.lat} lon={event.venue.lon} />
+              <VenueMap
+                lat={event.venue.lat}
+                lon={event.venue.lon}
+                numeral={numeral === "—" ? undefined : numeral}
+              />
             ) : (
               <p className="text-[12px] text-text-dim">{event.venue.name}</p>
             )}

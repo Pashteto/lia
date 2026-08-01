@@ -58,6 +58,7 @@ export function YandexMap({
   center,
   zoom = 13,
   marker,
+  markerNumeral,
   draggableMarker = false,
   onMarkerMove,
   pins,
@@ -70,6 +71,8 @@ export function YandexMap({
   center: LatLon;
   zoom?: number;
   marker?: LatLon;
+  /** Text inside the single marker's square. Defaults to a centred dot. */
+  markerNumeral?: string;
   draggableMarker?: boolean;
   onMarkerMove?: (lat: number, lon: number) => void;
   pins?: MapPin[];
@@ -164,7 +167,23 @@ export function YandexMap({
       markerRef.current = null;
     }
     if (marker) {
-      const pm = new ymaps.Placemark(marker, {}, { draggable: draggableMarker });
+      // Same square ink marker the /map browse view uses. A bare Placemark
+      // renders Yandex's default teardrop pin and opens Yandex's own balloon
+      // («Как добраться», «Доехать на такси»), which is neither ours nor
+      // grayscale-safe.
+      const layout = ymaps.templateLayoutFactory.createClass(
+        `<div class="swiss-pin">$[properties.iconContent]</div>`,
+      );
+      const pm = new ymaps.Placemark(
+        marker,
+        { iconContent: escapeHtml(markerNumeral ?? "·") },
+        {
+          draggable: draggableMarker,
+          iconLayout: layout,
+          iconShape: { type: "Rectangle", coordinates: [[-9, -31], [15, -7]] },
+          openBalloonOnClick: false,
+        },
+      );
       pm.events.add("dragend", () => {
         const c = pm.geometry.getCoordinates(); // [lat, lon]
         onMoveRef.current?.(c[0], c[1]);
@@ -172,7 +191,7 @@ export function YandexMap({
       map.geoObjects.add(pm);
       markerRef.current = pm;
     }
-  }, [ready, marker, draggableMarker]);
+  }, [ready, marker, markerNumeral, draggableMarker]);
 
   // multi-pin layer — square ink markers numbered in mono
   useEffect(() => {

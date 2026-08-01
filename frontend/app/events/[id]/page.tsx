@@ -1,6 +1,6 @@
 import { EventDetailView } from "@/components/EventDetailView";
 import { OwnerDraftFallback } from "@/components/OwnerDraftFallback";
-import { fetchEvent } from "@/lib/api";
+import { fetchEvent, getCategories } from "@/lib/api";
 import { MOCK_EVENTS } from "@/lib/mock-events";
 import type { LiaEvent } from "@/lib/types";
 
@@ -31,7 +31,10 @@ export default async function EventDetailPage({
   }
 
   if (event) {
-    return <EventDetailView event={event} />;
+    // The ordered taxonomy drives the positional category numeral on the
+    // coverless hero plate. Best-effort: the page renders fine without it.
+    const categories = await getCategories().catch(() => undefined);
+    return <EventDetailView event={event} categories={categories} />;
   }
 
   return <OwnerDraftFallback id={id} />;

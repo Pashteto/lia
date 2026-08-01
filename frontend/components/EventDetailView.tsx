@@ -1,4 +1,4 @@
-import { FeedbackForm } from "@/components/FeedbackForm";
+import { EventFeedbackSection } from "@/components/EventFeedbackSection";
 import { ReportButton } from "@/components/ReportButton";
 import { SignupCTA } from "@/components/SignupCTA";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
@@ -159,12 +159,7 @@ export function EventDetailView({ event }: { event: LiaEvent }) {
       )}
 
       {/* Description / feedback / report */}
-      {ended && (
-        <section className="border-b border-rule-inner px-[20px] py-[16px]">
-          <p className="cap mb-[10px]">Отзыв</p>
-          <FeedbackForm eventId={event.id} />
-        </section>
-      )}
+      {ended && <EventFeedbackSection event={event} />}
       <div className="px-[20px] py-[16px]">
         <ReportButton eventId={event.id} />
       </div>

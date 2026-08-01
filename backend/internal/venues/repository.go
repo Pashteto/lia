@@ -60,8 +60,10 @@ func searchPattern(q string) string {
 
 // Search matches q against the name, address and metro, all with diacritics
 // folded (unaccent), and falls back to trigram similarity on the name so a
-// near-miss spelling still finds the venue. Name hits outrank address/metro
-// hits, then closer trigram matches, then alphabetical order.
+// near-miss spelling still finds the venue. Every branch is repeated for each
+// transliteration of the query (see searchVariants), because neither unaccent
+// nor trigrams can cross between Latin and Cyrillic. Name hits outrank
+// address/metro hits, then closer trigram matches, then alphabetical order.
 //
 // unaccent() and the pg_trgm `%` operator come from migration 000022.
 func (r *pgRepository) Search(q string, limit int) ([]*models.Venue, error) {
@@ -71,17 +73,32 @@ func (r *pgRepository) Search(q string, limit int) ([]*models.Venue, error) {
 	var list []*models.Venue
 	query := r.db.Model(&list)
 	if trimmed := strings.TrimSpace(q); trimmed != "" {
-		pattern := searchPattern(trimmed)
+		var (
+			match     []string
+			matchArgs []interface{}
+			nameHit   []string
+			nameArgs  []interface{}
+			sim       []string
+			simArgs   []interface{}
+		)
+		for _, v := range searchVariants(trimmed) {
+			pattern := searchPattern(v)
+			match = append(match,
+				"unaccent(name) ILIKE unaccent(?)",
+				"unaccent(address) ILIKE unaccent(?)",
+				"unaccent(metro) ILIKE unaccent(?)",
+				"unaccent(name) % unaccent(?)",
+			)
+			matchArgs = append(matchArgs, pattern, pattern, pattern, v)
+			nameHit = append(nameHit, "unaccent(name) ILIKE unaccent(?)")
+			nameArgs = append(nameArgs, pattern)
+			sim = append(sim, "similarity(unaccent(name), unaccent(?))")
+			simArgs = append(simArgs, v)
+		}
 		query = query.
-			Where(
-				"unaccent(name) ILIKE unaccent(?)"+
-					" OR unaccent(address) ILIKE unaccent(?)"+
-					" OR unaccent(metro) ILIKE unaccent(?)"+
-					" OR unaccent(name) % unaccent(?)",
-				pattern, pattern, pattern, trimmed,
-			).
-			OrderExpr("(unaccent(name) ILIKE unaccent(?)) DESC", pattern).
-			OrderExpr("similarity(unaccent(name), unaccent(?)) DESC", trimmed)
+			Where(strings.Join(match, " OR "), matchArgs...).
+			OrderExpr("("+strings.Join(nameHit, " OR ")+") DESC", nameArgs...).
+			OrderExpr("GREATEST("+strings.Join(sim, ", ")+") DESC", simArgs...)
 	}
 	if err := query.Order("name ASC").Limit(limit).Select(); err != nil {
 		return nil, fmt.Errorf("search venues from db: %w", err)

@@ -153,3 +153,51 @@ func TestSearch_EmptyQueryStillListsVenues(t *testing.T) {
 		t.Fatal("Search(\"   \") returned nothing, want the first page of venues")
 	}
 }
+
+// Latin↔Cyrillic: neither unaccent nor trigrams cross alphabets, so these can
+// only pass via the transliterated query variants.
+func TestSearch_MatchesAcrossAlphabets(t *testing.T) {
+	db := openTestDB(t)
+	seedTranslitFixtures(t, db)
+	repo := NewRepository(db)
+
+	tests := []struct{ q, want string }{
+		{"Erarta", "Музей современного искусства «Эрарта»"},
+		{"Garazh", "Музей «Гараж»"},
+		{"Artmuza", "Музей современного искусства «Артмуза»"},
+		{"Manezh", "ЦВЗ «Манеж»"},
+		// Romanization drops the soft sign ("bolshoy" → "болшой"), so this one
+		// only lands through the trigram branch.
+		{"Bolshoy", "Большой театр"},
+		// The other direction: a Cyrillic query for a Latin-spelled venue.
+		{"Ноодоме", "Noôdome"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.q, func(t *testing.T) {
+			if got := names(t, repo, tt.q); !contains(got, tt.want) {
+				t.Fatalf("Search(%q) = %v, want %q", tt.q, got, tt.want)
+			}
+		})
+	}
+}
+
+func seedTranslitFixtures(t *testing.T, db *pg.DB) {
+	t.Helper()
+	rows := []string{
+		"Музей современного искусства «Эрарта»",
+		"Музей «Гараж»",
+		"Музей современного искусства «Артмуза»",
+		"ЦВЗ «Манеж»",
+		"Большой театр",
+		"Noôdome",
+	}
+	ids := make([]uuid.UUID, 0, len(rows))
+	for _, name := range rows {
+		id := uuid.Must(uuid.NewV4())
+		ids = append(ids, id)
+		if _, err := db.Exec(`INSERT INTO venues (id, name) VALUES (?, ?)`, id, name); err != nil {
+			t.Fatalf("seed venue %q: %v", name, err)
+		}
+	}
+	t.Cleanup(func() { _, _ = db.Exec(`DELETE FROM venues WHERE id IN (?)`, pg.In(ids)) })
+}

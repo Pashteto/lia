@@ -15,7 +15,8 @@ import {
   concatenateReasons,
   revisionReason,
 } from "@/lib/admin-reject-reasons";
-import { formatRelativeCompactRu } from "@/lib/admin-relative";
+import { submittedAgoRu } from "@/lib/admin-copy";
+import { formatShortDate } from "@/lib/format";
 import { isLikelyTestContent } from "@/lib/admin-test-heuristic";
 import {
   type AdminEvent,
@@ -260,7 +261,9 @@ export function AdminModeration() {
 
   const selected = queue.find((e) => e.id === selectedId) ?? null;
   const coverSrc = shownDetail?.coverUrl || selected?.cover_url;
-  const ageIso = selected?.starts_at ?? shownDetail?.startsAt;
+  // When the event was PUBLISHED — the queue is post-hoc, so that is what
+  // «подано» means here. It used to read starts_at, i.e. when the event happens.
+  const submittedIso = selected?.published_at;
   const orgName =
     shownDetail?.organizer?.name?.trim() || selected?.organizer_name?.trim() || "—";
   const categoryLabel = shownDetail?.categories?.[0]?.label ?? "—";
@@ -326,7 +329,7 @@ export function AdminModeration() {
                       selectedRow ? "text-ink/55" : undefined,
                     )}
                   >
-                    {formatRelativeCompactRu(event.starts_at)}
+                    {formatShortDate(event.starts_at)}
                   </span>
                 </div>
                 <div
@@ -385,8 +388,7 @@ export function AdminModeration() {
               </div>
               <div className="px-[16px] py-[14px]">
                 <div className="cap mb-[5px]">
-                  {adminShortId(selected.id)} · подано{" "}
-                  {ageIso ? formatRelativeCompactRu(ageIso) : "—"} назад
+                  {adminShortId(selected.id)} · {submittedAgoRu(submittedIso)}
                 </div>
                 <h2
                   className={cn(
@@ -419,7 +421,7 @@ export function AdminModeration() {
                     value={
                       shownDetail
                         ? formatModuleDate(shownDetail.startsAt, shownDetail.endsAt)
-                        : formatRelativeCompactRu(selected.starts_at)
+                        : formatShortDate(selected.starts_at)
                     }
                     valueClassName="text-[11px]"
                   />

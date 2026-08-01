@@ -579,6 +579,8 @@ export interface AdminEvent {
   title: string;
   status: string;
   starts_at: string;
+  /** When the event went live — the «подано» moment for the post-hoc queue. */
+  published_at?: string;
   cover_url?: string;
   organizer_name?: string;
   reason?: string;

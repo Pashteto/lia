@@ -13,6 +13,7 @@ import (
 
 	adminusers "github.com/Pashteto/lia/internal/adminusers"
 	complaintsdomain "github.com/Pashteto/lia/internal/complaints"
+	eventsdomain "github.com/Pashteto/lia/internal/events"
 	hygiene "github.com/Pashteto/lia/internal/hygiene"
 	domain "github.com/Pashteto/lia/internal/models"
 	"github.com/Pashteto/lia/internal/moderation"
@@ -398,5 +399,53 @@ func TestHygiene_503WhenUnwired(t *testing.T) {
 	NewHandler(Deps{Authenticate: authFn("admin")}).ServeHTTP(w, r)
 	if w.Code != http.StatusServiceUnavailable {
 		t.Fatalf("status = %d, want 503", w.Code)
+	}
+}
+
+// stubEvents serves a fixed list from the moderation queue endpoint.
+type stubEvents struct {
+	eventsdomain.Service
+	list []*domain.Event
+}
+
+func (s stubEvents) List(context.Context, string, *time.Time, *time.Time, *uuid.UUID) ([]*domain.Event, error) {
+	return s.list, nil
+}
+
+// The moderation detail labels the timestamp «подано», but the payload carried
+// only starts_at — when the event happens, not when it was submitted. Publishing
+// is the submission moment for a post-hoc queue, so published_at has to travel.
+func TestListEvents_CarriesPublishedAt(t *testing.T) {
+	published := time.Date(2026, 7, 5, 9, 0, 0, 0, time.UTC)
+	h := NewHandler(Deps{
+		Authenticate: authFn("admin"),
+		Moderation:   stubMod{},
+		Events: stubEvents{list: []*domain.Event{
+			{ID: uuid.Must(uuid.NewV4()), Title: "С датой", StatusSQL: "published",
+				StartsAt: time.Date(2026, 8, 15, 9, 0, 0, 0, time.UTC), PublishedAt: &published},
+			{ID: uuid.Must(uuid.NewV4()), Title: "Без даты", StatusSQL: "published",
+				StartsAt: time.Date(2026, 8, 15, 9, 0, 0, 0, time.UTC)},
+		}},
+	})
+	req := httptest.NewRequest("GET", "/api/v1/admin/moderation/events", nil)
+	req.Header.Set("Authorization", "Bearer t")
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200", rec.Code)
+	}
+	var got []map[string]any
+	if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if len(got) != 2 {
+		t.Fatalf("len = %d, want 2", len(got))
+	}
+	if got[0]["published_at"] != "2026-07-05T09:00:00Z" {
+		t.Fatalf("published_at = %v, want RFC3339 UTC", got[0]["published_at"])
+	}
+	if _, ok := got[1]["published_at"]; ok {
+		t.Fatalf("unpublished event must omit published_at, got %v", got[1]["published_at"])
 	}
 }

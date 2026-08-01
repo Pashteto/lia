@@ -6,7 +6,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { formatRelativeCompactRu } from "@/lib/admin-relative";
+import { complaintsSignalRu, testDataSignalRu } from "@/lib/admin-copy";
+import { formatShortDate } from "@/lib/format";
 import { isLikelyTestContent } from "@/lib/admin-test-heuristic";
 import {
   getAdminOverview,
@@ -70,7 +71,7 @@ function SignalsFooter({
         href="/admin/complaints"
         className="swiss-focus text-[11px] font-bold text-signal hover:underline"
       >
-        {complaintsOpen} событий с жалобами
+        {complaintsSignalRu(complaintsOpen)}
       </Link>
     );
   }
@@ -79,7 +80,7 @@ function SignalsFooter({
   if (testCount > 0) {
     return (
       <p className="text-[11px] font-bold text-signal">
-        {testCount} события с тестовыми данными
+        {testDataSignalRu(testCount)}
       </p>
     );
   }
@@ -142,7 +143,7 @@ function DesktopOverview({ data }: { data: OverviewData }) {
                     {event.title}
                   </span>
                   <span className="cap shrink-0 font-mono">
-                    {formatRelativeCompactRu(event.starts_at)}
+                    {formatShortDate(event.starts_at)}
                   </span>
                 </div>
               );
@@ -222,7 +223,7 @@ function DutyOverview({ data }: { data: OverviewData }) {
         ) : (
           queue.map((event, i) => {
             const test = isLikelyTestContent(event.title);
-            const age = formatRelativeCompactRu(event.starts_at);
+            const age = formatShortDate(event.starts_at);
             const org = event.organizer_name?.trim() || "—";
             return (
               <div

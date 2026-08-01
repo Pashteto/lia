@@ -140,10 +140,14 @@ func (h *handler) overview(w http.ResponseWriter, r *http.Request, _ *domain.Use
 }
 
 type adminEventJSON struct {
-	ID            string `json:"id"`
-	Title         string `json:"title"`
-	Status        string `json:"status"`
-	StartsAt      string `json:"starts_at"`
+	ID       string `json:"id"`
+	Title    string `json:"title"`
+	Status   string `json:"status"`
+	StartsAt string `json:"starts_at"`
+	// When the event went live. The moderation queue is post-hoc, so this is
+	// the «подано» moment the detail pane labels; starts_at is when the event
+	// happens, which is a different thing entirely.
+	PublishedAt   string `json:"published_at,omitempty"`
 	CoverURL      string `json:"cover_url,omitempty"`
 	OrganizerName string `json:"organizer_name,omitempty"`
 	Reason        string `json:"reason,omitempty"`
@@ -171,6 +175,9 @@ func (h *handler) listEvents(w http.ResponseWriter, r *http.Request, _ *domain.U
 			Status:   e.StatusSQL,
 			StartsAt: e.StartsAt.Format("2006-01-02T15:04:05Z07:00"),
 			CoverURL: e.CoverURL,
+		}
+		if e.PublishedAt != nil {
+			j.PublishedAt = e.PublishedAt.UTC().Format("2006-01-02T15:04:05Z07:00")
 		}
 		if e.Organizer != nil {
 			j.OrganizerName = e.Organizer.Name

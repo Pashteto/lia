@@ -92,12 +92,14 @@ func (r *pgRepository) Search(q string, limit int) ([]*models.Venue, error) {
 	query := r.db.Model(&list)
 	if trimmed := strings.TrimSpace(q); trimmed != "" {
 		var (
-			match     []string
-			matchArgs []interface{}
-			nameHit   []string
-			nameArgs  []interface{}
-			sim       []string
-			simArgs   []interface{}
+			match      []string
+			matchArgs  []interface{}
+			nameHit    []string
+			nameArgs   []interface{}
+			substrHit  []string
+			substrArgs []interface{}
+			sim        []string
+			simArgs    []interface{}
 		)
 		for _, v := range searchVariants(trimmed) {
 			pattern := searchPattern(v)
@@ -110,12 +112,23 @@ func (r *pgRepository) Search(q string, limit int) ([]*models.Venue, error) {
 			matchArgs = append(matchArgs, pattern, pattern, pattern, v)
 			nameHit = append(nameHit, "unaccent(name) ILIKE unaccent(?)")
 			nameArgs = append(nameArgs, pattern)
+			substrHit = append(substrHit,
+				"unaccent(name) ILIKE unaccent(?)",
+				"unaccent(address) ILIKE unaccent(?)",
+				"unaccent(metro) ILIKE unaccent(?)",
+			)
+			substrArgs = append(substrArgs, pattern, pattern, pattern)
 			sim = append(sim, "word_similarity(unaccent(?), unaccent(name))")
 			simArgs = append(simArgs, v)
 		}
+		// Three tiers: the name literally contains the query, then any field
+		// does, then how close the fuzzy branch got. Without the middle tier a
+		// venue matched on its metro sorts below unrelated names that merely
+		// scored above the trigram threshold.
 		query = query.
 			Where(strings.Join(match, " OR "), matchArgs...).
 			OrderExpr("("+strings.Join(nameHit, " OR ")+") DESC", nameArgs...).
+			OrderExpr("("+strings.Join(substrHit, " OR ")+") DESC", substrArgs...).
 			OrderExpr("GREATEST("+strings.Join(sim, ", ")+") DESC", simArgs...)
 	}
 	if err := query.Order("name ASC").Limit(limit).Select(); err != nil {

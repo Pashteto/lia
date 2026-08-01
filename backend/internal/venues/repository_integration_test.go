@@ -214,3 +214,15 @@ func TestSearch_FindsShortQueryInLongName(t *testing.T) {
 		t.Fatalf("Search(\"Zaryadye\") = %v, want the Зарядье hall", got)
 	}
 }
+
+// An exact metro hit must outrank a venue that merely cleared the trigram
+// threshold on its name.
+func TestSearch_RanksSubstringHitsAboveFuzzyHits(t *testing.T) {
+	db := openTestDB(t)
+	seedSearchFixtures(t, db)
+	seedTranslitFixtures(t, db)
+	got := names(t, NewRepository(db), "Технологический")
+	if len(got) == 0 || got[0] != "Клуб «Космонавт»" {
+		t.Fatalf("Search(\"Технологический\") = %v, want Космонавт first (metro hit)", got)
+	}
+}

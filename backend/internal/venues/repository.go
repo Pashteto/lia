@@ -18,8 +18,11 @@ const DefaultSearchLimit = 20
 
 // Repository defines venue persistence operations.
 type Repository interface {
-	// Search returns venues whose name matches q (case-insensitive substring),
-	// ordered by name. Empty q returns the first `limit` venues by name.
+	// Search returns venues whose name, address or metro matches q
+	// (case-insensitive substring, diacritics folded), plus name near-misses
+	// by trigram similarity. Name hits rank first, then closer trigram
+	// matches, then name order. Empty q returns the first `limit` venues by
+	// name.
 	Search(q string, limit int) ([]*models.Venue, error)
 	// GetByID returns a single venue by primary key.
 	GetByID(id uuid.UUID) (*models.Venue, error)
@@ -43,14 +46,42 @@ func NewRepository(db *pg.DB) Repository {
 	return &pgRepository{db: db}
 }
 
+// likeEscaper neutralizes the three characters LIKE reads as syntax, so a user
+// searching for "50%" gets the venue with a percent sign in its name rather
+// than every row in the table. The backslash case comes first by construction:
+// strings.NewReplacer matches replacements left to right and never rescans its
+// own output.
+var likeEscaper = strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`)
+
+// searchPattern turns a raw user query into a safe ILIKE substring pattern.
+func searchPattern(q string) string {
+	return "%" + likeEscaper.Replace(strings.TrimSpace(q)) + "%"
+}
+
+// Search matches q against the name, address and metro, all with diacritics
+// folded (unaccent), and falls back to trigram similarity on the name so a
+// near-miss spelling still finds the venue. Name hits outrank address/metro
+// hits, then closer trigram matches, then alphabetical order.
+//
+// unaccent() and the pg_trgm `%` operator come from migration 000022.
 func (r *pgRepository) Search(q string, limit int) ([]*models.Venue, error) {
 	if limit <= 0 {
 		limit = DefaultSearchLimit
 	}
 	var list []*models.Venue
 	query := r.db.Model(&list)
-	if strings.TrimSpace(q) != "" {
-		query = query.Where("name ILIKE ?", "%"+strings.TrimSpace(q)+"%")
+	if trimmed := strings.TrimSpace(q); trimmed != "" {
+		pattern := searchPattern(trimmed)
+		query = query.
+			Where(
+				"unaccent(name) ILIKE unaccent(?)"+
+					" OR unaccent(address) ILIKE unaccent(?)"+
+					" OR unaccent(metro) ILIKE unaccent(?)"+
+					" OR unaccent(name) % unaccent(?)",
+				pattern, pattern, pattern, trimmed,
+			).
+			OrderExpr("(unaccent(name) ILIKE unaccent(?)) DESC", pattern).
+			OrderExpr("similarity(unaccent(name), unaccent(?)) DESC", trimmed)
 	}
 	if err := query.Order("name ASC").Limit(limit).Select(); err != nil {
 		return nil, fmt.Errorf("search venues from db: %w", err)

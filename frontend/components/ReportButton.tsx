@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { LoginModal } from "@/components/AuthButton";
 import { Button } from "@/components/ui/Button";
+import { SquareRadio } from "@/components/ui/SquareRadio";
 import { VerifyEmailInterstitial } from "@/components/VerifyEmailInterstitial";
 import {
   COMPLAINT_CATEGORIES,
@@ -59,7 +60,7 @@ export function ReportButton({ eventId }: { eventId: string }) {
 
   if (done) {
     return (
-      <p className="text-[13px] text-label-secondary">Жалоба отправлена. Спасибо.</p>
+      <p className="cap text-muted-2">Жалоба отправлена. Спасибо.</p>
     );
   }
 
@@ -68,7 +69,7 @@ export function ReportButton({ eventId }: { eventId: string }) {
       <button
         type="button"
         onClick={openModal}
-        className="text-[13px] text-label-secondary underline-offset-2 hover:underline"
+        className="swiss-focus min-h-[44px] text-[11px] font-bold uppercase tracking-[0.07em] text-muted-2 underline-offset-2 hover:underline"
       >
         Пожаловаться
       </button>
@@ -79,23 +80,24 @@ export function ReportButton({ eventId }: { eventId: string }) {
           onClick={() => setOpen(false)}
         >
           <div
-            className="w-full max-w-md rounded-card bg-bg-secondary p-5 shadow-card"
+            className="w-full max-w-md border border-ink bg-paper p-[14px]"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="mb-3 text-[18px] font-semibold">Пожаловаться на событие</h2>
+            <h2 className="mb-[10px] text-[14px] font-black leading-[1.05] tracking-[-0.02em]">
+              Пожаловаться на событие
+            </h2>
 
-            <div className="space-y-2">
+            <div className="border-t border-rule-inner">
               {COMPLAINT_CATEGORIES.map((c) => (
-                <label key={c.value} className="flex items-center gap-2 text-[15px]">
-                  <input
-                    type="radio"
+                <div key={c.value} className="border-b border-rule-inner">
+                  <SquareRadio
                     name="complaint-category"
                     value={c.value}
+                    label={c.label}
                     checked={category === c.value}
                     onChange={() => setCategory(c.value)}
                   />
-                  {c.label}
-                </label>
+                </div>
               ))}
             </div>
 
@@ -104,16 +106,16 @@ export function ReportButton({ eventId }: { eventId: string }) {
               onChange={(e) => setNote(e.target.value)}
               placeholder="Комментарий (необязательно)"
               rows={3}
-              className="mt-3 w-full rounded-control bg-bg-tertiary p-3 text-[15px]"
+              className="swiss-focus mt-[12px] w-full border border-muted-2 bg-transparent px-[10px] py-[8px] text-[12px] outline-none"
             />
 
-            {error ? <p className="mt-2 text-[13px] text-red-500">{error}</p> : null}
+            {error ? <p className="mt-[8px] text-[11px] text-signal">{error}</p> : null}
 
-            <div className="mt-4 flex justify-end gap-2">
-              <Button variant="ghost" onClick={() => setOpen(false)}>
+            <div className="mt-[12px] flex justify-end gap-[8px]">
+              <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
                 Отмена
               </Button>
-              <Button onClick={submit} disabled={busy}>
+              <Button size="sm" onClick={submit} disabled={busy}>
                 {busy ? "Отправка…" : "Отправить"}
               </Button>
             </div>

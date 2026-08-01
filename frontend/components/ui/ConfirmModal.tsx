@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/Button";
 /**
  * Centered, dimmed confirmation modal — the styled Russian replacement for the
  * native window.confirm(). Backdrop click and Отмена both dismiss.
+ *
+ * Swiss Grid: square, hairline ink border on paper. No radius, no shadow, and
+ * the danger state uses the signal token rather than a raw Tailwind red.
  */
 export function ConfirmModal({
   title,
@@ -31,23 +34,26 @@ export function ConfirmModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-sm rounded-card bg-bg p-5 shadow-card"
+        className="w-full max-w-sm border border-ink bg-paper p-[14px]"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="mb-1 text-[17px] font-semibold">{title}</h2>
-        {body && <p className="mb-3 text-[15px] text-label-secondary">{body}</p>}
-        <div className="mt-4 flex items-center justify-end gap-2">
-          <button
-            type="button"
-            className="px-3 py-2 text-[15px] text-label"
-            onClick={onClose}
-          >
+        <h2 className="mb-[6px] text-[14px] font-black leading-[1.05] tracking-[-0.02em]">
+          {title}
+        </h2>
+        {body && (
+          <p className="mb-[12px] max-w-[52ch] text-[11.5px] leading-[1.45] text-text-dim">
+            {body}
+          </p>
+        )}
+        <div className="mt-[12px] flex items-center justify-end gap-[8px]">
+          <Button variant="ghost" size="sm" type="button" onClick={onClose}>
             {cancelLabel}
-          </button>
+          </Button>
           <Button
             type="button"
+            size="sm"
+            variant={danger ? "destructive" : "primary"}
             onClick={onConfirm}
-            className={danger ? "bg-red-500 hover:opacity-90" : undefined}
           >
             {confirmLabel}
           </Button>

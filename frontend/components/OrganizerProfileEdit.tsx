@@ -21,6 +21,7 @@ import { useAuth } from "@/lib/auth-context";
 import { ORG_VERIFY_STEPS, orgVerificationStep } from "@/lib/org-verification";
 import { padCount } from "@/lib/org-seats";
 import { tileCount } from "@/lib/tile-count";
+import { uploadErrorMessage, validateImageFile } from "@/lib/upload-errors";
 
 function previewCaption(status: VerificationStatus | undefined): string {
   if (status === "verified") return "Проверенный организатор";
@@ -67,7 +68,7 @@ function LogoSlot({
       <input
         ref={inputRef}
         type="file"
-        accept="image/png,image/jpeg,image/webp"
+        accept="image/png,image/jpeg,image/webp,image/heic,image/heif,.heic,.heif"
         className="sr-only"
         disabled={uploading}
         onChange={(e) => {
@@ -196,6 +197,11 @@ export function OrganizerProfileEdit() {
   };
 
   const onLogo = async (file: File) => {
+    const tooBig = validateImageFile(file);
+    if (tooBig) {
+      setLogoError(tooBig);
+      return;
+    }
     setLogoError(undefined);
     setLogoUploading(true);
     try {
@@ -203,7 +209,7 @@ export function OrganizerProfileEdit() {
       setLogoFileId(id);
       setLogoPreviewUrl(url);
     } catch (e) {
-      setLogoError(e instanceof Error ? e.message : String(e));
+      setLogoError(uploadErrorMessage(e));
     } finally {
       setLogoUploading(false);
     }

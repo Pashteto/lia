@@ -14,6 +14,7 @@ import { Stepper } from "@/components/ui/Stepper";
 import { joinLocal, splitLocal } from "@/components/ui/DateTimeField";
 import { VenuePicker } from "@/components/VenuePicker";
 import { VerifyEmailInterstitial } from "@/components/VerifyEmailInterstitial";
+import { uploadErrorMessage, validateImageFile } from "@/lib/upload-errors";
 import {
   createEvent,
   EMAIL_NOT_VERIFIED,
@@ -338,6 +339,11 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
   }, []);
 
   const handleCoverFile = async (file: File) => {
+    const tooBig = validateImageFile(file);
+    if (tooBig) {
+      setCoverError(tooBig);
+      return;
+    }
     setCoverError(undefined);
     setCoverUploading(true);
     try {
@@ -347,7 +353,7 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
       // Cover lives outside RHF dirty tracking — force edit-mode patch with new id.
       flushAutosave({ force: true, coverId: id });
     } catch (err) {
-      setCoverError(err instanceof Error ? err.message : "Ошибка загрузки");
+      setCoverError(uploadErrorMessage(err));
     } finally {
       setCoverUploading(false);
     }

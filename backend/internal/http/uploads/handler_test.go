@@ -3,10 +3,13 @@ package uploads
 import (
 	"bytes"
 	"context"
+	"image"
+	"image/png"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"net/textproto"
+	"strings"
 	"testing"
 
 	"github.com/go-openapi/strfmt"
@@ -117,10 +120,20 @@ func TestUpload_RejectsNonImage(t *testing.T) {
 	}
 }
 
+// tinyPNG is a real, decodable PNG. The handler no longer sniffs a magic
+// number — it decodes and re-encodes — so a bare signature is not enough.
+func tinyPNG(t *testing.T) []byte {
+	t.Helper()
+	img := image.NewRGBA(image.Rect(0, 0, 4, 4))
+	buf := &bytes.Buffer{}
+	if err := png.Encode(buf, img); err != nil {
+		t.Fatalf("encode png: %v", err)
+	}
+	return buf.Bytes()
+}
+
 func TestUpload_AcceptsImage_Returns201WithURL(t *testing.T) {
-	// Full 8-byte PNG signature — http.DetectContentType requires these 8 bytes
-	// to positively identify image/png.
-	body, ct := multipartFile(t, "file", "a.png", "image/png", []byte{0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a})
+	body, ct := multipartFile(t, "file", "a.png", "image/png", tinyPNG(t))
 	h := NewHandler(memStore(t), &fakeFiles{}, okAuth)
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/uploads", body)
 	req.Header.Set("Content-Type", ct)
@@ -193,5 +206,32 @@ func TestUpload_RejectsSpoofedImageContentType(t *testing.T) {
 	h.ServeHTTP(rec, req)
 	if rec.Code != http.StatusUnsupportedMediaType {
 		t.Fatalf("want 415 for spoofed content-type, got %d body=%s", rec.Code, rec.Body.String())
+	}
+}
+
+// Whatever comes in, a JPEG goes to storage — that is what keeps the byte cap
+// affordable and the served format predictable.
+func TestUpload_StoresAReencodedJPEG(t *testing.T) {
+	store := memStore(t)
+	files := &fakeFiles{}
+	body, ct := multipartFile(t, "file", "a.png", "image/png", tinyPNG(t))
+	h := NewHandler(store, files, okAuth)
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/uploads", body)
+	req.Header.Set("Content-Type", ct)
+	req.Header.Set("Authorization", "Bearer t")
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("want 201, got %d body=%s", rec.Code, rec.Body.String())
+	}
+	if files.registered == nil {
+		t.Fatal("nothing was registered")
+	}
+	if files.registered.ContentType != "image/jpeg" {
+		t.Errorf("registered content type = %q; want image/jpeg", files.registered.ContentType)
+	}
+	if !strings.HasSuffix(files.registered.StorageKey, ".jpg") {
+		t.Errorf("stored key = %q; want a .jpg extension", files.registered.StorageKey)
 	}
 }

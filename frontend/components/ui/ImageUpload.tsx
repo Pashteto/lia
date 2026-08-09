@@ -35,7 +35,11 @@ export function ImageUpload({
       <input
         ref={inputRef}
         type="file"
-        accept="image/png,image/jpeg,image/webp"
+        /* HEIC/HEIF are what an iPhone hands over unless the user has switched
+         * the camera to "Most Compatible"; without them in `accept` the picker
+         * greys those photos out. The extensions are listed too because iOS
+         * Safari does not always map the MIME types. */
+        accept="image/png,image/jpeg,image/webp,image/heic,image/heif,.heic,.heif"
         className="sr-only"
         disabled={disabled || uploading}
         onChange={(e) => {

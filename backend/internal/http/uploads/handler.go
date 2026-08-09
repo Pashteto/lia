@@ -6,26 +6,24 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"strings"
 
 	"github.com/gofrs/uuid"
 
-	apimodels "github.com/Pashteto/lia/internal/http/models"
 	filesdomain "github.com/Pashteto/lia/internal/files"
+	apimodels "github.com/Pashteto/lia/internal/http/models"
+	"github.com/Pashteto/lia/internal/images"
 	"github.com/Pashteto/lia/internal/storage"
 )
 
-const maxBytes = 5 << 20 // 5 MiB
-
-// allowedMIME maps accepted image content types to their file extensions.
-var allowedMIME = map[string]string{
-	"image/png":  ".png",
-	"image/jpeg": ".jpg",
-	"image/webp": ".webp",
-}
+// maxBytes caps the upload at what a phone photo actually weighs. It can afford
+// to be generous because nothing is stored verbatim: everything is re-encoded
+// as a downscaled JPEG (internal/images), so a 9 MB HEIC lands as a few
+// hundred KB. Keep nginx's client_max_body_size above this — a proxy-level 413
+// carries no CORS headers and surfaces in the browser as "Failed to fetch".
+const maxBytes = 10 << 20 // 10 MiB
 
 // uploadResponse is the 201 JSON payload.
 type uploadResponse struct {
@@ -122,23 +120,18 @@ func (h *handler) upload(w http.ResponseWriter, r *http.Request) {
 	size := n
 	data := buf.Bytes()
 
-	// Determine content type by sniffing the actual bytes — never trust the
-	// declared Content-Type header from the multipart part (MIME spoofing defence).
-	sniff := data
-	if len(sniff) > 512 {
-		sniff = sniff[:512]
-	}
-	ct := http.DetectContentType(sniff)
-	// Normalise (strip parameters like "; charset=utf-8").
-	if idx := strings.Index(ct, ";"); idx >= 0 {
-		ct = strings.TrimSpace(ct[:idx])
-	}
-
-	ext, ok := allowedMIME[ct]
-	if !ok {
-		http.Error(w, fmt.Sprintf("unsupported media type %q; allowed: image/png, image/jpeg, image/webp", ct), http.StatusUnsupportedMediaType)
+	// Decode and re-encode rather than trusting the declared Content-Type: the
+	// bytes have to survive a real decoder to be stored, which is a stronger
+	// MIME-spoofing defence than sniffing, and it is what makes HEIC from an
+	// iPhone acceptable in the first place.
+	data, ct, ext, err := images.Normalize(data)
+	if err != nil {
+		http.Error(w,
+			"unsupported media type; allowed: JPEG, PNG, WebP, HEIC/HEIF",
+			http.StatusUnsupportedMediaType)
 		return
 	}
+	size = int64(len(data))
 
 	// Generate storage key.
 	fileID := uuid.Must(uuid.NewV4())

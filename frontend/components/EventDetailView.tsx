@@ -29,6 +29,7 @@ export function EventDetailView({
   categories?: ReadonlyArray<{ slug: string }>;
 }) {
   const ended = new Date(event.endsAt ?? event.startsAt) < new Date();
+  const cancelled = event.status === "cancelled";
   const price = priceLabel(event.priceMin, event.priceType);
   const cat = event.categories[0];
   const numeral = cat && categories ? categoryNumeral(cat.slug, categories) : "—";
@@ -71,6 +72,20 @@ export function EventDetailView({
         />
       </div>
 
+      {/* Cancelled events stay reachable for people who already registered —
+       * the backend keeps serving them the page — so the cancellation has to be
+       * the loudest thing on it, above the title. */}
+      {cancelled && (
+        <div className="border-b border-ink bg-signal px-[20px] py-[12px]">
+          <p className="text-[16px] font-black uppercase tracking-[0.08em] text-white max-md:text-[13px]">
+            Событие отменено
+          </p>
+          <p className="mt-[2px] text-[12px] text-white/90">
+            Организатор отменил это событие. Ваша запись больше не действует.
+          </p>
+        </div>
+      )}
+
       {/* Title block: text left, price+CTA rail right */}
       <div className="grid grid-cols-[1fr_200px] border-b border-ink max-md:grid-cols-1">
         <div className="flex flex-col gap-[10px] px-[20px] py-[16px]">
@@ -93,7 +108,7 @@ export function EventDetailView({
           <span className="mt-[4px] font-mono text-[26px] font-bold leading-none">
             {price}
           </span>
-          {!ended && (
+          {!ended && !cancelled && (
             <div className="mt-auto pt-[10px]">
               <SignupCTA event={event} />
             </div>
@@ -191,7 +206,7 @@ export function EventDetailView({
       </div>
 
       {/* Mobile sticky footer: price + CTA */}
-      {!ended && (
+      {!ended && !cancelled && (
         <div className="fixed inset-x-0 bottom-[49px] z-20 border-t border-ink bg-paper md:hidden">
           <div className="flex items-center justify-between gap-[10px] px-[14px] py-[9px] pb-[calc(9px+env(safe-area-inset-bottom))]">
             <span className="font-mono text-[17px] font-bold">{price}</span>

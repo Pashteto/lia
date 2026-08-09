@@ -9,6 +9,7 @@ import { EventApplicationsPanel } from "@/components/EventApplicationsPanel";
 import { InviteByEmailPanel } from "@/components/InviteByEmailPanel";
 import { OrganizerFeedback } from "@/components/OrganizerFeedback";
 import { PublishEventButton } from "@/components/PublishEventButton";
+import { CancelEventButton } from "@/components/CancelEventButton";
 import { AuthGate } from "@/components/ui/AuthGate";
 import { Chip } from "@/components/ui/Chip";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -23,7 +24,7 @@ import { orgEventStatusLabel } from "@/lib/org-event-status";
 import { seatsFill } from "@/lib/org-seats";
 import type { LiaEvent } from "@/lib/types";
 
-type Filter = "all" | "published" | "pending_review" | "draft";
+type Filter = "all" | "published" | "pending_review" | "draft" | "cancelled";
 
 const FILTERS: {
   key: Filter;
@@ -35,6 +36,7 @@ const FILTERS: {
   { key: "published", label: "Опубликовано", shortLabel: "Опубл" },
   { key: "pending_review", label: "Модерация", shortLabel: "Мод", signal: true },
   { key: "draft", label: "Черновики", shortLabel: "Черн" },
+  { key: "cancelled", label: "Отменённые", shortLabel: "Отм" },
 ];
 
 function matchesFilter(event: LiaEvent, filter: Filter): boolean {
@@ -148,6 +150,9 @@ function OverflowExtras({
             <p className="cap mb-[6px]">Отзывы</p>
             <OrganizerFeedback eventId={event.id} />
           </div>
+        ) : null}
+        {event.status === "draft" || event.status === "published" ? (
+          <CancelEventButton eventId={event.id} />
         ) : null}
         {event.status !== "draft" &&
         event.status !== "published" &&
@@ -307,6 +312,7 @@ export function MyEventsBrowse() {
     published: list.filter((e) => e.status === "published").length,
     pending_review: list.filter((e) => e.status === "pending_review").length,
     draft: list.filter((e) => e.status === "draft").length,
+    cancelled: list.filter((e) => e.status === "cancelled").length,
   };
   const filtered = list.filter((e) => matchesFilter(e, filter));
 

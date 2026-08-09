@@ -47,6 +47,9 @@ function countLabel(n: number | undefined): string {
 function RegistrationRow({ rsvp }: { rsvp: Rsvp }) {
   const event = rsvp.event;
   const status = rsvpStatusLabel(rsvp.status);
+  // A cancelled event keeps its row here on purpose — the registration is what
+  // the user remembers, so the row has to say it is off rather than vanish.
+  const cancelled = event?.status === "cancelled";
   const context = event
     ? [event.venue?.name ?? (event.format === "online" ? "Онлайн" : "—"), formatStartTime(event.startsAt)]
         .filter(Boolean)
@@ -65,6 +68,7 @@ function RegistrationRow({ rsvp }: { rsvp: Rsvp }) {
         </span>
         <span className="border-r border-on-surface px-[14px] py-[10px]">
           <span className="block text-[13px] font-bold leading-[1.1]">
+            {cancelled && <span className="text-signal">ОТМЕНЕНО · </span>}
             {event?.title ?? `Событие #${rsvp.eventId.slice(0, 8)}`}
           </span>
           <span className="cap mt-[3px] block">{context}</span>
@@ -92,6 +96,7 @@ function RegistrationRow({ rsvp }: { rsvp: Rsvp }) {
           </StatusChip>
         </span>
         <span className="text-[12px] font-bold leading-[1.1]">
+          {cancelled && <span className="text-signal">ОТМЕНЕНО · </span>}
           {event?.title ?? `Событие #${rsvp.eventId.slice(0, 8)}`}
         </span>
       </div>

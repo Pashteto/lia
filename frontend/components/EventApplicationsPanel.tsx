@@ -333,7 +333,11 @@ export function EventApplicationsPanel({
                         type="button"
                         aria-label={checked ? "Снять выбор" : "Выбрать"}
                         aria-pressed={checked}
-                        className="inline-flex h-[44px] w-[44px] items-center justify-center swiss-focus"
+                        /* The hit target must stay inside the 26px grid track:
+                         * a fixed 44px-wide button overflowed it, so the column
+                         * rule cut through the box and the next cell swallowed
+                         * the right half of the clicks. */
+                        className="flex h-[44px] w-full items-center justify-center swiss-focus"
                         onClick={() => toggleOne(rsvp.id)}
                         disabled={isBusy}
                       >

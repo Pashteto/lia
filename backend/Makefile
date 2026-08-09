@@ -112,9 +112,17 @@ migrate-drop:
 run:
 	GODEBUG=xray_ptrace=1 go run -race $(APP_ENTRY_POINT) serve
 
-# The build target builds the application for the current system
+# The build target builds the application for the current system.
+#
+# `nodynamic` is load-bearing for the deployed image. The HEIC decoder
+# (internal/images) ships two backends: a pure-Go WASM one and a libheif one
+# reached through purego. The purego path emits //go:cgo_import_dynamic
+# directives, which push the linker into dynamic mode even under
+# CGO_ENABLED=0 — the resulting binary wants /lib64/ld-linux-x86-64.so.2 and
+# dies in the FROM scratch runtime image with "exec /lia: no such file or
+# directory". The tag drops that path; the WASM decoder stays.
 build:
-	env CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags="-w -s ${LDFLAGS}" -o $(BUILD_OUT_DIR)/$(APP) $(APP_ENTRY_POINT)
+	env CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build -tags nodynamic -ldflags="-w -s ${LDFLAGS}" -o $(BUILD_OUT_DIR)/$(APP) $(APP_ENTRY_POINT)
 
 # The test target runs go test
 test:

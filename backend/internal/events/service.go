@@ -30,17 +30,48 @@ var (
 	ErrCapacityBelowOccupied = errors.New("capacity below occupied seats")
 )
 
+// moscow returns the Europe/Moscow location, falling back to UTC when the
+// timezone database is unavailable.
+func moscow() *time.Location {
+	loc, err := time.LoadLocation("Europe/Moscow")
+	if err != nil {
+		return time.UTC
+	}
+	return loc
+}
+
 // startOfMonthMoscow returns midnight on the first day of t's calendar month
 // in the Europe/Moscow timezone.
 func startOfMonthMoscow(t time.Time) time.Time {
-	loc, err := time.LoadLocation("Europe/Moscow")
-	if err != nil {
-		// Fall back to UTC if timezone data is unavailable.
-		loc = time.UTC
-	}
-	moscow := t.In(loc)
-	return time.Date(moscow.Year(), moscow.Month(), 1, 0, 0, 0, 0, loc)
+	loc := moscow()
+	m := t.In(loc)
+	return time.Date(m.Year(), m.Month(), 1, 0, 0, 0, 0, loc)
 }
+
+// startOfDayMoscow returns midnight of t's calendar day in Europe/Moscow. The
+// daily cap resets on the wall clock organizers actually live by, matching the
+// monthly cap's timezone.
+func startOfDayMoscow(t time.Time) time.Time {
+	loc := moscow()
+	m := t.In(loc)
+	return time.Date(m.Year(), m.Month(), m.Day(), 0, 0, 0, 0, loc)
+}
+
+// QuotaError carries the numbers behind a rejected create so the HTTP layer can
+// tell the organizer what the limit actually is instead of a fixed sentence.
+// It reports itself as ErrQuotaExceeded, so existing handling still matches.
+type QuotaError struct {
+	Limit  int
+	Used   int
+	Period string // "day" | "month"
+}
+
+func (e *QuotaError) Error() string {
+	return fmt.Sprintf("event limit reached: %d/%d this %s", e.Used, e.Limit, e.Period)
+}
+
+// Is makes errors.Is(err, ErrQuotaExceeded) true for every quota rejection.
+func (e *QuotaError) Is(target error) bool { return target == ErrQuotaExceeded }
 
 // Service is the events business-logic interface.
 type Service interface {
@@ -129,11 +160,46 @@ type VenueValidator interface {
 	Validate(ctx context.Context, id uuid.UUID) (*models.Venue, error)
 }
 
+// DailyLimitLookup returns an organizer's own daily cap. ok is false when they
+// have no override and the global default applies. Satisfied by
+// organizers.Service.DailyEventLimit.
+type DailyLimitLookup func(ctx context.Context, ownerID uuid.UUID) (limit int, ok bool, err error)
+
 type service struct {
 	repo         Repository
 	categories   CategoryValidator
 	venues       VenueValidator
 	monthlyLimit int
+	dailyLimit   int
+	dailyLookup  DailyLimitLookup
+}
+
+// SetDailyLimit configures the per-day creation cap: a default that applies to
+// everyone, and an optional per-organizer override lookup. defaultLimit <= 0
+// disables the daily cap. Wired after construction (like rsvp's event
+// enricher) because the override lives in the organizers module, which is
+// built later.
+func (s *service) SetDailyLimit(defaultLimit int, lookup DailyLimitLookup) {
+	s.dailyLimit = defaultLimit
+	s.dailyLookup = lookup
+}
+
+// dailyLimitFor resolves the cap for one organizer: their override when set,
+// otherwise the global default. A failing lookup falls back to the default
+// rather than blocking the create — a registry hiccup must not stop publishing.
+func (s *service) dailyLimitFor(ctx context.Context, ownerID uuid.UUID) int {
+	if s.dailyLookup == nil {
+		return s.dailyLimit
+	}
+	limit, ok, err := s.dailyLookup(ctx, ownerID)
+	if err != nil {
+		logger.Log().Errorf("daily limit lookup for %s: %s", ownerID, err.Error())
+		return s.dailyLimit
+	}
+	if !ok {
+		return s.dailyLimit
+	}
+	return limit
 }
 
 // NewService creates an events service backed by the given repository, a
@@ -180,6 +246,21 @@ func (s *service) Create(ctx context.Context, event *models.Event) error {
 		}
 		if n >= s.monthlyLimit {
 			return fmt.Errorf("%w: %d/%d this month", ErrQuotaExceeded, n, s.monthlyLimit)
+		}
+	}
+
+	// Daily cap: a slower rhythm than the monthly one, aimed at bursts rather
+	// than volume. Checked second so an organizer at their monthly limit still
+	// hears about the longer wait.
+	if event.OrganizerID != uuid.Nil {
+		if limit := s.dailyLimitFor(ctx, event.OrganizerID); limit > 0 {
+			n, err := s.repo.CountByOrganizerSince(event.OrganizerID, startOfDayMoscow(time.Now()))
+			if err != nil {
+				return fmt.Errorf("daily quota check: %w", err)
+			}
+			if n >= limit {
+				return &QuotaError{Limit: limit, Used: n, Period: "day"}
+			}
 		}
 	}
 

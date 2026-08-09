@@ -180,6 +180,11 @@ type Scheme struct {
 	// EventsMonthlyLimit caps how many events a single organizer may create in
 	// one calendar month (Europe/Moscow). 0 means unlimited.
 	EventsMonthlyLimit int `mapstructure:"events_monthly_limit"`
+
+	// EventsDailyLimit caps how many events a single organizer may create in
+	// one calendar day (Europe/Moscow). 0 means unlimited. An organizer can be
+	// given a different cap via organizers.daily_event_limit.
+	EventsDailyLimit int `mapstructure:"events_daily_limit"`
 }
 
 // DatabaseConfig holds database connection settings.

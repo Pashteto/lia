@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
@@ -102,6 +104,7 @@ function OrganizersSkeleton() {
 
 /** A3 · Организаторы и верификация — registry table + absorbed verify/reject. */
 export function AdminOrganizers({ initialFilter }: { initialFilter?: string }) {
+  const router = useRouter();
   const [filter, setFilter] = useState<Filter>(() => parseFilter(initialFilter));
   const [rows, setRows] = useState<AdminOrganizer[]>([]);
   const [counts, setCounts] = useState({ all: 0, pending: 0, verified: 0 });
@@ -386,8 +389,10 @@ export function AdminOrganizers({ initialFilter }: { initialFilter?: string }) {
       return;
     }
     if (kind === "open") {
-      setExpandedId((prev) => (prev === org.id ? null : org.id));
+      // The inline expander only showed the profile; the events being moderated
+      // live on the detail page, which is what «Открыть» should reach.
       closeMenu();
+      router.push(`/admin/organizers/${org.id}`);
       return;
     }
     // delete / test → open revoke confirm with fixed reason

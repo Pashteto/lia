@@ -35,10 +35,10 @@ type mockRepo struct {
 	editAuditErr      error
 
 	// R1 fix: pre-validated capacity edit (occupancy read before any write).
-	occupiedSeats    int
-	occupiedErr      error
-	occupiedCallArg  uuid.UUID
-	updateCallCount  int
+	occupiedSeats   int
+	occupiedErr     error
+	occupiedCallArg uuid.UUID
+	updateCallCount int
 }
 
 func (m *mockRepo) Create(event *models.Event) error {
@@ -562,5 +562,74 @@ func TestList_PassesOrganizerOwnerIDIntoFilter(t *testing.T) {
 	_, _ = svc.List(context.Background(), "published", nil, nil, &owner)
 	if len(repo.listFilter.OrganizerIDs) != 1 || repo.listFilter.OrganizerIDs[0] != owner {
 		t.Fatalf("expected OrganizerIDs=[%s], got %v", owner, repo.listFilter.OrganizerIDs)
+	}
+}
+
+func TestCreate_DailyLimitRejectsTheFourthEvent(t *testing.T) {
+	repo := &mockRepo{countByOrganizer: 3}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+	svc.(*service).SetDailyLimit(3, nil)
+
+	err := svc.Create(context.Background(), validEventWithOrganizer())
+	if !errors.Is(err, ErrQuotaExceeded) {
+		t.Fatalf("err = %v; want ErrQuotaExceeded", err)
+	}
+	var q *QuotaError
+	if !errors.As(err, &q) {
+		t.Fatalf("err = %v; want a *QuotaError carrying the numbers", err)
+	}
+	if q.Limit != 3 || q.Period != "day" {
+		t.Errorf("quota = %+v; want limit 3 for the day", q)
+	}
+	// The window must start at Moscow midnight, not 24h back.
+	if want := startOfDayMoscow(time.Now()); !repo.countSinceArg.Equal(want) {
+		t.Errorf("since = %v; want startOfDayMoscow(now) = %v", repo.countSinceArg, want)
+	}
+}
+
+func TestCreate_DailyLimitAllowsUpToTheCap(t *testing.T) {
+	repo := &mockRepo{countByOrganizer: 2}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+	svc.(*service).SetDailyLimit(3, nil)
+
+	if err := svc.Create(context.Background(), validEventWithOrganizer()); err != nil {
+		t.Fatalf("third event of the day rejected: %v", err)
+	}
+}
+
+func TestCreate_PerOrganizerOverrideBeatsTheDefault(t *testing.T) {
+	repo := &mockRepo{countByOrganizer: 5}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+	svc.(*service).SetDailyLimit(3, func(context.Context, uuid.UUID) (int, bool, error) {
+		return 10, true, nil // this organizer was granted a higher cap
+	})
+
+	if err := svc.Create(context.Background(), validEventWithOrganizer()); err != nil {
+		t.Fatalf("override was ignored: %v", err)
+	}
+}
+
+func TestCreate_OverrideOfZeroMeansUncapped(t *testing.T) {
+	repo := &mockRepo{countByOrganizer: 500}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+	svc.(*service).SetDailyLimit(3, func(context.Context, uuid.UUID) (int, bool, error) {
+		return 0, true, nil
+	})
+
+	if err := svc.Create(context.Background(), validEventWithOrganizer()); err != nil {
+		t.Fatalf("a zero override should lift the cap, got: %v", err)
+	}
+}
+
+// A registry hiccup must not stop somebody publishing an event.
+func TestCreate_LookupFailureFallsBackToTheDefault(t *testing.T) {
+	repo := &mockRepo{countByOrganizer: 1}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+	svc.(*service).SetDailyLimit(3, func(context.Context, uuid.UUID) (int, bool, error) {
+		return 0, false, errors.New("registry down")
+	})
+
+	if err := svc.Create(context.Background(), validEventWithOrganizer()); err != nil {
+		t.Fatalf("create blocked by a failing lookup: %v", err)
 	}
 }

@@ -334,6 +334,14 @@ export async function createEvent(input: CreateEventInput): Promise<LiaEvent> {
     const b = await res.clone().json().catch(() => ({}));
     if (b?.code === "email_not_verified") throw new Error(EMAIL_NOT_VERIFIED);
   }
+  if (res.status === 429) {
+    // The daily/monthly cap. The server already phrases this in Russian and
+    // knows the actual number (which an admin can raise per organizer), so it
+    // is shown as-is rather than reworded here.
+    const b = await res.clone().json().catch(() => ({}));
+    if (typeof b?.message === "string" && b.message) throw new Error(b.message);
+    throw new Error("Достигнут лимит на создание событий. Попробуйте позже.");
+  }
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
     throw new Error(`create event failed: ${res.status} ${detail}`);
@@ -787,6 +795,10 @@ export interface OrganizerHistory {
 
 export interface AdminOrganizer extends Organizer {
   history?: OrganizerHistory[];
+  /** Every event this organizer owns, any status. Present on the detail call. */
+  events?: AdminEvent[];
+  /** Override of the global daily creation cap; absent = the default applies. */
+  daily_event_limit?: number;
 }
 
 export async function getMyOrganizer(): Promise<Organizer | null> {
@@ -959,6 +971,16 @@ export async function setOrganizerAutoVerify(id: string, enabled: boolean): Prom
     body: JSON.stringify({ enabled }),
   });
   if (!res.ok) throw new Error(`auto-verify: ${res.status}`);
+}
+
+/** Sets (or clears, with null) an organizer's daily event-creation cap. */
+export async function setOrganizerDailyLimit(id: string, limit: number | null): Promise<void> {
+  const res = await fetch(`${API_V1}/admin/organizers/${id}/daily-limit`, {
+    method: "POST",
+    headers: { ...authHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ limit }),
+  });
+  if (!res.ok) throw new Error(`daily-limit: ${res.status}`);
 }
 
 export type AdminUser = {

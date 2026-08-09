@@ -226,6 +226,21 @@ func (app *App) registerModules() error {
 		logger.Log().Info("events module wired to repository (no storage)")
 	}
 
+	// Wire the daily creation cap once both modules exist: the per-organizer
+	// override lives in the organizers registry, which is built after events.
+	if app.eventsSvc != nil {
+		if setter, ok := app.eventsSvc.(interface {
+			SetDailyLimit(int, eventsdomain.DailyLimitLookup)
+		}); ok {
+			var lookup eventsdomain.DailyLimitLookup
+			if app.organizersSvc != nil {
+				lookup = app.organizersSvc.DailyEventLimit
+			}
+			setter.SetDailyLimit(app.config.EventsDailyLimit, lookup)
+			logger.Log().Infof("events daily limit = %d", app.config.EventsDailyLimit)
+		}
+	}
+
 	// Wire the rsvp lists' event enrichment once events exists. The rsvp
 	// repository attaches events by columns only, so /me/applications and
 	// /me/practices would otherwise carry no venue, organizer or categories.

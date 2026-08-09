@@ -104,6 +104,7 @@ func setDefaults() {
 
 	// Events quota
 	viper.SetDefault("events_monthly_limit", 10)
+	viper.SetDefault("events_daily_limit", 3)
 
 	// Public base URL (used to build invite accept links)
 	viper.SetDefault("public_base_url", "https://presence.tarski.ru")

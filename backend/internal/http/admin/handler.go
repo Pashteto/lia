@@ -20,6 +20,7 @@ import (
 	"github.com/Pashteto/lia/internal/moderation"
 	"github.com/Pashteto/lia/internal/organizers"
 	"github.com/Pashteto/lia/internal/settings"
+	"github.com/Pashteto/lia/pkg/logger"
 )
 
 // Deps are the collaborators the admin handler needs.
@@ -58,6 +59,7 @@ func NewHandler(deps Deps) http.Handler {
 	h.mux.HandleFunc("POST /api/v1/admin/moderation/organizers/{id}/reject", h.staff(h.rejectOrganizer))
 	h.mux.HandleFunc("POST /api/v1/admin/moderation/organizers/{id}/revoke", h.staff(h.revokeOrganizer))
 	h.mux.HandleFunc("POST /api/v1/admin/organizers/{id}/auto-verify", h.staff(h.setAutoVerify))
+	h.mux.HandleFunc("POST /api/v1/admin/organizers/{id}/daily-limit", h.staff(h.setDailyLimit))
 	h.mux.HandleFunc("GET /api/v1/admin/settings", h.staff(h.getSettings))
 	h.mux.HandleFunc("PUT /api/v1/admin/settings", h.staff(h.putSettings))
 	h.mux.HandleFunc("GET /api/v1/admin/complaints", h.staff(h.listComplaints))
@@ -264,6 +266,9 @@ type adminOrganizerJSON struct {
 	// A3 registry columns «Событий» / «Жалоб», which had no data to render.
 	EventsCount     int `json:"events_count"`
 	ComplaintsCount int `json:"complaints_count"`
+	// DailyEventLimit is this organizer's override of the global daily
+	// creation cap. Absent means "use the default".
+	DailyEventLimit *int `json:"daily_event_limit,omitempty"`
 }
 
 func toAdminOrganizerJSON(o organizers.Organizer) adminOrganizerJSON {
@@ -271,6 +276,7 @@ func toAdminOrganizerJSON(o organizers.Organizer) adminOrganizerJSON {
 		ID: o.ID.String(), Name: o.Name, Description: o.Description, WebsiteURL: o.WebsiteURL,
 		VerificationStatus: o.VerificationStatus, AutoVerify: o.AutoVerify, LatestReason: o.LatestReason,
 		EventsCount: o.EventsCount, ComplaintsCount: o.ComplaintsCount,
+		DailyEventLimit: o.DailyEventLimit,
 	}
 }
 
@@ -316,7 +322,8 @@ func (h *handler) searchOrganizers(w http.ResponseWriter, r *http.Request, _ *do
 
 type organizerDetailJSON struct {
 	adminOrganizerJSON
-	History []historyJSON `json:"history"`
+	History []historyJSON    `json:"history"`
+	Events  []adminEventJSON `json:"events"`
 }
 
 type historyJSON struct {
@@ -352,7 +359,64 @@ func (h *handler) organizerDetail(w http.ResponseWriter, r *http.Request, _ *dom
 			Actor: e.ActorUserID.String(), CreatedAt: e.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
 		})
 	}
+	// Every event this organizer owns, any status — the registry row is only
+	// useful if you can get from it to the work being moderated.
+	if h.deps.Events != nil {
+		events, eerr := h.deps.Events.ListByOrganizer(r.Context(), o.OwnerUserID)
+		if eerr != nil {
+			// The profile is still worth showing without its events.
+			logger.Log().Errorf("list events for organizer %s: %s", o.ID, eerr.Error())
+		}
+		for _, e := range events {
+			j := adminEventJSON{
+				ID:       e.ID.String(),
+				Title:    e.Title,
+				Status:   e.StatusSQL,
+				StartsAt: e.StartsAt.Format("2006-01-02T15:04:05Z07:00"),
+				CoverURL: e.CoverURL,
+			}
+			if e.PublishedAt != nil {
+				j.PublishedAt = e.PublishedAt.UTC().Format("2006-01-02T15:04:05Z07:00")
+			}
+			j.OrganizerName = o.Name
+			out.Events = append(out.Events, j)
+		}
+	}
+
 	writeJSON(w, http.StatusOK, out)
+}
+
+// setDailyLimit sets or clears an organizer's daily event-creation override.
+// Body: {"limit": 5} to set, {"limit": null} to fall back to the global default.
+func (h *handler) setDailyLimit(w http.ResponseWriter, r *http.Request, u *domain.User) {
+	if h.deps.Organizers == nil {
+		writeErr(w, http.StatusServiceUnavailable, "organizers service not available")
+		return
+	}
+	id, ok := pathID(w, r)
+	if !ok {
+		return
+	}
+	var body struct {
+		Limit *int `json:"limit"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		writeErr(w, http.StatusBadRequest, "invalid body")
+		return
+	}
+	if body.Limit != nil && *body.Limit < 0 {
+		writeErr(w, http.StatusBadRequest, "Лимит не может быть отрицательным")
+		return
+	}
+	if err := h.deps.Organizers.SetDailyEventLimit(r.Context(), id, u.UUID, body.Limit); err != nil {
+		if err == organizers.ErrNotFound {
+			writeErr(w, http.StatusNotFound, "not found")
+			return
+		}
+		writeErr(w, http.StatusInternalServerError, "update failed")
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *handler) verifyOrganizer(w http.ResponseWriter, r *http.Request, u *domain.User) {

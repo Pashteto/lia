@@ -20,11 +20,12 @@ func scanOrganizer(dst *Organizer) []interface{} {
 	return []interface{}{
 		&dst.ID, &dst.OwnerUserID, &dst.Name, &dst.Description, &dst.WebsiteURL,
 		&dst.LogoFileID, &dst.VerificationStatus, &dst.AutoVerify, &dst.VerifiedAt,
+		&dst.DailyEventLimit,
 	}
 }
 
 const orgCols = `id, owner_user_id, name, description, website_url, logo_file_id,
-                 verification_status, auto_verify, verified_at`
+                 verification_status, auto_verify, verified_at, daily_event_limit`
 
 func (r *pgRepository) GetByOwner(ctx context.Context, ownerID uuid.UUID) (*Organizer, error) {
 	var o Organizer
@@ -200,6 +201,28 @@ func (r *pgRepository) SetAutoVerify(ctx context.Context, id, actorID uuid.UUID,
 			`INSERT INTO audit_log (actor_user_id, action, target_type, target_id, metadata)
 			 VALUES (?, 'organizer.set_auto_verify', 'organizer', ?, jsonb_build_object('enabled', ?::boolean))`,
 			actorID, id, enabled); err != nil {
+			return fmt.Errorf("insert audit log: %w", err)
+		}
+		return nil
+	})
+}
+
+// SetDailyEventLimit writes (or clears, with nil) an organizer's override of
+// the global daily event-creation cap, audited like every other admin action.
+func (r *pgRepository) SetDailyEventLimit(ctx context.Context, id, actorID uuid.UUID, limit *int) error {
+	return r.db.RunInTransaction(ctx, func(tx *pg.Tx) error {
+		res, err := tx.ExecContext(ctx,
+			`UPDATE organizers SET daily_event_limit = ?, updated_at = now() WHERE id = ?`, limit, id)
+		if err != nil {
+			return fmt.Errorf("update daily_event_limit: %w", err)
+		}
+		if res.RowsAffected() == 0 {
+			return ErrNotFound
+		}
+		if _, err := tx.ExecContext(ctx,
+			`INSERT INTO audit_log (actor_user_id, action, target_type, target_id, metadata)
+			 VALUES (?, 'organizer.set_daily_limit', 'organizer', ?, jsonb_build_object('limit', ?::int))`,
+			actorID, id, limit); err != nil {
 			return fmt.Errorf("insert audit log: %w", err)
 		}
 		return nil

@@ -18,6 +18,7 @@ import (
 	eventsops "github.com/Pashteto/lia/internal/http/server/operations/events"
 	domainmodels "github.com/Pashteto/lia/internal/models"
 	organizersdomain "github.com/Pashteto/lia/internal/organizers"
+	rsvpdomain "github.com/Pashteto/lia/internal/rsvp"
 )
 
 // mockEventsService captures the event passed to Create.
@@ -72,7 +73,7 @@ func (m *mockEventsService) GetEnriched(context.Context, []uuid.UUID) ([]*domain
 
 func TestCreateEvent_QuotaExceeded_Returns429(t *testing.T) {
 	svc := &mockEventsService{createErr: fmt.Errorf("%w: 10/10 this month", eventsdomain.ErrQuotaExceeded)}
-	h := NewCreateEvent(svc)
+	h := NewCreateEvent(svc, nil)
 
 	title := "Quota Test"
 	starts := strfmt.DateTime(time.Now())
@@ -113,7 +114,7 @@ func TestCreateEvent_QuotaExceeded_Returns429(t *testing.T) {
 
 func TestCreateEvent_UnverifiedForbidden(t *testing.T) {
 	svc := &mockEventsService{}
-	h := NewCreateEvent(svc)
+	h := NewCreateEvent(svc, nil)
 
 	title := "Test Event"
 	starts := strfmt.DateTime(time.Now())
@@ -147,7 +148,7 @@ func TestCreateEvent_UnverifiedForbidden(t *testing.T) {
 
 func TestCreateEvent_SetsOrganizerFromPrincipal(t *testing.T) {
 	svc := &mockEventsService{}
-	h := NewCreateEvent(svc)
+	h := NewCreateEvent(svc, nil)
 
 	title := "Test Event"
 	starts := strfmt.DateTime(time.Now())
@@ -309,6 +310,95 @@ func TestGetEventByID_AnonymousPublished_Returns200(t *testing.T) {
 	}
 }
 
+// stubRsvpStatus answers StatusForUser with a fixed status; the rest of the
+// RSVP surface is unreachable from GetEventByID.
+type stubRsvpStatus struct{ status domainmodels.RsvpStatus }
+
+func (s stubRsvpStatus) StatusForUser(context.Context, uuid.UUID, uuid.UUID) (domainmodels.RsvpStatus, error) {
+	return s.status, nil
+}
+func (stubRsvpStatus) SignUp(context.Context, uuid.UUID, uuid.UUID, string) (*domainmodels.Rsvp, error) {
+	return nil, nil
+}
+func (stubRsvpStatus) Cancel(context.Context, uuid.UUID, uuid.UUID) error { return nil }
+func (stubRsvpStatus) MyPractices(context.Context, uuid.UUID, string) ([]*rsvpdomain.PracticeRow, error) {
+	return nil, nil
+}
+func (stubRsvpStatus) MyApplications(context.Context, uuid.UUID, string) ([]*domainmodels.Rsvp, error) {
+	return nil, nil
+}
+func (stubRsvpStatus) ListActiveEventsInRange(context.Context, uuid.UUID, time.Time, time.Time) ([]*domainmodels.Event, error) {
+	return nil, nil
+}
+func (stubRsvpStatus) ListApplications(context.Context, uuid.UUID, uuid.UUID) ([]*domainmodels.Rsvp, error) {
+	return nil, nil
+}
+func (stubRsvpStatus) Decide(context.Context, uuid.UUID, uuid.UUID, uuid.UUID, bool) (*domainmodels.Rsvp, error) {
+	return nil, nil
+}
+func (stubRsvpStatus) CalendarICS(context.Context, uuid.UUID) ([]byte, error) { return nil, nil }
+func (stubRsvpStatus) SetEventEnricher(rsvpdomain.EventEnricher)              {}
+
+func TestCanSeeEvent(t *testing.T) {
+	cases := []struct {
+		name    string
+		status  string
+		owner   bool
+		hasRsvp bool
+		want    bool
+	}{
+		{"published is public", "published", false, false, true},
+		{"owner sees their draft", "draft", true, false, true},
+		{"stranger does not see a draft", "draft", false, false, false},
+		{"registered attendee still sees a cancelled event", "cancelled", false, true, true},
+		{"stranger does not see a cancelled event", "cancelled", false, false, false},
+		{"an rsvp does not unlock a draft", "draft", false, true, false},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			if got := canSeeEvent(c.status, c.owner, c.hasRsvp); got != c.want {
+				t.Fatalf("canSeeEvent(%q, owner=%v, rsvp=%v) = %v, want %v",
+					c.status, c.owner, c.hasRsvp, got, c.want)
+			}
+		})
+	}
+}
+
+// The gate consults the RSVP lookup, so a cancelled event must survive the
+// handler end-to-end for someone who is going — not just in canSeeEvent.
+func TestGetEventByID_CancelledWithRsvp_Returns200(t *testing.T) {
+	attendee := uuid.Must(uuid.NewV4())
+	svc := &mockEventsService{getByID: &domainmodels.Event{
+		ID: uuid.Must(uuid.NewV4()), OrganizerID: uuid.Must(uuid.NewV4()),
+		Status: domainmodels.EventCancelled, Title: "C", StartsAt: time.Now(),
+	}}
+	principal := &models.User{}
+	principal.UUID = strfmt.UUID(attendee.String())
+	h := NewGetEventByID(svc, stubRsvpStatus{status: domainmodels.RsvpGoing},
+		func(string) (*models.User, error) { return principal, nil })
+
+	resp := h.Handle(getByIDParams(t, "Bearer tok"))
+	if _, ok := resp.(*eventsops.GetEventByIDOK); !ok {
+		t.Fatalf("expected *GetEventByIDOK, got %T", resp)
+	}
+}
+
+func TestGetEventByID_CancelledWithoutRsvp_Returns404(t *testing.T) {
+	svc := &mockEventsService{getByID: &domainmodels.Event{
+		ID: uuid.Must(uuid.NewV4()), OrganizerID: uuid.Must(uuid.NewV4()),
+		Status: domainmodels.EventCancelled, Title: "C", StartsAt: time.Now(),
+	}}
+	principal := &models.User{}
+	principal.UUID = strfmt.UUID(uuid.Must(uuid.NewV4()).String())
+	h := NewGetEventByID(svc, stubRsvpStatus{status: ""},
+		func(string) (*models.User, error) { return principal, nil })
+
+	resp := h.Handle(getByIDParams(t, "Bearer tok"))
+	if _, ok := resp.(*eventsops.GetEventByIDNotFound); !ok {
+		t.Fatalf("expected *GetEventByIDNotFound, got %T", resp)
+	}
+}
+
 func TestListEvents_ForcesPublished(t *testing.T) {
 	svc := &mockEventsService{}
 	h := NewListEvents(svc, nil)
@@ -352,7 +442,16 @@ func (f *fakeOrganizers) Upsert(_ context.Context, _ uuid.UUID, _ organizersdoma
 	return nil, nil
 }
 func (f *fakeOrganizers) Submit(_ context.Context, _ uuid.UUID) (string, error) { return "", nil }
-func (f *fakeOrganizers) Verify(_ context.Context, _, _ uuid.UUID) error        { return nil }
+func (f *fakeOrganizers) EnsureForOwner(_ context.Context, _ uuid.UUID, _ string) (*organizersdomain.Organizer, error) {
+	return f.org, f.err
+}
+func (f *fakeOrganizers) DailyEventLimit(_ context.Context, _ uuid.UUID) (int, bool, error) {
+	return 0, false, nil
+}
+func (f *fakeOrganizers) SetDailyEventLimit(_ context.Context, _, _ uuid.UUID, _ *int) error {
+	return nil
+}
+func (f *fakeOrganizers) Verify(_ context.Context, _, _ uuid.UUID) error { return nil }
 func (f *fakeOrganizers) Reject(_ context.Context, _, _ uuid.UUID, _ string) error {
 	return nil
 }
@@ -432,5 +531,56 @@ func TestListEvents_OrganizerLookupErrorReturns503(t *testing.T) {
 	resp := h.Handle(eventsops.ListEventsParams{HTTPRequest: httptest.NewRequest("GET", "/events", nil), OrganizerID: &pid})
 	if _, ok := resp.(*eventsops.ListEventsServiceUnavailable); !ok {
 		t.Fatalf("expected *ListEventsServiceUnavailable, got %T", resp)
+	}
+}
+
+func TestQuotaMessage_DailyUsesTheActualLimit(t *testing.T) {
+	cases := []struct {
+		limit int
+		want  string
+	}{
+		{1, "Достигнут дневной лимит: 1 событие. Лимит обновится завтра."},
+		{3, "Достигнут дневной лимит: 3 события. Лимит обновится завтра."},
+		{5, "Достигнут дневной лимит: 5 событий. Лимит обновится завтра."},
+		{11, "Достигнут дневной лимит: 11 событий. Лимит обновится завтра."},
+		{21, "Достигнут дневной лимит: 21 событие. Лимит обновится завтра."},
+	}
+	for _, c := range cases {
+		err := &eventsdomain.QuotaError{Limit: c.limit, Used: c.limit, Period: "day"}
+		if got := quotaMessage(err); got != c.want {
+			t.Errorf("limit %d: got %q, want %q", c.limit, got, c.want)
+		}
+	}
+}
+
+func TestQuotaMessage_MonthlyKeepsItsWording(t *testing.T) {
+	err := fmt.Errorf("%w: 10/10 this month", eventsdomain.ErrQuotaExceeded)
+	const want = "Достигнут лимит: 10 событий в месяц. Лимит обновится 1-го числа."
+	if got := quotaMessage(err); got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
+// A daily QuotaError must still be recognised as a quota rejection so the
+// handler answers 429 rather than 503.
+func TestCreateEvent_DailyQuota_Returns429(t *testing.T) {
+	svc := &mockEventsService{createErr: &eventsdomain.QuotaError{Limit: 3, Used: 3, Period: "day"}}
+	h := NewCreateEvent(svc, nil)
+
+	title := "Fourth today"
+	starts := strfmt.DateTime(time.Now())
+	params := eventsops.CreateEventParams{
+		Body: &models.EventInput{Title: &title, StartsAt: &starts},
+	}
+	req, _ := http.NewRequest(http.MethodPost, "/api/v1/events", nil)
+	params.HTTPRequest = req
+
+	resp := h.Handle(params, testPrincipal())
+	tooMany, ok := resp.(*eventsops.CreateEventTooManyRequests)
+	if !ok {
+		t.Fatalf("expected *CreateEventTooManyRequests, got %T", resp)
+	}
+	if tooMany.Payload.Message == nil || *tooMany.Payload.Message != "Достигнут дневной лимит: 3 события. Лимит обновится завтра." {
+		t.Errorf("unexpected message: %v", tooMany.Payload.Message)
 	}
 }

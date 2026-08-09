@@ -9,6 +9,7 @@ package organizers
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -41,7 +42,10 @@ type Organizer struct {
 	VerificationStatus string     `pg:"verification_status,use_zero"`
 	AutoVerify         bool       `pg:"auto_verify,use_zero"`
 	VerifiedAt         *time.Time `pg:"verified_at"` // nullable; ORM scans NULL → nil
-	LatestReason       string     `pg:"-"`           // transient, not a column
+	// DailyEventLimit overrides the global daily event-creation cap for this
+	// organizer. nil means "use the default"; 0 means uncapped.
+	DailyEventLimit *int   `pg:"daily_event_limit"`
+	LatestReason    string `pg:"-"` // transient, not a column
 	// Registry columns «Событий» / «Жалоб». Transient, batch-loaded by List.
 	EventsCount     int `pg:"-"`
 	ComplaintsCount int `pg:"-"`
@@ -88,6 +92,7 @@ type Repository interface {
 	Reject(ctx context.Context, id, actorID uuid.UUID, reason string) error
 	Revoke(ctx context.Context, id, actorID uuid.UUID, reason string) error
 	SetAutoVerify(ctx context.Context, id, actorID uuid.UUID, enabled bool) error
+	SetDailyEventLimit(ctx context.Context, id, actorID uuid.UUID, limit *int) error
 	List(ctx context.Context, f ListFilter) ([]Organizer, error)
 	History(ctx context.Context, id uuid.UUID) ([]HistoryEntry, error)
 	Counts(ctx context.Context) (Counts, error)
@@ -99,10 +104,18 @@ type Service interface {
 	GetByID(ctx context.Context, id uuid.UUID) (*Organizer, error)
 	Upsert(ctx context.Context, ownerID uuid.UUID, in Input) (*Organizer, error)
 	Submit(ctx context.Context, ownerID uuid.UUID) (newStatus string, err error)
+	// EnsureForOwner gives an event-creating user the organizer profile their
+	// events imply. No-op when they already have one.
+	EnsureForOwner(ctx context.Context, ownerID uuid.UUID, name string) (*Organizer, error)
+	// DailyEventLimit reports an owner's per-day event cap override. ok is
+	// false when they have none and the global default applies.
+	DailyEventLimit(ctx context.Context, ownerID uuid.UUID) (limit int, ok bool, err error)
 	Verify(ctx context.Context, id, actorID uuid.UUID) error
 	Reject(ctx context.Context, id, actorID uuid.UUID, reason string) error
 	Revoke(ctx context.Context, id, actorID uuid.UUID, reason string) error
 	SetAutoVerify(ctx context.Context, id, actorID uuid.UUID, enabled bool) error
+	// SetDailyEventLimit overrides (nil clears) this organizer's daily cap.
+	SetDailyEventLimit(ctx context.Context, id, actorID uuid.UUID, limit *int) error
 	List(ctx context.Context, f ListFilter) ([]Organizer, error)
 	GetWithHistory(ctx context.Context, id uuid.UUID) (*Organizer, []HistoryEntry, error)
 	Overview(ctx context.Context) (Counts, error)
@@ -147,6 +160,62 @@ func (s *service) Submit(ctx context.Context, ownerID uuid.UUID) (string, error)
 		return "", err
 	}
 	return s.repo.Submit(ctx, org.ID, ownerID, global || org.AutoVerify)
+}
+
+// EnsureForOwner backs the "publishing an event makes you an organizer" rule.
+//
+// Before this, `organizers` rows were created only by the profile form, so
+// somebody who just created events was an organizer in every functional sense
+// yet invisible to the admin registry, unfollowable, and could never carry a
+// verification badge. The profile is created from the user's own display name
+// and auto-verified — repo.Submit with autoVerify writes the history and audit
+// rows, so the promotion is as traceable as a moderator's click.
+//
+// Idempotent: an existing profile is returned untouched, whatever its
+// verification status — this must never resurrect a profile a moderator revoked.
+func (s *service) EnsureForOwner(ctx context.Context, ownerID uuid.UUID, name string) (*Organizer, error) {
+	existing, err := s.repo.GetByOwner(ctx, ownerID)
+	if err != nil && !errors.Is(err, ErrNotFound) {
+		return nil, err
+	}
+	if existing != nil {
+		return existing, nil
+	}
+
+	name = strings.TrimSpace(name)
+	if name == "" {
+		name = "Организатор"
+	}
+	org, err := s.repo.Upsert(ctx, ownerID, Input{Name: name})
+	if err != nil {
+		return nil, err
+	}
+	if _, err := s.repo.Submit(ctx, org.ID, ownerID, true); err != nil {
+		return nil, fmt.Errorf("auto-verify organizer %s: %w", org.ID, err)
+	}
+	return s.repo.GetByID(ctx, org.ID)
+}
+
+// DailyEventLimit reads the owner's override. A missing profile is not an
+// error here — the caller falls back to the global default — because the
+// profile is created alongside the first event, and the create path asks about
+// the limit before that has happened.
+func (s *service) DailyEventLimit(ctx context.Context, ownerID uuid.UUID) (int, bool, error) {
+	org, err := s.repo.GetByOwner(ctx, ownerID)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return 0, false, nil
+		}
+		return 0, false, err
+	}
+	if org == nil || org.DailyEventLimit == nil {
+		return 0, false, nil
+	}
+	return *org.DailyEventLimit, true, nil
+}
+
+func (s *service) SetDailyEventLimit(ctx context.Context, id, actorID uuid.UUID, limit *int) error {
+	return s.repo.SetDailyEventLimit(ctx, id, actorID, limit)
 }
 
 func (s *service) Verify(ctx context.Context, id, actorID uuid.UUID) error {

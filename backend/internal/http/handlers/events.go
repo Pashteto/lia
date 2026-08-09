@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/Pashteto/lia/internal/http/formatter"
 	apimodels "github.com/Pashteto/lia/internal/http/models"
 	eventsops "github.com/Pashteto/lia/internal/http/server/operations/events"
+	domainmodels "github.com/Pashteto/lia/internal/models"
 	organizersdomain "github.com/Pashteto/lia/internal/organizers"
 	rsvpdomain "github.com/Pashteto/lia/internal/rsvp"
 	"github.com/Pashteto/lia/pkg/logger"
@@ -94,8 +96,23 @@ func (h *ListEvents) Handle(params eventsops.ListEventsParams) middleware.Respon
 	return eventsops.NewListEventsOK().WithPayload(payload)
 }
 
+// canSeeEvent reports whether a caller may load an event's detail page.
+//
+// Published is public. A cancelled event stays readable for anyone who is
+// already registered — cancelling must not silently delete the page out from
+// under the people who planned to come; they need to land on it and read
+// "отменено". Everything else (draft, moderation, rejected) is owner-only, and
+// non-owners get 404 rather than 403 so existence is never leaked.
+func canSeeEvent(status string, isOwner, hasRsvp bool) bool {
+	if status == "published" || isOwner {
+		return true
+	}
+	return status == "cancelled" && hasRsvp
+}
+
 // GetEventByID handler returns a single event by UUID. Non-published events are
-// visible only to their owner; everyone else gets 404 (existence not leaked).
+// visible only to their owner (and, once cancelled, to registered attendees);
+// everyone else gets 404 (existence not leaked).
 type GetEventByID struct {
 	events    eventsdomain.Service
 	rsvp      rsvpdomain.Service // optional; nil → my_rsvp_status stays ""
@@ -131,50 +148,81 @@ func (h *GetEventByID) Handle(params eventsops.GetEventByIDParams) middleware.Re
 		}
 	}
 
-	// Non-published events are visible only to the owner.
-	if event.Status.String() != "published" && !h.callerOwns(params, event.OrganizerID.String()) {
-		return eventsops.NewGetEventByIDNotFound().
-			WithPayload(DefaultError(http.StatusNotFound, errors.New("event not found"), nil))
+	// Resolve the caller once: both the visibility gate and my_rsvp_status need
+	// it, and a cancelled event's gate depends on the RSVP lookup.
+	//
+	// my_rsvp_status also feeds the detail page's join/apply state on reload
+	// (design-review R4).
+	var caller *apimodels.User
+	if h.checkAuth != nil {
+		if u, err := h.checkAuth(params.HTTPRequest.Header.Get("Authorization")); err == nil {
+			caller = u
+		}
 	}
-
-	// Populate my_rsvp_status for the authenticated caller so the detail page
-	// renders the correct join/apply state on reload (design-review R4).
-	if h.rsvp != nil && h.checkAuth != nil {
-		if u, err := h.checkAuth(params.HTTPRequest.Header.Get("Authorization")); err == nil && u != nil {
-			if uid, err := uuid.FromString(u.UUID.String()); err == nil {
-				if eid, err := uuid.FromString(params.ID.String()); err == nil {
-					if st, err := h.rsvp.StatusForUser(params.HTTPRequest.Context(), eid, uid); err == nil {
-						event.MyRsvpStatus = string(st)
-					}
+	if caller != nil && h.rsvp != nil {
+		if uid, err := uuid.FromString(caller.UUID.String()); err == nil {
+			if eid, err := uuid.FromString(params.ID.String()); err == nil {
+				if st, err := h.rsvp.StatusForUser(params.HTTPRequest.Context(), eid, uid); err == nil {
+					event.MyRsvpStatus = string(st)
 				}
 			}
 		}
 	}
 
+	isOwner := caller != nil && caller.UUID.String() == event.OrganizerID.String()
+	registered := domainmodels.RsvpStatus(event.MyRsvpStatus).IsActive()
+	if !canSeeEvent(event.Status.String(), isOwner, registered) {
+		return eventsops.NewGetEventByIDNotFound().
+			WithPayload(DefaultError(http.StatusNotFound, errors.New("event not found"), nil))
+	}
+
 	return eventsops.NewGetEventByIDOK().WithPayload(formatter.EventToAPI(event))
 }
 
-// callerOwns reports whether the (optional) authenticated caller owns the event.
-// Any auth failure is treated as anonymous (not the owner).
-func (h *GetEventByID) callerOwns(params eventsops.GetEventByIDParams, organizerID string) bool {
-	if h.checkAuth == nil {
-		return false
+// quotaMessage renders a rejected create in Russian. The daily cap is
+// configurable and can be raised per organizer, so its message is built from
+// the actual number rather than hardcoded; the monthly cap keeps its
+// spec-mandated wording.
+func quotaMessage(err error) string {
+	var q *eventsdomain.QuotaError
+	if errors.As(err, &q) && q.Period == "day" {
+		return fmt.Sprintf(
+			"Достигнут дневной лимит: %s. Лимит обновится завтра.",
+			plural(q.Limit, "событие", "события", "событий"),
+		)
 	}
-	u, err := h.checkAuth(params.HTTPRequest.Header.Get("Authorization"))
-	if err != nil || u == nil {
-		return false
+	// NOTE: "10 событий в месяц" is intentionally hardcoded per spec.
+	// Keep in sync with the EVENTS_MONTHLY_LIMIT config value.
+	return "Достигнут лимит: 10 событий в месяц. Лимит обновится 1-го числа."
+}
+
+// plural renders a Russian count with the right noun form ("1 событие",
+// "3 события", "5 событий").
+func plural(n int, one, few, many string) string {
+	mod100 := n % 100
+	mod10 := n % 10
+	switch {
+	case mod100 >= 11 && mod100 <= 14:
+		return fmt.Sprintf("%d %s", n, many)
+	case mod10 == 1:
+		return fmt.Sprintf("%d %s", n, one)
+	case mod10 >= 2 && mod10 <= 4:
+		return fmt.Sprintf("%d %s", n, few)
+	default:
+		return fmt.Sprintf("%d %s", n, many)
 	}
-	return u.UUID.String() == organizerID
 }
 
 // CreateEvent handler creates a new event.
 type CreateEvent struct {
-	events eventsdomain.Service
+	events     eventsdomain.Service
+	organizers organizersdomain.Service // optional; nil → no profile is created
 }
 
-// NewCreateEvent creates a CreateEvent handler.
-func NewCreateEvent(svc eventsdomain.Service) *CreateEvent {
-	return &CreateEvent{events: svc}
+// NewCreateEvent creates a CreateEvent handler. orgs may be nil (no-DB mode),
+// in which case creating an event does not create an organizer profile.
+func NewCreateEvent(svc eventsdomain.Service, orgs organizersdomain.Service) *CreateEvent {
+	return &CreateEvent{events: svc, organizers: orgs}
 }
 
 // Handle POST /events.
@@ -204,13 +252,25 @@ func (h *CreateEvent) Handle(params eventsops.CreateEventParams, principal *apim
 			return eventsops.NewCreateEventBadRequest().
 				WithPayload(DefaultError(http.StatusBadRequest, err, nil))
 		case errors.Is(err, eventsdomain.ErrQuotaExceeded):
-			// NOTE: "10 событий в месяц" is intentionally hardcoded per spec.
-			// Keep in sync with the EVENTS_MONTHLY_LIMIT config value.
 			return eventsops.NewCreateEventTooManyRequests().
-				WithPayload(DefaultError(http.StatusTooManyRequests, errors.New("Достигнут лимит: 10 событий в месяц. Лимит обновится 1-го числа."), nil))
+				WithPayload(DefaultError(http.StatusTooManyRequests, errors.New(quotaMessage(err)), nil))
 		default:
 			return eventsops.NewCreateEventServiceUnavailable().
 				WithPayload(DefaultError(http.StatusServiceUnavailable, err, nil))
+		}
+	}
+
+	// Creating an event is what makes somebody an organizer, so the profile is
+	// minted here rather than waiting for them to find the profile form. Best
+	// effort: the event is already committed, and a registry row is not worth
+	// failing the request the user actually made.
+	if h.organizers != nil && principal != nil && event.OrganizerID != uuid.Nil {
+		name := ""
+		if principal.Name != nil {
+			name = *principal.Name
+		}
+		if _, err := h.organizers.EnsureForOwner(params.HTTPRequest.Context(), event.OrganizerID, name); err != nil {
+			logger.Log().Errorf("ensure organizer profile for %s: %s", event.OrganizerID, err.Error())
 		}
 	}
 

@@ -12,6 +12,7 @@ import {
 
 import { demoLogin, getMe, loginWithPassword, registerWithPassword } from "./api";
 import { clearSession, getStoredEmail, getToken, setSession } from "./auth";
+import { shouldRevalidateVerification } from "./verify-revalidate";
 
 interface AuthState {
   /** Email of the signed-in user, or null when signed out. */
@@ -193,6 +194,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setRoleResolved(true);
     }
   }, []);
+
+  // Verification can be completed anywhere — a second tab, another device, the
+  // link in the mail client — and this tab would keep showing the banner until
+  // the session was torn down and rebuilt. Ask again whenever an unverified tab
+  // is brought back to the front.
+  useEffect(() => {
+    const recheck = () => {
+      if (
+        shouldRevalidateVerification({
+          hasToken: getToken() !== null,
+          emailVerified,
+          visibility: document.visibilityState,
+        })
+      ) {
+        void refresh();
+      }
+    };
+    document.addEventListener("visibilitychange", recheck);
+    window.addEventListener("focus", recheck);
+    return () => {
+      document.removeEventListener("visibilitychange", recheck);
+      window.removeEventListener("focus", recheck);
+    };
+  }, [emailVerified, refresh]);
 
   const logout = useCallback(() => {
     clearSession();

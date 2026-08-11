@@ -43,7 +43,7 @@ end-to-end (миграция 000012, поле `events.external_registration_url`
 Матчинг: хост URL равен `domain_suffix` **или** оканчивается на
 `.domain_suffix` (покрывает `msk.kassir.ru`, `org.timepad.ru`). Сравнение —
 после нормализации хоста в punycode; суффиксы в seed уже в punycode
-(`xn--80atjc.xn--p1ai` для культура.рф), иначе матчер обходится
+(`xn--80atdujec4e.xn--p1ai` для культура.рф), иначе матчер обходится
 юникод-двойниками. Анти-обход: `timepad.ru.evil.com` не матчится (суффикс
 проверяется по границе точки с конца).
 

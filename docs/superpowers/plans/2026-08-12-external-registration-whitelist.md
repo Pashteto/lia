@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Suffix matching is done on **punycode** hosts; seed rows store punycode (`xn--80atjc.xn--p1ai` for культура.рф).
+- Suffix matching is done on **punycode** hosts; seed rows store punycode (`xn--80atdujec4e.xn--p1ai` for культура.рф).
 - URL hard-validation (the only 422): must be `https://`, no userinfo, host must not be an IP. Everything else goes the moderation path — an unknown domain must NEVER produce an error or lose data.
 - Snapshot semantics: `events.external_url_verified` is set when the URL is (re)checked; whitelist edits do not retroactively change published events. Re-check happens only when the URL **changes** (or on first publish). Admin approve sets `external_url_verified = true`.
 - Exact RU copy (verbatim): «Билеты на {name}» (платное), «Записаться через {name}» (бесплатное), «Записаться на сайте организатора», «Переход на {домен}», «Ограничено · наличие на сайте регистрации», «Оплата на месте», «Платформа: {name}», «Неизвестная платформа — событие уйдёт на проверку модератору», «Событие отправлено на проверку модератору и опубликуется после одобрения».
@@ -68,7 +68,7 @@ INSERT INTO trusted_platforms (domain_suffix, display_name, category) VALUES
   ('events.nethouse.ru',    'Nethouse.События', 'ticketing'),
   ('leader-id.ru',          'Leader-ID',        'gov'),
   ('culture.ru',            'Культура.РФ',      'gov'),
-  ('xn--80atjc.xn--p1ai',   'Культура.РФ',      'gov'),
+  ('xn--80atdujec4e.xn--p1ai',   'Культура.РФ',      'gov'),
   ('mos.ru',                'mos.ru',           'gov'),
   ('vmuzey.com',            'ВМузей',           'afisha'),
   ('kudago.com',            'KudaGo',           'afisha')
@@ -125,7 +125,7 @@ func TestNormalizeHost(t *testing.T) {
 		{"plain https", "https://timepad.ru/event/123", "timepad.ru", false},
 		{"subdomain", "https://org.timepad.ru/event/123", "org.timepad.ru", false},
 		{"uppercase host", "https://TimePad.RU/e", "timepad.ru", false},
-		{"unicode idn to punycode", "https://культура.рф/afisha", "xn--80atjc.xn--p1ai", false},
+		{"unicode idn to punycode", "https://культура.рф/afisha", "xn--80atdujec4e.xn--p1ai", false},
 		{"http rejected", "http://timepad.ru/e", "", true},
 		{"userinfo rejected", "https://user@timepad.ru/e", "", true},
 		{"ipv4 rejected", "https://1.2.3.4/e", "", true},
@@ -331,7 +331,7 @@ func (f *fakeRepo) SetActive(_ context.Context, id uuid.UUID, active bool) error
 func newTestService() Service {
 	return NewService(&fakeRepo{rows: []*TrustedPlatform{
 		{DomainSuffix: "timepad.ru", DisplayName: "TimePad", Category: "ticketing", IsActive: true},
-		{DomainSuffix: "xn--80atjc.xn--p1ai", DisplayName: "Культура.РФ", Category: "gov", IsActive: true},
+		{DomainSuffix: "xn--80atdujec4e.xn--p1ai", DisplayName: "Культура.РФ", Category: "gov", IsActive: true},
 		{DomainSuffix: "dead.ru", DisplayName: "Dead", Category: "ticketing", IsActive: false},
 	}})
 }
@@ -1035,7 +1035,7 @@ import { hostOf, matchPlatform, type TrustedPlatform } from "@/lib/platforms";
 
 const LIST: TrustedPlatform[] = [
   { domainSuffix: "timepad.ru", displayName: "TimePad", category: "ticketing" },
-  { domainSuffix: "xn--80atjc.xn--p1ai", displayName: "Культура.РФ", category: "gov" },
+  { domainSuffix: "xn--80atdujec4e.xn--p1ai", displayName: "Культура.РФ", category: "gov" },
 ];
 
 describe("hostOf", () => {

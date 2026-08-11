@@ -32,7 +32,7 @@ INSERT INTO trusted_platforms (domain_suffix, display_name, category) VALUES
   ('events.nethouse.ru',    'Nethouse.События', 'ticketing'),
   ('leader-id.ru',          'Leader-ID',        'gov'),
   ('culture.ru',            'Культура.РФ',      'gov'),
-  ('xn--80atjc.xn--p1ai',   'Культура.РФ',      'gov'),
+  ('xn--80atdujec4e.xn--p1ai',   'Культура.РФ',      'gov'),
   ('mos.ru',                'mos.ru',           'gov'),
   ('vmuzey.com',            'ВМузей',           'afisha'),
   ('kudago.com',            'KudaGo',           'afisha')

@@ -1,6 +1,19 @@
 # Lia — Handoff
 
-> ## ⭐ CURRENT STATE — 2026-07-24 (read this first)
+> ## ⭐ CURRENT STATE — 2026-08-11 (read this first)
+>
+> **Walk category + filter-axis UI + two security fixes — all merged, pushed, and DEPLOYED LIVE** on `presence.tarski.ru`. **`origin/main` = `75122da` (pushed, in sync).** Prod **Lia DB 24 → 25**; GateGuard DB unchanged. Prod images: backend `backend-app:ratelimit`, frontend `lia-frontend-presence:walk-r1`.
+>
+> ### What shipped this session
+> - **New event format «Прогулки и экскурсии»** (`53ce582`) — migration `000025_walk_category` (mirrors 000021), slug `walk`, sort_order 90. Zero frontend change (categories come from `GET /api/v1/categories`, numerals positional). Live: API returns it, create-event offers it, feed filter shows «10».
+> - **Filter-bar axis separation** (`53ce582`, frontend only) — the feed filter bar now labels its two axes («Когда и где» / «Тема») with a full-height rule between them, and topic chips carry their positional numerals (`01 Лекции` …). Swiss-Grid rule "categories are numerals". `DiscoveryFeed.tsx`.
+> - **🔒 demo-login closed in prod** (`77dc42f`) — `POST /auth/demo-login` used to mint a **password-less GateGuard session for any email** even with `HTTP_MOCK_AUTH=false` (deterministic uuid = account takeover). Now `handlers.NewDemoLogin(signer, enabled)` gates on `m.config.MockAuth`; in prod the route returns **404**. Register/login unaffected (verified live). Rollback `backend-app:rollback-demologin-20260811`.
+> - **🔒 per-IP rate limiting LIVE** (`7b00cf3` + `75122da`) — reworked `middlewares.RateLimit`: reads real client IP from `X-Real-IP` (was keyed on `RemoteAddr` = proxy IP → one shared bucket), two-tier token bucket (general **20 rps / burst 40**; auth `/auth/` paths **5 min / burst 10** to bound brute-force), idle-client eviction (15m TTL). Tunable via `HTTP_RATE_LIMIT_*` in `docker-compose.prod.yml` app env. Verified live: bad logins 10×401 then **429**, general traffic unaffected, parallel flood trips general 429. Rollback `backend-app:rollback-ratelimit-20260811`. **Note:** GateGuard password login has no server-side attempt-lockout of its own — the IP limiter is the only brute-force bound.
+>
+> ### QA
+> Full scenario pass (28 scenarios, incl. first live admin `poulissimo@gmail.com` complaints-inbox verification) — report artifact generated 2026-08-11; all product features pass. QA test data cleaned from both DBs (pre-existing `*@presence.test` junk left intact). Deploy per `docs/superpowers/runbooks/2026-08-09-qa-09aug-deploy.md` (build-on-Mac → static-binary `file` check → save|rsync|load → migrate → recreate → prune).
+>
+> ## ⭐ CURRENT STATE — 2026-07-24
 >
 > **QA-20-jul "fix everything" — 11 fixes + a #418 hydration fix, all merged to `main` and DEPLOYED LIVE** on `presence.tarski.ru`. **Local `main` = `a366c61`, 15 commits AHEAD of `origin/main` (UNPUSHED)** — prod deployed from local images, not a pushed ref; `git push origin main` when ready. GateGuard DB **12 → 13**; Lia DB unchanged at **020**.
 >
@@ -138,7 +151,7 @@ Live at **`https://lia.pashteto.com`** / **`https://api.lia.pashteto.com`** on *
 - **Runbooks**: live cutover [`superpowers/runbooks/2026-06-23-vds-ru215-deploy.md`](superpowers/runbooks/2026-06-23-vds-ru215-deploy.md); GateGuard [`superpowers/runbooks/2026-06-25-gateguard-deploy.md`](superpowers/runbooks/2026-06-25-gateguard-deploy.md).
 - The box is **flaky** (1.9 GB RAM, intermittent SSH, broken IPv6) — run long builds detached + poll. The old **oracle-1** demo (frontend-only mock) is orphaned (DNS repointed); tear down later.
 
-**Compliance note (ISO 27001 / Vanta):** Auth is enforced in prod (`HTTP_MOCK_AUTH=false`); GateGuard validates JWTs. The demo-login endpoint is a **non-production control** (mints a JWT for any email, no password) — must never be enabled in real prod. Uploads are authenticated, MIME-allowlisted (byte-sniff), size-capped (5 MB) — not an open write surface. `GET /files/{key}` is intentionally public read (event cover images are public content) — documented decision. The cleanup job is destructive but narrow (only unreferenced blobs >24 h, logged). S3 secrets via env only.
+**Compliance note (ISO 27001 / Vanta):** Auth is enforced in prod (`HTTP_MOCK_AUTH=false`); GateGuard validates JWTs. The demo-login endpoint is a **non-production control** (mints a JWT for any email, no password); as of 2026-08-11 (`77dc42f`) it is **code-gated on `HTTP_MOCK_AUTH` and returns 404 in prod** — previously the route was reachable despite `HTTP_MOCK_AUTH=false` (the flag only disabled the JWT-validation bypass, not this route). **Per-IP rate limiting is enabled in prod** (`HTTP_RATE_LIMIT_*`; general 20 rps, auth `/auth/` 5/min) to bound brute-force. Uploads are authenticated, MIME-allowlisted (byte-sniff), size-capped (5 MB) — not an open write surface. `GET /files/{key}` is intentionally public read (event cover images are public content) — documented decision. The cleanup job is destructive but narrow (only unreferenced blobs >24 h, logged). S3 secrets via env only.
 
 **Recently done:**
 

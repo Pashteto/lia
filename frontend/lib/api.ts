@@ -454,6 +454,8 @@ export async function loginWithPassword(
   });
   if (!res.ok) {
     if (res.status === 401) throw new Error("Неверный email или пароль");
+    if (res.status === 429)
+      throw new Error("Слишком много неудачных попыток входа. Попробуйте через 15 минут.");
     throw new Error(`Не удалось войти (${res.status})`);
   }
   const data = (await res.json()) as DemoLoginResponse;

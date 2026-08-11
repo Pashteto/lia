@@ -38,6 +38,8 @@ type Signer interface {
 var (
 	ErrInvalidCredentials = fmt.Errorf("invalid credentials")
 	ErrUserExists         = fmt.Errorf("user already exists")
+	// ErrAccountLocked maps GateGuard's temporary login lockout to an HTTP 429.
+	ErrAccountLocked = fmt.Errorf("account temporarily locked")
 )
 
 func classifyAuthErr(err error) error {
@@ -45,6 +47,8 @@ func classifyAuthErr(err error) error {
 	switch {
 	case strings.Contains(msg, "already exists"):
 		return ErrUserExists
+	case strings.Contains(msg, "locked"):
+		return ErrAccountLocked
 	case strings.Contains(msg, "invalid credentials"):
 		return ErrInvalidCredentials
 	default:

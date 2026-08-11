@@ -67,3 +67,14 @@ func notFound(err error) middleware.Responder {
 		_ = json.NewEncoder(w).Encode(payload)
 	})
 }
+
+// tooManyRequests writes a plain 429 JSON response (no generated 429 responder
+// exists for the auth operations).
+func tooManyRequests(err error) middleware.Responder {
+	payload := DefaultError(http.StatusTooManyRequests, err, nil)
+	return middleware.ResponderFunc(func(w http.ResponseWriter, _ runtime.Producer) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusTooManyRequests)
+		_ = json.NewEncoder(w).Encode(payload)
+	})
+}

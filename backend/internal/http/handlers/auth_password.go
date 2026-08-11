@@ -75,6 +75,9 @@ func (h *Login) Handle(params authops.LoginParams) middleware.Responder {
 	email := params.Body.Email.String()
 	token, err := h.signer.SignInPassword(params.HTTPRequest.Context(), email, *params.Body.Password)
 	if err != nil {
+		if errors.Is(err, authpkg.ErrAccountLocked) {
+			return tooManyRequests(fmt.Errorf("слишком много неудачных попыток входа, попробуйте через 15 минут"))
+		}
 		if errors.Is(err, authpkg.ErrInvalidCredentials) {
 			return authops.NewLoginUnauthorized().
 				WithPayload(DefaultError(http.StatusUnauthorized, fmt.Errorf("invalid email or password"), nil))

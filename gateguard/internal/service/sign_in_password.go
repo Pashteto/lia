@@ -16,7 +16,20 @@ var (
 	ErrUserAlreadyExists = errors.New("user already exists")
 	// ErrInvalidCredentials is returned for an unknown email or a wrong password.
 	ErrInvalidCredentials = errors.New("invalid credentials")
+	// ErrAccountLocked is returned when an account has been temporarily locked
+	// after too many consecutive failed logins. The message contains "locked"
+	// so the Lia edge can classify it (see classifyAuthErr).
+	ErrAccountLocked = errors.New("account temporarily locked")
 )
+
+// maxLoginAttempts is the number of consecutive failed password logins that
+// trips a temporary lockout. Mirrors verificationMaxAttempts.
+const maxLoginAttempts = 5
+
+// loginLockoutWindow is how long an account stays locked after tripping the cap.
+// The lock auto-expires — no admin unlock needed — and the failure counter
+// resets on the next attempt once the window has passed.
+const loginLockoutWindow = 15 * time.Minute
 
 // SignUpWithPassword creates a credentialed account and returns a session JWT.
 // If the email already exists without a password (e.g. a demo-login user), the
@@ -86,13 +99,56 @@ func (u *UsersService) SignInWithPassword(ctx context.Context, email, plain stri
 	user := &models.User{Email: email}
 	if err := u.repository.GetUser(ctx, user, repository.Email); err != nil {
 		if errors.Is(err, repository.ErrUserNotFound) {
+			// No row to lock; the per-IP edge limiter bounds email enumeration.
 			return nil, nil, ErrInvalidCredentials
 		}
 		return nil, nil, fmt.Errorf("lookup user %s: %w", email, err)
 	}
 
+	// ORDER IS LOAD-BEARING: reject a locked account BEFORE comparing the
+	// password, so the lock holds even against a now-correct guess and no timing
+	// oracle leaks whether the password was right during the lockout window.
+	now := time.Now()
+	if !user.LoginLockedUntil.IsZero() && now.Before(user.LoginLockedUntil) {
+		return nil, nil, ErrAccountLocked
+	}
+	// Lock window elapsed: start this attempt from a clean slate.
+	windowElapsed := !user.LoginLockedUntil.IsZero() && !now.Before(user.LoginLockedUntil)
+
 	if user.PasswordHash == "" || password.Compare(user.PasswordHash, plain) != nil {
+		if windowElapsed {
+			user.FailedLoginAttempts = 0
+			user.LoginLockedUntil = time.Time{}
+		}
+		user.FailedLoginAttempts++
+		cols := []string{"failed_login_attempts"}
+		locked := user.FailedLoginAttempts >= maxLoginAttempts
+		if locked {
+			user.LoginLockedUntil = now.Add(loginLockoutWindow)
+			cols = append(cols, "login_locked_until")
+		} else if windowElapsed {
+			// Persist the cleared lock alongside the reset counter.
+			cols = append(cols, "login_locked_until")
+		}
+		if err := u.repository.UpdateUserBy(ctx, user, repository.Email, cols...); err != nil {
+			u.log.ErrorCtx(ctx, err, "persist failed-login attempt %s", email)
+			return nil, nil, fmt.Errorf("persist attempt %s: %w", email, err)
+		}
+		if locked {
+			return nil, nil, ErrAccountLocked
+		}
 		return nil, nil, ErrInvalidCredentials
+	}
+
+	// Success — clear any accumulated failures/lock.
+	if user.FailedLoginAttempts != 0 || !user.LoginLockedUntil.IsZero() {
+		user.FailedLoginAttempts = 0
+		user.LoginLockedUntil = time.Time{}
+		if err := u.repository.UpdateUserBy(ctx, user, repository.Email,
+			"failed_login_attempts", "login_locked_until"); err != nil {
+			// Non-fatal: the login itself succeeded; log and continue.
+			u.log.ErrorCtx(ctx, err, "reset login lockout %s", email)
+		}
 	}
 
 	jwt, err := u.createJWT(ctx, user)

@@ -32,7 +32,11 @@ type User struct {
 	EmailVerificationAttempts int       `pg:"email_verification_attempts,use_zero"`
 	EmailVerificationToken    string    `pg:"email_verification_token"`
 	EmailVerificationSentAt   time.Time `pg:"email_verification_sent_at"`
-	CreatedOrRestored         bool      `pg:"-"`
+	// Login lockout: consecutive failed password attempts and, when set in the
+	// future, the time until which sign-in is blocked. See SignInWithPassword.
+	FailedLoginAttempts int       `pg:"failed_login_attempts,use_zero"`
+	LoginLockedUntil    time.Time `pg:"login_locked_until"`
+	CreatedOrRestored   bool      `pg:"-"`
 	UpdatedAt                 time.Time
 	CreatedAt                 time.Time
 	DeletedAt                 time.Time

@@ -32,7 +32,15 @@ func (h *GateguardHandlers) SignInWithPassword(ctx context.Context, req *proto.P
 	token, _, err := h.srv.SignInWithPassword(ctx, req.Email, req.Password)
 	if err != nil {
 		h.log.ErrorCtx(ctx, err, "Failed to sign in user")
-		return nil, fmt.Errorf("sign in user: %w", err)
+		switch {
+		case errors.Is(err, service.ErrAccountLocked):
+			// Message keeps the word "locked" so the Lia edge can classify it.
+			return nil, status.Error(codes.ResourceExhausted, "account temporarily locked")
+		case errors.Is(err, service.ErrInvalidCredentials):
+			return nil, status.Error(codes.Unauthenticated, "invalid credentials")
+		default:
+			return nil, fmt.Errorf("sign in user: %w", err)
+		}
 	}
 
 	return &proto.TokenResponse{Token: token}, nil

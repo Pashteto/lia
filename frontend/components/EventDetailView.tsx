@@ -7,8 +7,8 @@ import { Cell, CellStrip } from "@/components/ui/Cell";
 import { VenueMap } from "@/components/VenueMap";
 import {
   attendanceShort,
+  formatEndTime,
   formatEventRange,
-  formatStartTime,
 } from "@/lib/format";
 import { categoryNumeral } from "@/lib/category-numerals";
 import { coverPhoto } from "@/lib/covers";
@@ -116,10 +116,14 @@ export function EventDetailView({
         </div>
       </div>
 
-      {/* Fact strip */}
-      <CellStrip cols={4} className="max-md:grid-cols-2!">
+      {/* Fact strip. «Когда» already carries the start time, so a «Начало»
+          cell duplicated it (design review P2) — the second slot now shows the
+          end time and disappears when no end is set. */}
+      <CellStrip cols={formatEndTime(event.endsAt) ? 4 : 3} className="max-md:grid-cols-2!">
         <Cell caption="Когда" value={formatEventRange(event)} />
-        <Cell caption="Начало" value={formatStartTime(event.startsAt)} mono />
+        {formatEndTime(event.endsAt) && (
+          <Cell caption="Окончание" value={formatEndTime(event.endsAt)} mono />
+        )}
         <Cell caption="Места" value={attendanceShort(event)} mono />
         <Cell
           caption="Организатор"

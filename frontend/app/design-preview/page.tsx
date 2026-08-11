@@ -84,7 +84,7 @@ function Gallery() {
         <Skeleton className="h-[40px] w-[200px]" />
       </Section>
       <Section title="Stepper">
-        <Stepper className="w-full" steps={["Основное", "Когда и где", "Билеты", "Публикация"]} current={1} />
+        <Stepper className="w-full" steps={["Основное", "Когда и где", "Запись", "Публикация"]} current={1} />
         <Stepper
           className="w-full"
           steps={[...ORG_VERIFY_STEPS]}

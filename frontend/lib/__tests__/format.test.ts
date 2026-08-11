@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatEventRange } from "@/lib/format";
+import { attendanceShort, formatEndTime, formatEventRange } from "@/lib/format";
 
 describe("formatEventRange", () => {
   it("single-day (no end) keeps the time form", () => {
@@ -51,5 +51,30 @@ describe("formatEventRange", () => {
         endsAt: "2027-01-17T09:00:00Z",
       }),
     ).toBe("15 января – 17 января");
+  });
+});
+
+describe("formatEndTime", () => {
+  it("returns the Moscow end time for a real end", () => {
+    // 18:00Z == 21:00 MSK
+    expect(formatEndTime("2026-06-13T18:00:00Z")).toBe("21:00");
+  });
+  it("returns null for a missing or zero-time end", () => {
+    expect(formatEndTime(undefined)).toBeNull();
+    expect(formatEndTime("0001-01-01T00:00:00Z")).toBeNull();
+  });
+});
+
+describe("attendanceShort", () => {
+  it("spells out an unset limit instead of a dash", () => {
+    expect(attendanceShort({})).toBe("Без ограничения");
+    expect(attendanceShort({ attendeeCount: 0 })).toBe("Без ограничения");
+  });
+  it("shows the bare count without a limit", () => {
+    expect(attendanceShort({ attendeeCount: 64 })).toBe("64");
+  });
+  it("shows count / capacity when limited", () => {
+    expect(attendanceShort({ attendeeCount: 12, capacity: 40 })).toBe("12 / 40");
+    expect(attendanceShort({ capacity: 40 })).toBe("0 / 40");
   });
 });

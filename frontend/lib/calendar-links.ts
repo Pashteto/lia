@@ -8,7 +8,7 @@ function gcalStamp(iso: string): string {
 /**
  * Deep-link that opens a pre-filled event in the user's Google Calendar.
  * No OAuth, no backend — closes the "не интегрируется с Google" gap (QA 4a).
- * .ics (existing "В календарь") still covers Apple/Outlook.
+ * .ics (existing «В календарь (.ics)») still covers Apple/Outlook.
  */
 export function googleCalendarUrl(event: LiaEvent): string {
   const start = new Date(event.startsAt);

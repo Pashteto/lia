@@ -225,7 +225,7 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
         download
         className="swiss-focus text-[11.5px] text-text-dim underline underline-offset-2"
       >
-        В календарь
+        В календарь (.ics)
       </a>
       <a
         href={googleCalendarUrl(event)}
@@ -233,7 +233,7 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
         rel="noopener noreferrer"
         className="swiss-focus text-[11.5px] text-text-dim underline underline-offset-2"
       >
-        В Google
+        В Google-календарь
       </a>
       <SeatsCounter event={event} />
     </div>

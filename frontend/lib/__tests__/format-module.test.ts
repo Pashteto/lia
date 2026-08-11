@@ -35,7 +35,7 @@ describe("attendanceShort", () => {
   it("count only", () => {
     expect(attendanceShort({ attendeeCount: 64 })).toBe("64");
   });
-  it("nothing known → em dash", () => {
-    expect(attendanceShort({})).toBe("—");
+  it("no limit set → spelled out, not an em dash (design review P2)", () => {
+    expect(attendanceShort({})).toBe("Без ограничения");
   });
 });

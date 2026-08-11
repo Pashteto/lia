@@ -89,10 +89,12 @@ export function toDatetimeLocalValue(iso: string): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-const STEPS = ["Основное", "Когда и где", "Билеты", "Публикация"] as const;
+// «Запись», not «Билеты»: the platform is not about selling tickets — most
+// events are free / by signup / by application (design review P2).
+const STEPS = ["Основное", "Когда и где", "Запись", "Публикация"] as const;
 const NEXT_LABELS = [
   "ДАЛЕЕ · КОГДА И ГДЕ",
-  "ДАЛЕЕ · БИЛЕТЫ",
+  "ДАЛЕЕ · ЗАПИСЬ",
   "ДАЛЕЕ · ПУБЛИКАЦИЯ",
   "СОХРАНИТЬ",
 ] as const;
@@ -649,7 +651,7 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
               )}
             </div>
 
-            {/* 03 Билеты */}
+            {/* 03 Запись */}
             <div hidden={step !== 2} className="flex flex-col gap-[11px]">
               <div className="flex flex-col gap-[5px]">
                 <span className="cap">Цена</span>

@@ -107,14 +107,22 @@ export function formatModuleDate(startsAt: string, endsAt?: string): string {
   return `${shortDateFmt.format(new Date(startsAt))} – ${shortDateFmt.format(new Date(endsAt as string))}`;
 }
 
-/** "12 / 40" | "64" | "—" — mono seat counter for cells and module footers. */
+/** "20:00" (Moscow) when a real end is set; null when the backend zero-time
+ * placeholder means "no end". Detail-page «Окончание» cell. */
+export function formatEndTime(endsAt?: string): string | null {
+  return hasRealEnd(endsAt) ? shortTimeFmt.format(new Date(endsAt as string)) : null;
+}
+
+/** "12 / 40" | "64" | "Без ограничения" — seat counter for cells and module
+ * footers. A bare "—" for an unset limit read as "data failed to load"
+ * (design review P2), so the no-capacity case is spelled out. */
 export function attendanceShort(
   event: Pick<LiaEvent, "attendeeCount" | "capacity">,
 ): string {
-  if (event.attendeeCount == null) return "—";
-  return event.capacity != null
-    ? `${event.attendeeCount} / ${event.capacity}`
-    : String(event.attendeeCount);
+  if (event.capacity == null) {
+    return event.attendeeCount ? String(event.attendeeCount) : "Без ограничения";
+  }
+  return `${event.attendeeCount ?? 0} / ${event.capacity}`;
 }
 
 /** "12.07" — Moscow civil day, for the U6 date column. */

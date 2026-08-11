@@ -2,7 +2,7 @@
 
 > ## ⭐ CURRENT STATE — 2026-08-11 · design-review-11-aug fixes (read this first)
 >
-> **Дизайн-ревью 11 авг (артефакт «Presence · Дизайн-ревью экранов») — все пункты исправлены, кроме намеренно пропущенного P3 «Подчеркнуть „бесплатно" как ценность». 7 фронтенд-коммитов на локальном `main` (UNPUSHED), задеплоено LIVE** — образ `lia-frontend:dr11`, rollback `lia-frontend-presence:rollback-dr11-20260811`. Бэкенд/БД не менялись.
+> **Дизайн-ревью 11 авг (артефакт «Presence · Дизайн-ревью экранов») — все пункты исправлены, кроме намеренно пропущенного P3 «Подчеркнуть „бесплатно" как ценность». 7 фронтенд-коммитов, **`origin/main` = `f5de61d` (pushed, in sync)**, задеплоено LIVE** — образ `lia-frontend:dr11`, rollback `lia-frontend-presence:rollback-dr11-20260811`. Бэкенд/БД не менялись.
 >
 > ### What shipped
 > - **P1 RSVP-ошибки** — `lib/rsvp-errors.ts` (401→login-modal, 409/429/generic→RU, тесты); неподтверждённая почта → CTA «Подтвердить почту» + подсказка ДО запроса (`SignupCTA`).

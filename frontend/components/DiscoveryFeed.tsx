@@ -12,7 +12,8 @@ import {
 } from "@/lib/api";
 import { categoryNumeral } from "@/lib/category-numerals";
 import { eventToModuleProps } from "@/lib/event-module";
-import { todayRange, weekendRange } from "@/lib/mock-events";
+import { useAuth } from "@/lib/auth-context";
+import { todayRange, tonightRange, weekendRange, weekRange } from "@/lib/mock-events";
 import { pluralRu } from "@/lib/plural";
 import type { LiaEvent } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
@@ -21,6 +22,9 @@ import { useMemo, useState } from "react";
 const TIME_FILTERS = [
   { slug: "all", label: "Все" },
   { slug: "today", label: "Сегодня", dateRange: todayRange },
+  // Social frames (design review P3): «куда сегодня вечером / на этой неделе».
+  { slug: "tonight", label: "Сегодня вечером", dateRange: tonightRange },
+  { slug: "week", label: "На этой неделе", dateRange: weekRange },
   { slug: "weekend", label: "Выходные", dateRange: weekendRange },
   { slug: "free", label: "Бесплатно" },
 ] as const;
@@ -45,6 +49,7 @@ export function DiscoveryFeed({
   initialEvents: LiaEvent[];
   categories: ApiCategory[];
 }) {
+  const { ready, isAuthed } = useAuth();
   const [active, setActive] = useState("all");
   const [activeCat, setActiveCat] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -176,6 +181,15 @@ export function DiscoveryFeed({
         <h1 className="mt-[8px] max-w-[14ch] text-[38px] font-black leading-[0.94] tracking-[-0.03em] max-sm:text-[22px]">
           Лента событий
         </h1>
+        {/* One-line manifest for the cold visitor (design review P3): a guest
+            landing from a link should get the vibe in two seconds — the brand
+            voice otherwise hides behind the login screen. */}
+        {ready && !isAuthed && (
+          <p className="mt-[8px] max-w-[52ch] text-[12.5px] leading-[1.45] text-text-dim">
+            Живые события культурной Москвы — медиации, лекции и разговоры об
+            искусстве. Участвуйте, а не только смотрите.
+          </p>
+        )}
       </div>
 
       {/* Filter bar: two labelled axes — when/where left, topic right — split by

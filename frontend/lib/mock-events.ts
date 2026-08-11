@@ -22,6 +22,29 @@ export function todayRange(now: Date): { from: Date; to: Date } {
   return { from, to };
 }
 
+// Tonight: [17:00 today, 00:00 tomorrow) in local time. The social "куда
+// сегодня вечером" frame (design review P3); a fixed 17:00 start keeps the
+// window stable however late in the evening the feed is opened.
+export function tonightRange(now: Date): { from: Date; to: Date } {
+  const from = new Date(now);
+  from.setHours(17, 0, 0, 0);
+  const to = new Date(from);
+  to.setDate(from.getDate() + 1);
+  to.setHours(0, 0, 0, 0);
+  return { from, to };
+}
+
+// This week: [today 00:00, next Monday 00:00) in local time. On Monday the
+// window is the full week ahead; on Sunday it is just the day that's left.
+export function weekRange(now: Date): { from: Date; to: Date } {
+  const from = new Date(now);
+  from.setHours(0, 0, 0, 0);
+  const daysToMonday = (8 - from.getDay()) % 7 || 7;
+  const to = new Date(from);
+  to.setDate(from.getDate() + daysToMonday);
+  return { from, to };
+}
+
 // The current week's weekend: [Sat 00:00, Mon 00:00) in local time. On Mon–Fri
 // this is the upcoming weekend; on Sat/Sun it is the weekend in progress.
 export function weekendRange(now: Date): { from: Date; to: Date } {

@@ -1,6 +1,21 @@
 # Lia — Handoff
 
-> ## ⭐ CURRENT STATE — 2026-08-11 (read this first)
+> ## ⭐ CURRENT STATE — 2026-08-11 · design-review-11-aug fixes (read this first)
+>
+> **Дизайн-ревью 11 авг (артефакт «Presence · Дизайн-ревью экранов») — все пункты исправлены, кроме намеренно пропущенного P3 «Подчеркнуть „бесплатно" как ценность». 7 фронтенд-коммитов на локальном `main` (UNPUSHED), задеплоено LIVE** — образ `lia-frontend:dr11`, rollback `lia-frontend-presence:rollback-dr11-20260811`. Бэкенд/БД не менялись.
+>
+> ### What shipped
+> - **P1 RSVP-ошибки** — `lib/rsvp-errors.ts` (401→login-modal, 409/429/generic→RU, тесты); неподтверждённая почта → CTA «Подтвердить почту» + подсказка ДО запроса (`SignupCTA`).
+> - **P1 карта** — мгновенный поиск по Москве при загрузке (без 6-сек ожидания геолокации); recenter на юзера только если у него есть события; статы «…» вместо «0» при загрузке; `timed-resolver` удалён.
+> - **P1 прод-сид** — тестовые «twix-mars» и «Читаем статьи Жириновского» переведены в `draft` (обратимо, UPDATE в prod DB); в ленте 8 настоящих событий.
+> - **P2 микрокопирайт** — шаг «Билеты»→«Запись»; «Начало»-дубль → «Окончание» (новый `formatEndTime`, ячейка скрывается без конца); «Места: —»→«Без ограничения»; «В календарь (.ics)» / «В Google-календарь».
+> - **P2 кнопки входа** — всегда чёрные (валидация на submit, mismatch-сообщение), не мгновенно-disabled.
+> - **P2 плашка без обложки** — диагональная штриховка (rule-light поверх cell-blank), десктоп + мобайл.
+> - **P3** — строка-манифест для гостя под H1 ленты; чипы «Сегодня вечером» + «На этой неделе» (`tonightRange`/`weekRange`, тесты).
+>
+> Всё проверено на живом HTML (`Окончание`/`Без ограничения`/календарные ссылки/чипы отдаются). 255 фронтенд-тестов зелёные.
+
+> ## ⭐ PREVIOUS STATE — 2026-08-11 (security hardenings)
 >
 > **Walk category + filter-axis UI + three security hardenings — all merged, pushed, and DEPLOYED LIVE** on `presence.tarski.ru`. **`origin/main` = `b5b02cc` (pushed, in sync).** Prod **Lia DB 24 → 25**, **GateGuard DB 13 → 14**. Prod images: backend `backend-app:lockout`, frontend `lia-frontend-presence:walk-r2`, gateguard `gateguard:local` (rebuilt).
 >

@@ -156,3 +156,16 @@ export const MOCK_EVENTS: LiaEvent[] = [
     venue: { id: "v-poryadok", name: "Порядок слов", metro: "Маяковская", lat: 55.77, lon: 37.596 },
   },
 ];
+
+// SSR fallbacks for a failed API fetch. Demo data must never reach a real
+// visitor: with an API configured (prod) a transient failure degrades to an
+// empty list / null — the client-side query refetches and recovers. Only an
+// unconfigured API URL (local dev without a backend) serves the mocks.
+export function ssrFallbackEvents(): LiaEvent[] {
+  return process.env.NEXT_PUBLIC_API_URL ? [] : MOCK_EVENTS;
+}
+
+export function ssrFallbackEvent(id: string): LiaEvent | null {
+  if (process.env.NEXT_PUBLIC_API_URL) return null;
+  return MOCK_EVENTS.find((e) => e.id === id) ?? null;
+}

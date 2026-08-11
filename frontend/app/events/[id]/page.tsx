@@ -1,7 +1,7 @@
 import { EventDetailView } from "@/components/EventDetailView";
 import { OwnerDraftFallback } from "@/components/OwnerDraftFallback";
 import { fetchEvent, getCategories } from "@/lib/api";
-import { MOCK_EVENTS } from "@/lib/mock-events";
+import { ssrFallbackEvent } from "@/lib/mock-events";
 import type { LiaEvent } from "@/lib/types";
 
 // Event detail + registration — built from design/screens/event-detail.html.
@@ -27,7 +27,7 @@ export default async function EventDetailPage({
   try {
     event = await fetchEvent(id);
   } catch {
-    event = MOCK_EVENTS.find((e) => e.id === id) ?? null;
+    event = ssrFallbackEvent(id);
   }
 
   if (event) {

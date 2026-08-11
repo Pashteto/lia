@@ -2,13 +2,15 @@ import { DiscoveryFeed } from "@/components/DiscoveryFeed";
 import { AppHeader, USER_NAV } from "@/components/ui/AppHeader";
 import { AuthNavControl } from "@/components/ui/AuthNavControl";
 import { fetchPublishedEvents, getCategories } from "@/lib/api";
-import { MOCK_EVENTS } from "@/lib/mock-events";
+import { ssrFallbackEvents } from "@/lib/mock-events";
 
 // U1 · Лента событий. SSR both the events and the ordered category taxonomy
-// (numerals are positional in this list); mock fallback keeps local dev alive.
+// (numerals are positional in this list); the fallback serves mocks only in
+// API-less local dev — in prod a failed fetch degrades to an empty list and
+// the client-side query recovers.
 export default async function DiscoveryPage() {
   const [initialEvents, categories] = await Promise.all([
-    fetchPublishedEvents().catch(() => MOCK_EVENTS),
+    fetchPublishedEvents().catch(() => ssrFallbackEvents()),
     getCategories().catch(() => []),
   ]);
 

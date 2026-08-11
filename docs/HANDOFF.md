@@ -15,6 +15,11 @@
 >
 > Всё проверено на живом HTML (`Окончание`/`Без ограничения`/календарные ссылки/чипы отдаются). 255 фронтенд-тестов зелёные.
 
+> ### 2026-08-12 addendum — QA pass + mock-fallback fix (DEPLOYED)
+> - **Full dr11 QA pass 2026-08-12** (headless Playwright + live Chrome, prod): all flows green — guest RSVP→login-modal, unverified→«Подтвердить почту» (0 POST /rsvp), wrong password→black CTA + RU error, map «Всего 7» instantly, chips + empty state, hatch plates, «Окончание»/«Без ограничения»/calendar links. QA test account deleted from gateguard, zero residue.
+> - **fix(feed) `8d50f0e` — mock events never reach prod visitors.** QA caught the feed serving the 4 demo events (broken covers, «от 2 500 ₽») when one SSR `fetchPublishedEvents()` failed: `app/page.tsx` fell back to `MOCK_EVENTS` unconditionally (same in `/search` and the event page). Now gated on `NEXT_PUBLIC_API_URL` being unset (`ssrFallbackEvents`/`ssrFallbackEvent` in `lib/mock-events.ts` + 4 tests, suite 259 green): prod degrades to empty list (client query refetches and recovers) / event not-found. **DEPLOYED** image `lia-frontend:mockfb`, rollback `lia-frontend-presence:rollback-mockfb-20260812` (= dr11). Box images pruned (disk 81%→72%).
+>
+
 > ## ⭐ PREVIOUS STATE — 2026-08-11 (security hardenings)
 >
 > **Walk category + filter-axis UI + three security hardenings — all merged, pushed, and DEPLOYED LIVE** on `presence.tarski.ru`. **`origin/main` = `b5b02cc` (pushed, in sync).** Prod **Lia DB 24 → 25**, **GateGuard DB 13 → 14**. Prod images: backend `backend-app:lockout`, frontend `lia-frontend-presence:walk-r2`, gateguard `gateguard:local` (rebuilt).

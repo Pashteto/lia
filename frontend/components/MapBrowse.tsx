@@ -15,7 +15,6 @@ import { distanceLabel, haversineKm, type LatLon } from "@/lib/geo";
 import { createLatestRequestGate } from "@/lib/latest-request-gate";
 import { mapAreaStats } from "@/lib/map-stats";
 import { priceLabel } from "@/lib/price-label";
-import { createTimedResolver } from "@/lib/timed-resolver";
 import type { LiaEvent } from "@/lib/types";
 import type { MapPin, MapViewport } from "@/components/map/YandexMap";
 
@@ -28,7 +27,6 @@ const MOSCOW: LatLon = [55.742, 37.618];
 const SEARCH_LIMIT = 200;
 const PIN_CAP = 100;
 const NEAR_KM = 5;
-const GEOLOCATION_FALLBACK_MS = 6_000;
 const MOBILE_QUERY = "(max-width: 639px)";
 
 type Filter = "all" | "near" | "free";
@@ -75,47 +73,56 @@ export function MapBrowse() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async (at: LatLon) => {
+  // Resolves with the pin count of the search, or null when superseded/failed.
+  const load = useCallback(async (at: LatLon): Promise<number | null> => {
     const requestId = requestGateRef.current.begin();
     setLoading(true);
     setError(null);
     try {
       const all = await fetchNearbyEvents(at[0], at[1], SEARCH_LIMIT);
-      if (!requestGateRef.current.isLatest(requestId)) return;
+      if (!requestGateRef.current.isLatest(requestId)) return null;
       const withCoords = all.filter((e) => e.venue?.lat != null && e.venue?.lon != null);
       setTruncated(withCoords.length > PIN_CAP);
       setEvents(withCoords.slice(0, PIN_CAP));
       setSearchCenter(at);
       setActiveId(null);
+      return withCoords.length;
     } catch {
-      if (!requestGateRef.current.isLatest(requestId)) return;
+      if (!requestGateRef.current.isLatest(requestId)) return null;
       setError("Не удалось загрузить события в этой области.");
+      return null;
     } finally {
       if (requestGateRef.current.isLatest(requestId)) setLoading(false);
     }
   }, []);
 
-  // Open on the user's position when they allow it, Moscow otherwise.
+  // Search the default view immediately — never an empty map while the browser
+  // waits on the geolocation prompt (design review P1: «ВСЕГО 0» on entry).
+  // When geolocation later resolves to a position that actually has events,
+  // recenter there; a position with none keeps the Moscow results on screen.
   useEffect(() => {
-    const resolution = createTimedResolver(
-      () => void load(MOSCOW),
-      GEOLOCATION_FALLBACK_MS,
-    );
-    if (!navigator.geolocation) {
-      queueMicrotask(() => resolution.resolve(() => void load(MOSCOW)));
-      return () => resolution.cancel();
-    }
+    void load(MOSCOW);
+    if (!navigator.geolocation) return;
+    let cancelled = false;
     navigator.geolocation.getCurrentPosition(
-      (pos) =>
-        resolution.resolve(() => {
-          const at: LatLon = [pos.coords.latitude, pos.coords.longitude];
-          setCenter(at);
-          void load(at);
-        }),
-      () => resolution.resolve(() => void load(MOSCOW)),
+      (pos) => {
+        if (cancelled) return;
+        const at: LatLon = [pos.coords.latitude, pos.coords.longitude];
+        void load(at).then((count) => {
+          if (cancelled || count == null) return;
+          if (count > 0) {
+            setCenter(at);
+          } else {
+            void load(MOSCOW);
+          }
+        });
+      },
+      () => {},
       { enableHighAccuracy: false, timeout: 10_000, maximumAge: 60_000 },
     );
-    return () => resolution.cancel();
+    return () => {
+      cancelled = true;
+    };
   }, [load]);
 
   const visible = useMemo(() => {
@@ -257,13 +264,13 @@ export function MapBrowse() {
       {/* Stat strip — four cells desktop at `.cell`/`.val` defaults, two on
           mobile at 8px/12px padding and an 11px value (reference :369-374, :394-397) */}
       <CellStrip cols={4} className="max-sm:hidden">
-        <Cell caption="Всего" value={stats.total} mono />
+        <Cell caption="Всего" value={loading ? "…" : stats.total} mono />
         <Cell caption="Радиус" value={stats.radius} mono />
-        <Cell caption="Бесплатно" value={stats.free} mono />
-        <Cell caption="Сегодня" value={stats.today} mono />
+        <Cell caption="Бесплатно" value={loading ? "…" : stats.free} mono />
+        <Cell caption="Сегодня" value={loading ? "…" : stats.today} mono />
       </CellStrip>
       <CellStrip cols={2} className="sm:hidden">
-        <Cell caption="Всего" value={stats.total} mono valueClassName="text-[11px]" className="px-[12px] py-[8px]" />
+        <Cell caption="Всего" value={loading ? "…" : stats.total} mono valueClassName="text-[11px]" className="px-[12px] py-[8px]" />
         <Cell caption="Радиус" value={stats.radius} mono valueClassName="text-[11px]" className="px-[12px] py-[8px]" />
       </CellStrip>
 

@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { createTimedResolver } from "@/lib/timed-resolver";
 import {
   recenterMapPreservingZoom,
   updateActivePinLayouts,
@@ -8,35 +7,6 @@ import {
 
 afterEach(() => {
   vi.useRealTimers();
-});
-
-describe("createTimedResolver", () => {
-  it("falls back when geolocation never resolves", () => {
-    vi.useFakeTimers();
-    const fallback = vi.fn();
-    createTimedResolver(fallback, 6_000);
-
-    vi.advanceTimersByTime(5_999);
-    expect(fallback).not.toHaveBeenCalled();
-    vi.advanceTimersByTime(1);
-    expect(fallback).toHaveBeenCalledTimes(1);
-  });
-
-  it("runs only the first geolocation outcome", () => {
-    vi.useFakeTimers();
-    const fallback = vi.fn();
-    const success = vi.fn();
-    const error = vi.fn();
-    const resolver = createTimedResolver(fallback, 6_000);
-
-    resolver.resolve(success);
-    resolver.resolve(error);
-    vi.advanceTimersByTime(6_000);
-
-    expect(success).toHaveBeenCalledTimes(1);
-    expect(error).not.toHaveBeenCalled();
-    expect(fallback).not.toHaveBeenCalled();
-  });
 });
 
 describe("Yandex map controls", () => {

@@ -56,6 +56,14 @@ services:
       STORAGE_BACKEND: "local"
       STORAGE_LOCAL_DIR: "/data/uploads"
       STORAGE_PUBLIC_BASE: "https://api.presence.tarski.ru/api/v1/files"
+      # Per-IP rate limiting. Two tiers: a generous general bucket and a strict
+      # bucket for /auth/ paths (login/register/verify) to bound brute-force.
+      # Client IP is read from X-Real-IP (set by nginx). Tune here + recreate app.
+      HTTP_RATE_LIMIT_ENABLED: "true"
+      HTTP_RATE_LIMIT_REQUESTS_PER_SEC: "20"
+      HTTP_RATE_LIMIT_BURST: "40"
+      HTTP_RATE_LIMIT_AUTH_REQUESTS_PER_MIN: "5"
+      HTTP_RATE_LIMIT_AUTH_BURST: "10"
       # Per-user event-creation quota (calendar month, Europe/Moscow).
       EVENTS_MONTHLY_LIMIT: "10"
       # Daily orphaned-upload cleanup (24h grace; in-process ticker).

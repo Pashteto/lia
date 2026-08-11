@@ -8,6 +8,7 @@ import { VerifyEmailInterstitial } from "@/components/VerifyEmailInterstitial";
 import { cancelRsvp, eventCalendarUrl, EMAIL_NOT_VERIFIED, fetchEventWithAuth, signUp } from "@/lib/api";
 import { googleCalendarUrl } from "@/lib/calendar-links";
 import { useAuth } from "@/lib/auth-context";
+import { extractHttpStatus, rsvpErrorMessage } from "@/lib/rsvp-errors";
 import { signupClosedLabel } from "@/lib/signup-availability";
 import type { LiaEvent, RsvpStatus } from "@/lib/types";
 
@@ -92,7 +93,11 @@ function ApplicationSheet({
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function SignupCTA({ event }: { event: LiaEvent }) {
-  const { isAuthed, ready } = useAuth();
+  const { isAuthed, ready, roleResolved, emailVerified } = useAuth();
+
+  // Known-unverified viewer: explain the state up front instead of letting the
+  // API call fail (design review P1 — "sign up failed: 401" at the CTA).
+  const needsVerify = isAuthed && roleResolved && !emailVerified;
 
   // Local state — seeded from the server's my_rsvp_status (populated on
   // GET /events/{id}) and authoritative after any user action this session.
@@ -146,6 +151,10 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
       handleAuthError();
       return;
     }
+    if (needsVerify) {
+      setShowVerify(true);
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
@@ -167,7 +176,13 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
           if (url) window.open(url, "_blank");
           return;
         }
-        setError(err.message);
+        // A server-side 401 means the stored token is stale/invalid — that is
+        // an auth problem, not a message to display.
+        if (extractHttpStatus(err) === 401) {
+          handleAuthError();
+          return;
+        }
+        setError(rsvpErrorMessage(err, "signup"));
       } else {
         setError("Произошла ошибка. Попробуйте ещё раз.");
       }
@@ -188,13 +203,14 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
       await cancelRsvp(event.id);
       setLocalStatus("");
     } catch (err) {
-      if (err instanceof Error && err.message === "not authenticated") {
+      if (
+        (err instanceof Error && err.message === "not authenticated") ||
+        extractHttpStatus(err) === 401
+      ) {
         handleAuthError();
         return;
       }
-      setError(
-        err instanceof Error ? err.message : "Не удалось отменить запись.",
-      );
+      setError(rsvpErrorMessage(err, "cancel"));
     } finally {
       setBusy(false);
     }
@@ -333,8 +349,13 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
           disabled={busy}
           onClick={() => handleSignUp()}
         >
-          {busy ? "…" : isFull ? "В лист ожидания" : "Записаться"}
+          {busy ? "…" : needsVerify ? "Подтвердить почту" : isFull ? "В лист ожидания" : "Записаться"}
         </Button>
+        {needsVerify && (
+          <p className="text-[11px] text-text-dim">
+            Записаться можно после подтверждения почты
+          </p>
+        )}
         {error && <p className="text-[11px] text-signal">{error}</p>}
         {footer}
         {showLoginModal && (
@@ -405,11 +426,20 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
               setShowLoginModal(true);
               return;
             }
+            if (needsVerify) {
+              setShowVerify(true);
+              return;
+            }
             setShowApplicationSheet(true);
           }}
         >
-          Подать заявку
+          {needsVerify ? "Подтвердить почту" : "Подать заявку"}
         </Button>
+        {needsVerify && (
+          <p className="text-[11px] text-text-dim">
+            Подать заявку можно после подтверждения почты
+          </p>
+        )}
         {error && <p className="text-[11px] text-signal">{error}</p>}
         {footer}
         {showLoginModal && (

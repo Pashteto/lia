@@ -35,15 +35,18 @@ export function AuthForm({
   const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
 
   const mismatch = isRegister && confirm.length > 0 && confirm !== password;
-  const canSubmit =
-    email.trim().length > 0 &&
-    password.length >= (isRegister ? 8 : 1) &&
-    (!isRegister || confirm === password) &&
-    !busy;
 
+  // The button stays enabled (primary black) the whole time — a form that
+  // mounts with a grey disabled CTA reads as broken (design review P2).
+  // Native required/minLength attributes gate empty/short fields on submit;
+  // the confirm-mismatch is the one check the browser can't do.
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canSubmit) return;
+    if (busy) return;
+    if (isRegister && confirm !== password) {
+      setError("Пароли не совпадают");
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
@@ -93,7 +96,7 @@ export function AuthForm({
         <Input label="Пароль ещё раз" type="password" required value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="••••••••" autoComplete="new-password" error={mismatch ? "Пароли не совпадают" : undefined} />
       )}
       {error && <p className="text-[11px] text-signal">{error}</p>}
-      <Button type="submit" disabled={!canSubmit} className="mt-[6px]">
+      <Button type="submit" disabled={busy} className="mt-[6px]">
         {busy ? (isRegister ? "Создаём…" : "Вход…") : isRegister ? "Создать аккаунт" : "Войти"}
       </Button>
     </form>

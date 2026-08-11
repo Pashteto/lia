@@ -66,8 +66,10 @@ func setDefaults() {
 
 	// Rate limit defaults
 	viper.SetDefault("http.rate_limit.enabled", false)
-	viper.SetDefault("http.rate_limit.requests_per_sec", 100.0)
-	viper.SetDefault("http.rate_limit.burst", 20)
+	viper.SetDefault("http.rate_limit.requests_per_sec", 20.0) // general bucket, per IP
+	viper.SetDefault("http.rate_limit.burst", 40)
+	viper.SetDefault("http.rate_limit.auth_requests_per_min", 5.0) // auth bucket, per IP
+	viper.SetDefault("http.rate_limit.auth_burst", 10)
 
 	// Gatekeeper defaults (for future use)
 	viper.SetDefault("http.gatekeeper.address", "localhost:9091")

@@ -53,11 +53,18 @@ type CORSConfig struct {
 	Enabled        bool     `mapstructure:"enabled"`         // Enable CORS middleware
 }
 
-// RateLimitConfig holds rate limiting settings.
+// RateLimitConfig holds per-IP rate limiting settings. The limiter is two-tier:
+// a generous general bucket for all traffic, and a strict bucket for auth
+// endpoints (login/register/verify) to bound credential brute-force.
 type RateLimitConfig struct {
 	Enabled        bool    `mapstructure:"enabled"`          // Enable rate limiting middleware
-	RequestsPerSec float64 `mapstructure:"requests_per_sec"` // Requests per second (e.g., 100.0)
-	Burst          int     `mapstructure:"burst"`            // Burst size (e.g., 20)
+	RequestsPerSec float64 `mapstructure:"requests_per_sec"` // General bucket: sustained req/s per IP
+	Burst          int     `mapstructure:"burst"`            // General bucket: burst size
+
+	// Auth bucket — applied to any request path containing "/auth/". Kept far
+	// stricter than the general bucket since these are the credential surface.
+	AuthRequestsPerMin float64 `mapstructure:"auth_requests_per_min"` // Auth bucket: sustained req/min per IP
+	AuthBurst          int     `mapstructure:"auth_burst"`            // Auth bucket: burst size
 }
 
 // GatekeeperConfig holds gatekeeper service settings.

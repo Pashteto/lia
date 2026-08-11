@@ -280,7 +280,9 @@ func (m *Module) initAPI() error {
 		signer = s
 	}
 	m.signer = signer
-	api.AuthDemoLoginHandler = handlers.NewDemoLogin(signer)
+	// Demo-login mints a password-less session for any email, so it is served
+	// ONLY in mock-auth mode. In prod (HTTP_MOCK_AUTH=false) the route 404s.
+	api.AuthDemoLoginHandler = handlers.NewDemoLogin(signer, m.config.MockAuth)
 	api.AuthRegisterHandler = handlers.NewRegister(signer)
 	api.AuthLoginHandler = handlers.NewLogin(signer)
 

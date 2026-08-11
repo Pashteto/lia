@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/go-openapi/strfmt"
@@ -40,7 +41,7 @@ func (f *fakeSigner) MarkEmailVerified(_ context.Context, _ string) error {
 var _ authpkg.Signer = (*fakeSigner)(nil)
 
 func TestDemoLogin_ReturnsToken(t *testing.T) {
-	h := NewDemoLogin(&fakeSigner{token: "jwt-xyz"})
+	h := NewDemoLogin(&fakeSigner{token: "jwt-xyz"}, true)
 	email := strfmt.Email("a@b.com")
 	params := authops.DemoLoginParams{Body: &models.DemoLoginInput{Email: &email, Name: "A"}}
 	req, _ := http.NewRequest(http.MethodPost, "/api/v1/auth/demo-login", nil)
@@ -57,7 +58,7 @@ func TestDemoLogin_ReturnsToken(t *testing.T) {
 }
 
 func TestDemoLogin_SignerError(t *testing.T) {
-	h := NewDemoLogin(&fakeSigner{err: fmt.Errorf("gateguard down")})
+	h := NewDemoLogin(&fakeSigner{err: fmt.Errorf("gateguard down")}, true)
 	email := strfmt.Email("a@b.com")
 	params := authops.DemoLoginParams{Body: &models.DemoLoginInput{Email: &email}}
 	req, _ := http.NewRequest(http.MethodPost, "/", nil)
@@ -69,7 +70,7 @@ func TestDemoLogin_SignerError(t *testing.T) {
 }
 
 func TestDemoLogin_NoSigner(t *testing.T) {
-	h := NewDemoLogin(nil) // gatekeeper not configured
+	h := NewDemoLogin(nil, true) // gatekeeper not configured
 	email := strfmt.Email("a@b.com")
 	params := authops.DemoLoginParams{Body: &models.DemoLoginInput{Email: &email}}
 	req, _ := http.NewRequest(http.MethodPost, "/", nil)
@@ -77,5 +78,25 @@ func TestDemoLogin_NoSigner(t *testing.T) {
 
 	if _, isUnavail := h.Handle(params).(*authops.DemoLoginServiceUnavailable); !isUnavail {
 		t.Error("expected DemoLoginServiceUnavailable when no signer is configured")
+	}
+}
+
+// In production (mock auth off) the demo-login route must not mint tokens; it
+// answers 404 as if unregistered — even with a working signer.
+func TestDemoLogin_DisabledReturns404(t *testing.T) {
+	h := NewDemoLogin(&fakeSigner{token: "jwt-xyz"}, false)
+	email := strfmt.Email("a@b.com")
+	params := authops.DemoLoginParams{Body: &models.DemoLoginInput{Email: &email, Name: "A"}}
+	req, _ := http.NewRequest(http.MethodPost, "/api/v1/auth/demo-login", nil)
+	params.HTTPRequest = req
+
+	resp := h.Handle(params)
+	if _, isOK := resp.(*authops.DemoLoginOK); isOK {
+		t.Fatal("disabled demo-login must NOT return a token")
+	}
+	rec := httptest.NewRecorder()
+	resp.WriteResponse(rec, nil)
+	if rec.Code != http.StatusNotFound {
+		t.Errorf("expected 404 when demo-login disabled, got %d", rec.Code)
 	}
 }

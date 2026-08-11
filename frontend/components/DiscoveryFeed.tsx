@@ -10,6 +10,7 @@ import {
   fetchPublishedEvents,
   type ApiCategory,
 } from "@/lib/api";
+import { categoryNumeral } from "@/lib/category-numerals";
 import { eventToModuleProps } from "@/lib/event-module";
 import { todayRange, weekendRange } from "@/lib/mock-events";
 import { pluralRu } from "@/lib/plural";
@@ -177,9 +178,15 @@ export function DiscoveryFeed({
         </h1>
       </div>
 
-      {/* Filter bar: time+near-me left, categories (API-ordered) right */}
-      <div className="flex items-center justify-between gap-[10px] overflow-x-auto border-b border-ink px-[20px] py-[9px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {/* Filter bar: two labelled axes — when/where left, topic right — split by
+          a full-height ink rule. Topic chips carry their positional numerals
+          (the Swiss rule: categories are numerals), which is what visually
+          separates them from the when/where chips. */}
+      <div className="flex items-stretch justify-between gap-[10px] overflow-x-auto border-b border-ink px-[20px] py-[9px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="flex shrink-0 items-center gap-[6px]">
+          <span aria-hidden className="mr-[4px] text-[9px] uppercase tracking-[0.12em] text-muted-2">
+            Когда и где
+          </span>
           {TIME_FILTERS.map((f) => (
             <Chip
               key={f.slug}
@@ -198,13 +205,18 @@ export function DiscoveryFeed({
             {geoLoading ? "Определяем…" : "Рядом со мной"}
           </Chip>
         </div>
+        <div aria-hidden className="w-px shrink-0 self-stretch bg-ink" />
         <div className="flex shrink-0 items-center gap-[6px]">
+          <span aria-hidden className="mr-[4px] text-[9px] uppercase tracking-[0.12em] text-muted-2">
+            Тема
+          </span>
           {categories.map((c) => (
             <Chip
               key={c.id}
               variant={activeCat === c.slug ? "active" : "default"}
               onClick={() => setActiveCat(activeCat === c.slug ? null : c.slug)}
             >
+              <span className="mr-[5px] font-mono">{categoryNumeral(c.slug, categories)}</span>
               {c.label}
             </Chip>
           ))}

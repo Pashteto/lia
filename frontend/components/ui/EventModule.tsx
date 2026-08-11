@@ -49,7 +49,9 @@ export function EventModule({
           aspect="aspect-[5/2]"
           className="flex-none border-b border-rule-inner"
           fallback={
-            <div className="flex h-full items-center justify-between px-[14px]">
+            // Hatched, not blank: an empty-looking plate read as a broken card
+            // (design review P2) — the print-style hatch marks it deliberate.
+            <div className="flex h-full items-center justify-between bg-[repeating-linear-gradient(-45deg,transparent,transparent_5px,var(--rule-light)_5px,var(--rule-light)_6px)] px-[14px]">
               <span className="font-mono text-[26px] font-bold tracking-[-0.02em] text-ink">
                 {numeral}
               </span>
@@ -86,7 +88,7 @@ export function EventModule({
           aspect="aspect-square"
           className="row-span-2 self-start border border-ink"
           fallback={
-            <div className="flex h-full items-center justify-center">
+            <div className="flex h-full items-center justify-center bg-[repeating-linear-gradient(-45deg,transparent,transparent_4px,var(--rule-light)_4px,var(--rule-light)_5px)]">
               <span className="font-mono text-[10px] font-bold text-ink">{numeral}</span>
             </div>
           }

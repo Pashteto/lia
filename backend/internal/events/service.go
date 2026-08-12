@@ -125,6 +125,7 @@ type UpdateParams struct {
 	CuratorQuestion         *string
 	ExternalRegistrationURL *string
 	Capacity                *int
+	CapacityLimited         *bool
 }
 
 // ownerSettableStatus reports whether an owner may set the given status via the
@@ -165,13 +166,20 @@ type VenueValidator interface {
 // organizers.Service.DailyEventLimit.
 type DailyLimitLookup func(ctx context.Context, ownerID uuid.UUID) (limit int, ok bool, err error)
 
+// PlatformChecker judges whether an external registration URL belongs to a
+// whitelisted platform. Satisfied by platforms.Service.Check directly.
+type PlatformChecker interface {
+	Check(ctx context.Context, rawURL string) (displayName string, trusted bool, err error)
+}
+
 type service struct {
-	repo         Repository
-	categories   CategoryValidator
-	venues       VenueValidator
-	monthlyLimit int
-	dailyLimit   int
-	dailyLookup  DailyLimitLookup
+	repo            Repository
+	categories      CategoryValidator
+	venues          VenueValidator
+	monthlyLimit    int
+	dailyLimit      int
+	dailyLookup     DailyLimitLookup
+	platformChecker PlatformChecker
 }
 
 // SetDailyLimit configures the per-day creation cap: a default that applies to
@@ -182,6 +190,40 @@ type service struct {
 func (s *service) SetDailyLimit(defaultLimit int, lookup DailyLimitLookup) {
 	s.dailyLimit = defaultLimit
 	s.dailyLookup = lookup
+}
+
+// SetPlatformChecker wires the external-registration whitelist checker.
+// Wired after construction (like SetDailyLimit) because the platforms module
+// is built independently. Left nil in tests/deployments where the feature is
+// off, in which case applyExternalURLPolicy is a no-op.
+func (s *service) SetPlatformChecker(c PlatformChecker) {
+	s.platformChecker = c
+}
+
+// applyExternalURLPolicy enforces the whitelist on the way to publication.
+// urlChanged=true forces a re-check (create counts as changed). Never blocks
+// unknown domains — it downgrades the status to pending_review instead.
+func (s *service) applyExternalURLPolicy(ctx context.Context, event *models.Event, urlChanged bool) error {
+	if s.platformChecker == nil { // feature not wired (tests) — no-op
+		return nil
+	}
+	if event.SignupMode != "external" || event.Status != models.EventPublished {
+		return nil
+	}
+	if event.ExternalURLVerified && !urlChanged {
+		return nil // snapshot semantics: whitelist edits don't re-judge
+	}
+	_, trusted, err := s.platformChecker.Check(ctx, event.ExternalRegistrationURL)
+	if err != nil {
+		return fmt.Errorf("%w: некорректная ссылка для внешней регистрации (нужен https)", ErrInvalidInput)
+	}
+	if trusted {
+		event.ExternalURLVerified = true
+		return nil
+	}
+	event.ExternalURLVerified = false
+	event.Status = models.EventPendingReview
+	return nil
 }
 
 // dailyLimitFor resolves the cap for one organizer: their override when set,
@@ -235,6 +277,10 @@ func (s *service) Create(ctx context.Context, event *models.Event) error {
 		return fmt.Errorf("validate venue: %w", err)
 	}
 	event.Venue = venue
+
+	if err := s.applyExternalURLPolicy(ctx, event, true); err != nil {
+		return err
+	}
 
 	// Quota check: if a monthly limit is configured, reject once the organizer
 	// has reached it for the current calendar month (Europe/Moscow).
@@ -308,6 +354,8 @@ func (s *service) Update(ctx context.Context, id, ownerID uuid.UUID, p UpdatePar
 		return nil, fmt.Errorf("%w: event %s", ErrNotFound, id)
 	}
 
+	originalURL := event.ExternalRegistrationURL
+
 	// Draft and published events are editable. Moderation/terminal statuses are not.
 	if event.Status != models.EventDraft && event.Status != models.EventPublished {
 		return nil, fmt.Errorf("%w: event %s is %s", ErrNotEditable, id, event.Status)
@@ -348,6 +396,9 @@ func (s *service) Update(ctx context.Context, id, ownerID uuid.UUID, p UpdatePar
 	}
 	if p.ExternalRegistrationURL != nil {
 		event.ExternalRegistrationURL = *p.ExternalRegistrationURL
+	}
+	if p.CapacityLimited != nil {
+		event.CapacityLimited = *p.CapacityLimited
 	}
 	if p.VenueID != nil {
 		event.VenueID = *p.VenueID
@@ -402,6 +453,11 @@ func (s *service) Update(ctx context.Context, id, ownerID uuid.UUID, p UpdatePar
 
 	if err := event.Validate(); err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrInvalidInput, err.Error())
+	}
+
+	urlChanged := p.ExternalRegistrationURL != nil && *p.ExternalRegistrationURL != originalURL
+	if err := s.applyExternalURLPolicy(ctx, event, urlChanged); err != nil {
+		return nil, err
 	}
 
 	// Pre-validate a capacity change BEFORE any field write, so a rejection

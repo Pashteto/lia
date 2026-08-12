@@ -10,6 +10,7 @@ import (
 
 	"github.com/Pashteto/lia/internal/categories"
 	"github.com/Pashteto/lia/internal/models"
+	"github.com/Pashteto/lia/internal/platforms"
 	"github.com/Pashteto/lia/internal/venues"
 )
 
@@ -631,5 +632,167 @@ func TestCreate_LookupFailureFallsBackToTheDefault(t *testing.T) {
 
 	if err := svc.Create(context.Background(), validEventWithOrganizer()); err != nil {
 		t.Fatalf("create blocked by a failing lookup: %v", err)
+	}
+}
+
+// --- External registration whitelist (task 4) ---
+
+// fakeChecker is a stub PlatformChecker for testing applyExternalURLPolicy.
+type fakeChecker struct {
+	name    string
+	trusted bool
+	err     error
+	calls   int
+}
+
+func (f *fakeChecker) Check(context.Context, string) (string, bool, error) {
+	f.calls++
+	return f.name, f.trusted, f.err
+}
+
+// externalEvent returns a valid published event with SignupMode "external".
+func externalEvent(owner uuid.UUID) *models.Event {
+	ev := publishedEvent(owner)
+	ev.SignupMode = "external"
+	ev.ExternalRegistrationURL = "https://x.timepad.ru/e/1"
+	return ev
+}
+
+func boolPtr(b bool) *bool { return &b }
+
+func TestCreateExternalTrustedPublishes(t *testing.T) {
+	repo := &mockRepo{}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+	checker := &fakeChecker{trusted: true, name: "TimePad"}
+	svc.(*service).SetPlatformChecker(checker)
+
+	ev := externalEvent(uuid.Must(uuid.NewV4()))
+	if err := svc.Create(context.Background(), ev); err != nil {
+		t.Fatalf("Create returned error: %v", err)
+	}
+	if repo.created.Status != models.EventPublished {
+		t.Fatalf("expected status published, got %s", repo.created.Status)
+	}
+	if !repo.created.ExternalURLVerified {
+		t.Fatal("expected ExternalURLVerified true")
+	}
+}
+
+func TestCreateExternalUnknownGoesPending(t *testing.T) {
+	repo := &mockRepo{}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+	checker := &fakeChecker{trusted: false}
+	svc.(*service).SetPlatformChecker(checker)
+
+	ev := externalEvent(uuid.Must(uuid.NewV4()))
+	if err := svc.Create(context.Background(), ev); err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if repo.created.Status != models.EventPendingReview {
+		t.Fatalf("expected status pending_review, got %s", repo.created.Status)
+	}
+	if repo.created.ExternalURLVerified {
+		t.Fatal("expected ExternalURLVerified false")
+	}
+}
+
+func TestCreateExternalBadURLRejected(t *testing.T) {
+	repo := &mockRepo{}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+	checker := &fakeChecker{err: platforms.ErrBadURL}
+	svc.(*service).SetPlatformChecker(checker)
+
+	ev := externalEvent(uuid.Must(uuid.NewV4()))
+	err := svc.Create(context.Background(), ev)
+	if !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("expected ErrInvalidInput, got %v", err)
+	}
+}
+
+func TestCreateExternalDraftSkipsCheck(t *testing.T) {
+	repo := &mockRepo{}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+	checker := &fakeChecker{trusted: false}
+	svc.(*service).SetPlatformChecker(checker)
+
+	ev := externalEvent(uuid.Must(uuid.NewV4()))
+	ev.Status = models.EventDraft
+	if err := svc.Create(context.Background(), ev); err != nil {
+		t.Fatalf("Create returned error: %v", err)
+	}
+	if checker.calls != 0 {
+		t.Fatalf("expected checker not called for draft, got %d calls", checker.calls)
+	}
+	if repo.created.Status != models.EventDraft {
+		t.Fatalf("expected status to stay draft, got %s", repo.created.Status)
+	}
+}
+
+func TestUpdateExternalURLChangeRechecks(t *testing.T) {
+	owner := uuid.Must(uuid.NewV4())
+	ev := externalEvent(owner)
+	ev.ExternalURLVerified = true
+	repo := &mockRepo{get: ev}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+	checker := &fakeChecker{trusted: false}
+	svc.(*service).SetPlatformChecker(checker)
+
+	newURL := "https://sketchy.example.com/reg"
+	reloaded, err := svc.Update(context.Background(), ev.ID, owner, UpdateParams{ExternalRegistrationURL: &newURL})
+	if err != nil {
+		t.Fatalf("Update returned error: %v", err)
+	}
+	if reloaded.Status != models.EventPendingReview {
+		t.Fatalf("expected status pending_review, got %s", reloaded.Status)
+	}
+}
+
+func TestUpdateUnrelatedEditKeepsVerified(t *testing.T) {
+	owner := uuid.Must(uuid.NewV4())
+	ev := externalEvent(owner)
+	ev.ExternalURLVerified = true
+	repo := &mockRepo{get: ev}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+	checker := &fakeChecker{trusted: false}
+	svc.(*service).SetPlatformChecker(checker)
+
+	title := "Новое название"
+	reloaded, err := svc.Update(context.Background(), ev.ID, owner, UpdateParams{Title: &title})
+	if err != nil {
+		t.Fatalf("Update returned error: %v", err)
+	}
+	if checker.calls != 0 {
+		t.Fatalf("expected checker not called, got %d calls", checker.calls)
+	}
+	if reloaded.Status != models.EventPublished {
+		t.Fatalf("expected status to stay published, got %s", reloaded.Status)
+	}
+}
+
+func TestUpdateCapacityLimited(t *testing.T) {
+	owner := uuid.Must(uuid.NewV4())
+	ev := publishedEvent(owner)
+	repo := &mockRepo{get: ev}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+
+	reloaded, err := svc.Update(context.Background(), ev.ID, owner, UpdateParams{CapacityLimited: boolPtr(true)})
+	if err != nil {
+		t.Fatalf("Update returned error: %v", err)
+	}
+	if !reloaded.CapacityLimited {
+		t.Fatal("expected CapacityLimited true")
+	}
+}
+
+func TestCreateNilCheckerNoop(t *testing.T) {
+	repo := &mockRepo{}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+
+	ev := externalEvent(uuid.Must(uuid.NewV4()))
+	if err := svc.Create(context.Background(), ev); err != nil {
+		t.Fatalf("Create returned error: %v", err)
+	}
+	if repo.created.Status != models.EventPublished {
+		t.Fatalf("expected status to stay published, got %s", repo.created.Status)
 	}
 }

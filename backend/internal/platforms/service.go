@@ -38,8 +38,10 @@ func (s *service) Check(ctx context.Context, rawURL string) (string, bool, error
 	return "", false, nil
 }
 
-func (s *service) ListActive(ctx context.Context) ([]*TrustedPlatform, error) { return s.repo.ListActive(ctx) }
-func (s *service) List(ctx context.Context) ([]*TrustedPlatform, error)       { return s.repo.List(ctx) }
+func (s *service) ListActive(ctx context.Context) ([]*TrustedPlatform, error) {
+	return s.repo.ListActive(ctx)
+}
+func (s *service) List(ctx context.Context) ([]*TrustedPlatform, error) { return s.repo.List(ctx) }
 
 func (s *service) Add(ctx context.Context, domainSuffix, displayName, category string) (*TrustedPlatform, error) {
 	if domainSuffix == "" || displayName == "" {

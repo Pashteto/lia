@@ -53,6 +53,12 @@ type Event struct {
 	Capacity                *int   `pg:"capacity"`                           // nil = unlimited
 	CuratorQuestion         string `pg:"curator_question,use_zero"`          // required when application
 	ExternalRegistrationURL string `pg:"external_registration_url,use_zero"` // required when external
+	CapacityLimited         bool   `pg:"capacity_limited,use_zero"`          // external: "мест ограничено", число не хранится
+	ExternalURLVerified     bool   `pg:"external_url_verified,use_zero"`     // snapshot: URL matched whitelist when last checked
+
+	// ExternalPlatformName is transient (not a column): the whitelist display
+	// name matched at read time. Populated by the events repository.
+	ExternalPlatformName string `pg:"-"`
 
 	// Transient (not columns): populated by the repository per request.
 	SeatsRemaining *int   `pg:"-"` // nil = unlimited; computed = capacity - going

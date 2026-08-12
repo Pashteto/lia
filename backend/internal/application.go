@@ -30,6 +30,7 @@ import (
 	"github.com/Pashteto/lia/internal/module"
 	"github.com/Pashteto/lia/internal/notifications"
 	organizersdomain "github.com/Pashteto/lia/internal/organizers"
+	platformsdomain "github.com/Pashteto/lia/internal/platforms"
 	"github.com/Pashteto/lia/internal/repository"
 	rsvpdomain "github.com/Pashteto/lia/internal/rsvp"
 	"github.com/Pashteto/lia/internal/service"
@@ -53,6 +54,10 @@ type App struct {
 
 	// eventsSvc is the events domain service. Nil when the database is disabled.
 	eventsSvc eventsdomain.Service
+
+	// platformsSvc is the trusted-platforms domain service (external
+	// registration whitelist). Nil when the database is disabled.
+	platformsSvc platformsdomain.Service
 
 	// categoriesSvc is the categories domain service. Nil when the DB is disabled.
 	categoriesSvc categoriesdomain.Service
@@ -238,6 +243,18 @@ func (app *App) registerModules() error {
 			}
 			setter.SetDailyLimit(app.config.EventsDailyLimit, lookup)
 			logger.Log().Infof("events daily limit = %d", app.config.EventsDailyLimit)
+		}
+	}
+
+	// Wire the external-registration whitelist checker once the repository
+	// exists. Tasks 6-7 also pass app.platformsSvc to HTTP handlers.
+	if repoModule != nil && app.eventsSvc != nil {
+		app.platformsSvc = platformsdomain.NewService(platformsdomain.NewRepository(repoModule.DB()))
+		if setter, ok := app.eventsSvc.(interface {
+			SetPlatformChecker(eventsdomain.PlatformChecker)
+		}); ok {
+			setter.SetPlatformChecker(app.platformsSvc)
+			logger.Log().Info("events wired to platforms whitelist checker")
 		}
 	}
 

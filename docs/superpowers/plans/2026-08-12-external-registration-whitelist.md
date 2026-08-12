@@ -377,7 +377,7 @@ func TestAddValidation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("add: %v", err)
 	}
-	if p.DomainSuffix != "xn--b1amnebsh.xn--p1ai" {
+	if p.DomainSuffix != "xn--b1aoke0e.xn--p1ai" {
 		t.Fatalf("suffix must be stored in punycode, got %q", p.DomainSuffix)
 	}
 }

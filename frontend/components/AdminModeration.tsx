@@ -20,6 +20,7 @@ import { formatShortDate } from "@/lib/format";
 import { isLikelyTestContent } from "@/lib/admin-test-heuristic";
 import {
   type AdminEvent,
+  approveEvent,
   fetchEventWithAuth,
   listModerationEvents,
   reinstateEvent,
@@ -29,7 +30,7 @@ import { cn } from "@/lib/cn";
 import { formatModuleDate, formatPrice } from "@/lib/format";
 import type { LiaEvent } from "@/lib/types";
 
-type Filter = "waiting" | "all";
+type Filter = "waiting" | "all" | "links";
 
 function mergeQueue(published: AdminEvent[], rejected: AdminEvent[]): AdminEvent[] {
   const seen = new Set<string>();
@@ -65,6 +66,7 @@ export function AdminModeration() {
   const [filter, setFilter] = useState<Filter>("waiting");
   const [queue, setQueue] = useState<AdminEvent[]>([]);
   const [waitingCount, setWaitingCount] = useState(0);
+  const [linksCount, setLinksCount] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [reasons, setReasons] = useState<Set<string>>(new Set());
   const [detail, setDetail] = useState<LiaEvent | null>(null);
@@ -87,6 +89,15 @@ export function AdminModeration() {
           setSelectedId((prev) => {
             if (prev && published.some((e) => e.id === prev)) return prev;
             return published[0]?.id ?? null;
+          });
+        } else if (filter === "links") {
+          const pending = await listModerationEvents("pending_review");
+          if (cancelled) return;
+          setLinksCount(pending.length);
+          setQueue(pending);
+          setSelectedId((prev) => {
+            if (prev && pending.some((e) => e.id === prev)) return prev;
+            return pending[0]?.id ?? null;
           });
         } else {
           const [published, rejected] = await Promise.all([
@@ -167,6 +178,7 @@ export function AdminModeration() {
     const removed = queue.find((e) => e.id === removedId);
     setQueue(next);
     if (filter === "waiting") setWaitingCount(next.length);
+    else if (filter === "links") setLinksCount(next.length);
     else if (removed?.status === "published") setWaitingCount((c) => Math.max(0, c - 1));
     setSelectedId(nextIdx >= 0 ? next[nextIdx]!.id : null);
     setReasons(new Set());
@@ -189,7 +201,10 @@ export function AdminModeration() {
     setBusy(true);
     setActionError("");
     try {
-      if (row.status === "rejected") {
+      if (row.status === "pending_review") {
+        await approveEvent(row.id);
+        advanceAfterRemoval(row.id);
+      } else if (row.status === "rejected") {
         await reinstateEvent(row.id);
         advanceAfterRemoval(row.id);
       } else {
@@ -260,6 +275,7 @@ export function AdminModeration() {
   }
 
   const selected = queue.find((e) => e.id === selectedId) ?? null;
+  const isPendingReview = selected?.status === "pending_review";
   const coverSrc = shownDetail?.coverUrl || selected?.cover_url;
   // When the event was PUBLISHED — the queue is post-hoc, so that is what
   // «подано» means here. It used to read starts_at, i.e. when the event happens.
@@ -294,6 +310,16 @@ export function AdminModeration() {
             }}
           >
             Все
+          </Chip>
+          <Chip
+            variant={filter === "links" ? "dark-active" : "dark-muted"}
+            onClick={() => {
+              if (filter === "links") return;
+              setLoading(true);
+              setFilter("links");
+            }}
+          >
+            Ссылки · {linksCount}
           </Chip>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto">
@@ -462,22 +488,30 @@ export function AdminModeration() {
               </>
             )}
             <div className="flex-1 px-[16px] py-[12px]">
-              <div className="cap mb-[6px]">Причина отклонения</div>
-              <div className="flex flex-wrap gap-[5px]">
-                {REJECT_REASON_CHIPS.map((label) => {
-                  const on = reasons.has(label);
-                  return (
-                    <Chip
-                      key={label}
-                      variant={on ? "dark-active" : "dark-muted"}
-                      onClick={() => toggleReason(label)}
-                      aria-pressed={on}
-                    >
-                      {label}
-                    </Chip>
-                  );
-                })}
-              </div>
+              {isPendingReview ? (
+                <p className="cap text-muted-2">
+                  Ссылка на регистрацию не в белом списке — событие ждёт публикации.
+                </p>
+              ) : (
+                <>
+                  <div className="cap mb-[6px]">Причина отклонения</div>
+                  <div className="flex flex-wrap gap-[5px]">
+                    {REJECT_REASON_CHIPS.map((label) => {
+                      const on = reasons.has(label);
+                      return (
+                        <Chip
+                          key={label}
+                          variant={on ? "dark-active" : "dark-muted"}
+                          onClick={() => toggleReason(label)}
+                          aria-pressed={on}
+                        >
+                          {label}
+                        </Chip>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
               {actionError ? (
                 <p className="mt-[8px] text-[11.5px] font-bold text-signal">
                   {actionError}
@@ -493,26 +527,30 @@ export function AdminModeration() {
                 onClick={onApprove}
                 className="min-h-[44px] flex-1 text-[10px]"
               >
-                ОДОБРИТЬ
+                {isPendingReview ? "ОПУБЛИКОВАТЬ" : "ОДОБРИТЬ"}
               </Button>
-              <Button
-                variant="destructive"
-                type="button"
-                disabled={busy}
-                onClick={onReject}
-                className="min-h-[44px] flex-1 text-[10px]"
-              >
-                ОТКЛОНИТЬ
-              </Button>
-              <Button
-                variant="dark-ghost"
-                type="button"
-                disabled={busy}
-                onClick={onRevision}
-                className="min-h-[44px] flex-none px-[16px] text-[10px]"
-              >
-                НА ДОРАБОТКУ
-              </Button>
+              {isPendingReview ? null : (
+                <>
+                  <Button
+                    variant="destructive"
+                    type="button"
+                    disabled={busy}
+                    onClick={onReject}
+                    className="min-h-[44px] flex-1 text-[10px]"
+                  >
+                    ОТКЛОНИТЬ
+                  </Button>
+                  <Button
+                    variant="dark-ghost"
+                    type="button"
+                    disabled={busy}
+                    onClick={onRevision}
+                    className="min-h-[44px] flex-none px-[16px] text-[10px]"
+                  >
+                    НА ДОРАБОТКУ
+                  </Button>
+                </>
+              )}
             </div>
           </>
         )}

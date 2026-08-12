@@ -701,7 +701,7 @@ export async function getAdminOverview(): Promise<{
 }
 
 export async function listModerationEvents(
-  status: "published" | "rejected",
+  status: "published" | "rejected" | "pending_review",
 ): Promise<AdminEvent[]> {
   const res = await fetch(`${API_V1}/admin/moderation/events?status=${status}`, {
     headers: authHeaders(),

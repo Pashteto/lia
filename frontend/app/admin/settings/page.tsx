@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { AdminTrustedPlatforms } from "@/components/AdminTrustedPlatforms";
 import { Chip } from "@/components/ui/Chip";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { SquareCheck } from "@/components/ui/SquareCheck";
@@ -95,6 +96,8 @@ export default function AdminSettingsPage() {
           );
         })
       )}
+
+      <AdminTrustedPlatforms />
     </div>
   );
 }

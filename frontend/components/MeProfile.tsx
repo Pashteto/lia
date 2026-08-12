@@ -222,13 +222,20 @@ export function MeProfile() {
               mono
               valueClassName="text-[15px]"
               className="border-b border-on-surface"
+              href="/me?tab=past"
             />
-            <Cell caption="Подписки" value={countLabel(counts.follows)} mono valueClassName="text-[15px]" />
+            <Cell
+              caption="Подписки"
+              value={countLabel(counts.follows)}
+              mono
+              valueClassName="text-[15px]"
+              href="/me?tab=follows"
+            />
           </div>
           <div className="grid grid-cols-3 border-b border-ink md:hidden [&>*+*]:border-l [&>*+*]:border-on-surface">
-            <Cell caption="Посещено" value={countLabel(counts.past)} mono className="px-[10px] py-[8px]" />
-            <Cell caption="Заявки" value={countLabel(counts.applications)} mono className="px-[10px] py-[8px]" />
-            <Cell caption="Подписки" value={countLabel(counts.follows)} mono className="px-[10px] py-[8px]" />
+            <Cell caption="Посещено" value={countLabel(counts.past)} mono className="px-[10px] py-[8px]" href="/me?tab=past" />
+            <Cell caption="Заявки" value={countLabel(counts.applications)} mono className="px-[10px] py-[8px]" href="/me?tab=applications" />
+            <Cell caption="Подписки" value={countLabel(counts.follows)} mono className="px-[10px] py-[8px]" href="/me?tab=follows" />
           </div>
         </div>
 

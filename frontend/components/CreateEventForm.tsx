@@ -711,7 +711,7 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
                 />
                 {Number(priceMin) > 0 && signupMode !== "external" && (
                   <span className="mt-[4px] block text-[11px] text-text-dim">
-                    Посетители увидят «Оплата на месте»
+                    Посетители увидят „Оплата на месте“
                   </span>
                 )}
               </div>

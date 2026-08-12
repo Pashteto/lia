@@ -113,12 +113,19 @@ export function formatEndTime(endsAt?: string): string | null {
   return hasRealEnd(endsAt) ? shortTimeFmt.format(new Date(endsAt as string)) : null;
 }
 
-/** "12 / 40" | "64" | "Без ограничения" — seat counter for cells and module
- * footers. A bare "—" for an unset limit read as "data failed to load"
- * (design review P2), so the no-capacity case is spelled out. */
+/** "12 / 40" | "64" | "Без ограничения" | "Ограничено · наличие на сайте
+ * регистрации" — seat counter for cells and module footers. A bare "—" for an
+ * unset limit read as "data failed to load" (design review P2), so the
+ * no-capacity case is spelled out. `capacityLimited` marks an external event
+ * whose real attendee count Lia doesn't track — showing a stale/zero count
+ * there would misrepresent availability, so it's replaced with a pointer to
+ * the registration site instead. */
 export function attendanceShort(
-  event: Pick<LiaEvent, "attendeeCount" | "capacity">,
+  event: Pick<LiaEvent, "attendeeCount" | "capacity" | "capacityLimited">,
 ): string {
+  if (event.capacityLimited) {
+    return "Ограничено · наличие на сайте регистрации";
+  }
   if (event.capacity == null) {
     return event.attendeeCount ? String(event.attendeeCount) : "Без ограничения";
   }

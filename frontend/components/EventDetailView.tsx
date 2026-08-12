@@ -103,7 +103,7 @@ export function EventDetailView({
       )}
 
       {/* Title block: text left, price+CTA rail right */}
-      <div className="grid grid-cols-[1fr_200px] border-b border-ink max-md:grid-cols-1">
+      <div className="grid grid-cols-[1fr_248px] border-b border-ink max-md:grid-cols-1">
         <div className="flex flex-col gap-[10px] px-[20px] py-[16px]">
           <p className="cap">
             {[cat?.label, event.format === "online" ? "Онлайн" : "Очно"]
@@ -124,6 +124,11 @@ export function EventDetailView({
           <span className="mt-[4px] font-mono text-[26px] font-bold leading-none">
             {price}
           </span>
+          {event.priceType !== "free" && event.signupMode !== "external" && (
+            <span className="mt-[2px] text-[10px] uppercase tracking-[0.07em] text-text-dim">
+              Оплата на месте
+            </span>
+          )}
           {!ended && !cancelled && (
             <div className="mt-auto pt-[10px]">
               <SignupCTA event={event} />
@@ -178,7 +183,7 @@ export function EventDetailView({
 
       {/* Venue block: map left, address rail right */}
       {event.venue && (
-        <div className="grid grid-cols-[1fr_200px] border-b border-ink max-md:grid-cols-1">
+        <div className="grid grid-cols-[1fr_248px] border-b border-ink max-md:grid-cols-1">
           <div className="p-[14px]">
             {event.venue.lat != null && event.venue.lon != null ? (
               <VenueMap
@@ -229,7 +234,14 @@ export function EventDetailView({
       {!ended && !cancelled && (
         <div className="fixed inset-x-0 bottom-[49px] z-20 border-t border-ink bg-paper md:hidden">
           <div className="flex items-center justify-between gap-[10px] px-[14px] py-[9px] pb-[calc(9px+env(safe-area-inset-bottom))]">
-            <span className="font-mono text-[17px] font-bold">{price}</span>
+            <div className="flex flex-col">
+              <span className="font-mono text-[17px] font-bold">{price}</span>
+              {event.priceType !== "free" && event.signupMode !== "external" && (
+                <span className="text-[10px] uppercase tracking-[0.07em] text-text-dim">
+                  Оплата на месте
+                </span>
+              )}
+            </div>
             <SignupCTA event={event} />
           </div>
         </div>

@@ -77,4 +77,18 @@ describe("attendanceShort", () => {
     expect(attendanceShort({ attendeeCount: 12, capacity: 40 })).toBe("12 / 40");
     expect(attendanceShort({ capacity: 40 })).toBe("0 / 40");
   });
+  it("hides the real count for a capacity-limited external event", () => {
+    expect(attendanceShort({ capacityLimited: true })).toBe(
+      "Ограничено · наличие на сайте регистрации",
+    );
+    expect(
+      attendanceShort({ capacityLimited: true, attendeeCount: 12, capacity: 40 }),
+    ).toBe("Ограничено · наличие на сайте регистрации");
+  });
+  it("capacityLimited: false behaves like the flag were absent", () => {
+    expect(attendanceShort({ capacityLimited: false, attendeeCount: 64 })).toBe("64");
+    expect(
+      attendanceShort({ capacityLimited: false, attendeeCount: 12, capacity: 40 }),
+    ).toBe("12 / 40");
+  });
 });

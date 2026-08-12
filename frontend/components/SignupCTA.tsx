@@ -10,6 +10,7 @@ import { googleCalendarUrl } from "@/lib/calendar-links";
 import { useAuth } from "@/lib/auth-context";
 import { extractHttpStatus, rsvpErrorMessage } from "@/lib/rsvp-errors";
 import { signupClosedLabel } from "@/lib/signup-availability";
+import { hostOf } from "@/lib/platforms";
 import type { LiaEvent, RsvpStatus } from "@/lib/types";
 
 // ─── Local types ────────────────────────────────────────────────────────────
@@ -272,6 +273,12 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
   // ── EXTERNAL ─────────────────────────────────────────────────────────────
 
   if (mode === "external") {
+    const isPaid = event.priceType !== "free";
+    const name = event.externalPlatformName;
+    const host = event.externalRegistrationUrl
+      ? hostOf(event.externalRegistrationUrl)
+      : null;
+
     return (
       <div className="flex flex-col items-end gap-2">
         <a
@@ -280,10 +287,14 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
           rel="noopener noreferrer"
           className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap bg-ink px-8 py-[11px] text-[11px] font-bold uppercase tracking-[0.07em] text-white transition-colors duration-[120ms] ease-linear select-none hover:bg-black swiss-focus"
         >
-          Записаться на сайте организатора
+          {name
+            ? isPaid
+              ? `Билеты на ${name}`
+              : `Записаться через ${name}`
+            : "Записаться на сайте организатора"}
         </a>
         <span className="text-[11.5px] text-text-dim">
-          Запись ведёт организатор
+          {name ? host : host ? `Переход на ${host}` : "Запись ведёт организатор"}
         </span>
         {footer}
       </div>

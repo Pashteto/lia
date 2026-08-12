@@ -3,6 +3,7 @@ package admin
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -18,6 +19,7 @@ import (
 	domain "github.com/Pashteto/lia/internal/models"
 	"github.com/Pashteto/lia/internal/moderation"
 	"github.com/Pashteto/lia/internal/organizers"
+	platformsdomain "github.com/Pashteto/lia/internal/platforms"
 )
 
 func authFn(role string) func(string) (*domain.User, error) {
@@ -554,6 +556,142 @@ func TestOverview_OmitsTotalsWhenUnwired(t *testing.T) {
 	}
 	if _, ok := got["users_total"]; ok {
 		t.Fatalf("users_total must be absent when Users is unwired, got %v", got["users_total"])
+	}
+}
+
+type stubPlatforms struct {
+	platformsdomain.Service
+	rows     []*platformsdomain.TrustedPlatform
+	addErr   error
+	deactErr error
+	added    *platformsdomain.TrustedPlatform
+	deactID  uuid.UUID
+}
+
+func (s *stubPlatforms) List(context.Context) ([]*platformsdomain.TrustedPlatform, error) {
+	return s.rows, nil
+}
+
+func (s *stubPlatforms) Add(_ context.Context, domainSuffix, displayName, category string) (*platformsdomain.TrustedPlatform, error) {
+	if s.addErr != nil {
+		return nil, s.addErr
+	}
+	p := &platformsdomain.TrustedPlatform{
+		ID: uuid.Must(uuid.NewV4()), DomainSuffix: domainSuffix, DisplayName: displayName,
+		Category: category, IsActive: true,
+	}
+	s.added = p
+	return p, nil
+}
+
+func (s *stubPlatforms) Deactivate(_ context.Context, id uuid.UUID) error {
+	s.deactID = id
+	return s.deactErr
+}
+
+func newHandlerWithPlatforms(role string, p platformsdomain.Service) http.Handler {
+	return NewHandler(Deps{Authenticate: authFn(role), Moderation: stubMod{}, Platforms: p})
+}
+
+func TestTrustedPlatforms_403ForCommon(t *testing.T) {
+	r := httptest.NewRequest(http.MethodGet, "/api/v1/admin/trusted-platforms", nil)
+	r.Header.Set("Authorization", "Bearer x")
+	w := httptest.NewRecorder()
+	newHandlerWithPlatforms("common", &stubPlatforms{}).ServeHTTP(w, r)
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("status = %d, want 403", w.Code)
+	}
+}
+
+func TestTrustedPlatforms_200ListsRows(t *testing.T) {
+	id := uuid.Must(uuid.NewV4())
+	stub := &stubPlatforms{rows: []*platformsdomain.TrustedPlatform{
+		{ID: id, DomainSuffix: "timepad.ru", DisplayName: "Timepad", Category: "ticketing", IsActive: true},
+	}}
+	r := httptest.NewRequest(http.MethodGet, "/api/v1/admin/trusted-platforms", nil)
+	r.Header.Set("Authorization", "Bearer x")
+	w := httptest.NewRecorder()
+	newHandlerWithPlatforms("admin", stub).ServeHTTP(w, r)
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200", w.Code)
+	}
+	var got []map[string]any
+	if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if len(got) != 1 || got[0]["domain_suffix"] != "timepad.ru" || got[0]["is_active"] != true {
+		t.Fatalf("body = %v", got)
+	}
+}
+
+func TestTrustedPlatforms_503WhenUnwired(t *testing.T) {
+	r := httptest.NewRequest(http.MethodGet, "/api/v1/admin/trusted-platforms", nil)
+	r.Header.Set("Authorization", "Bearer x")
+	w := httptest.NewRecorder()
+	newTestHandler("admin").ServeHTTP(w, r)
+	if w.Code != http.StatusServiceUnavailable {
+		t.Fatalf("status = %d, want 503", w.Code)
+	}
+}
+
+func TestTrustedPlatforms_POST_422OnInvalidCategory(t *testing.T) {
+	stub := &stubPlatforms{addErr: errors.New("invalid category")}
+	r := httptest.NewRequest(http.MethodPost, "/api/v1/admin/trusted-platforms",
+		strings.NewReader(`{"domain_suffix":"foo.ru","display_name":"Foo","category":"bogus"}`))
+	r.Header.Set("Authorization", "Bearer x")
+	w := httptest.NewRecorder()
+	newHandlerWithPlatforms("admin", stub).ServeHTTP(w, r)
+	if w.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("status = %d, want 422", w.Code)
+	}
+}
+
+func TestTrustedPlatforms_POST_201OnSuccess(t *testing.T) {
+	stub := &stubPlatforms{}
+	r := httptest.NewRequest(http.MethodPost, "/api/v1/admin/trusted-platforms",
+		strings.NewReader(`{"domain_suffix":"timepad.ru","display_name":"Timepad","category":"ticketing"}`))
+	r.Header.Set("Authorization", "Bearer x")
+	w := httptest.NewRecorder()
+	newHandlerWithPlatforms("admin", stub).ServeHTTP(w, r)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("status = %d, want 201", w.Code)
+	}
+	var got map[string]any
+	if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if got["domain_suffix"] != "timepad.ru" || got["display_name"] != "Timepad" {
+		t.Fatalf("body = %v", got)
+	}
+	if stub.added == nil {
+		t.Fatalf("Add was not called")
+	}
+}
+
+func TestTrustedPlatforms_DELETE_404OnUnknownID(t *testing.T) {
+	stub := &stubPlatforms{deactErr: errors.New("not found")}
+	id := uuid.Must(uuid.NewV4()).String()
+	r := httptest.NewRequest(http.MethodDelete, "/api/v1/admin/trusted-platforms/"+id, nil)
+	r.Header.Set("Authorization", "Bearer x")
+	w := httptest.NewRecorder()
+	newHandlerWithPlatforms("admin", stub).ServeHTTP(w, r)
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("status = %d, want 404", w.Code)
+	}
+}
+
+func TestTrustedPlatforms_DELETE_204OnSuccess(t *testing.T) {
+	stub := &stubPlatforms{}
+	id := uuid.Must(uuid.NewV4())
+	r := httptest.NewRequest(http.MethodDelete, "/api/v1/admin/trusted-platforms/"+id.String(), nil)
+	r.Header.Set("Authorization", "Bearer x")
+	w := httptest.NewRecorder()
+	newHandlerWithPlatforms("admin", stub).ServeHTTP(w, r)
+	if w.Code != http.StatusNoContent {
+		t.Fatalf("status = %d, want 204", w.Code)
+	}
+	if stub.deactID != id {
+		t.Fatalf("deactID = %v, want %v", stub.deactID, id)
 	}
 }
 

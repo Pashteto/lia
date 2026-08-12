@@ -19,6 +19,7 @@ import (
 	domain "github.com/Pashteto/lia/internal/models"
 	"github.com/Pashteto/lia/internal/moderation"
 	"github.com/Pashteto/lia/internal/organizers"
+	platforms "github.com/Pashteto/lia/internal/platforms"
 	"github.com/Pashteto/lia/internal/settings"
 	"github.com/Pashteto/lia/pkg/logger"
 )
@@ -34,6 +35,7 @@ type Deps struct {
 	Complaints   complaints.Service
 	Users        adminusers.Service
 	Hygiene      hygiene.Service
+	Platforms    platforms.Service
 }
 
 type handler struct {
@@ -66,6 +68,9 @@ func NewHandler(deps Deps) http.Handler {
 	h.mux.HandleFunc("GET /api/v1/admin/complaints", h.staff(h.listComplaints))
 	h.mux.HandleFunc("GET /api/v1/admin/complaints/events/{id}", h.staff(h.complaintDetail))
 	h.mux.HandleFunc("POST /api/v1/admin/complaints/events/{id}/resolve", h.staff(h.resolveComplaints))
+	h.mux.HandleFunc("GET /api/v1/admin/trusted-platforms", h.staff(h.listPlatforms))
+	h.mux.HandleFunc("POST /api/v1/admin/trusted-platforms", h.staff(h.addPlatform))
+	h.mux.HandleFunc("DELETE /api/v1/admin/trusted-platforms/{id}", h.staff(h.removePlatform))
 	return h
 }
 
@@ -712,4 +717,59 @@ func (h *handler) hideAllHygiene(w http.ResponseWriter, r *http.Request, u *doma
 		return
 	}
 	writeJSON(w, http.StatusOK, res)
+}
+
+// listPlatforms serves every trusted-platform row, including inactive ones,
+// for the admin whitelist screen.
+func (h *handler) listPlatforms(w http.ResponseWriter, r *http.Request, _ *domain.User) {
+	if h.deps.Platforms == nil {
+		writeErr(w, http.StatusServiceUnavailable, "platforms service not available")
+		return
+	}
+	rows, err := h.deps.Platforms.List(r.Context())
+	if err != nil {
+		writeErr(w, http.StatusInternalServerError, "platforms list failed")
+		return
+	}
+	writeJSON(w, http.StatusOK, rows)
+}
+
+// addPlatform adds a new trusted-platform whitelist entry.
+func (h *handler) addPlatform(w http.ResponseWriter, r *http.Request, _ *domain.User) {
+	if h.deps.Platforms == nil {
+		writeErr(w, http.StatusServiceUnavailable, "platforms service not available")
+		return
+	}
+	var body struct {
+		DomainSuffix string `json:"domain_suffix"`
+		DisplayName  string `json:"display_name"`
+		Category     string `json:"category"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		writeErr(w, http.StatusUnprocessableEntity, "invalid body")
+		return
+	}
+	p, err := h.deps.Platforms.Add(r.Context(), body.DomainSuffix, body.DisplayName, body.Category)
+	if err != nil {
+		writeErr(w, http.StatusUnprocessableEntity, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusCreated, p)
+}
+
+// removePlatform deactivates (does not hard-delete) a trusted-platform row.
+func (h *handler) removePlatform(w http.ResponseWriter, r *http.Request, _ *domain.User) {
+	if h.deps.Platforms == nil {
+		writeErr(w, http.StatusServiceUnavailable, "platforms service not available")
+		return
+	}
+	id, ok := pathID(w, r)
+	if !ok {
+		return
+	}
+	if err := h.deps.Platforms.Deactivate(r.Context(), id); err != nil {
+		writeErr(w, http.StatusNotFound, "not found")
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }

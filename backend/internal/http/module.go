@@ -350,6 +350,7 @@ func (m *Module) initAPI() error {
 		Complaints:   m.complaints,
 		Users:        m.adminUsers,
 		Hygiene:      m.hygiene,
+		Platforms:    m.platforms,
 	})
 
 	// Build the organizers handler (user-facing /me/organizer + public

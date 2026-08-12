@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -25,6 +25,12 @@ import { seatsFill } from "@/lib/org-seats";
 import type { LiaEvent } from "@/lib/types";
 
 type Filter = "all" | "published" | "pending_review" | "draft" | "cancelled";
+
+/** Maps the ?status= query value to a Filter; anything unknown → "all". */
+export function parseStatusParam(raw: string | null): Filter {
+  const valid: Filter[] = ["all", "published", "pending_review", "draft", "cancelled"];
+  return valid.includes(raw as Filter) ? (raw as Filter) : "all";
+}
 
 const FILTERS: {
   key: Filter;
@@ -256,8 +262,9 @@ function EventRow({
 export function MyEventsBrowse() {
   const { isAuthed, ready } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const qc = useQueryClient();
-  const [filter, setFilter] = useState<Filter>("all");
+  const [filter, setFilter] = useState<Filter>(() => parseStatusParam(searchParams.get("status")));
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [dupId, setDupId] = useState<string | null>(null);
 
@@ -335,7 +342,10 @@ export function MyEventsBrowse() {
             <Chip
               key={f.key}
               variant={variant}
-              onClick={() => setFilter(f.key)}
+              onClick={() => {
+                setFilter(f.key);
+                router.replace(f.key === "all" ? "/events/mine" : `/events/mine?status=${f.key}`);
+              }}
               aria-pressed={active}
               className="min-h-[44px] max-sm:text-[8px]"
             >

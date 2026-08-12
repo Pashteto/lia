@@ -1,8 +1,11 @@
+import { Suspense } from "react";
 import Link from "next/link";
 
 import { MyEventsBrowse } from "@/components/MyEventsBrowse";
 import { AppHeader, ORG_NAV } from "@/components/ui/AppHeader";
 
+// MyEventsBrowse reads ?status= via useSearchParams, which needs a Suspense
+// boundary in the App Router.
 export default function MyEventsPage() {
   return (
     <>
@@ -19,7 +22,9 @@ export default function MyEventsPage() {
           </Link>
         }
       />
-      <MyEventsBrowse />
+      <Suspense fallback={null}>
+        <MyEventsBrowse />
+      </Suspense>
     </>
   );
 }

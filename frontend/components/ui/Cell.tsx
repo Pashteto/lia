@@ -12,7 +12,8 @@ export interface CellProps {
   /** Ink-filled emphasis cell (e.g. O1 «На модерации»). */
   invert?: boolean;
   /** Navigation target. Present ⇒ the cell renders as a link with a « →»
-   * caption suffix and hover inversion — the product-wide affordance for
+   * caption suffix and hover affordance (hover-invert for normal cells,
+   * explicit bg/text swap for invert cells) — the product-wide affordance for
    * "this tile is a button" (spec 2026-08-12-clickable-dashboard-tiles). */
   href?: string;
   /** Per-screen size override on the value; the reference sets it inline
@@ -25,7 +26,13 @@ export interface CellProps {
 export function Cell({ caption, value, mono, roomy, invert, href, valueClassName, className }: CellProps) {
   const inner = (
     <>
-      <span className={cn("cap", invert && "text-text-dim-dark-2")}>
+      <span
+        className={cn(
+          "cap",
+          invert && "text-text-dim-dark-2",
+          href && invert && "group-hover:text-text-dim",
+        )}
+      >
         {caption}
         {href ? " →" : null}
       </span>
@@ -41,8 +48,11 @@ export function Cell({ caption, value, mono, roomy, invert, href, valueClassName
     className,
   );
   if (href) {
+    const hoverClasses = invert
+      ? "group transition-colors duration-[120ms] hover:bg-surface hover:text-on-surface"
+      : "hover-invert";
     return (
-      <Link href={href} className={cn(shared, "swiss-focus hover-invert cursor-pointer")}>
+      <Link href={href} className={cn(shared, "swiss-focus cursor-pointer", hoverClasses)}>
         {inner}
       </Link>
     );

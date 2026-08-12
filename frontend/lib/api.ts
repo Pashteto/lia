@@ -10,6 +10,7 @@ import type {
   Rsvp,
   RsvpStatus,
 } from "./types";
+import type { TrustedPlatform } from "./platforms";
 
 // Base URL of the Go backend. Overridable via env; defaults to local compose.
 // NEXT_PUBLIC_ prefix so the value is available in both server and client code.
@@ -80,6 +81,9 @@ export function apiEventToLia(e: ApiEvent): LiaEvent {
     myRsvpStatus: e.my_rsvp_status,
     curatorQuestion: e.curator_question,
     externalRegistrationUrl: e.external_registration_url,
+    externalPlatformName: e.external_platform_name,
+    capacityLimited: e.capacity_limited,
+    moderationRequired: e.moderation_required,
   };
 }
 
@@ -311,6 +315,7 @@ export interface CreateEventInput {
   // Signup configuration (backend maps these in EventFromAPIInput).
   signup_mode?: "open" | "application" | "external";
   capacity?: number;
+  capacity_limited?: boolean;
   curator_question?: string;
   external_registration_url?: string;
 }
@@ -1166,4 +1171,79 @@ export async function fetchMyInvitations(): Promise<MyInvitation[]> {
   });
   if (!res.ok) throw new Error(`my invitations failed: ${res.status}`);
   return res.json();
+}
+
+// ---------------------------------------------------------------------------
+// Trusted platforms API
+// ---------------------------------------------------------------------------
+
+/** Fetches the list of trusted external registration platforms (public, no auth). */
+export async function fetchTrustedPlatforms(): Promise<TrustedPlatform[]> {
+  const res = await fetch(`${API_V1}/trusted-platforms`);
+  if (!res.ok) throw new Error(`fetch trusted platforms failed: ${res.status}`);
+  const rows: { domain_suffix: string; display_name: string; category: string }[] = await res.json();
+  return rows.map((r) => ({
+    domainSuffix: r.domain_suffix,
+    displayName: r.display_name,
+    category: r.category,
+  }));
+}
+
+/** Admin: full row for a trusted platform (includes id and is_active). */
+export interface AdminTrustedPlatform extends TrustedPlatform {
+  id: string;
+  isActive: boolean;
+}
+
+/** Admin: Lists all trusted platforms (active and inactive). */
+export async function adminListTrustedPlatforms(): Promise<AdminTrustedPlatform[]> {
+  const res = await fetch(`${API_V1}/admin/trusted-platforms`, {
+    headers: authHeaders(),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`admin list trusted platforms failed: ${res.status}`);
+  const rows: { id: string; domain_suffix: string; display_name: string; category: string; is_active: boolean; created_at?: string }[] = await res.json();
+  return rows.map((r) => ({
+    id: r.id,
+    domainSuffix: r.domain_suffix,
+    displayName: r.display_name,
+    category: r.category,
+    isActive: r.is_active,
+  }));
+}
+
+/** Admin: Adds a new trusted platform. */
+export async function adminAddTrustedPlatform(input: {
+  domainSuffix: string;
+  displayName: string;
+  category: string;
+}): Promise<void> {
+  const res = await fetch(`${API_V1}/admin/trusted-platforms`, {
+    method: "POST",
+    headers: { ...authHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({
+      domain_suffix: input.domainSuffix,
+      display_name: input.displayName,
+      category: input.category,
+    }),
+  });
+  if (!res.ok) throw new Error(`admin add trusted platform failed: ${res.status}`);
+}
+
+/** Admin: Removes a trusted platform by id. */
+export async function adminRemoveTrustedPlatform(id: string): Promise<void> {
+  const res = await fetch(`${API_V1}/admin/trusted-platforms/${id}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(`admin remove trusted platform failed: ${res.status}`);
+}
+
+/** Admin: Approves a moderation-required event. POST to approve endpoint with no body. */
+export async function approveEvent(id: string): Promise<void> {
+  const res = await fetch(`${API_V1}/admin/moderation/events/${id}/approve`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(`approve event failed: ${res.status}`);
 }

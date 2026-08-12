@@ -82,6 +82,9 @@ export interface LiaEvent {
   myRsvpStatus?: RsvpStatus | "";
   curatorQuestion?: string;
   externalRegistrationUrl?: string;
+  externalPlatformName?: string;
+  capacityLimited?: boolean;
+  moderationRequired?: boolean;
 }
 
 export interface Rsvp {
@@ -141,4 +144,7 @@ export interface ApiEvent {
   my_rsvp_status?: RsvpStatus | "";
   curator_question?: string;
   external_registration_url?: string;
+  external_platform_name?: string;
+  capacity_limited?: boolean;
+  moderation_required?: boolean;
 }

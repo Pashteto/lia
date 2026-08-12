@@ -599,6 +599,9 @@ export interface AdminEvent {
   cover_url?: string;
   organizer_name?: string;
   reason?: string;
+  /** The URL under judgment for a pending_review row (unknown-domain external registration). */
+  external_registration_url?: string;
+  external_platform_name?: string;
 }
 
 export type ComplaintCategory =

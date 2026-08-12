@@ -356,8 +356,13 @@ func (s *service) Update(ctx context.Context, id, ownerID uuid.UUID, p UpdatePar
 
 	originalURL := event.ExternalRegistrationURL
 
-	// Draft and published events are editable. Moderation/terminal statuses are not.
-	if event.Status != models.EventDraft && event.Status != models.EventPublished {
+	// Draft, published, and pending_review events are editable. pending_review
+	// is not publicly visible (same as draft), so an organizer with a typo'd
+	// external URL is never stuck: they can fix the URL and re-target
+	// published (the whitelist policy re-checks below) or fall back to draft.
+	// Rejected/cancelled remain terminal.
+	if event.Status != models.EventDraft && event.Status != models.EventPublished &&
+		event.Status != models.EventPendingReview {
 		return nil, fmt.Errorf("%w: event %s is %s", ErrNotEditable, id, event.Status)
 	}
 	wasPublished := event.Status == models.EventPublished
@@ -456,6 +461,14 @@ func (s *service) Update(ctx context.Context, id, ownerID uuid.UUID, p UpdatePar
 	}
 
 	urlChanged := p.ExternalRegistrationURL != nil && *p.ExternalRegistrationURL != originalURL
+	if urlChanged {
+		// Unconditional, regardless of current status: a URL swap invalidates any
+		// prior verification. Without this, a draft detour (publish trusted →
+		// patch to draft + swap URL, which skips the policy entirely → patch back
+		// to published with no further URL change) would launder an unchecked
+		// URL through the "verified && !urlChanged" early return below.
+		event.ExternalURLVerified = false
+	}
 	if err := s.applyExternalURLPolicy(ctx, event, urlChanged); err != nil {
 		return nil, err
 	}

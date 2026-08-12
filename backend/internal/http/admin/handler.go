@@ -165,6 +165,11 @@ type adminEventJSON struct {
 	CoverURL      string `json:"cover_url,omitempty"`
 	OrganizerName string `json:"organizer_name,omitempty"`
 	Reason        string `json:"reason,omitempty"`
+	// ExternalRegistrationURL/ExternalPlatformName let the «Ссылки» queue show
+	// the URL under judgment without a detail fetch — pending_review events are
+	// not publicly visible, so the admin detail pane can't always load them.
+	ExternalRegistrationURL string `json:"external_registration_url,omitempty"`
+	ExternalPlatformName    string `json:"external_platform_name,omitempty"`
 }
 
 func (h *handler) listEvents(w http.ResponseWriter, r *http.Request, _ *domain.User) {
@@ -173,7 +178,7 @@ func (h *handler) listEvents(w http.ResponseWriter, r *http.Request, _ *domain.U
 		return
 	}
 	status := r.URL.Query().Get("status")
-	if status != "published" && status != "rejected" {
+	if status != "published" && status != "rejected" && status != "pending_review" {
 		status = "published"
 	}
 	events, err := h.deps.Events.List(r.Context(), status, nil, nil, nil)
@@ -184,11 +189,13 @@ func (h *handler) listEvents(w http.ResponseWriter, r *http.Request, _ *domain.U
 	out := make([]adminEventJSON, 0, len(events))
 	for _, e := range events {
 		j := adminEventJSON{
-			ID:       e.ID.String(),
-			Title:    e.Title,
-			Status:   e.StatusSQL,
-			StartsAt: e.StartsAt.Format("2006-01-02T15:04:05Z07:00"),
-			CoverURL: e.CoverURL,
+			ID:                      e.ID.String(),
+			Title:                   e.Title,
+			Status:                  e.StatusSQL,
+			StartsAt:                e.StartsAt.Format("2006-01-02T15:04:05Z07:00"),
+			CoverURL:                e.CoverURL,
+			ExternalRegistrationURL: e.ExternalRegistrationURL,
+			ExternalPlatformName:    e.ExternalPlatformName,
 		}
 		if e.PublishedAt != nil {
 			j.PublishedAt = e.PublishedAt.UTC().Format("2006-01-02T15:04:05Z07:00")

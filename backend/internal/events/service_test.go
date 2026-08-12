@@ -769,6 +769,105 @@ func TestUpdateUnrelatedEditKeepsVerified(t *testing.T) {
 	}
 }
 
+// TestUpdateDraftDetourCannotLaunderVerified is the C1 regression: publish a
+// trusted external event (verified=true) → patch to draft while swapping the
+// URL to an untrusted one (drafts skip the policy, so this alone must NOT
+// re-verify) → patch back to published with no further URL change. Without
+// clearing ExternalURLVerified on the draft-detour edit, the second publish
+// would hit the "verified && !urlChanged" early return and republish with an
+// unchecked URL. The fix must force a real re-check on the republish.
+func TestUpdateDraftDetourCannotLaunderVerified(t *testing.T) {
+	owner := uuid.Must(uuid.NewV4())
+	ev := externalEvent(owner)
+	ev.ExternalURLVerified = true
+	repo := &mockRepo{get: ev}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+	checker := &fakeChecker{trusted: false} // the swapped URL is untrusted
+	svc.(*service).SetPlatformChecker(checker)
+
+	// Step 1: detour to draft while swapping the URL. Drafts skip the policy,
+	// so the checker must not be called here.
+	draft := "draft"
+	evilURL := "https://evil.example.com/reg"
+	if _, err := svc.Update(context.Background(), ev.ID, owner, UpdateParams{
+		Status: &draft, ExternalRegistrationURL: &evilURL,
+	}); err != nil {
+		t.Fatalf("draft detour returned error: %v", err)
+	}
+	if checker.calls != 0 {
+		t.Fatalf("checker must not be called on the draft edit, got %d calls", checker.calls)
+	}
+	if ev.ExternalURLVerified {
+		t.Fatal("expected ExternalURLVerified cleared by the URL swap, even while drafting")
+	}
+
+	// Step 2: republish with no further URL change. Because verified was
+	// cleared in step 1, this must force a real re-check, not an early return.
+	published := "published"
+	reloaded, err := svc.Update(context.Background(), ev.ID, owner, UpdateParams{Status: &published})
+	if err != nil {
+		t.Fatalf("republish returned error: %v", err)
+	}
+	if checker.calls != 1 {
+		t.Fatalf("expected checker called on republish, got %d calls", checker.calls)
+	}
+	if reloaded.Status != models.EventPendingReview {
+		t.Fatalf("expected status pending_review (untrusted URL caught), got %s", reloaded.Status)
+	}
+	if reloaded.ExternalURLVerified {
+		t.Fatal("expected ExternalURLVerified false — the swapped URL was never verified")
+	}
+}
+
+// TestUpdateOwnerFixesPendingReviewURLThenPublishes covers I2: an owner whose
+// event landed in pending_review (unknown domain) must not be stuck. Fixing
+// the URL to a trusted one and targeting published re-runs the whitelist
+// policy and publishes it verified.
+func TestUpdateOwnerFixesPendingReviewURLThenPublishes(t *testing.T) {
+	owner := uuid.Must(uuid.NewV4())
+	ev := externalEvent(owner)
+	ev.Status = models.EventPendingReview
+	ev.ExternalURLVerified = false
+	repo := &mockRepo{get: ev}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+	checker := &fakeChecker{trusted: true, name: "TimePad"}
+	svc.(*service).SetPlatformChecker(checker)
+
+	trustedURL := "https://timepad.ru/event/typo-fixed"
+	published := "published"
+	reloaded, err := svc.Update(context.Background(), ev.ID, owner, UpdateParams{
+		ExternalRegistrationURL: &trustedURL, Status: &published,
+	})
+	if err != nil {
+		t.Fatalf("Update returned error: %v", err)
+	}
+	if reloaded.Status != models.EventPublished {
+		t.Fatalf("expected status published, got %s", reloaded.Status)
+	}
+	if !reloaded.ExternalURLVerified {
+		t.Fatal("expected ExternalURLVerified true")
+	}
+}
+
+// TestUpdateOwnerRevertsPendingReviewToDraft covers I2's second guarantee: an
+// owner stuck in pending_review can always fall back to draft.
+func TestUpdateOwnerRevertsPendingReviewToDraft(t *testing.T) {
+	owner := uuid.Must(uuid.NewV4())
+	ev := externalEvent(owner)
+	ev.Status = models.EventPendingReview
+	repo := &mockRepo{get: ev}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+
+	draft := "draft"
+	reloaded, err := svc.Update(context.Background(), ev.ID, owner, UpdateParams{Status: &draft})
+	if err != nil {
+		t.Fatalf("Update returned error: %v", err)
+	}
+	if reloaded.Status != models.EventDraft {
+		t.Fatalf("expected status draft, got %s", reloaded.Status)
+	}
+}
+
 func TestUpdateCapacityLimited(t *testing.T) {
 	owner := uuid.Must(uuid.NewV4())
 	ev := publishedEvent(owner)

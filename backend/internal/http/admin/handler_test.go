@@ -448,13 +448,18 @@ func TestHygiene_503WhenUnwired(t *testing.T) {
 	}
 }
 
-// stubEvents serves a fixed list from the moderation queue endpoint.
+// stubEvents serves a fixed list from the moderation queue endpoint. It
+// records the status filter it was called with so tests can assert which
+// branch the handler took (C2 regression: pending_review must not silently
+// coerce to published).
 type stubEvents struct {
 	eventsdomain.Service
-	list []*domain.Event
+	list       []*domain.Event
+	calledWith string
 }
 
-func (s stubEvents) List(context.Context, string, *time.Time, *time.Time, *uuid.UUID) ([]*domain.Event, error) {
+func (s *stubEvents) List(_ context.Context, status string, _, _ *time.Time, _ *uuid.UUID) ([]*domain.Event, error) {
+	s.calledWith = status
 	return s.list, nil
 }
 
@@ -466,7 +471,7 @@ func TestListEvents_CarriesPublishedAt(t *testing.T) {
 	h := NewHandler(Deps{
 		Authenticate: authFn("admin"),
 		Moderation:   stubMod{},
-		Events: stubEvents{list: []*domain.Event{
+		Events: &stubEvents{list: []*domain.Event{
 			{ID: uuid.Must(uuid.NewV4()), Title: "С датой", StatusSQL: "published",
 				StartsAt: time.Date(2026, 8, 15, 9, 0, 0, 0, time.UTC), PublishedAt: &published},
 			{ID: uuid.Must(uuid.NewV4()), Title: "Без даты", StatusSQL: "published",
@@ -493,6 +498,53 @@ func TestListEvents_CarriesPublishedAt(t *testing.T) {
 	}
 	if _, ok := got[1]["published_at"]; ok {
 		t.Fatalf("unpublished event must omit published_at, got %v", got[1]["published_at"])
+	}
+}
+
+// TestListEvents_PendingReviewStatus is the C2 regression: listEvents used to
+// coerce any status other than published/rejected to published, so
+// ?status=pending_review silently returned the published queue and the admin
+// «Ссылки» tab never saw the events awaiting review. It must now pass
+// pending_review straight through to the events service, and the response
+// must carry the fake service's pending rows (not the published branch).
+func TestListEvents_PendingReviewStatus(t *testing.T) {
+	events := &stubEvents{list: []*domain.Event{
+		{ID: uuid.Must(uuid.NewV4()), Title: "На проверке", StatusSQL: "pending_review",
+			StartsAt: time.Date(2026, 8, 20, 9, 0, 0, 0, time.UTC),
+			ExternalRegistrationURL: "https://sketchy.example.com/reg",
+			ExternalPlatformName:    "",
+		},
+	}}
+	h := NewHandler(Deps{
+		Authenticate: authFn("admin"),
+		Moderation:   stubMod{},
+		Events:       events,
+	})
+	req := httptest.NewRequest("GET", "/api/v1/admin/moderation/events?status=pending_review", nil)
+	req.Header.Set("Authorization", "Bearer t")
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200", rec.Code)
+	}
+	if events.calledWith != "pending_review" {
+		t.Fatalf("events.List called with status=%q, want pending_review (must not hit the published branch)", events.calledWith)
+	}
+	var got []map[string]any
+	if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if len(got) != 1 {
+		t.Fatalf("len = %d, want 1", len(got))
+	}
+	if got[0]["title"] != "На проверке" {
+		t.Fatalf("title = %v, want the pending row's title (not the published branch's)", got[0]["title"])
+	}
+	// I1(a): the queue row must carry the URL under judgment so staff don't
+	// need a separate (possibly inaccessible) detail fetch.
+	if got[0]["external_registration_url"] != "https://sketchy.example.com/reg" {
+		t.Fatalf("external_registration_url = %v, want the pending event's URL", got[0]["external_registration_url"])
 	}
 }
 

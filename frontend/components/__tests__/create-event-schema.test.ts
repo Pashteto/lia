@@ -36,6 +36,20 @@ describe("eventFormSchema signup rules", () => {
     expect(ok.success).toBe(true);
   });
 
+  // Backend is https-only for external registration URLs; the form must
+  // reject plain http:// rather than silently accepting a value the server
+  // will bounce, and the message must match (no more "http/https").
+  it("external rejects http:// and requires https", () => {
+    const r = eventFormSchema.safeParse({
+      ...base, signupMode: "external", externalRegistrationUrl: "http://t.me/x",
+    });
+    expect(r.success).toBe(false);
+    if (!r.success) {
+      const msg = r.error.issues.find((i) => i.path[0] === "externalRegistrationUrl")?.message;
+      expect(msg).toBe("Укажите ссылку для внешней регистрации (https)");
+    }
+  });
+
   it("external mode with capacityLimited: true parses", () => {
     const r = eventFormSchema.safeParse({
       ...base,

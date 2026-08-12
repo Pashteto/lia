@@ -67,12 +67,12 @@ export const eventFormSchema = z
     }
     if (v.signupMode === "external") {
       const url = v.externalRegistrationUrl?.trim() ?? "";
-      const ok = /^https?:\/\/.+/.test(url);
+      const ok = /^https:\/\/.+/.test(url);
       if (!ok) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["externalRegistrationUrl"],
-          message: "Укажите ссылку для внешней регистрации (http/https)",
+          message: "Укажите ссылку для внешней регистрации (https)",
         });
       }
     }

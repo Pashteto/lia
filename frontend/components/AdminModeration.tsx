@@ -43,6 +43,16 @@ function mergeQueue(published: AdminEvent[], rejected: AdminEvent[]): AdminEvent
   return out;
 }
 
+/** Best-effort hostname for the domain caption above the raw URL text. Never
+ * throws on a malformed URL — the admin still gets the raw text either way. */
+function externalUrlDomain(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return "";
+  }
+}
+
 function ModerationSkeleton() {
   return (
     <div className="grid min-h-[360px] grid-cols-[250px_1fr]">
@@ -489,9 +499,24 @@ export function AdminModeration() {
             )}
             <div className="flex-1 px-[16px] py-[12px]">
               {isPendingReview ? (
-                <p className="cap text-muted-2">
-                  Ссылка на регистрацию не в белом списке — событие ждёт публикации.
-                </p>
+                <>
+                  <p className="cap mb-[6px] text-muted-2">
+                    Ссылка на регистрацию не в белом списке — событие ждёт публикации.
+                  </p>
+                  {selected.external_registration_url ? (
+                    <div className="border border-rule-inner px-[10px] py-[8px]">
+                      <div className="cap mb-[3px] text-muted-2">
+                        {externalUrlDomain(selected.external_registration_url) || "домен неизвестен"}
+                      </div>
+                      {/* Deliberately not a link — this is the admin's judgment
+                          target, not a place to click through to (avoids an
+                          accidental visit to an unvetted, possibly untrusted URL). */}
+                      <p className="break-all text-[11px] leading-[1.4] text-ink">
+                        {selected.external_registration_url}
+                      </p>
+                    </div>
+                  ) : null}
+                </>
               ) : (
                 <>
                   <div className="cap mb-[6px]">Причина отклонения</div>

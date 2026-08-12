@@ -10,6 +10,8 @@ import (
 
 	"github.com/go-pg/pg/v10"
 	"github.com/gofrs/uuid"
+
+	"github.com/Pashteto/lia/internal/models"
 )
 
 // openTestDB opens a *pg.DB from the TEST_DATABASE_URL env var and skips the
@@ -122,5 +124,51 @@ func TestSetCapacityTx_BelowOccupied(t *testing.T) {
 	_, err := r.SetCapacityTx(ev, intp(1))
 	if !errors.Is(err, ErrCapacityBelowOccupied) {
 		t.Fatalf("want ErrCapacityBelowOccupied, got %v", err)
+	}
+}
+
+// TestUpdate_PersistsCapacityLimitedAndExternalURLVerified is a real DB
+// round-trip guarding the Update() Column() allowlist: it must include
+// "capacity_limited" and "external_url_verified", or a value set on those
+// fields is silently dropped on write (the in-memory Event returned to the
+// caller still looks right, but a subsequent read reverts to the old DB
+// value). Regression test for a bug caught in code review of Task 6.
+func TestUpdate_PersistsCapacityLimitedAndExternalURLVerified(t *testing.T) {
+	r, db := newTestRepo(t)
+
+	event := &models.Event{
+		Title:                   "integration test event",
+		Status:                  models.EventDraft,
+		StartsAt:                time.Now().Add(24 * time.Hour),
+		SignupMode:              "external",
+		ExternalRegistrationURL: "https://timepad.ru/event/123",
+		CapacityLimited:         false,
+		ExternalURLVerified:     false,
+	}
+	if err := r.Create(event); err != nil {
+		t.Fatalf("Create: %v", err)
+	}
+	t.Cleanup(func() {
+		db.Exec(`DELETE FROM events WHERE id = ?`, event.ID) //nolint:errcheck
+	})
+
+	// Flip both fields and persist.
+	event.CapacityLimited = true
+	event.ExternalURLVerified = true
+	if err := r.Update(event); err != nil {
+		t.Fatalf("Update: %v", err)
+	}
+
+	// Re-fetch via a fresh repository call (not the in-memory struct) to prove
+	// the values actually landed in the DB, not just in the caller's copy.
+	reloaded, err := r.GetByID(event.ID)
+	if err != nil {
+		t.Fatalf("GetByID: %v", err)
+	}
+	if !reloaded.CapacityLimited {
+		t.Error("capacity_limited did not persist: reloaded value is false")
+	}
+	if !reloaded.ExternalURLVerified {
+		t.Error("external_url_verified did not persist: reloaded value is false")
 	}
 }

@@ -1,6 +1,26 @@
 # Lia — Handoff
 
-> ## ⭐ CURRENT STATE — 2026-08-11 · design-review-11-aug fixes (read this first)
+> ## ⭐ CURRENT STATE — 2026-08-12 · внешняя регистрация (whitelist) + кликабельные плитки дашбордов (read this first)
+>
+> **Две фичи спроектированы, реализованы subagent-циклом, отревьюены и ЗАДЕПЛОЕНЫ LIVE 2026-08-12. `origin/main` = `3607f29` (pushed, in sync).** Prod: **Lia DB 25 → 26**, backend `lia-backend:extreg-r1` (rollback `backend-app:rollback-extreg-20260812`), frontend `lia-frontend:tiles-r1` (rollback `lia-frontend-presence:rollback-tiles-20260812`; промежуточный `rollback-extreg-20260812` тоже на боксе).
+>
+> ### 1. Внешняя регистрация — whitelist платформ (spec `2026-08-12-external-registration-design.md`, runbook `2026-08-12-external-registration-deploy.md`)
+> - **Миграция 000026**: таблица `trusted_platforms` (suffix-матчинг в punycode, seed 22 домена Рунета: TimePad, Яндекс Афиша, Кассир.ру, Qtickets, Радарио, Ticketland, Ponominalu, МТС Live, Leader-ID, Культура.РФ `xn--80atdujec4e.xn--p1ai`, vmuzey, KudaGo, vk.com…) + `events.capacity_limited` / `events.external_url_verified`.
+> - **Публикация external-события**: известный домен → live сразу + `external_platform_name` в API; неизвестный → `pending_review` + `moderation_required` (событие никогда не теряется); 422 только за не-https/userinfo/IP. **Любая смена URL (в любом статусе) сбрасывает `external_url_verified`** — финальное ревью поймало и закрыло draft-detour обход whitelist (регрессионный тест есть).
+> - **Модерация**: `moderation.Approve` (`pending_review→published`, ставит verified=true) + `POST /api/v1/admin/moderation/events/{id}/approve` (204); админ-таб «Ссылки» в `/admin/moderation/events` показывает URL прямо в строке; владелец может править pending_review-событие (re-check при публикации / вернуть в draft).
+> - **Управление whitelist**: публичный `GET /api/v1/trusted-platforms`; admin CRUD `GET/POST/DELETE /api/v1/admin/trusted-platforms` (деактивация, не delete; sentinels `platforms.ErrNotFound`/`ErrInvalidInput` → 404/422/500/400); UI на `/admin/settings`; punycode-нормализация при добавлении проверена живьём (кириллический домен).
+> - **UX**: кнопка «Билеты на {платформа}» / «Записаться через {платформа}» + домен подписью; «Оплата на месте» (платное + обычная запись, desktop + mobile); чекбокс «Количество мест ограничено» без числа → «Места: Ограничено · наличие на сайте регистрации»; живая подсказка домена в форме («Платформа: TimePad» / «уйдёт на проверку модератору»); баннер организатору после ухода на модерацию; **фикс вёрстки: CTA-колонка 200→248px** (баг «Вы записаны» пересекало линию).
+> - Прод-QA end-to-end: trusted → publish, unknown → pending (аноним 404, вне фида) → approve 401/403/**204** → live; capacity_limited round-trip; браузерные скриншоты. Тестовые данные удалены из обеих БД. Gotchas: роль юзера живёт в **GateGuard** `users.role` (синк в Lia на каждый запрос); `price_type` = `free|fixed|from`; go-pg `Update()` events-репозитория использует Column-allowlist — новые колонки добавлять туда явно.
+>
+> ### 2. Кликабельные плитки дашбордов (spec `2026-08-12-clickable-dashboard-tiles-design.md`, runbook `2026-08-12-clickable-tiles-deploy.md`)
+> - **Язык аффордансов: стрелка в капшене (`ЧЕРНОВИКИ →`) = плитка кликабельна**; без стрелки = просто цифра. `Cell` принимает `href` (next/link + hover-инверсия; invert-плитка — обратная инверсия, т.к. `hover-invert` на ink-плитке no-op).
+> - **`/events/mine?status=…`** — URL-фильтр «Моих событий» (черновики получили постоянный адрес); фильтр деривится из searchParams каждый рендер (паттерн `/me?tab=`), чипы пишут URL через `router.replace`.
+> - Проводка: кабинет организатора (Опубликовано/На модерации/Черновики ×2 брейкпоинта; «Всего записей» инертна), админ-обзор (Ждут модерации/Организаторов/Пользователей + мобильные + превью-строки-ссылки; «Событий всего» инертна), `/me` (Посещено/Подписки/Заявки → табы).
+> - Прод-QA живьём: клик «Черновики →» → `/events/mine?status=draft` с активным чипом; «Посещено →» → same-route таб-переключение; hover красной «Ждут модерации» → бумага + красный текст (каскад cap/group-hover ок).
+>
+> Оба цикла: brainstorm → spec → plan → subagent-driven (fix-раунды: непersистящийся `capacity_limited` в PATCH Column-allowlist, data-loss флага в edit-форме, punycode-опечатки в спеке, hover no-op, URL-десинк фильтра, мёртвая админ-очередь из-за коэрсии статуса) → финальное whole-branch ревью → merge → deploy → прод-QA.
+
+> ## ⭐ PREVIOUS STATE — 2026-08-11 · design-review-11-aug fixes
 >
 > **Дизайн-ревью 11 авг (артефакт «Presence · Дизайн-ревью экранов») — все пункты исправлены, кроме намеренно пропущенного P3 «Подчеркнуть „бесплатно" как ценность». 7 фронтенд-коммитов, **`origin/main` = `f5de61d` (pushed, in sync)**, задеплоено LIVE** — образ `lia-frontend:dr11`, rollback `lia-frontend-presence:rollback-dr11-20260811`. Бэкенд/БД не менялись.
 >

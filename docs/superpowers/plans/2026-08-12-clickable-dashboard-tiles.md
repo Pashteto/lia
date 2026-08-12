@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+**Status: EXECUTED & DEPLOYED LIVE 2026-08-12** (all tasks complete, final review clean; runbook `docs/superpowers/runbooks/2026-08-12-clickable-tiles-deploy.md`)
+
 **Goal:** Stat tiles on the organizer cabinet, admin overview, and /me profile become links with a visible affordance («КАПШЕН →» + hover-invert), enabled by a `?status=` URL filter on «Мои события».
 
 **Architecture:** One primitive change (`Cell` gets optional `href` rendering a next/link with arrow suffix), one enabler (`MyEventsBrowse` reads/writes `?status=` — exact mirror of `MeProfile`'s `?tab=` pattern), then pure wiring on three dashboards. Ad-hoc admin tiles (dark theme, not Cell-based) get the same affordance inline with a `group`/`group-hover` pattern.
@@ -29,7 +31,7 @@
 **Interfaces:**
 - Produces: `CellProps` gains `href?: string`. With `href`, `Cell` renders a `next/link` `<Link>` carrying the same layout classes plus `swiss-focus hover-invert cursor-pointer`, and the caption renders as `{caption} →`. Without `href`, output is byte-identical to today (div, no arrow). Tasks 3 and 5 pass `href` to existing `Cell` call sites.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 // frontend/components/__tests__/cell-href.test.tsx
@@ -68,12 +70,12 @@ describe("Cell href affordance", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd frontend && npx vitest run components/__tests__/cell-href.test.tsx`
 Expected: FAIL — `href` prop unknown / no `<a>` rendered.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Rewrite `frontend/components/ui/Cell.tsx`'s `Cell` (keep `CellStrip` untouched):
 
@@ -130,12 +132,12 @@ export function Cell({ caption, value, mono, roomy, invert, href, valueClassName
 
 Note: `hover-invert` (globals.css:169) swaps to the themed `--hover-fill`/`--hover-text` vars, which already handle the inverted cell correctly in both contexts — no bespoke hover for `invert` cells.
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `cd frontend && npx vitest run components/__tests__/cell-href.test.tsx && npx vitest run && npx tsc --noEmit`
 Expected: new tests PASS; full suite still green; no new tsc errors.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/components/ui/Cell.tsx frontend/components/__tests__/cell-href.test.tsx
@@ -155,7 +157,7 @@ git commit -m "feat(ui): Cell href — arrow-caption link affordance for dashboa
 - Consumes: nothing new.
 - Produces: `/events/mine?status=<Filter>` initializes the page filter; chip clicks keep the URL in sync (`all` → bare `/events/mine`). Exported helper `parseStatusParam(raw: string | null): Filter` (from `MyEventsBrowse.tsx`) — pure, testable. Task 3 links to these URLs.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // frontend/components/__tests__/my-events-status-param.test.ts
@@ -179,12 +181,12 @@ describe("parseStatusParam", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd frontend && npx vitest run components/__tests__/my-events-status-param.test.ts`
 Expected: FAIL — `parseStatusParam` is not exported.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `MyEventsBrowse.tsx` (read the file first; `Filter` type and `FILTERS` are near line 27):
 
@@ -216,12 +218,12 @@ onClick={() => {
 
 3. `app/events/mine/page.tsx`: wrap `<MyEventsBrowse />` in `<Suspense fallback={null}>` (import `Suspense` from `react`) — `useSearchParams` requires it in the App Router; mirror the comment style of `app/me/page.tsx`.
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `cd frontend && npx vitest run && npx tsc --noEmit && npm run build`
 Expected: all green (the `npm run build` here is load-bearing: it catches a missing Suspense boundary, which vitest cannot).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/components/MyEventsBrowse.tsx frontend/app/events/mine/page.tsx frontend/components/__tests__/my-events-status-param.test.ts
@@ -238,16 +240,16 @@ git commit -m "feat(my-events): ?status= URL filter — drafts get a shareable a
 **Interfaces:**
 - Consumes: `Cell.href` (Task 1), `/events/mine?status=…` (Task 2).
 
-- [ ] **Step 1: Wire the tiles**
+- [x] **Step 1: Wire the tiles**
 
 Desktop `CellStrip cols={4}`: add `href` to three cells — «Опубликовано» → `/events/mine?status=published`, «На модерации» → `/events/mine?status=pending_review`, «Черновики» → `/events/mine?status=draft`. «Всего записей» gets NO href (stays inert, no arrow). Mobile `CellStrip cols={3}`: same three hrefs on «Опубл.» / «Модер.» / «Черн.». No other changes.
 
-- [ ] **Step 2: Verify**
+- [x] **Step 2: Verify**
 
 Run: `cd frontend && npx vitest run && npx tsc --noEmit`
 Expected: green. Then start the dev server (`npx next dev -p 13000`) against any backend (mock is fine) and eyeball `/organizer`: three tiles carry ` →` and invert on hover; «Всего записей» doesn't. Stop the server.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add frontend/components/OrganizerHub.tsx
@@ -264,9 +266,9 @@ git commit -m "feat(organizer): cabinet tiles link to filtered Мои событ
 **Interfaces:**
 - Consumes: nothing from earlier tasks (these are ad-hoc dark-theme divs, not `Cell`). Targets: `/admin/moderation/events`, `/admin/organizers`, `/admin/users`, `/admin/organizers?filter=pending`, `/admin/organizers/{id}`.
 
-- [ ] **Step 1: Read the component fully**, note the exact class strings on each tile (dark theme: `border-paper`, `bg-signal`, `cap`, mono values).
+- [x] **Step 1: Read the component fully**, note the exact class strings on each tile (dark theme: `border-paper`, `bg-signal`, `cap`, mono values).
 
-- [ ] **Step 2: Convert the three navigable KPI tiles to links**
+- [x] **Step 2: Convert the three navigable KPI tiles to links**
 
 Pattern for a normal dark tile (arrow in cap + paper-inversion hover via `group`):
 
@@ -286,19 +288,19 @@ Pattern for a normal dark tile (arrow in cap + paper-inversion hover via `group`
 - «Пользователей» → `/admin/users` (same normal pattern, it has no `border-r`).
 - «Событий всего» stays a div, no arrow.
 
-- [ ] **Step 3: Convert the preview rows**
+- [x] **Step 3: Convert the preview rows**
 
 - «Очередь модерации» rows (~135-155): wrap each row's existing content in a `<Link href="/admin/moderation/events" className="… swiss-focus cursor-pointer transition-colors hover:bg-paper group">` preserving the row's current layout classes; add `group-hover:text-ink` on text spans that carry explicit light colors. NO arrow (rows, not tiles).
 - «Заявки на верификацию» rows (~171-187): same, but each row links to `/admin/organizers/${org.id}` (read the row's data shape for the actual id field — the detail route `app/admin/organizers/[id]` exists).
 
-- [ ] **Step 4: Mobile duty tiles** (~205-220): «Модерация» → `/admin/moderation/events`, «Верификация» → `/admin/organizers?filter=pending`, both with caption ` →` and the same group-hover pattern.
+- [x] **Step 4: Mobile duty tiles** (~205-220): «Модерация» → `/admin/moderation/events`, «Верификация» → `/admin/organizers?filter=pending`, both with caption ` →` and the same group-hover pattern.
 
-- [ ] **Step 5: Verify**
+- [x] **Step 5: Verify**
 
 Run: `cd frontend && npx vitest run && npx tsc --noEmit`
 Expected: green, no new errors. (Visual pass happens in Task 5.)
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/components/AdminOverview.tsx
@@ -315,20 +317,20 @@ git commit -m "feat(admin): overview tiles and preview rows navigate to their se
 **Interfaces:**
 - Consumes: `Cell.href` (Task 1); existing tab URLs `/me?tab=past|follows|applications`.
 
-- [ ] **Step 1: Wire the tiles**
+- [x] **Step 1: Wire the tiles**
 
 Desktop: «Посещено» → `href="/me?tab=past"`, «Подписки» → `href="/me?tab=follows"`. Mobile strip: «Посещено» → `/me?tab=past`, «Заявки» → `/me?tab=applications`, «Подписки» → `/me?tab=follows`. No other changes.
 
-- [ ] **Step 2: Full verification**
+- [x] **Step 2: Full verification**
 
 Run: `cd frontend && npx vitest run && npx tsc --noEmit && npm run build`
 Expected: all green, no new tsc errors, build succeeds.
 
-- [ ] **Step 3: Visual pass**
+- [x] **Step 3: Visual pass**
 
 Start dev server (`npx next dev -p 13000`), eyeball: `/organizer` (three arrows + hover-invert, «Всего записей» inert), `/me` (tiles navigate to tabs), `/events/mine?status=draft` opens with «Черновики» chip active. Admin pages need a staff login — verify AdminOverview markup by the component tests/tsc only and flag the live admin check for the deploy QA. Stop the server.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add frontend/components/MeProfile.tsx

@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+**Status: EXECUTED & DEPLOYED LIVE 2026-08-12** (all tasks complete, final review clean; runbook `docs/superpowers/runbooks/2026-08-12-external-registration-deploy.md`)
+
 **Goal:** Whitelist of trusted RU ticketing platforms for `signup_mode=external` events: known domain → publish immediately with platform-branded CTA; unknown domain → `pending_review` moderation; plus «Оплата на месте» label for paid open-signup events, a hidden-capacity flag, and a CTA-column layout fix.
 
 **Architecture:** New `internal/platforms` module (pure suffix matcher + go-pg repo + service) consulted synchronously by the events service on create/update. Read path enriches events with the matched platform display name. Moderation gets an `Approve` transition (`pending_review → published`). New public endpoint `/api/v1/trusted-platforms` (plain handler, mirrors `/api/v1/places`), admin CRUD under `/api/v1/admin/trusted-platforms`.
@@ -31,7 +33,7 @@
 **Interfaces:**
 - Produces: table `trusted_platforms(id uuid, domain_suffix text, display_name text, category text, is_active bool, created_at timestamptz)`; columns `events.capacity_limited boolean`, `events.external_url_verified boolean`. Later tasks rely on these exact names.
 
-- [ ] **Step 1: Write the up migration**
+- [x] **Step 1: Write the up migration**
 
 ```sql
 -- 000026_trusted_platforms.up.sql
@@ -75,7 +77,7 @@ INSERT INTO trusted_platforms (domain_suffix, display_name, category) VALUES
 ON CONFLICT (domain_suffix) DO NOTHING;
 ```
 
-- [ ] **Step 2: Write the down migration**
+- [x] **Step 2: Write the down migration**
 
 ```sql
 -- 000026_trusted_platforms.down.sql
@@ -84,12 +86,12 @@ ALTER TABLE events DROP COLUMN IF EXISTS capacity_limited;
 DROP TABLE IF EXISTS trusted_platforms;
 ```
 
-- [ ] **Step 3: Apply to the local dev DB**
+- [x] **Step 3: Apply to the local dev DB**
 
 Run from `backend/`: `make migrate-up` (uses `$(DATABASE_URL)`; if the local Docker postgres is down, start it first — see `backend/README.md`; local Docker can be flaky per memory `lia-dev-gotchas`, host-run postgres is the workaround).
 Expected: `26/u trusted_platforms` applied. Verify: `psql "$DATABASE_URL" -c "select count(*) from trusted_platforms"` → 22.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add backend/db/migrations/000026_trusted_platforms.*
@@ -107,7 +109,7 @@ git commit -m "feat(db): trusted_platforms whitelist + capacity_limited/external
 **Interfaces:**
 - Produces: `platforms.NormalizeHost(rawURL string) (string, error)` — returns lowercased punycode host; error sentinel `platforms.ErrBadURL` for non-https/userinfo/IP/unparseable. `platforms.MatchesSuffix(host, suffix string) bool` — exact or dot-boundary suffix match. Both consumed by Tasks 3, 4, 6.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```go
 package platforms
@@ -176,12 +178,12 @@ func TestMatchesSuffix(t *testing.T) {
 }
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd backend && go test ./internal/platforms/ -v`
 Expected: FAIL — `NormalizeHost` undefined.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```go
 // Package platforms is the trusted external-registration platform whitelist:
@@ -234,12 +236,12 @@ func MatchesSuffix(host, suffix string) bool {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `cd backend && go test ./internal/platforms/ -v`
 Expected: PASS (all cases).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/internal/platforms/
@@ -289,7 +291,7 @@ func NewService(repo Repository) Service
 func NewRepository(db *pg.DB) Repository
 ```
 
-- [ ] **Step 1: Write the failing service tests (fake repo, no DB)**
+- [x] **Step 1: Write the failing service tests (fake repo, no DB)**
 
 ```go
 package platforms
@@ -383,12 +385,12 @@ func TestAddValidation(t *testing.T) {
 }
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd backend && go test ./internal/platforms/ -v`
 Expected: FAIL — `TrustedPlatform`, `NewService` undefined.
 
-- [ ] **Step 3: Implement model, repository, service**
+- [x] **Step 3: Implement model, repository, service**
 
 `model.go`:
 
@@ -548,12 +550,12 @@ func (s *service) Deactivate(ctx context.Context, id uuid.UUID) error {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `cd backend && go test ./internal/platforms/ -v`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/internal/platforms/
@@ -617,7 +619,7 @@ func (s *service) applyExternalURLPolicy(ctx context.Context, event *models.Even
 }
 ```
 
-- [ ] **Step 1: Write the failing service tests**
+- [x] **Step 1: Write the failing service tests**
 
 Append to `backend/internal/events/service_test.go`, following the file's existing fake-repo pattern (read the top of the file first; a fake `Repository` already exists there — reuse it). Add a fake checker:
 
@@ -646,12 +648,12 @@ Test cases (each builds a service via the file's existing constructor helper, th
 7. `TestUpdateCapacityLimited` — patch `CapacityLimited: ptr(true)` → persisted event has `CapacityLimited == true`.
 8. `TestCreateNilCheckerNoop` — no `SetPlatformChecker` call → external published event stays published (feature off, existing behavior preserved).
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd backend && go test ./internal/events/ -run 'External|CapacityLimited' -v`
 Expected: FAIL — `SetPlatformChecker` undefined, `CapacityLimited` unknown field.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 1. `models/event.go` — add to the signup block (after `ExternalRegistrationURL`):
 
@@ -679,12 +681,12 @@ Expected: FAIL — `SetPlatformChecker` undefined, `CapacityLimited` unknown fie
 
    - Add the `applyExternalURLPolicy` helper (code above, in Interfaces).
 
-- [ ] **Step 4: Run the full events test suite**
+- [x] **Step 4: Run the full events test suite**
 
 Run: `cd backend && go test ./internal/events/ ./internal/models/ -v`
 Expected: PASS, including all pre-existing tests (nil checker keeps old behavior).
 
-- [ ] **Step 5: Wire in application.go**
+- [x] **Step 5: Wire in application.go**
 
 In `backend/internal/application.go`, find where the events service is built (grep `SetDailyLimit` — the platforms wiring goes next to it) and add:
 
@@ -699,7 +701,7 @@ Adjust to the file's actual style: if `SetDailyLimit` is called via a concrete t
 Run: `cd backend && go build ./...`
 Expected: builds clean.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add backend/internal/models/event.go backend/internal/events/ backend/internal/application.go
@@ -719,7 +721,7 @@ git commit -m "feat(events): whitelist check on publish — unknown domain route
 **Interfaces:**
 - Produces: `moderation.Service.Approve(ctx, eventID, actorID uuid.UUID) error` — transition `pending_review → published`, action `"event.approve"`; sets `external_url_verified = true` and `published_at = COALESCE(published_at, now())`. HTTP: `POST /api/v1/admin/moderation/events/{id}/approve` → 204. Consumed by Task 11 (admin UI).
 
-- [ ] **Step 1: Write the failing repository/service test**
+- [x] **Step 1: Write the failing repository/service test**
 
 Follow the existing moderation test pattern (read the existing test file first). The transition helper takes fixed from/to, but Approve needs extra columns — so Approve gets its own transaction, structured like `transition`:
 
@@ -756,23 +758,23 @@ func (r *pgRepository) Approve(ctx context.Context, eventID, actorID uuid.UUID) 
 
 If existing moderation tests use a fake repo (service-level), test the service delegation + add an admin handler test; if they run against a real DB, mirror that. Admin handler test (mirror an existing `handler_test.go` case, e.g. reinstate): POST to `/api/v1/admin/moderation/events/{id}/approve` with a staff token fake → expect 204 and the fake moderation service records the call; non-staff → 403.
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `cd backend && go test ./internal/moderation/ ./internal/http/admin/ -run Approve -v`
 Expected: FAIL — `Approve` undefined.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 - `moderation/repository.go`: add `Approve` to the `Repository` interface + the implementation above.
 - `moderation/service.go`: add `Approve(ctx context.Context, eventID, actorID uuid.UUID) error` to `Service` interface; implementation delegates: `func (s *service) Approve(ctx context.Context, eventID, actorID uuid.UUID) error { return s.repo.Approve(ctx, eventID, actorID) }`.
 - `http/admin/handler.go`: register `h.mux.HandleFunc("POST /api/v1/admin/moderation/events/{id}/approve", h.staff(h.approve))`; implement `approve` mirroring the existing `reinstate` handler (parse `{id}`, call `h.deps.Moderation.Approve(r.Context(), id, actor.ID)`, map `ErrInvalidTransition` → 409, success → 204). Read `reinstate` first and copy its exact error-mapping style.
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 Run: `cd backend && go test ./internal/moderation/ ./internal/http/admin/ -v`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/internal/moderation/ backend/internal/http/admin/
@@ -796,7 +798,7 @@ git commit -m "feat(moderation): approve pending_review events (whitelist modera
 - Consumes: `models.Event.{CapacityLimited, ExternalURLVerified, ExternalPlatformName}` (Task 4), `platforms.Service.ListActive` + `platforms.MatchesSuffix` + `platforms.NormalizeHost` (Tasks 2–3).
 - Produces (consumed by frontend Tasks 8–10): Event JSON gains `external_platform_name` (string, omitted when empty), `capacity_limited` (bool), `moderation_required` (bool, true ⇔ status is `pending_review`); EventInput/EventPatch accept `capacity_limited`; `GET /api/v1/trusted-platforms` → `200 [{"domain_suffix":"timepad.ru","display_name":"TimePad","category":"ticketing"}, …]` (active only, no auth).
 
-- [ ] **Step 1: swagger.yaml — add fields**
+- [x] **Step 1: swagger.yaml — add fields**
 
 In the `Event` definition (find the existing `signup_mode:` block ~line 930), add alongside:
 
@@ -822,12 +824,12 @@ In `EventInput` (~line 1033) and `EventPatch` (~line 1100), add:
 
 (`x-nullable` in the patch gives `*bool` so "absent" ≠ "false"; in EventInput it is also `*bool` — treat nil as false.)
 
-- [ ] **Step 2: Regenerate + validate**
+- [x] **Step 2: Regenerate + validate**
 
 Run: `cd backend && make swagger-validate && make generate-api && go build ./...`
 Expected: clean build. Inspect `internal/http/models/event.go` for the generated field names (`ExternalPlatformName`, `CapacityLimited`, `ModerationRequired`) — use whatever casing the generator emits.
 
-- [ ] **Step 3: Formatter mappings**
+- [x] **Step 3: Formatter mappings**
 
 `formatter/event.go`:
 - `EventToAPI` (after the `out.SignupMode = …` block ~line 121):
@@ -842,7 +844,7 @@ Expected: clean build. Inspect `internal/http/models/event.go` for the generated
 - `EventFromAPIInput`: `if in.CapacityLimited != nil { event.CapacityLimited = *in.CapacityLimited }`.
 - `EventPatchToUpdateParams`: `if in.CapacityLimited != nil { v := *in.CapacityLimited; p.CapacityLimited = &v }`.
 
-- [ ] **Step 4: Read-path enrichment in the events repository**
+- [x] **Step 4: Read-path enrichment in the events repository**
 
 In `backend/internal/events/repository.go`, find the shared enrichment path (grep `loadOrganizers` — the function that calls it after selects). Add a `loadPlatformNames` step in the same pipeline:
 
@@ -882,7 +884,7 @@ func (r *pgRepository) loadPlatformNames(events []*models.Event) error {
 
 Match the repository's actual receiver/type names (read the file first — the receiver may not be named `pgRepository`). Call it wherever `loadOrganizers` is called, with the same error handling style. Import `github.com/Pashteto/lia/internal/platforms` (no cycle: platforms imports nothing from events).
 
-- [ ] **Step 5: Public trusted-platforms handler + mount**
+- [x] **Step 5: Public trusted-platforms handler + mount**
 
 `backend/internal/http/platformspublic/handler.go` (mirror `backend/internal/http/geocode/handler.go` structure, but **no auth** — this list is public):
 
@@ -944,12 +946,12 @@ Mount in `module.go` router (next to the geocode branch ~line 458):
 
 building `platformsH := platformspublic.NewHandler(platformspublic.Deps{Platforms: m.platforms})` alongside `geocodeH` — add an `m.platforms platforms.Service` field + `SetPlatforms` setter to `Module` following the existing `SetAdminUsers` pattern (~line 149), and call it from `application.go` with the `platformsSvc` built in Task 4 Step 5.
 
-- [ ] **Step 6: Run tests + build**
+- [x] **Step 6: Run tests + build**
 
 Run: `cd backend && go build ./... && go test ./internal/http/... ./internal/events/ -v`
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add backend/api/swagger.yaml backend/internal/http/ backend/internal/events/repository.go
@@ -968,14 +970,14 @@ git commit -m "feat(api): platform name + capacity_limited + moderation_required
 - Consumes: `platforms.Service` (Task 3) — add `Platforms platforms.Service` to `admin.Deps`; wire from `application.go` (same `platformsSvc`).
 - Produces (consumed by Task 11): `GET /api/v1/admin/trusted-platforms` → 200 full rows (including inactive, JSON tags from the model); `POST /api/v1/admin/trusted-platforms` body `{"domain_suffix":"…","display_name":"…","category":"ticketing"}` → 201 created row; `DELETE /api/v1/admin/trusted-platforms/{id}` → 204 (deactivates, does not hard-delete).
 
-- [ ] **Step 1: Write failing handler tests** — mirror the existing staff-gated handler tests: staff GET lists rows from a fake service; POST with invalid category → 422; POST valid → 201; DELETE unknown id → 404/409 per the fake's error; non-staff → 403.
+- [x] **Step 1: Write failing handler tests** — mirror the existing staff-gated handler tests: staff GET lists rows from a fake service; POST with invalid category → 422; POST valid → 201; DELETE unknown id → 404/409 per the fake's error; non-staff → 403.
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `cd backend && go test ./internal/http/admin/ -run TrustedPlatforms -v`
 Expected: FAIL.
 
-- [ ] **Step 3: Implement** — add to `NewHandler`:
+- [x] **Step 3: Implement** — add to `NewHandler`:
 
 ```go
 	h.mux.HandleFunc("GET /api/v1/admin/trusted-platforms", h.staff(h.listPlatforms))
@@ -985,9 +987,9 @@ Expected: FAIL.
 
 Handlers follow the file's existing json/error style: `listPlatforms` → `deps.Platforms.List`; `addPlatform` decodes the body, calls `Add`, maps validation errors → 422 via the existing error helper; `removePlatform` parses `{id}` uuid, calls `Deactivate`, not-found → 404, success → 204. Guard `deps.Platforms == nil` → 503 (mirroring how other optional deps degrade).
 
-- [ ] **Step 4: Run tests** — `cd backend && go test ./internal/http/admin/ -v` → PASS.
+- [x] **Step 4: Run tests** — `cd backend && go test ./internal/http/admin/ -v` → PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/internal/http/admin/ backend/internal/application.go
@@ -1027,7 +1029,7 @@ export async function approveEvent(id: string): Promise<void>; // POST …/moder
 // CreateEventInput gains capacityLimited?: boolean → body field capacity_limited
 ```
 
-- [ ] **Step 1: Write failing matcher tests**
+- [x] **Step 1: Write failing matcher tests**
 
 ```ts
 import { describe, expect, it } from "vitest";
@@ -1063,9 +1065,9 @@ describe("matchPlatform", () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify failure** — `cd frontend && npx vitest run lib/__tests__/platforms.test.ts` → FAIL (module missing).
+- [x] **Step 2: Run to verify failure** — `cd frontend && npx vitest run lib/__tests__/platforms.test.ts` → FAIL (module missing).
 
-- [ ] **Step 3: Implement `lib/platforms.ts`**
+- [x] **Step 3: Implement `lib/platforms.ts`**
 
 ```ts
 /** Client-side mirror of backend/internal/platforms matching — used only for
@@ -1099,16 +1101,16 @@ export function matchPlatform(
 }
 ```
 
-- [ ] **Step 4: types + api mappings**
+- [x] **Step 4: types + api mappings**
 
 - `types.ts` LiaEvent: add the three optional fields (Interfaces block above).
 - `api.ts` `apiEventToLia`: map `externalPlatformName: e.external_platform_name`, `capacityLimited: e.capacity_limited`, `moderationRequired: e.moderation_required` (add the snake_case fields to the `ApiEvent` type in the same file, matching how `price_min` is declared).
 - `CreateEventInput`: add `capacityLimited?: boolean`; in `createEvent`/`patchEvent` body construction include `capacity_limited: input.capacityLimited` (follow how other optional fields are serialized in those functions — read them first).
 - New fetchers per the Interfaces block: `fetchTrustedPlatforms` hits `${API_V1}/trusted-platforms` without auth headers and maps snake_case→camelCase; the three admin functions follow the `listModerationEvents`/`takedownEvent` style (auth headers, error on !ok); `approveEvent` mirrors `takedownEvent` with no body.
 
-- [ ] **Step 5: Run tests + typecheck** — `cd frontend && npx vitest run && npx tsc --noEmit` → PASS.
+- [x] **Step 5: Run tests + typecheck** — `cd frontend && npx vitest run && npx tsc --noEmit` → PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/lib/
@@ -1127,17 +1129,17 @@ git commit -m "feat(frontend): trusted-platform types, client matcher, api fetch
 - Consumes: `fetchTrustedPlatforms`, `matchPlatform` (Task 8); `moderationRequired` on the created/patched event.
 - Produces: form field `capacityLimited: boolean` serialized as `capacity_limited`.
 
-- [ ] **Step 1: Extend the zod schema test** — in `create-event-schema.test.ts` add cases: external mode with `capacityLimited: true` parses; open mode ignores `capacityLimited` (payload builder omits it when mode ≠ external). Follow the file's existing test style for building form values and calling the exported schema/payload helpers.
+- [x] **Step 1: Extend the zod schema test** — in `create-event-schema.test.ts` add cases: external mode with `capacityLimited: true` parses; open mode ignores `capacityLimited` (payload builder omits it when mode ≠ external). Follow the file's existing test style for building form values and calling the exported schema/payload helpers.
 
-- [ ] **Step 2: Run to verify failure** — `cd frontend && npx vitest run components/__tests__/create-event-schema.test.ts` → FAIL.
+- [x] **Step 2: Run to verify failure** — `cd frontend && npx vitest run components/__tests__/create-event-schema.test.ts` → FAIL.
 
-- [ ] **Step 3: Implement schema + payload**
+- [x] **Step 3: Implement schema + payload**
 
 - Schema (~line 55): add `capacityLimited: z.boolean().optional()`.
 - Payload builder (~line 192): add `capacity_limited: v.signupMode === "external" ? (v.capacityLimited ?? false) : undefined`.
 - Defaults (~line 250): `capacityLimited: initial?.capacityLimited ?? false`.
 
-- [ ] **Step 4: Implement UI**
+- [x] **Step 4: Implement UI**
 
 In the signup section (~line 742):
 - Load platforms once: `const [platforms, setPlatforms] = useState<TrustedPlatform[]>([]);` + `useEffect(() => { fetchTrustedPlatforms().then(setPlatforms).catch(() => {}); }, []);` — a failed load degrades to "no hint", never blocks the form.
@@ -1160,9 +1162,9 @@ where `const matched = extUrl ? matchPlatform(extUrl.trim(), platforms) : null`.
 - Paid-open warning (spec §4): in the price section (near the `priceMin` input, ~line 680), when the watched values give `priceMin > 0 && signupMode !== "external"`, render `<span className="text-[11px] text-text-dim">Посетители увидят «Оплата на месте»</span>` (watch `priceMin` via the same `useWatch` pattern as `signupMode` at line ~263).
 - Moderation notice: in the create/patch `onSuccess` handlers (~lines 286–303), before routing: `if (event.moderationRequired) { router.push(`/events/${event.id}?moderation=1`); return; }` — and in `frontend/app/events/[id]/page.tsx`'s client view (or `EventDetailView`), when the query flag is present and the viewer owns the pending event, render a banner: «Событие отправлено на проверку модератору и опубликуется после одобрения». Follow the existing owner-draft banner pattern — grep `Черновик` in `EventDetailView.tsx`/`app/events/[id]` to find it and mirror.
 
-- [ ] **Step 5: Run tests + typecheck** — `cd frontend && npx vitest run && npx tsc --noEmit` → PASS.
+- [x] **Step 5: Run tests + typecheck** — `cd frontend && npx vitest run && npx tsc --noEmit` → PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/components/CreateEventForm.tsx frontend/components/__tests__/ frontend/app/events/
@@ -1182,13 +1184,13 @@ git commit -m "feat(form): platform hint, hidden-capacity checkbox, moderation n
 **Interfaces:**
 - Consumes: `event.externalPlatformName`, `event.capacityLimited` (Task 8); `priceLabel`/`priceType` already on LiaEvent.
 
-- [ ] **Step 1: Extend format tests** — `attendanceShort` with `capacityLimited: true` (and external mode) returns `"Ограничено · наличие на сайте регистрации"`; without the flag behavior is unchanged (run existing cases).
+- [x] **Step 1: Extend format tests** — `attendanceShort` with `capacityLimited: true` (and external mode) returns `"Ограничено · наличие на сайте регистрации"`; without the flag behavior is unchanged (run existing cases).
 
-- [ ] **Step 2: Run to verify failure** — `cd frontend && npx vitest run lib/__tests__/format.test.ts` → FAIL.
+- [x] **Step 2: Run to verify failure** — `cd frontend && npx vitest run lib/__tests__/format.test.ts` → FAIL.
 
-- [ ] **Step 3: Implement `attendanceShort`** — read the function first; add the `capacityLimited` branch **before** the existing unlimited/counted branches (signature takes the event or its fields — extend per its actual shape).
+- [x] **Step 3: Implement `attendanceShort`** — read the function first; add the `capacityLimited` branch **before** the existing unlimited/counted branches (signature takes the event or its fields — extend per its actual shape).
 
-- [ ] **Step 4: SignupCTA external branch** — replace the static label (line 283) with:
+- [x] **Step 4: SignupCTA external branch** — replace the static label (line 283) with:
 
 ```tsx
 const isPaid = event.priceType !== "free";
@@ -1202,15 +1204,15 @@ const host = event.externalRegistrationUrl ? hostOf(event.externalRegistrationUr
 
 (import `hostOf` from `@/lib/platforms`; keep the existing classNames untouched).
 
-- [ ] **Step 5: «Оплата на месте»** — in `EventDetailView.tsx`: desktop price rail (after the price `<span>`, ~line 110) and mobile footer (after the price `<span>`, ~line 216), when `event.priceType !== "free" && event.signupMode !== "external"`, render `<span className="text-[10px] uppercase tracking-[0.07em] text-text-dim">Оплата на месте</span>` (reuse the `cap` utility class if it fits better — compare with the «Цена» caption styling).
+- [x] **Step 5: «Оплата на месте»** — in `EventDetailView.tsx`: desktop price rail (after the price `<span>`, ~line 110) and mobile footer (after the price `<span>`, ~line 216), when `event.priceType !== "free" && event.signupMode !== "external"`, render `<span className="text-[10px] uppercase tracking-[0.07em] text-text-dim">Оплата на месте</span>` (reuse the `cap` utility class if it fits better — compare with the «Цена» caption styling).
 
-- [ ] **Step 6: Layout fix** — change `grid-cols-[1fr_200px]` → `grid-cols-[1fr_248px]` at **both** occurrences (~lines 90 and 165 — header CTA rail and venue address rail; both must move together or the vertical rules misalign).
+- [x] **Step 6: Layout fix** — change `grid-cols-[1fr_200px]` → `grid-cols-[1fr_248px]` at **both** occurrences (~lines 90 and 165 — header CTA rail and venue address rail; both must move together or the vertical rules misalign).
 
-- [ ] **Step 7: Verify visually** — run the frontend dev server against local backend (or use existing screenshots flow), open an event page: CTA column no longer clips «Вы записаны» / «В календарь (.ics)» / «В Google-календарь» against the `border-l` rule; check an external-mode event shows the platform-branded button.
+- [x] **Step 7: Verify visually** — run the frontend dev server against local backend (or use existing screenshots flow), open an event page: CTA column no longer clips «Вы записаны» / «В календарь (.ics)» / «В Google-календарь» against the `border-l` rule; check an external-mode event shows the platform-branded button.
 
-- [ ] **Step 8: Run all frontend tests + typecheck** — `cd frontend && npx vitest run && npx tsc --noEmit` → PASS.
+- [x] **Step 8: Run all frontend tests + typecheck** — `cd frontend && npx vitest run && npx tsc --noEmit` → PASS.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add frontend/components/SignupCTA.tsx frontend/components/EventDetailView.tsx frontend/lib/
@@ -1230,17 +1232,17 @@ git commit -m "feat(event-page): platform CTA texts, оплата на мест�
 **Interfaces:**
 - Consumes: `approveEvent`, `adminListTrustedPlatforms`, `adminAddTrustedPlatform`, `adminRemoveTrustedPlatform` (Task 8); backend endpoints (Tasks 5, 7); `listModerationEvents("pending_review")` (backend `listEvents` already accepts any valid status via `Events.List`).
 
-- [ ] **Step 1: Widen `listModerationEvents`** — change the status parameter type to `"published" | "rejected" | "pending_review"`.
+- [x] **Step 1: Widen `listModerationEvents`** — change the status parameter type to `"published" | "rejected" | "pending_review"`.
 
-- [ ] **Step 2: AdminModeration pending chip** — read the component fully first. Add a third filter chip «Ссылки» (`filter === "links"`) that loads `listModerationEvents("pending_review")`; row actions for a `pending_review` row: «Опубликовать» → `approveEvent(row.id)` (then remove from queue, same optimistic pattern as reinstate ~line 192) and the existing takedown/reject flow for declines. Follow the component's existing chip/row/action idioms exactly.
+- [x] **Step 2: AdminModeration pending chip** — read the component fully first. Add a third filter chip «Ссылки» (`filter === "links"`) that loads `listModerationEvents("pending_review")`; row actions for a `pending_review` row: «Опубликовать» → `approveEvent(row.id)` (then remove from queue, same optimistic pattern as reinstate ~line 192) and the existing takedown/reject flow for declines. Follow the component's existing chip/row/action idioms exactly.
 
-- [ ] **Step 3: AdminTrustedPlatforms component** — table of `adminListTrustedPlatforms()` rows (domain, name, category, active), a three-field add form (domain / название / категория select of the 4 values) calling `adminAddTrustedPlatform` then reloading, and a «Отключить» button per active row calling `adminRemoveTrustedPlatform`. Copy layout primitives from `AdminModeration.tsx`/`frontend/app/admin/settings` (read them; reuse Chip/Input components).
+- [x] **Step 3: AdminTrustedPlatforms component** — table of `adminListTrustedPlatforms()` rows (domain, name, category, active), a three-field add form (domain / название / категория select of the 4 values) calling `adminAddTrustedPlatform` then reloading, and a «Отключить» button per active row calling `adminRemoveTrustedPlatform`. Copy layout primitives from `AdminModeration.tsx`/`frontend/app/admin/settings` (read them; reuse Chip/Input components).
 
-- [ ] **Step 4: Mount + verify** — mount the component; run the dev stack, log in as staff, verify: pending event appears under «Ссылки», approve publishes it (event page shows it live), adding a domain makes the form hint in Task 9 recognize it.
+- [x] **Step 4: Mount + verify** — mount the component; run the dev stack, log in as staff, verify: pending event appears under «Ссылки», approve publishes it (event page shows it live), adding a domain makes the form hint in Task 9 recognize it.
 
-- [ ] **Step 5: Typecheck + tests** — `cd frontend && npx tsc --noEmit && npx vitest run` → PASS.
+- [x] **Step 5: Typecheck + tests** — `cd frontend && npx tsc --noEmit && npx vitest run` → PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/components/AdminModeration.tsx frontend/components/AdminTrustedPlatforms.tsx frontend/lib/api.ts frontend/app/admin/
@@ -1251,10 +1253,10 @@ git commit -m "feat(admin): pending-links moderation queue + trusted-platforms m
 
 ### Task 12: Full verification pass
 
-- [ ] **Step 1: Backend** — `cd backend && go build ./... && go test ./... && golangci-lint run` → all green.
-- [ ] **Step 2: Frontend** — `cd frontend && npx tsc --noEmit && npx vitest run && npm run build` → all green.
-- [ ] **Step 3: End-to-end smoke (local stack)** — as organizer: create external event with `https://xxx.timepad.ru/event/1` + «мест ограничено» → publishes immediately; event page shows «Билеты на TimePad» (set a price) and «Ограничено · наличие на сайте регистрации». Create one with an unknown domain → banner «Событие отправлено на проверку модератору…», feed does not show it; as admin approve it → visible. Paid open-signup event shows «Оплата на месте».
-- [ ] **Step 4: Commit any fixes; do not push or deploy** — deployment is a separate step (below) done with the user.
+- [x] **Step 1: Backend** — `cd backend && go build ./... && go test ./... && golangci-lint run` → all green.
+- [x] **Step 2: Frontend** — `cd frontend && npx tsc --noEmit && npx vitest run && npm run build` → all green.
+- [x] **Step 3: End-to-end smoke (local stack)** — as organizer: create external event with `https://xxx.timepad.ru/event/1` + «мест ограничено» → publishes immediately; event page shows «Билеты на TimePad» (set a price) and «Ограничено · наличие на сайте регистрации». Create one with an unknown domain → banner «Событие отправлено на проверку модератору…», feed does not show it; as admin approve it → visible. Paid open-signup event shows «Оплата на месте».
+- [x] **Step 4: Commit any fixes; do not push or deploy** — deployment is a separate step (below) done with the user.
 
 ---
 

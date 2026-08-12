@@ -34,6 +34,7 @@ type stubMod struct {
 	overviewErr  error
 	takedownErr  error
 	reinstateErr error
+	approveErr   error
 }
 
 func (s stubMod) Overview(context.Context) (moderation.Counts, error) {
@@ -53,6 +54,13 @@ func (s stubMod) Takedown(ctx context.Context, id uuid.UUID, by uuid.UUID, reaso
 func (s stubMod) Reinstate(ctx context.Context, id uuid.UUID, by uuid.UUID) error {
 	if s.reinstateErr != nil {
 		return s.reinstateErr
+	}
+	return nil
+}
+
+func (s stubMod) Approve(ctx context.Context, id uuid.UUID, by uuid.UUID) error {
+	if s.approveErr != nil {
+		return s.approveErr
 	}
 	return nil
 }
@@ -135,6 +143,40 @@ func TestReinstate_409OnInvalidTransition(t *testing.T) {
 	newTestHandlerWithMod("admin", mod).ServeHTTP(w, r)
 	if w.Code != http.StatusConflict {
 		t.Fatalf("status = %d, want 409", w.Code)
+	}
+}
+
+func TestApprove_204OnSuccess(t *testing.T) {
+	id := uuid.Must(uuid.NewV4()).String()
+	r := httptest.NewRequest(http.MethodPost, "/api/v1/admin/moderation/events/"+id+"/approve", nil)
+	r.Header.Set("Authorization", "Bearer x")
+	w := httptest.NewRecorder()
+	newTestHandlerWithMod("admin", stubMod{}).ServeHTTP(w, r)
+	if w.Code != http.StatusNoContent {
+		t.Fatalf("status = %d, want 204", w.Code)
+	}
+}
+
+func TestApprove_409OnInvalidTransition(t *testing.T) {
+	id := uuid.Must(uuid.NewV4()).String()
+	r := httptest.NewRequest(http.MethodPost, "/api/v1/admin/moderation/events/"+id+"/approve", nil)
+	r.Header.Set("Authorization", "Bearer x")
+	w := httptest.NewRecorder()
+	mod := stubMod{approveErr: moderation.ErrInvalidTransition}
+	newTestHandlerWithMod("admin", mod).ServeHTTP(w, r)
+	if w.Code != http.StatusConflict {
+		t.Fatalf("status = %d, want 409", w.Code)
+	}
+}
+
+func TestApprove_403ForCommon(t *testing.T) {
+	id := uuid.Must(uuid.NewV4()).String()
+	r := httptest.NewRequest(http.MethodPost, "/api/v1/admin/moderation/events/"+id+"/approve", nil)
+	r.Header.Set("Authorization", "Bearer x")
+	w := httptest.NewRecorder()
+	newTestHandlerWithMod("common", stubMod{}).ServeHTTP(w, r)
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("status = %d, want 403", w.Code)
 	}
 }
 

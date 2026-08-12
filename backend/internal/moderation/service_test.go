@@ -12,6 +12,8 @@ type fakeRepo struct {
 	takedownReason string
 	takedownErr    error
 	reinstateErr   error
+	approveErr     error
+	approveCalled  bool
 	counts         Counts
 }
 
@@ -20,6 +22,10 @@ func (f *fakeRepo) Takedown(_ context.Context, _, _ uuid.UUID, reason string) er
 	return f.takedownErr
 }
 func (f *fakeRepo) Reinstate(_ context.Context, _, _ uuid.UUID) error { return f.reinstateErr }
+func (f *fakeRepo) Approve(_ context.Context, _, _ uuid.UUID) error {
+	f.approveCalled = true
+	return f.approveErr
+}
 func (f *fakeRepo) Counts(_ context.Context) (Counts, error)         { return f.counts, nil }
 func (f *fakeRepo) LatestReason(_ context.Context, _ uuid.UUID) (string, error) { return "", nil }
 
@@ -39,5 +45,25 @@ func TestTakedown_PassesReasonToRepo(t *testing.T) {
 	}
 	if repo.takedownReason != "spam" {
 		t.Fatalf("reason = %q, want spam", repo.takedownReason)
+	}
+}
+
+func TestApprove_DelegatesToRepo(t *testing.T) {
+	repo := &fakeRepo{}
+	svc := NewService(repo)
+	if err := svc.Approve(context.Background(), uuid.Must(uuid.NewV4()), uuid.Must(uuid.NewV4())); err != nil {
+		t.Fatalf("approve: %v", err)
+	}
+	if !repo.approveCalled {
+		t.Fatalf("expected repo.Approve to be called")
+	}
+}
+
+func TestApprove_PropagatesInvalidTransition(t *testing.T) {
+	repo := &fakeRepo{approveErr: ErrInvalidTransition}
+	svc := NewService(repo)
+	err := svc.Approve(context.Background(), uuid.Must(uuid.NewV4()), uuid.Must(uuid.NewV4()))
+	if !errors.Is(err, ErrInvalidTransition) {
+		t.Fatalf("err = %v, want ErrInvalidTransition", err)
 	}
 }

@@ -171,6 +171,83 @@ func TestTransition_TakedownThenReinstate(t *testing.T) {
 	}
 }
 
+// insertPendingReviewEvent inserts a minimal event row with
+// status='pending_review' and returns its ID. The event is cleaned up in a
+// t.Cleanup defer.
+func insertPendingReviewEvent(t *testing.T, db *pg.DB) uuid.UUID {
+	t.Helper()
+	id := uuid.Must(uuid.NewV4())
+	_, err := db.Exec(
+		`INSERT INTO events (id, title, status, starts_at, created_at, updated_at)
+		 VALUES (?, 'integration test event', 'pending_review', ?, now(), now())`,
+		id, time.Now().Add(24*time.Hour),
+	)
+	if err != nil {
+		t.Fatalf("insert test event: %v", err)
+	}
+	t.Cleanup(func() {
+		db.Exec(`DELETE FROM events WHERE id = ?`, id)          //nolint:errcheck
+		db.Exec(`DELETE FROM audit_log WHERE target_id = ?`, id) //nolint:errcheck
+	})
+	return id
+}
+
+// TestApprove_PendingReviewToPublished exercises the whitelist-moderation
+// approve path: pending_review → published, external_url_verified set,
+// history + audit rows written. A second Approve on the now-published event
+// returns ErrInvalidTransition.
+func TestApprove_PendingReviewToPublished(t *testing.T) {
+	db := openTestDB(t)
+	repo := NewRepository(db)
+	ctx := context.Background()
+
+	actor := uuid.Must(uuid.NewV4())
+	eventID := insertPendingReviewEvent(t, db)
+
+	if err := repo.Approve(ctx, eventID, actor); err != nil {
+		t.Fatalf("Approve: %v", err)
+	}
+	if got := queryEventStatus(t, db, eventID); got != "published" {
+		t.Errorf("after Approve: status = %q, want published", got)
+	}
+
+	var verified bool
+	if _, err := db.QueryOne(pg.Scan(&verified),
+		`SELECT external_url_verified FROM events WHERE id = ?`, eventID); err != nil {
+		t.Fatalf("query external_url_verified: %v", err)
+	}
+	if !verified {
+		t.Errorf("external_url_verified = false, want true")
+	}
+
+	var histCount int
+	if _, err := db.QueryOne(pg.Scan(&histCount),
+		`SELECT count(*) FROM event_status_history
+		 WHERE event_id = ? AND from_status = 'pending_review' AND to_status = 'published'`,
+		eventID); err != nil {
+		t.Fatalf("query history: %v", err)
+	}
+	if histCount != 1 {
+		t.Errorf("expected 1 history row after Approve, got %d", histCount)
+	}
+
+	var auditCount int
+	if _, err := db.QueryOne(pg.Scan(&auditCount),
+		`SELECT count(*) FROM audit_log WHERE target_id = ? AND action = 'event.approve'`,
+		eventID); err != nil {
+		t.Fatalf("query audit: %v", err)
+	}
+	if auditCount != 1 {
+		t.Errorf("expected 1 audit row after Approve, got %d", auditCount)
+	}
+
+	// Second Approve on an already-published event → ErrInvalidTransition.
+	err := repo.Approve(ctx, eventID, actor)
+	if !errors.Is(err, ErrInvalidTransition) {
+		t.Errorf("second Approve: err = %v, want ErrInvalidTransition", err)
+	}
+}
+
 // TestCounts verifies the overview query returns expected buckets.
 func TestCounts_Integration(t *testing.T) {
 	db := openTestDB(t)

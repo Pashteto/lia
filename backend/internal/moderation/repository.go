@@ -51,6 +51,39 @@ func (r *pgRepository) Reinstate(ctx context.Context, eventID, actorID uuid.UUID
 	return r.transition(ctx, eventID, actorID, "rejected", "published", "event.reinstate", "")
 }
 
+// Approve transitions an event from pending_review to published, marking its
+// external-registration URL as verified. Unlike transition, it touches extra
+// columns (external_url_verified, published_at), so it gets its own transaction
+// rather than reusing the fixed from/to helper.
+func (r *pgRepository) Approve(ctx context.Context, eventID, actorID uuid.UUID) error {
+	return r.db.RunInTransaction(ctx, func(tx *pg.Tx) error {
+		res, err := tx.ExecContext(ctx,
+			`UPDATE events
+			    SET status = 'published',
+			        external_url_verified = true,
+			        published_at = COALESCE(published_at, now()),
+			        updated_at = now()
+			  WHERE id = ? AND status = 'pending_review'`, eventID)
+		if err != nil {
+			return fmt.Errorf("approve event: %w", err)
+		}
+		if res.RowsAffected() == 0 {
+			return ErrInvalidTransition
+		}
+		if _, err := tx.ExecContext(ctx,
+			`INSERT INTO event_status_history (event_id, from_status, to_status, actor_user_id, reason)
+			 VALUES (?, 'pending_review', 'published', ?, NULL)`, eventID, actorID); err != nil {
+			return fmt.Errorf("insert status history: %w", err)
+		}
+		if _, err := tx.ExecContext(ctx,
+			`INSERT INTO audit_log (actor_user_id, action, target_type, target_id, metadata)
+			 VALUES (?, 'event.approve', 'event', ?, '{}'::jsonb)`, actorID, eventID); err != nil {
+			return fmt.Errorf("insert audit log: %w", err)
+		}
+		return nil
+	})
+}
+
 func (r *pgRepository) Counts(ctx context.Context) (Counts, error) {
 	var c Counts
 	_, err := r.db.QueryOneContext(ctx, pg.Scan(&c.EventsTotal, &c.EventsPublished, &c.EventsRemoved),

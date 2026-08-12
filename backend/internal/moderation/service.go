@@ -30,6 +30,7 @@ var ErrReasonRequired = errors.New("moderation: reason required")
 type Repository interface {
 	Takedown(ctx context.Context, eventID, actorID uuid.UUID, reason string) error
 	Reinstate(ctx context.Context, eventID, actorID uuid.UUID) error
+	Approve(ctx context.Context, eventID, actorID uuid.UUID) error
 	Counts(ctx context.Context) (Counts, error)
 	LatestReason(ctx context.Context, eventID uuid.UUID) (string, error)
 }
@@ -38,6 +39,7 @@ type Repository interface {
 type Service interface {
 	Takedown(ctx context.Context, eventID, actorID uuid.UUID, reason string) error
 	Reinstate(ctx context.Context, eventID, actorID uuid.UUID) error
+	Approve(ctx context.Context, eventID, actorID uuid.UUID) error
 	Overview(ctx context.Context) (Counts, error)
 }
 
@@ -55,6 +57,10 @@ func (s *service) Takedown(ctx context.Context, eventID, actorID uuid.UUID, reas
 
 func (s *service) Reinstate(ctx context.Context, eventID, actorID uuid.UUID) error {
 	return s.repo.Reinstate(ctx, eventID, actorID)
+}
+
+func (s *service) Approve(ctx context.Context, eventID, actorID uuid.UUID) error {
+	return s.repo.Approve(ctx, eventID, actorID)
 }
 
 func (s *service) Overview(ctx context.Context) (Counts, error) { return s.repo.Counts(ctx) }

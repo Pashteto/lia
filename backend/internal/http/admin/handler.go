@@ -49,6 +49,7 @@ func NewHandler(deps Deps) http.Handler {
 	h.mux.HandleFunc("GET /api/v1/admin/moderation/events", h.staff(h.listEvents))
 	h.mux.HandleFunc("POST /api/v1/admin/moderation/events/{id}/takedown", h.staff(h.takedown))
 	h.mux.HandleFunc("POST /api/v1/admin/moderation/events/{id}/reinstate", h.staff(h.reinstate))
+	h.mux.HandleFunc("POST /api/v1/admin/moderation/events/{id}/approve", h.staff(h.approve))
 	h.mux.HandleFunc("GET /api/v1/admin/moderation/organizers", h.staff(h.listOrganizers))
 	h.mux.HandleFunc("GET /api/v1/admin/organizers", h.staff(h.searchOrganizers))
 	h.mux.HandleFunc("GET /api/v1/admin/organizers/{id}", h.staff(h.organizerDetail))
@@ -233,6 +234,23 @@ func (h *handler) reinstate(w http.ResponseWriter, r *http.Request, u *domain.Us
 		writeErr(w, http.StatusConflict, "Событие нельзя вернуть из текущего статуса")
 	default:
 		writeErr(w, http.StatusInternalServerError, "reinstate failed")
+	}
+}
+
+// approve promotes a pending_review event (unknown external-registration
+// domain awaiting staff review) to published and marks its URL verified.
+func (h *handler) approve(w http.ResponseWriter, r *http.Request, u *domain.User) {
+	id, ok := pathID(w, r)
+	if !ok {
+		return
+	}
+	switch err := h.deps.Moderation.Approve(r.Context(), id, u.UUID); err {
+	case nil:
+		w.WriteHeader(http.StatusNoContent)
+	case moderation.ErrInvalidTransition:
+		writeErr(w, http.StatusConflict, "Событие нельзя одобрить из текущего статуса")
+	default:
+		writeErr(w, http.StatusInternalServerError, "approve failed")
 	}
 }
 

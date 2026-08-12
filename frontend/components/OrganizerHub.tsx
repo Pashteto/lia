@@ -140,6 +140,7 @@ export function OrganizerHub() {
           caption="Опубликовано"
           value={stripHero(stats.published)}
           mono
+          href="/events/mine?status=published"
           valueClassName="text-[26px]"
           className="px-[14px] py-[14px]"
         />
@@ -148,6 +149,7 @@ export function OrganizerHub() {
           value={stripHero(stats.pendingReview)}
           mono
           invert
+          href="/events/mine?status=pending_review"
           valueClassName="text-[26px]"
           className="px-[14px] py-[14px]"
         />
@@ -155,6 +157,7 @@ export function OrganizerHub() {
           caption="Черновики"
           value={stripHero(stats.drafts)}
           mono
+          href="/events/mine?status=draft"
           valueClassName="text-[26px]"
           className="px-[14px] py-[14px]"
         />
@@ -171,6 +174,7 @@ export function OrganizerHub() {
           caption="Опубл."
           value={stripHero(stats.published)}
           mono
+          href="/events/mine?status=published"
           valueClassName="text-[16px]"
           className="px-[10px] py-[9px]"
         />
@@ -179,6 +183,7 @@ export function OrganizerHub() {
           value={stripHero(stats.pendingReview)}
           mono
           invert
+          href="/events/mine?status=pending_review"
           valueClassName="text-[16px]"
           className="px-[10px] py-[9px]"
         />
@@ -186,6 +191,7 @@ export function OrganizerHub() {
           caption="Черн."
           value={stripHero(stats.drafts)}
           mono
+          href="/events/mine?status=draft"
           valueClassName="text-[16px]"
           className="px-[10px] py-[9px]"
         />

@@ -264,7 +264,7 @@ export function MyEventsBrowse() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const qc = useQueryClient();
-  const [filter, setFilter] = useState<Filter>(() => parseStatusParam(searchParams.get("status")));
+  const filter = parseStatusParam(searchParams.get("status"));
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [dupId, setDupId] = useState<string | null>(null);
 
@@ -342,10 +342,9 @@ export function MyEventsBrowse() {
             <Chip
               key={f.key}
               variant={variant}
-              onClick={() => {
-                setFilter(f.key);
-                router.replace(f.key === "all" ? "/events/mine" : `/events/mine?status=${f.key}`);
-              }}
+              onClick={() =>
+                router.replace(f.key === "all" ? "/events/mine" : `/events/mine?status=${f.key}`)
+              }
               aria-pressed={active}
               className="min-h-[44px] max-sm:text-[8px]"
             >

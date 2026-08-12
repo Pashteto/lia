@@ -104,24 +104,35 @@ function DesktopOverview({ data }: { data: OverviewData }) {
             {tileHero(overview.events_total)}
           </div>
         </div>
-        <div className="border-r border-paper bg-signal p-[14px]">
-          <div className="cap text-signal-tint">Ждут модерации</div>
-          <div className="font-mono text-[26px] font-bold leading-none text-white">
+        <Link
+          href="/admin/moderation/events"
+          className="group swiss-focus cursor-pointer border-r border-paper bg-signal p-[14px] transition-colors duration-[120ms] hover:bg-paper"
+        >
+          <div className="cap text-signal-tint group-hover:text-signal">
+            Ждут модерации →
+          </div>
+          <div className="font-mono text-[26px] font-bold leading-none text-white group-hover:text-signal">
             {tileHero(waiting)}
           </div>
-        </div>
-        <div className="border-r border-paper p-[14px]">
-          <div className="cap">Организаторов</div>
-          <div className="font-mono text-[26px] font-bold leading-none">
+        </Link>
+        <Link
+          href="/admin/organizers"
+          className="group swiss-focus cursor-pointer border-r border-paper p-[14px] transition-colors duration-[120ms] hover:bg-paper"
+        >
+          <div className="cap group-hover:text-ink">Организаторов →</div>
+          <div className="font-mono text-[26px] font-bold leading-none group-hover:text-ink">
             {tileCount(overview.organizers_total)}
           </div>
-        </div>
-        <div className="p-[14px]">
-          <div className="cap">Пользователей</div>
-          <div className="font-mono text-[26px] font-bold leading-none">
+        </Link>
+        <Link
+          href="/admin/users"
+          className="group swiss-focus cursor-pointer p-[14px] transition-colors duration-[120ms] hover:bg-paper"
+        >
+          <div className="cap group-hover:text-ink">Пользователей →</div>
+          <div className="font-mono text-[26px] font-bold leading-none group-hover:text-ink">
             {tileCount(overview.users_total)}
           </div>
-        </div>
+        </Link>
       </div>
 
       <div className="grid min-h-0 flex-1 grid-cols-2">
@@ -135,22 +146,23 @@ function DesktopOverview({ data }: { data: OverviewData }) {
             queue.map((event) => {
               const test = isLikelyTestContent(event.title);
               return (
-                <div
+                <Link
                   key={event.id}
-                  className="flex items-baseline justify-between gap-[12px] border-b border-rule-inner px-[16px] py-[9px]"
+                  href="/admin/moderation/events"
+                  className="group swiss-focus flex cursor-pointer items-baseline justify-between gap-[12px] border-b border-rule-inner px-[16px] py-[9px] transition-colors hover:bg-paper"
                 >
                   <span
                     className={cn(
-                      "text-[11.5px] font-bold leading-[1.2]",
+                      "text-[11.5px] font-bold leading-[1.2] group-hover:text-ink",
                       test && "text-signal",
                     )}
                   >
                     {event.title}
                   </span>
-                  <span className="cap shrink-0 font-mono">
+                  <span className="cap shrink-0 font-mono group-hover:text-ink">
                     {formatShortDate(event.starts_at)}
                   </span>
-                </div>
+                </Link>
               );
             })
           )}
@@ -171,19 +183,20 @@ function DesktopOverview({ data }: { data: OverviewData }) {
             orgs.map((org) => {
               const test = isLikelyTestContent(org.name, org.website_url);
               return (
-                <div
+                <Link
                   key={org.id}
-                  className="border-b border-rule-inner px-[16px] py-[9px]"
+                  href={`/admin/organizers/${org.id}`}
+                  className="group swiss-focus block cursor-pointer border-b border-rule-inner px-[16px] py-[9px] transition-colors hover:bg-paper"
                 >
                   <span
                     className={cn(
-                      "text-[11.5px] font-bold leading-[1.2]",
+                      "text-[11.5px] font-bold leading-[1.2] group-hover:text-ink",
                       test && "text-signal",
                     )}
                   >
                     {org.name}
                   </span>
-                </div>
+                </Link>
               );
             })
           )}
@@ -208,18 +221,26 @@ function DutyOverview({ data }: { data: OverviewData }) {
   return (
     <div className="flex min-h-[360px] flex-col sm:hidden">
       <div className="grid flex-none grid-cols-2 border-b border-paper">
-        <div className="border-r border-paper bg-signal p-[11px]">
-          <div className="cap text-signal-tint">Модерация</div>
-          <div className="font-mono text-[20px] font-bold leading-none text-white">
+        <Link
+          href="/admin/moderation/events"
+          className="group swiss-focus cursor-pointer border-r border-paper bg-signal p-[11px] transition-colors duration-[120ms] hover:bg-paper"
+        >
+          <div className="cap text-signal-tint group-hover:text-signal">
+            Модерация →
+          </div>
+          <div className="font-mono text-[20px] font-bold leading-none text-white group-hover:text-signal">
             {tileHero(waiting)}
           </div>
-        </div>
-        <div className="p-[11px]">
-          <div className="cap">Верификация</div>
-          <div className="font-mono text-[20px] font-bold leading-none">
+        </Link>
+        <Link
+          href="/admin/organizers?filter=pending"
+          className="group swiss-focus cursor-pointer p-[11px] transition-colors duration-[120ms] hover:bg-paper"
+        >
+          <div className="cap group-hover:text-ink">Верификация →</div>
+          <div className="font-mono text-[20px] font-bold leading-none group-hover:text-ink">
             {tileHero(pendingOrgs.length)}
           </div>
-        </div>
+        </Link>
       </div>
 
       <div className="min-h-0 flex-1">

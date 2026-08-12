@@ -56,7 +56,7 @@ func insertPublishedEvent(t *testing.T, db *pg.DB) uuid.UUID {
 	}
 	t.Cleanup(func() {
 		// cascades also delete event_status_history rows (ON DELETE CASCADE)
-		db.Exec(`DELETE FROM events WHERE id = ?`, id)        //nolint:errcheck
+		db.Exec(`DELETE FROM events WHERE id = ?`, id)           //nolint:errcheck
 		db.Exec(`DELETE FROM audit_log WHERE target_id = ?`, id) //nolint:errcheck
 	})
 	return id
@@ -186,7 +186,7 @@ func insertPendingReviewEvent(t *testing.T, db *pg.DB) uuid.UUID {
 		t.Fatalf("insert test event: %v", err)
 	}
 	t.Cleanup(func() {
-		db.Exec(`DELETE FROM events WHERE id = ?`, id)          //nolint:errcheck
+		db.Exec(`DELETE FROM events WHERE id = ?`, id)           //nolint:errcheck
 		db.Exec(`DELETE FROM audit_log WHERE target_id = ?`, id) //nolint:errcheck
 	})
 	return id

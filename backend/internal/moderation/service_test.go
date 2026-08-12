@@ -26,7 +26,7 @@ func (f *fakeRepo) Approve(_ context.Context, _, _ uuid.UUID) error {
 	f.approveCalled = true
 	return f.approveErr
 }
-func (f *fakeRepo) Counts(_ context.Context) (Counts, error)         { return f.counts, nil }
+func (f *fakeRepo) Counts(_ context.Context) (Counts, error)                    { return f.counts, nil }
 func (f *fakeRepo) LatestReason(_ context.Context, _ uuid.UUID) (string, error) { return "", nil }
 
 func TestTakedown_RequiresReason(t *testing.T) {

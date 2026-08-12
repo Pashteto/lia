@@ -63,8 +63,8 @@ func seedPublishedEvent(t *testing.T, db *pg.DB, capacity int) uuid.UUID {
 	}
 	t.Cleanup(func() {
 		db.Exec(`DELETE FROM event_rsvps WHERE event_id = ?`, id) //nolint:errcheck
-		db.Exec(`DELETE FROM events WHERE id = ?`, id)             //nolint:errcheck
-		db.Exec(`DELETE FROM audit_log WHERE target_id = ?`, id)   //nolint:errcheck
+		db.Exec(`DELETE FROM events WHERE id = ?`, id)            //nolint:errcheck
+		db.Exec(`DELETE FROM audit_log WHERE target_id = ?`, id)  //nolint:errcheck
 	})
 	return id
 }

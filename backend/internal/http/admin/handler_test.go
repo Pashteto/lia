@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -635,7 +636,7 @@ func TestTrustedPlatforms_503WhenUnwired(t *testing.T) {
 }
 
 func TestTrustedPlatforms_POST_422OnInvalidCategory(t *testing.T) {
-	stub := &stubPlatforms{addErr: errors.New("invalid category")}
+	stub := &stubPlatforms{addErr: fmt.Errorf("%w: invalid category", platformsdomain.ErrInvalidInput)}
 	r := httptest.NewRequest(http.MethodPost, "/api/v1/admin/trusted-platforms",
 		strings.NewReader(`{"domain_suffix":"foo.ru","display_name":"Foo","category":"bogus"}`))
 	r.Header.Set("Authorization", "Bearer x")
@@ -643,6 +644,30 @@ func TestTrustedPlatforms_POST_422OnInvalidCategory(t *testing.T) {
 	newHandlerWithPlatforms("admin", stub).ServeHTTP(w, r)
 	if w.Code != http.StatusUnprocessableEntity {
 		t.Fatalf("status = %d, want 422", w.Code)
+	}
+}
+
+func TestTrustedPlatforms_POST_500OnDBFailure(t *testing.T) {
+	stub := &stubPlatforms{addErr: errors.New("db connection lost")}
+	r := httptest.NewRequest(http.MethodPost, "/api/v1/admin/trusted-platforms",
+		strings.NewReader(`{"domain_suffix":"foo.ru","display_name":"Foo","category":"ticketing"}`))
+	r.Header.Set("Authorization", "Bearer x")
+	w := httptest.NewRecorder()
+	newHandlerWithPlatforms("admin", stub).ServeHTTP(w, r)
+	if w.Code != http.StatusInternalServerError {
+		t.Fatalf("status = %d, want 500", w.Code)
+	}
+}
+
+func TestTrustedPlatforms_POST_400OnMalformedJSON(t *testing.T) {
+	stub := &stubPlatforms{}
+	r := httptest.NewRequest(http.MethodPost, "/api/v1/admin/trusted-platforms",
+		strings.NewReader(`{not json`))
+	r.Header.Set("Authorization", "Bearer x")
+	w := httptest.NewRecorder()
+	newHandlerWithPlatforms("admin", stub).ServeHTTP(w, r)
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want 400", w.Code)
 	}
 }
 
@@ -669,7 +694,7 @@ func TestTrustedPlatforms_POST_201OnSuccess(t *testing.T) {
 }
 
 func TestTrustedPlatforms_DELETE_404OnUnknownID(t *testing.T) {
-	stub := &stubPlatforms{deactErr: errors.New("not found")}
+	stub := &stubPlatforms{deactErr: fmt.Errorf("%w: %s", platformsdomain.ErrNotFound, "x")}
 	id := uuid.Must(uuid.NewV4()).String()
 	r := httptest.NewRequest(http.MethodDelete, "/api/v1/admin/trusted-platforms/"+id, nil)
 	r.Header.Set("Authorization", "Bearer x")
@@ -677,6 +702,18 @@ func TestTrustedPlatforms_DELETE_404OnUnknownID(t *testing.T) {
 	newHandlerWithPlatforms("admin", stub).ServeHTTP(w, r)
 	if w.Code != http.StatusNotFound {
 		t.Fatalf("status = %d, want 404", w.Code)
+	}
+}
+
+func TestTrustedPlatforms_DELETE_500OnDBFailure(t *testing.T) {
+	stub := &stubPlatforms{deactErr: errors.New("db connection lost")}
+	id := uuid.Must(uuid.NewV4()).String()
+	r := httptest.NewRequest(http.MethodDelete, "/api/v1/admin/trusted-platforms/"+id, nil)
+	r.Header.Set("Authorization", "Bearer x")
+	w := httptest.NewRecorder()
+	newHandlerWithPlatforms("admin", stub).ServeHTTP(w, r)
+	if w.Code != http.StatusInternalServerError {
+		t.Fatalf("status = %d, want 500", w.Code)
 	}
 }
 

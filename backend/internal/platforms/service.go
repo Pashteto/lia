@@ -2,10 +2,18 @@ package platforms
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/gofrs/uuid"
 )
+
+// ErrNotFound is returned when a trusted-platform id does not exist.
+var ErrNotFound = errors.New("platform not found")
+
+// ErrInvalidInput is returned when Add is called with invalid fields
+// (missing domain_suffix/display_name, bad category, or unparsable suffix).
+var ErrInvalidInput = errors.New("invalid platform input")
 
 type Service interface {
 	Check(ctx context.Context, rawURL string) (displayName string, trusted bool, err error)
@@ -45,16 +53,16 @@ func (s *service) List(ctx context.Context) ([]*TrustedPlatform, error) { return
 
 func (s *service) Add(ctx context.Context, domainSuffix, displayName, category string) (*TrustedPlatform, error) {
 	if domainSuffix == "" || displayName == "" {
-		return nil, fmt.Errorf("domain_suffix and display_name are required")
+		return nil, fmt.Errorf("%w: domain_suffix and display_name are required", ErrInvalidInput)
 	}
 	if !validCategories[category] {
-		return nil, fmt.Errorf("invalid category %q", category)
+		return nil, fmt.Errorf("%w: invalid category %q", ErrInvalidInput, category)
 	}
 	// Normalize the suffix the same way hosts are normalized (punycode,
 	// lowercase) so matching stays consistent.
 	ascii, err := NormalizeHost("https://" + domainSuffix)
 	if err != nil {
-		return nil, fmt.Errorf("invalid domain_suffix %q", domainSuffix)
+		return nil, fmt.Errorf("%w: invalid domain_suffix %q", ErrInvalidInput, domainSuffix)
 	}
 	p := &TrustedPlatform{DomainSuffix: ascii, DisplayName: displayName, Category: category, IsActive: true}
 	if err := s.repo.Create(ctx, p); err != nil {

@@ -31,7 +31,7 @@ func (f *fakeRepo) SetActive(_ context.Context, id uuid.UUID, active bool) error
 			return nil
 		}
 	}
-	return errors.New("not found")
+	return ErrNotFound
 }
 
 func newTestService() Service {
@@ -73,11 +73,11 @@ func TestCheck(t *testing.T) {
 
 func TestAddValidation(t *testing.T) {
 	s := newTestService()
-	if _, err := s.Add(context.Background(), "", "X", "ticketing"); err == nil {
-		t.Fatal("empty suffix must fail")
+	if _, err := s.Add(context.Background(), "", "X", "ticketing"); err == nil || !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("empty suffix must fail with ErrInvalidInput, got %v", err)
 	}
-	if _, err := s.Add(context.Background(), "new.ru", "New", "bogus"); err == nil {
-		t.Fatal("bogus category must fail")
+	if _, err := s.Add(context.Background(), "new.ru", "New", "bogus"); err == nil || !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("bogus category must fail with ErrInvalidInput, got %v", err)
 	}
 	p, err := s.Add(context.Background(), "Новый.РФ", "Новый", "afisha")
 	if err != nil {
@@ -85,5 +85,12 @@ func TestAddValidation(t *testing.T) {
 	}
 	if p.DomainSuffix != "xn--b1aoke0e.xn--p1ai" {
 		t.Fatalf("suffix must be stored in punycode, got %q", p.DomainSuffix)
+	}
+}
+
+func TestDeactivate_ErrNotFound(t *testing.T) {
+	s := newTestService()
+	if err := s.Deactivate(context.Background(), uuid.Must(uuid.NewV4())); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("unknown id must fail with ErrNotFound, got %v", err)
 	}
 }

@@ -746,15 +746,18 @@ func (h *handler) addPlatform(w http.ResponseWriter, r *http.Request, _ *domain.
 		Category     string `json:"category"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		writeErr(w, http.StatusUnprocessableEntity, "invalid body")
+		writeErr(w, http.StatusBadRequest, "invalid body")
 		return
 	}
 	p, err := h.deps.Platforms.Add(r.Context(), body.DomainSuffix, body.DisplayName, body.Category)
-	if err != nil {
+	switch {
+	case err == nil:
+		writeJSON(w, http.StatusCreated, p)
+	case errors.Is(err, platforms.ErrInvalidInput):
 		writeErr(w, http.StatusUnprocessableEntity, err.Error())
-		return
+	default:
+		writeErr(w, http.StatusInternalServerError, "add platform failed")
 	}
-	writeJSON(w, http.StatusCreated, p)
 }
 
 // removePlatform deactivates (does not hard-delete) a trusted-platform row.
@@ -767,9 +770,12 @@ func (h *handler) removePlatform(w http.ResponseWriter, r *http.Request, _ *doma
 	if !ok {
 		return
 	}
-	if err := h.deps.Platforms.Deactivate(r.Context(), id); err != nil {
+	switch err := h.deps.Platforms.Deactivate(r.Context(), id); {
+	case err == nil:
+		w.WriteHeader(http.StatusNoContent)
+	case errors.Is(err, platforms.ErrNotFound):
 		writeErr(w, http.StatusNotFound, "not found")
-		return
+	default:
+		writeErr(w, http.StatusInternalServerError, "deactivate platform failed")
 	}
-	w.WriteHeader(http.StatusNoContent)
 }

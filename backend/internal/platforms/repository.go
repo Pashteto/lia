@@ -50,7 +50,7 @@ func (r *pgRepository) SetActive(ctx context.Context, id uuid.UUID, active bool)
 		return fmt.Errorf("set platform active: %w", err)
 	}
 	if res.RowsAffected() == 0 {
-		return fmt.Errorf("platform %s: not found", id)
+		return fmt.Errorf("%w: %s", ErrNotFound, id)
 	}
 	return nil
 }

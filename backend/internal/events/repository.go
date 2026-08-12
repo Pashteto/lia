@@ -13,6 +13,7 @@ import (
 	"github.com/gofrs/uuid"
 
 	"github.com/Pashteto/lia/internal/models"
+	"github.com/Pashteto/lia/internal/platforms"
 	"github.com/Pashteto/lia/internal/storage"
 	"github.com/Pashteto/lia/pkg/logger"
 )
@@ -196,6 +197,10 @@ func (r *pgRepository) GetByID(id uuid.UUID) (*models.Event, error) {
 		return nil, err
 	}
 
+	if err := r.loadPlatformNames([]*models.Event{event}); err != nil {
+		return nil, err
+	}
+
 	if err := r.loadSeats([]*models.Event{event}); err != nil {
 		return nil, err
 	}
@@ -253,6 +258,10 @@ func (r *pgRepository) List(filter ListFilter) ([]*models.Event, error) {
 	}
 
 	if err := r.loadOrganizers(list); err != nil {
+		return nil, err
+	}
+
+	if err := r.loadPlatformNames(list); err != nil {
 		return nil, err
 	}
 
@@ -515,6 +524,38 @@ func (r *pgRepository) loadOrganizers(events []*models.Event) error {
 			org.AvatarURL = r.store.URL(info.storageKey)
 		}
 		e.Organizer = org
+	}
+	return nil
+}
+
+// loadPlatformNames resolves ExternalPlatformName for external-mode events by
+// matching their registration URL against active trusted_platforms. One query
+// per batch; silent skip on bad URLs (they only reach here pre-moderation).
+func (r *pgRepository) loadPlatformNames(events []*models.Event) error {
+	var external []*models.Event
+	for _, e := range events {
+		if e.SignupMode == "external" && e.ExternalRegistrationURL != "" {
+			external = append(external, e)
+		}
+	}
+	if len(external) == 0 {
+		return nil
+	}
+	var rows []*platforms.TrustedPlatform
+	if err := r.db.Model(&rows).Where("is_active").Select(); err != nil {
+		return fmt.Errorf("load trusted platforms: %w", err)
+	}
+	for _, e := range external {
+		host, err := platforms.NormalizeHost(e.ExternalRegistrationURL)
+		if err != nil {
+			continue
+		}
+		for _, row := range rows {
+			if platforms.MatchesSuffix(host, row.DomainSuffix) {
+				e.ExternalPlatformName = row.DisplayName
+				break
+			}
+		}
 	}
 	return nil
 }

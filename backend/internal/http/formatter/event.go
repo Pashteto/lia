@@ -121,6 +121,9 @@ func EventToAPI(event *domainModels.Event) *apiModels.Event {
 	out.SignupMode = event.SignupMode
 	out.CuratorQuestion = event.CuratorQuestion
 	out.ExternalRegistrationURL = event.ExternalRegistrationURL
+	out.ExternalPlatformName = event.ExternalPlatformName
+	out.CapacityLimited = event.CapacityLimited
+	out.ModerationRequired = event.Status == domainModels.EventPendingReview
 	if event.Capacity != nil {
 		c := int64(*event.Capacity)
 		out.Capacity = &c
@@ -164,6 +167,9 @@ func EventFromAPIInput(in *apiModels.EventInput) (*domainModels.Event, error) {
 	if in.Capacity != nil {
 		c := int(*in.Capacity)
 		event.Capacity = &c
+	}
+	if in.CapacityLimited != nil {
+		event.CapacityLimited = *in.CapacityLimited
 	}
 
 	if in.Title != nil {
@@ -314,6 +320,10 @@ func EventPatchToUpdateParams(in *apiModels.EventPatch) eventsdomain.UpdateParam
 	if in.Capacity != nil {
 		c := int(*in.Capacity)
 		p.Capacity = &c
+	}
+	if in.CapacityLimited != nil {
+		v := *in.CapacityLimited
+		p.CapacityLimited = &v
 	}
 	return p
 }

@@ -938,6 +938,15 @@ definitions:
         type: string
       external_registration_url:
         type: string
+      external_platform_name:
+        type: string
+        description: Whitelist display name matched from external_registration_url (read-only)
+      capacity_limited:
+        type: boolean
+        description: Seats are limited but the count is managed on the external platform
+      moderation_required:
+        type: boolean
+        description: True when the event is pending_review (read-only)
       seats_remaining:
         type: integer
         format: int64
@@ -1041,6 +1050,9 @@ definitions:
         type: string
       external_registration_url:
         type: string
+      capacity_limited:
+        type: boolean
+        x-nullable: true
 
   EventPatch:
     type: object
@@ -1108,6 +1120,9 @@ definitions:
         type: string
       external_registration_url:
         type: string
+      capacity_limited:
+        type: boolean
+        x-nullable: true
 
   Venue:
     type: object

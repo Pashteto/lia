@@ -35,6 +35,7 @@ import (
 	httpinvitations "github.com/Pashteto/lia/internal/http/invitations"
 	"github.com/Pashteto/lia/internal/http/middlewares"
 	organizershttp "github.com/Pashteto/lia/internal/http/organizers"
+	"github.com/Pashteto/lia/internal/http/platformspublic"
 	httpserver "github.com/Pashteto/lia/internal/http/server"
 	"github.com/Pashteto/lia/internal/http/server/operations"
 	"github.com/Pashteto/lia/internal/http/uploads"
@@ -42,6 +43,7 @@ import (
 	invitationsdomain "github.com/Pashteto/lia/internal/invitations"
 	"github.com/Pashteto/lia/internal/moderation"
 	organizersdomain "github.com/Pashteto/lia/internal/organizers"
+	"github.com/Pashteto/lia/internal/platforms"
 	rsvpdomain "github.com/Pashteto/lia/internal/rsvp"
 	"github.com/Pashteto/lia/internal/service"
 	settingsdomain "github.com/Pashteto/lia/internal/settings"
@@ -74,6 +76,7 @@ type Module struct {
 	invitationsBaseURL string
 	geocoderKey        string
 	placesKey          string
+	platforms          platforms.Service
 	server             *httpserver.Server
 	api                *operations.LiaAPIAPI
 	handler            *http.Handler
@@ -166,6 +169,9 @@ func (m *Module) SetGeocoder(key string) { m.geocoderKey = key }
 
 // SetPlaces injects the Yandex Places (Search) API key. Call before Init.
 func (m *Module) SetPlaces(key string) { m.placesKey = key }
+
+// SetPlatforms injects the trusted-platforms whitelist service. Call before Init.
+func (m *Module) SetPlatforms(svc platforms.Service) { m.platforms = svc }
 
 // Name returns the module identifier.
 func (m *Module) Name() string {
@@ -408,6 +414,9 @@ func (m *Module) initAPI() error {
 		Client:       geo.NewClient(m.geocoderKey).WithPlacesKey(m.placesKey),
 	})
 
+	// Build the public trusted-platforms handler (no auth — GET /api/v1/trusted-platforms).
+	platformsH := platformspublic.NewHandler(platformspublic.Deps{Platforms: m.platforms})
+
 	// Build the auth-verify handler (public: request-verification + verify-email
 	// proxy GateGuard's email-verification RPCs). Present whenever the demo-login
 	// signer is wired; otherwise it 503s per-request (no signer configured).
@@ -457,6 +466,10 @@ func (m *Module) initAPI() error {
 		}
 		if p == "/api/v1/geocode" || p == "/api/v1/places" {
 			geocodeH.ServeHTTP(w, r)
+			return
+		}
+		if p == "/api/v1/trusted-platforms" {
+			platformsH.ServeHTTP(w, r)
 			return
 		}
 		if mounted != nil &&

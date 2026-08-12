@@ -173,3 +173,65 @@ func TestEventToAPIIncludesSignupFields(t *testing.T) {
 		t.Fatalf("my_rsvp_status = %q", out.MyRsvpStatus)
 	}
 }
+
+func TestEventToAPI_PlatformNameCapacityLimitedModeration(t *testing.T) {
+	e := &domainModels.Event{
+		ID:                   uuid.Must(uuid.NewV4()),
+		Title:                "x",
+		StartsAt:             time.Now(),
+		Status:               domainModels.EventPendingReview,
+		SignupMode:           "external",
+		CapacityLimited:      true,
+		ExternalPlatformName: "TimePad",
+	}
+	out := EventToAPI(e)
+	if out.ExternalPlatformName != "TimePad" {
+		t.Fatalf("external_platform_name = %q", out.ExternalPlatformName)
+	}
+	if !out.CapacityLimited {
+		t.Fatalf("capacity_limited = %v, want true", out.CapacityLimited)
+	}
+	if !out.ModerationRequired {
+		t.Fatalf("moderation_required = %v, want true for pending_review", out.ModerationRequired)
+	}
+}
+
+func TestEventToAPI_ModerationRequiredFalseWhenPublished(t *testing.T) {
+	e := &domainModels.Event{
+		ID:       uuid.Must(uuid.NewV4()),
+		Title:    "x",
+		StartsAt: time.Now(),
+		Status:   domainModels.EventPublished,
+	}
+	out := EventToAPI(e)
+	if out.ModerationRequired {
+		t.Fatalf("moderation_required = true, want false for published")
+	}
+}
+
+func TestEventFromAPIInput_CapacityLimited(t *testing.T) {
+	title := "X"
+	starts := strfmt.DateTime(time.Now())
+	limited := true
+	in := &apiModels.EventInput{Title: &title, StartsAt: &starts, CapacityLimited: &limited}
+
+	ev, err := EventFromAPIInput(in)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !ev.CapacityLimited {
+		t.Fatalf("expected CapacityLimited true")
+	}
+}
+
+func TestEventPatchToUpdateParams_CapacityLimited(t *testing.T) {
+	limited := true
+	p := EventPatchToUpdateParams(&apiModels.EventPatch{CapacityLimited: &limited})
+	if p.CapacityLimited == nil || !*p.CapacityLimited {
+		t.Fatalf("want capacity_limited true, got %v", p.CapacityLimited)
+	}
+	p2 := EventPatchToUpdateParams(&apiModels.EventPatch{})
+	if p2.CapacityLimited != nil {
+		t.Fatalf("want nil capacity_limited when omitted, got %v", *p2.CapacityLimited)
+	}
+}

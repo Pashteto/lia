@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { eventFormSchema, firstErrorStep } from "@/components/CreateEventForm";
+import { eventFormSchema, firstErrorStep, valuesToInput } from "@/components/CreateEventForm";
 
 const base = {
   title: "Тур",
@@ -36,6 +36,16 @@ describe("eventFormSchema signup rules", () => {
     expect(ok.success).toBe(true);
   });
 
+  it("external mode with capacityLimited: true parses", () => {
+    const r = eventFormSchema.safeParse({
+      ...base,
+      signupMode: "external",
+      externalRegistrationUrl: "https://t.me/x",
+      capacityLimited: true,
+    });
+    expect(r.success).toBe(true);
+  });
+
   it("capacity must be a positive integer when set", () => {
     expect(eventFormSchema.safeParse({ ...base, capacity: 0 }).success).toBe(false);
     expect(eventFormSchema.safeParse({ ...base, capacity: 10 }).success).toBe(true);
@@ -67,6 +77,23 @@ describe("eventFormSchema signup rules", () => {
         "Укажите дату и время",
       );
     }
+  });
+});
+
+describe("valuesToInput capacity_limited payload", () => {
+  it("external mode serializes capacity_limited", () => {
+    const input = valuesToInput({
+      ...base,
+      signupMode: "external",
+      externalRegistrationUrl: "https://t.me/x",
+      capacityLimited: true,
+    });
+    expect(input.capacity_limited).toBe(true);
+  });
+
+  it("open mode omits capacity_limited even if set on the form", () => {
+    const input = valuesToInput({ ...base, signupMode: "open", capacityLimited: true });
+    expect(input.capacity_limited).toBeUndefined();
   });
 });
 

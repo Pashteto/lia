@@ -18,6 +18,7 @@ import { uploadErrorMessage, validateImageFile } from "@/lib/upload-errors";
 import {
   createEvent,
   EMAIL_NOT_VERIFIED,
+  fetchTrustedPlatforms,
   getCategories,
   patchEvent,
   type CreateEventInput,
@@ -27,6 +28,7 @@ import { useAuth } from "@/lib/auth-context";
 import { categoryNumeral } from "@/lib/category-numerals";
 import { cn } from "@/lib/cn";
 import { formatModuleDate } from "@/lib/format";
+import { hostOf, matchPlatform, type TrustedPlatform } from "@/lib/platforms";
 import { priceLabel } from "@/lib/price-label";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -53,6 +55,7 @@ export const eventFormSchema = z
     ),
     curatorQuestion: z.string().optional(),
     externalRegistrationUrl: z.string().optional(),
+    capacityLimited: z.boolean().optional(),
   })
   .superRefine((v, ctx) => {
     if (v.signupMode === "application" && !v.curatorQuestion?.trim()) {
@@ -176,7 +179,7 @@ const mskClock = new Intl.DateTimeFormat("ru-RU", {
   timeZone: "Europe/Moscow",
 });
 
-function valuesToInput(v: FormValues, coverFileId?: string): CreateEventInput {
+export function valuesToInput(v: FormValues, coverFileId?: string): CreateEventInput {
   return {
     title: v.title,
     description: v.description || undefined,
@@ -198,6 +201,7 @@ function valuesToInput(v: FormValues, coverFileId?: string): CreateEventInput {
       v.signupMode === "application" ? v.curatorQuestion?.trim() || undefined : undefined,
     external_registration_url:
       v.signupMode === "external" ? v.externalRegistrationUrl?.trim() || undefined : undefined,
+    capacity_limited: v.signupMode === "external" ? (v.capacityLimited ?? false) : undefined,
   };
 }
 
@@ -227,6 +231,12 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
   const [venueName, setVenueName] = useState(initial?.venueName ?? "");
   const [showCheckBanner, setShowCheckBanner] = useState(false);
   const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [platforms, setPlatforms] = useState<TrustedPlatform[]>([]);
+
+  // A failed load just degrades to "no hint" — never blocks the form.
+  useEffect(() => {
+    fetchTrustedPlatforms().then(setPlatforms).catch(() => {});
+  }, []);
 
   const {
     register,
@@ -256,6 +266,7 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
       capacity: initial?.capacity,
       curatorQuestion: initial?.curatorQuestion,
       externalRegistrationUrl: initial?.externalRegistrationUrl,
+      capacityLimited: initial?.capacityLimited ?? false,
     },
   });
 
@@ -268,6 +279,8 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
   const categoryIds = useWatch({ control, name: "categoryIds" });
   const format = useWatch({ control, name: "format" });
   const priceMin = useWatch({ control, name: "priceMin" });
+  const extUrl = useWatch({ control, name: "externalRegistrationUrl" });
+  const matched = extUrl ? matchPlatform(extUrl.trim(), platforms) : null;
 
   const [coverFileId, setCoverFileId] = useState<string | undefined>(initial?.coverFileId);
   const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | undefined>(
@@ -283,12 +296,24 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
 
   const mutation = useMutation({
     mutationFn: (input: CreateEventInput) => createEvent(input),
-    onSuccess: (event) => router.push(`/events/${event.id}`),
+    onSuccess: (event) => {
+      if (event.moderationRequired) {
+        router.push(`/events/${event.id}?moderation=1`);
+        return;
+      }
+      router.push(`/events/${event.id}`);
+    },
   });
 
   const editMutation = useMutation({
     mutationFn: (patch: Partial<CreateEventInput>) => patchEvent(eventId as string, patch),
-    onSuccess: (event) => router.push(`/events/${event.id}`),
+    onSuccess: (event) => {
+      if (event.moderationRequired) {
+        router.push(`/events/${event.id}?moderation=1`);
+        return;
+      }
+      router.push(`/events/${event.id}`);
+    },
   });
 
   /** Create-mode ghost ЧЕРНОВИК — explicit first save, then edit route. */
@@ -684,6 +709,11 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
                   placeholder="2500"
                   {...register("priceMin")}
                 />
+                {Number(priceMin) > 0 && signupMode !== "external" && (
+                  <span className="mt-[4px] block text-[11px] text-text-dim">
+                    Посетители увидят «Оплата на месте»
+                  </span>
+                )}
               </div>
 
               <div className="flex flex-col gap-[5px]">
@@ -739,14 +769,31 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
                   {...register("curatorQuestion")}
                 />
               </div>
-              <div hidden={signupMode !== "external"}>
-                <Input
-                  label="Ссылка для регистрации"
-                  type="url"
-                  error={errors.externalRegistrationUrl?.message}
-                  placeholder="https://…"
-                  {...register("externalRegistrationUrl")}
-                />
+              <div hidden={signupMode !== "external"} className="flex flex-col gap-[8px]">
+                <div>
+                  <Input
+                    label="Ссылка для регистрации"
+                    type="url"
+                    error={errors.externalRegistrationUrl?.message}
+                    placeholder="https://…"
+                    {...register("externalRegistrationUrl")}
+                  />
+                  {signupMode === "external" && extUrl?.trim() && (
+                    matched ? (
+                      <span className="mt-[4px] block text-[11px] text-emerald-700">
+                        Платформа: {matched.displayName}
+                      </span>
+                    ) : hostOf(extUrl.trim()) ? (
+                      <span className="mt-[4px] block text-[11px] text-amber-700">
+                        Неизвестная платформа — событие уйдёт на проверку модератору
+                      </span>
+                    ) : null
+                  )}
+                </div>
+                <label className="flex items-center gap-[7px] text-[12px]">
+                  <input type="checkbox" {...register("capacityLimited")} />
+                  Количество мест ограничено
+                </label>
               </div>
             </div>
 

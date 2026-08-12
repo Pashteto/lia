@@ -21,12 +21,17 @@ import Link from "next/link";
 export function EventDetailView({
   event,
   categories,
+  moderationJustSubmitted,
 }: {
   event: LiaEvent;
   /** Ordered taxonomy, for the positional category numeral. Optional: the
    * owner-draft path has no server fetch to piggyback on, and the plate still
    * reads without it. */
   categories?: ReadonlyArray<{ slug: string }>;
+  /** Set right after the owner's own create/edit submit redirected here with
+   * `?moderation=1`. Only ever reaches the owner: a pending event is 404 to
+   * anonymous fetches, so this prop only lands via the authenticated retry. */
+  moderationJustSubmitted?: boolean;
 }) {
   const ended = new Date(event.endsAt ?? event.startsAt) < new Date();
   const cancelled = event.status === "cancelled";
@@ -82,6 +87,17 @@ export function EventDetailView({
           </p>
           <p className="mt-[2px] text-[12px] text-white/90">
             Организатор отменил это событие. Ваша запись больше не действует.
+          </p>
+        </div>
+      )}
+
+      {/* Moderation notice: shown once, right after the owner's own submit —
+       * mirrors the cancelled banner's placement/loudness pattern above but
+       * with a neutral (non-error) tone. */}
+      {moderationJustSubmitted && event.moderationRequired && (
+        <div className="border-b border-ink bg-ink px-[20px] py-[12px]">
+          <p className="text-[13px] font-bold text-white">
+            Событие отправлено на проверку модератору и опубликуется после одобрения
           </p>
         </div>
       )}

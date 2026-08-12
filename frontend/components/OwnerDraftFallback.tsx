@@ -16,7 +16,13 @@ import { useEffect, useState } from "react";
 // This retries with the bearer token. If the event resolves, it's the owner's
 // draft and we render it. If it's still missing (truly gone, or not ours), we
 // fall through to the real 404.
-export function OwnerDraftFallback({ id }: { id: string }) {
+export function OwnerDraftFallback({
+  id,
+  moderationJustSubmitted,
+}: {
+  id: string;
+  moderationJustSubmitted?: boolean;
+}) {
   const [state, setState] = useState<
     { kind: "loading" } | { kind: "found"; event: LiaEvent } | { kind: "missing" }
   >({ kind: "loading" });
@@ -37,7 +43,9 @@ export function OwnerDraftFallback({ id }: { id: string }) {
   }, [id]);
 
   if (state.kind === "found") {
-    return <EventDetailView event={state.event} />;
+    return (
+      <EventDetailView event={state.event} moderationJustSubmitted={moderationJustSubmitted} />
+    );
   }
 
   if (state.kind === "missing") {

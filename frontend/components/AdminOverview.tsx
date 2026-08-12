@@ -252,25 +252,26 @@ function DutyOverview({ data }: { data: OverviewData }) {
             const age = formatShortDate(event.starts_at);
             const org = event.organizer_name?.trim() || "—";
             return (
-              <div
+              <Link
                 key={event.id}
+                href="/admin/moderation/events"
                 className={cn(
-                  "px-[14px] py-[10px]",
+                  "group swiss-focus flex flex-col cursor-pointer px-[14px] py-[10px] transition-colors hover:bg-paper",
                   i < queue.length - 1 && "border-b border-rule-inner",
                 )}
               >
-                <div className="cap mb-[3px]">
+                <div className="cap mb-[3px] group-hover:text-ink">
                   {age} · {org}
                 </div>
                 <div
                   className={cn(
-                    "text-[11.5px] font-bold leading-[1.1]",
+                    "text-[11.5px] font-bold leading-[1.1] group-hover:text-ink",
                     test && "text-signal",
                   )}
                 >
                   {event.title}
                 </div>
-              </div>
+              </Link>
             );
           })
         )}

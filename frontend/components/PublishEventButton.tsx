@@ -17,7 +17,14 @@ const API_V1 = `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"}/ap
  * one-way: the backend locks a published event from further edits. On success,
  * invalidates the "my-events" query so the card re-renders without its badge.
  */
-export function PublishEventButton({ eventId }: { eventId: string }) {
+export function PublishEventButton({
+  eventId,
+  onPublished,
+}: {
+  eventId: string;
+  /** Extra success hook for hosts outside «Мои события» (event detail strip). */
+  onPublished?: () => void;
+}) {
   const qc = useQueryClient();
   const [confirming, setConfirming] = useState(false);
 
@@ -37,7 +44,10 @@ export function PublishEventButton({ eventId }: { eventId: string }) {
         throw new Error(`publish failed: ${res.status} ${await res.text().catch(() => "")}`);
       }
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["my-events"] }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["my-events"] });
+      onPublished?.();
+    },
   });
 
   return (

@@ -262,5 +262,19 @@ export function YandexMap({
       </div>
     );
   }
-  return <div ref={elRef} className={className} />;
+  return (
+    <div className="relative">
+      <div ref={elRef} className={className} />
+      {/* The tiles take seconds on mobile; without this the block reads as a
+       * blank rectangle (QA 14.08, finding 5). aria-hidden: purely visual. */}
+      {!ready && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 flex items-center justify-center bg-cell-blank text-[11.5px] text-text-dim"
+        >
+          Загружаем карту…
+        </div>
+      )}
+    </div>
+  );
 }

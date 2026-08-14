@@ -1,10 +1,10 @@
 import { OrganizerApplications } from "@/components/OrganizerApplications";
-import { AppHeader, ORG_NAV } from "@/components/ui/AppHeader";
+import { AppHeader, BackToFeedLink, ORG_NAV } from "@/components/ui/AppHeader";
 
 export default function OrganizerApplicationsPage() {
   return (
     <>
-      <AppHeader nav={ORG_NAV} mobileCaption="ЗАЯВКИ" />
+      <AppHeader nav={ORG_NAV} mobileCaption="ЗАЯВКИ" actions={<BackToFeedLink />} />
       <OrganizerApplications />
     </>
   );

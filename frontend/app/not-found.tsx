@@ -14,7 +14,7 @@ export default function NotFound() {
         Страница не найдена
       </h1>
       <p className="max-w-[52ch] text-[11.5px] leading-[1.45] text-text-dim-dark-2">
-        Возможно, событие сняли с публикации или ссылка устарела.
+        Проверьте адрес: возможно, ссылка устарела или страницу убрали.
       </p>
       <Link
         href="/"

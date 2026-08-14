@@ -6,6 +6,20 @@ import { VenueGeoModal } from "@/components/VenueGeoModal";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 
+/** «Указать на карте» used to render as bare accent text that visually merged
+ * with the venue field (QA 14.08, finding 7) — now an explicit bordered button. */
+export function MapPinButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="swiss-focus hover-invert mt-2 cursor-pointer border border-ink px-[11px] py-[7px] text-[9px] font-bold uppercase tracking-[0.07em]"
+    >
+      Указать на карте
+    </button>
+  );
+}
+
 const inputCls =
   "w-full rounded-control bg-fill px-3.5 py-2.5 text-[17px] text-label outline-none placeholder:text-label-secondary focus:ring-2 focus:ring-accent";
 
@@ -146,15 +160,7 @@ export function VenuePicker({
           )}
         </div>
       )}
-      {selected && (
-        <button
-          type="button"
-          className="mt-1.5 text-[13px] text-accent"
-          onClick={() => setGeoOpen(true)}
-        >
-          Указать на карте
-        </button>
-      )}
+      {selected && <MapPinButton onClick={() => setGeoOpen(true)} />}
       {geoOpen && selected && (
         <VenueGeoModal
           venue={selected}

@@ -170,7 +170,8 @@ function OverflowExtras({
   );
 }
 
-function EventRow({
+/** Exported for tests. */
+export function EventRow({
   event,
   expanded,
   onToggleExpand,
@@ -240,10 +241,10 @@ function EventRow({
             type="button"
             onClick={onToggleExpand}
             aria-expanded={expanded}
-            aria-label="Действия"
-            className="swiss-focus cursor-pointer tracking-[0.2em] hover-invert"
+            className="swiss-focus flex cursor-pointer items-baseline gap-[6px] hover-invert"
           >
-            ···
+            <span>Действия</span>
+            <span aria-hidden className="tracking-[0.2em]">···</span>
           </button>
         </div>
       </div>

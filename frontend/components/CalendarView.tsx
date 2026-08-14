@@ -34,6 +34,23 @@ import type { CalendarEvent } from "@/lib/types";
 type Mode = "month" | "list";
 
 /** One agenda block: mono time, «Записан» chip when the user attends, title, venue. */
+/** Legend under the month grid: the black day fill was unexplained (QA 14.08,
+ * finding 8). Exported for tests. */
+export function CalendarLegend() {
+  return (
+    <p className="cap flex items-center gap-[12px] border-t border-rule-grid px-[14px] py-[6px]">
+      <span className="flex items-center gap-[5px]">
+        <span aria-hidden className="inline-block h-[8px] w-[8px] bg-ink" />
+        есть события
+      </span>
+      <span className="flex items-center gap-[5px]">
+        <span aria-hidden className="inline-block h-[8px] w-[8px] outline outline-2 -outline-offset-1 outline-ink" />
+        выбранный день
+      </span>
+    </p>
+  );
+}
+
 function AgendaBlock({
   event,
   categories,
@@ -280,6 +297,7 @@ export function CalendarView() {
                   );
                 })}
               </div>
+              <CalendarLegend />
             </div>
 
             {/* Agenda rail. Desktop header cell = «Выбрано» + 16px/900 short date

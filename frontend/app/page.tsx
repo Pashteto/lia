@@ -1,6 +1,7 @@
 import { DiscoveryFeed } from "@/components/DiscoveryFeed";
 import { AppHeader, USER_NAV } from "@/components/ui/AppHeader";
 import { AuthNavControl } from "@/components/ui/AuthNavControl";
+import { CityControl } from "@/components/ui/CityControl";
 import { fetchPublishedEvents, getCategories } from "@/lib/api";
 import { ssrFallbackEvents } from "@/lib/mock-events";
 
@@ -16,7 +17,7 @@ export default async function DiscoveryPage() {
 
   return (
     <>
-      <AppHeader nav={USER_NAV} actions={<AuthNavControl />} mobileCaption="МСК" />
+      <AppHeader nav={USER_NAV} actions={<AuthNavControl />} mobileCaption={<CityControl />} />
       <DiscoveryFeed initialEvents={initialEvents} categories={categories} />
     </>
   );

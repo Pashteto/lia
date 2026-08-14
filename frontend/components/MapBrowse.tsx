@@ -101,7 +101,10 @@ export function MapBrowse() {
   // When geolocation later resolves to a position that actually has events,
   // recenter there; a position with none keeps the Moscow results on screen.
   useEffect(() => {
-    void load(MOSCOW);
+    // Deferred a microtask: load() flips `loading` synchronously, which the
+    // set-state-in-effect rule (rightly) flags when called from the effect
+    // body itself. `loading` already starts true, so nothing visibly changes.
+    void Promise.resolve().then(() => load(MOSCOW));
     if (!navigator.geolocation) return;
     let cancelled = false;
     navigator.geolocation.getCurrentPosition(

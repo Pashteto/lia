@@ -1,4 +1,5 @@
 import { EventFeedbackSection } from "@/components/EventFeedbackSection";
+import { OwnerEventActions } from "@/components/OwnerEventActions";
 import { ReportButton } from "@/components/ReportButton";
 import { SignupCTA } from "@/components/SignupCTA";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
@@ -101,6 +102,10 @@ export function EventDetailView({
           </p>
         </div>
       )}
+
+      {/* Owner strip: draft/pending events reach only their owner, who needs
+       * publish/edit right here — not hidden behind «···» in «Мои события». */}
+      <OwnerEventActions event={event} />
 
       {/* Title block: text left, price+CTA rail right */}
       <div className="grid grid-cols-[1fr_248px] border-b border-ink max-md:grid-cols-1">

@@ -14,8 +14,9 @@ export interface AppHeaderProps {
   nav?: NavItem[];
   /** Admin variant: wordmark PRESENCE / ADMIN, paper bottom rule (inside data-surface="ink"). */
   admin?: boolean;
-  /** Mobile shows a context caption instead of nav. */
-  mobileCaption?: string;
+  /** Mobile shows a context caption instead of nav. A string gets the cap
+   * style; a ReactNode (e.g. the city control) renders as-is. */
+  mobileCaption?: ReactNode;
   /** Optional right-side extras (auth control) appended after nav. */
   actions?: ReactNode;
 }
@@ -71,11 +72,26 @@ export function AppHeader({ nav = [], admin, mobileCaption, actions }: AppHeader
       </nav>
       {(mobileCaption || actions) ? (
         <div className="flex items-baseline gap-[12px] sm:hidden">
-          {mobileCaption ? <span className="cap">{mobileCaption}</span> : null}
+          {typeof mobileCaption === "string" ? (
+            <span className="cap">{mobileCaption}</span>
+          ) : (
+            (mobileCaption ?? null)
+          )}
           {actions}
         </div>
       ) : null}
     </header>
+  );
+}
+
+/** Mobile escape hatch for organizer-area headers: the bottom tab bar is
+ * user-layer only, so without this the only way back was the wordmark
+ * (QA 14.08, finding 8). Renders in the header's actions slot. */
+export function BackToFeedLink() {
+  return (
+    <Link href="/" className="cap swiss-focus hover-invert">
+      ← Лента
+    </Link>
   );
 }
 

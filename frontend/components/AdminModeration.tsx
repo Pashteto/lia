@@ -55,8 +55,8 @@ function externalUrlDomain(url: string): string {
 
 function ModerationSkeleton() {
   return (
-    <div className="grid min-h-[360px] grid-cols-[250px_1fr]">
-      <div className="flex flex-col gap-[8px] border-r border-paper p-[14px]">
+    <div className="grid min-h-[360px] grid-cols-[250px_1fr] max-[899px]:grid-cols-1">
+      <div className="flex flex-col gap-[8px] border-r border-paper p-[14px] max-[899px]:border-r-0 max-[899px]:border-b">
         <Skeleton className="h-[28px] w-full" />
         <Skeleton className="h-[64px] w-full" />
         <Skeleton className="h-[64px] w-full" />
@@ -297,9 +297,9 @@ export function AdminModeration() {
   const testTitle = isLikelyTestContent(titleText);
 
   return (
-    <div className="grid min-h-[360px] grid-cols-[250px_1fr]">
+    <div className="grid min-h-[360px] grid-cols-[250px_1fr] max-[899px]:grid-cols-1">
       {/* Queue — filter chips stay mounted even when empty so staff can switch to «Все» */}
-      <div className="flex flex-col border-r border-paper">
+      <div className="flex flex-col border-r border-paper max-[899px]:border-r-0 max-[899px]:border-b">
         <div className="flex gap-[5px] border-b border-paper px-[14px] py-[9px]">
           <Chip
             variant={filter === "waiting" ? "dark-active" : "dark-muted"}
@@ -332,7 +332,8 @@ export function AdminModeration() {
             Ссылки · {linksCount}
           </Chip>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto">
+        {/* Capped on mobile so the record card stays within one screen. */}
+        <div className="min-h-0 flex-1 overflow-y-auto max-[899px]:max-h-[220px]">
           {queue.map((event) => {
             const selectedRow = event.id === selectedId;
             const test = isLikelyTestContent(event.title);

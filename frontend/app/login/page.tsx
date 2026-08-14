@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AuthForm } from "@/components/AuthForm";
+import { CURRENT_CITY, cityLoginCaption } from "@/lib/city";
 
 export const metadata = { title: "Вход — PRESENCE" };
 
@@ -16,7 +17,7 @@ export default function LoginPage() {
           <h1 className="max-w-[16ch] text-[34px] font-black leading-[0.94] tracking-[-0.03em] max-md:text-[22px]">
             Медиации, лекции и разговоры об искусстве
           </h1>
-          <p className="cap">События Москвы</p>
+          <p className="cap">{cityLoginCaption(CURRENT_CITY)}</p>
         </div>
       </div>
       <div className="flex flex-col justify-center gap-[14px] p-[20px] md:px-[48px]">

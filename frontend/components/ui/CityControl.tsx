@@ -1,22 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { CITIES, CURRENT_CITY } from "@/lib/city";
 import { cn } from "@/lib/cn";
 
-export interface CityOption {
-  /** Header code, e.g. «МСК». */
-  code: string;
-  name: string;
-  /** Only Moscow is live; the rest render as «Скоро» and stay disabled. */
-  available: boolean;
-}
+/** The city list lives in lib/city (single source shared with the feed copy,
+ * login caption and map center); re-exported here for existing imports. */
+export const CITY_OPTIONS = CITIES;
 
-export const CITY_OPTIONS: readonly CityOption[] = [
-  { code: "МСК", name: "Москва", available: true },
-  { code: "СПБ", name: "Санкт-Петербург", available: false },
-];
-
-const CURRENT = CITY_OPTIONS[0];
+const CURRENT = CURRENT_CITY;
 
 /** Dropdown list under the header control. Split out so the open-state markup
  * is testable without simulating a click. */

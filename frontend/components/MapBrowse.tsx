@@ -10,6 +10,7 @@ import { Chip } from "@/components/ui/Chip";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { fetchNearbyEvents } from "@/lib/api";
+import { CURRENT_CITY } from "@/lib/city";
 import { cn } from "@/lib/cn";
 import { distanceLabel, haversineKm, type LatLon } from "@/lib/geo";
 import { createLatestRequestGate } from "@/lib/latest-request-gate";
@@ -23,7 +24,8 @@ const YandexMap = dynamic(() => import("@/components/map/YandexMap").then((m) =>
 });
 
 // Handoff U5 default view.
-const MOSCOW: LatLon = [55.742, 37.618];
+// Default map center = the current city (single source in lib/city).
+const MOSCOW: LatLon = CURRENT_CITY.center;
 const SEARCH_LIMIT = 200;
 const PIN_CAP = 100;
 const NEAR_KM = 5;

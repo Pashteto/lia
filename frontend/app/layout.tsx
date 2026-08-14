@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { CURRENT_CITY } from "@/lib/city";
 import { Golos_Text, Manrope, JetBrains_Mono } from "next/font/google";
 import { Providers } from "./providers";
 import { TabBarGate } from "@/components/ui/TabBarGate";
@@ -30,7 +31,7 @@ const jbmono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "PRESENCE — События",
   description:
-    "Медиации, лекции и разговоры об искусстве. Участливые культурные события Москвы.",
+    `Медиации, лекции и разговоры об искусстве. Участливые культурные события ${CURRENT_CITY.genitive}.`,
 };
 
 export default function RootLayout({

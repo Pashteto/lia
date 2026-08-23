@@ -95,11 +95,25 @@ QA Павла после открытия: в ДЕСКТОПНОЙ шапке п
 на каждой не-админской странице (`72abc91`). Задеплоен `lia-frontend:spb-r3`
 (тот же rollback-тег), переключение на десктопе проверено live в обе стороны.
 
+## Geo-IP (spb-r4 backend / spb-r5 frontend, deployed same day)
+
+MaxMind GeoLite2-City (выбор Павла). `internal/geoip`: оффлайн-резолвер,
+msk ← MOW/MOS, spb ← SPE/LEN (область → её метрополия), не-RU/прочие → "".
+База НЕ в образе: `/opt/lia/geoip/GeoLite2-City.mmdb` (63M, зеркало
+P3TERX/GeoLite.mmdb; обновление = замена файла + recreate app), bind-mount
+`/opt/lia/geoip:/geoip:ro` + env `GEOIP_MMDB_PATH` в docker-compose.prod.yml;
+нет файла → фича тихо выключена. `GET /cities` строки несут `suggested`
+(IP из X-Real-IP). Фронт: `CityGeoDefault` при первом заходе БЕЗ cookie
+спрашивает /cities ИЗ БРАУЗЕРА (SSR дал бы IP бокса), пишет cookie (включая
+msk-fallback — geo-lookup один раз на посетителя), refresh только если
+подсказка ≠ дефолту. Проверено на проде: X-Real-IP 31.134.191.1 → spb
+suggested; 95.220.0.1 → msk; 8.8.8.8 → ничего; первый заход пишет cookie.
+Атрибуция: «This product includes GeoLite2 data created by MaxMind».
+
 ## Gaps / follow-ups
 
-- Гео-IP определение города нового посетителя — НЕ реализовано (нужен выбор
-  провайдера: MaxMind GeoLite2 (оффлайн-БД, нужен аккаунт) vs внешний API).
-  Сохранение выбора уже работает (cookie на год).
+- GeoLite2-база обновляется вручную (замена файла); можно добавить cron.
+  Для официальных обновлений завести аккаунт MaxMind (сейчас — зеркало).
 - На `?city=` ссылке шапка мигает старым городом до пост-гидрационного
   refresh (косметика, самолечится).
 - Выбор города пока не хранится в профиле (только cookie) — кросс-девайс нет.

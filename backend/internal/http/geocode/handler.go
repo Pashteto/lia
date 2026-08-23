@@ -14,8 +14,8 @@ import (
 
 // Geocoder is the subset of *geo.Client the handler needs (for test injection).
 type Geocoder interface {
-	Geocode(ctx context.Context, q string) ([]geo.Result, error)
-	SearchPlaces(ctx context.Context, q string) ([]geo.Result, error)
+	Geocode(ctx context.Context, q, city string) ([]geo.Result, error)
+	SearchPlaces(ctx context.Context, q, city string) ([]geo.Result, error)
 }
 
 // Deps are the handler's injected dependencies.
@@ -60,7 +60,7 @@ func (h *handler) geocode(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
-	results, err := h.deps.Client.Geocode(r.Context(), r.URL.Query().Get("q"))
+	results, err := h.deps.Client.Geocode(r.Context(), r.URL.Query().Get("q"), r.URL.Query().Get("city"))
 	if err != nil {
 		writeErr(w, http.StatusServiceUnavailable, "geocode_failed")
 		return
@@ -73,7 +73,7 @@ func (h *handler) places(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
-	results, err := h.deps.Client.SearchPlaces(r.Context(), r.URL.Query().Get("q"))
+	results, err := h.deps.Client.SearchPlaces(r.Context(), r.URL.Query().Get("q"), r.URL.Query().Get("city"))
 	if err != nil {
 		writeErr(w, http.StatusServiceUnavailable, "places_failed")
 		return

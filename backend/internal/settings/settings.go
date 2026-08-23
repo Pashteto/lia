@@ -15,6 +15,11 @@ import (
 // KeyAutoVerifyAll, when true, auto-verifies every submitted organizer draft.
 const KeyAutoVerifyAll = "organizers.auto_verify_all"
 
+// KeyCitySPBAvailable, when true, opens Санкт-Петербург for discovery (the
+// header city switcher stops rendering it as «Скоро»). Missing row = false,
+// so the launch is a single app_settings flip, no deploy.
+const KeyCitySPBAvailable = "cities.spb_available"
+
 // Repository persists boolean settings backed by app_settings.value->>'enabled'.
 type Repository interface {
 	GetBool(ctx context.Context, key string) (bool, error)

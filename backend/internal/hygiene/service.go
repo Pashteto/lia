@@ -14,7 +14,7 @@ import (
 
 // Events is the subset of the events domain service this package needs.
 type Events interface {
-	List(ctx context.Context, status string, from, to *time.Time, organizerOwnerID *uuid.UUID) ([]*models.Event, error)
+	List(ctx context.Context, status string, from, to *time.Time, organizerOwnerID *uuid.UUID, city string) ([]*models.Event, error)
 }
 
 // Moderator is the subset of the moderation service used to hide events.
@@ -47,7 +47,7 @@ func NewService(events Events, mod Moderator) Service {
 }
 
 func (s *service) List(ctx context.Context) ([]Issue, error) {
-	events, err := s.events.List(ctx, "published", nil, nil, nil)
+	events, err := s.events.List(ctx, "published", nil, nil, nil, "")
 	if err != nil {
 		return nil, fmt.Errorf("list published events: %w", err)
 	}

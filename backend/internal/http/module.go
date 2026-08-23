@@ -317,6 +317,10 @@ func (m *Module) initAPI() error {
 		api.CategoriesListCategoriesHandler = handlers.NewListCategories(m.categories)
 	}
 
+	// Always registered: with no settings service (no-DB mode) every
+	// non-default city simply reads as unavailable.
+	api.CitiesListCitiesHandler = handlers.NewListCities(m.settings)
+
 	if m.venues != nil {
 		api.VenuesListVenuesHandler = handlers.NewListVenues(m.venues)
 		api.VenuesCreateVenueHandler = handlers.NewCreateVenue(m.venues)

@@ -77,7 +77,20 @@ func (h *ListEvents) Handle(params eventsops.ListEventsParams) middleware.Respon
 		organizerOwner = &org.OwnerUserID
 	}
 
-	list, err := h.events.List(params.HTTPRequest.Context(), "published", from, to, organizerOwner)
+	// No city param = msk (legacy clients keep their pre-city behavior; spb
+	// events never leak into the Moscow feed). Exception: an organizer's
+	// public page lists their events across cities, so an organizer_id query
+	// only filters by city when one is passed explicitly. Enum validation
+	// (msk|spb) is done by the go-swagger binding layer before this handler.
+	city := ""
+	if params.City != nil {
+		city = *params.City
+	}
+	if city == "" && organizerOwner == nil {
+		city = domainmodels.DefaultCity
+	}
+
+	list, err := h.events.List(params.HTTPRequest.Context(), "published", from, to, organizerOwner, city)
 	if err != nil {
 		logger.Log().Errorf("list events: %s", err.Error())
 		if errors.Is(err, eventsdomain.ErrInvalidInput) {

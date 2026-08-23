@@ -22,7 +22,9 @@ type mockRepo struct {
 	updateErr    error
 }
 
-func (m *mockRepo) Search(string, int) ([]*models.Venue, error) { return m.searchResult, nil }
+func (m *mockRepo) Search(string, string, int) ([]*models.Venue, error) {
+	return m.searchResult, nil
+}
 func (m *mockRepo) GetByID(uuid.UUID) (*models.Venue, error) {
 	if m.getErr != nil {
 		return nil, m.getErr
@@ -43,7 +45,7 @@ func venue(name string) *models.Venue {
 
 func TestService_Search(t *testing.T) {
 	svc := NewService(&mockRepo{searchResult: []*models.Venue{venue("Винзавод")}})
-	got, err := svc.Search(context.Background(), "вин", 0)
+	got, err := svc.Search(context.Background(), "", "вин", 0)
 	if err != nil {
 		t.Fatalf("Search error: %v", err)
 	}

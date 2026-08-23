@@ -20,15 +20,27 @@ const defaultEndpoint = "https://geocode-maps.yandex.ru/1.x/"
 // defaultPlacesEndpoint is the Yandex Places (Search) API v1 base URL.
 const defaultPlacesEndpoint = "https://search-maps.yandex.ru/v1/"
 
-// Moscow viewport bias. Presence launches in Moscow, so we hint the geocoder to
-// rank results near the city center first. `ll` is the center (lon,lat) and
-// `spn` the span (Δlon,Δlat) covering greater Moscow. We deliberately omit
-// `rspn=1` (hard restrict) so a venue genuinely outside Moscow still resolves —
-// this is a soft ranking bias, not a filter.
-const (
-	moscowLL  = "37.617700,55.755800"
-	moscowSpn = "0.7,0.5"
-)
+// Per-city viewport bias. We hint the geocoder to rank results near the
+// selected city's center first. `ll` is the center (lon,lat) and `spn` the
+// span (Δlon,Δlat) covering the greater city. We deliberately omit `rspn=1`
+// (hard restrict) so a venue genuinely outside the city still resolves — this
+// is a soft ranking bias, not a filter. Keys are models.Cities slugs; kept as
+// local literals to avoid an import cycle worry and because the bias is a
+// transport-layer concern.
+type cityBias struct{ ll, spn string }
+
+var cityBiases = map[string]cityBias{
+	"msk": {ll: "37.617700,55.755800", spn: "0.7,0.5"},
+	"spb": {ll: "30.314997,59.938784", spn: "0.9,0.5"},
+}
+
+// biasFor returns the viewport bias for a city slug, falling back to Moscow.
+func biasFor(city string) cityBias {
+	if b, ok := cityBiases[city]; ok {
+		return b
+	}
+	return cityBiases["msk"]
+}
 
 // Result is one geocoded address, in [lat, lon] terms for frontend consumption.
 type Result struct {
@@ -84,9 +96,10 @@ type yandexResponse struct {
 	} `json:"response"`
 }
 
-// Geocode returns up to 5 matches for q. A blank query yields an empty slice
+// Geocode returns up to 5 matches for q, viewport-biased to city (slug;
+// unknown/empty falls back to Moscow). A blank query yields an empty slice
 // without an HTTP call.
-func (c *Client) Geocode(ctx context.Context, q string) ([]Result, error) {
+func (c *Client) Geocode(ctx context.Context, q, city string) ([]Result, error) {
 	q = strings.TrimSpace(q)
 	if q == "" {
 		return []Result{}, nil
@@ -94,14 +107,15 @@ func (c *Client) Geocode(ctx context.Context, q string) ([]Result, error) {
 	if c.apiKey == "" {
 		return nil, errors.New("geocode: api key not configured")
 	}
+	bias := biasFor(city)
 	params := url.Values{
 		"apikey":  {c.apiKey},
 		"geocode": {q},
 		"format":  {"json"},
 		"lang":    {"ru_RU"},
 		"results": {"5"},
-		"ll":      {moscowLL},
-		"spn":     {moscowSpn},
+		"ll":      {bias.ll},
+		"spn":     {bias.spn},
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.endpoint+"?"+params.Encode(), nil)
 	if err != nil {
@@ -150,9 +164,10 @@ type placesResponse struct {
 	} `json:"features"`
 }
 
-// SearchPlaces resolves a venue/organization NAME (e.g. "Дом Радио") to points,
-// biased to Moscow. Blank query → empty slice, no HTTP call.
-func (c *Client) SearchPlaces(ctx context.Context, q string) ([]Result, error) {
+// SearchPlaces resolves a venue/organization NAME (e.g. "Дом Радио") to
+// points, viewport-biased to city (slug; unknown/empty falls back to Moscow).
+// Blank query → empty slice, no HTTP call.
+func (c *Client) SearchPlaces(ctx context.Context, q, city string) ([]Result, error) {
 	q = strings.TrimSpace(q)
 	if q == "" {
 		return []Result{}, nil
@@ -160,14 +175,15 @@ func (c *Client) SearchPlaces(ctx context.Context, q string) ([]Result, error) {
 	if c.placesKey == "" {
 		return nil, errors.New("places: api key not configured")
 	}
+	bias := biasFor(city)
 	params := url.Values{
 		"apikey":  {c.placesKey},
 		"text":    {q},
 		"type":    {"biz"},
 		"lang":    {"ru_RU"},
 		"results": {"5"},
-		"ll":      {moscowLL},
-		"spn":     {moscowSpn},
+		"ll":      {bias.ll},
+		"spn":     {bias.spn},
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.placesEndpoint+"?"+params.Encode(), nil)
 	if err != nil {

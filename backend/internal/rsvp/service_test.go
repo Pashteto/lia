@@ -465,3 +465,22 @@ func TestMyApplications_WorksWithoutEnricher(t *testing.T) {
 		t.Fatalf("rows = %+v, want the unenriched row preserved", rows)
 	}
 }
+
+// --- QA-23-aug: owner cannot rsvp/apply to their own event ---
+
+func TestSignUpOwnEventForbidden(t *testing.T) {
+	e := openEvent(nil)
+	svc := NewService(newFake(e))
+	if _, err := svc.SignUp(context.Background(), e.ID, e.OrganizerID, ""); !errors.Is(err, ErrForbidden) {
+		t.Fatalf("want ErrForbidden, got %v", err)
+	}
+}
+
+func TestApplyOwnEventForbidden(t *testing.T) {
+	e := openEvent(nil)
+	e.SignupMode = "application"
+	svc := NewService(newFake(e))
+	if _, err := svc.SignUp(context.Background(), e.ID, e.OrganizerID, "мой ответ"); !errors.Is(err, ErrForbidden) {
+		t.Fatalf("want ErrForbidden, got %v", err)
+	}
+}

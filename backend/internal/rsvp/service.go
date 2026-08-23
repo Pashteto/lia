@@ -120,6 +120,12 @@ func (s *service) SignUp(_ context.Context, eventID, userID uuid.UUID, answer st
 		return nil, fmt.Errorf("load event: %w", err)
 	}
 
+	// Owners never sign up for their own event — the CTA is hidden in the UI,
+	// this is the authoritative guard.
+	if event.OrganizerID == userID {
+		return nil, fmt.Errorf("%w: нельзя записаться на собственное событие", ErrForbidden)
+	}
+
 	switch event.SignupMode {
 	case "external":
 		// Caller registers on the organizer's site; surface the URL via the error.

@@ -64,6 +64,10 @@ func (h *SignUp) Handle(params rsvpops.SignUpParams, principal *apimodels.User) 
 			return rsvpops.NewSignUpNotFound().WithPayload(DefaultError(http.StatusNotFound, err, nil))
 		case errors.Is(err, rsvpdomain.ErrConflict):
 			return rsvpops.NewSignUpConflict().WithPayload(DefaultError(http.StatusConflict, err, nil))
+		case errors.Is(err, rsvpdomain.ErrForbidden):
+			// No 403 responder in the generated op — 409 carries the message.
+			return rsvpops.NewSignUpConflict().WithPayload(DefaultError(http.StatusConflict,
+				errors.New("нельзя записаться на собственное событие"), nil))
 		case errors.Is(err, rsvpdomain.ErrInvalidInput):
 			return rsvpops.NewSignUpBadRequest().WithPayload(DefaultError(http.StatusBadRequest, err, nil))
 		case errors.Is(err, rsvpdomain.ErrExternal):

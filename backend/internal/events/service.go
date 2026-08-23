@@ -180,6 +180,40 @@ type service struct {
 	dailyLimit      int
 	dailyLookup     DailyLimitLookup
 	platformChecker PlatformChecker
+	orgVerifier     OrganizerVerifier
+}
+
+// OrganizerVerifier reports whether the event owner passed admin verification.
+// Satisfied by the organizers service. Unverified owners publish through
+// pre-moderation (pending_review) instead of straight to the feed.
+type OrganizerVerifier interface {
+	IsVerifiedOwner(ctx context.Context, ownerUserID uuid.UUID) (bool, error)
+}
+
+// SetOrganizerVerifier wires the organizer-verification lookup. Wired after
+// construction (like SetPlatformChecker) because the organizers module is
+// built later. Left nil in tests/deployments where the feature is off, in
+// which case applyModerationPolicy is a no-op.
+func (s *service) SetOrganizerVerifier(v OrganizerVerifier) {
+	s.orgVerifier = v
+}
+
+// applyModerationPolicy demotes a to-be-published event of an unverified
+// organizer to pending_review. Call ONLY on a draft/pending→published
+// transition, never on edits of an already-published event.
+func (s *service) applyModerationPolicy(ctx context.Context, event *models.Event) error {
+	if s.orgVerifier == nil || event.Status != models.EventPublished {
+		return nil
+	}
+	verified, err := s.orgVerifier.IsVerifiedOwner(ctx, event.OrganizerID)
+	if err != nil {
+		return fmt.Errorf("organizer verification lookup: %w", err)
+	}
+	if !verified {
+		event.Status = models.EventPendingReview
+		event.PublishedAt = nil
+	}
+	return nil
 }
 
 // SetDailyLimit configures the per-day creation cap: a default that applies to
@@ -279,6 +313,9 @@ func (s *service) Create(ctx context.Context, event *models.Event) error {
 	event.Venue = venue
 
 	if err := s.applyExternalURLPolicy(ctx, event, true); err != nil {
+		return err
+	}
+	if err := s.applyModerationPolicy(ctx, event); err != nil {
 		return err
 	}
 
@@ -471,6 +508,13 @@ func (s *service) Update(ctx context.Context, id, ownerID uuid.UUID, p UpdatePar
 	}
 	if err := s.applyExternalURLPolicy(ctx, event, urlChanged); err != nil {
 		return nil, err
+	}
+	// Pre-moderation gate: only on an actual transition into published.
+	// Edits of an already-published event must never demote it.
+	if p.Status != nil && !wasPublished {
+		if err := s.applyModerationPolicy(ctx, event); err != nil {
+			return nil, err
+		}
 	}
 
 	// Pre-validate a capacity change BEFORE any field write, so a rejection

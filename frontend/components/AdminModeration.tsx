@@ -329,7 +329,7 @@ export function AdminModeration() {
               setFilter("links");
             }}
           >
-            Ссылки · {linksCount}
+            На проверке · {linksCount}
           </Chip>
         </div>
         {/* Capped on mobile so the record card stays within one screen. */}

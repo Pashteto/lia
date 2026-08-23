@@ -110,6 +110,9 @@ type Service interface {
 	// DailyEventLimit reports an owner's per-day event cap override. ok is
 	// false when they have none and the global default applies.
 	DailyEventLimit(ctx context.Context, ownerID uuid.UUID) (limit int, ok bool, err error)
+	// IsVerifiedOwner reports whether the owner's organizer profile passed
+	// admin verification. Missing profile → false (not an error).
+	IsVerifiedOwner(ctx context.Context, ownerID uuid.UUID) (bool, error)
 	Verify(ctx context.Context, id, actorID uuid.UUID) error
 	Reject(ctx context.Context, id, actorID uuid.UUID, reason string) error
 	Revoke(ctx context.Context, id, actorID uuid.UUID, reason string) error
@@ -133,6 +136,17 @@ func NewService(repo Repository, set settings.Service) Service {
 
 func (s *service) GetByOwner(ctx context.Context, ownerID uuid.UUID) (*Organizer, error) {
 	return s.repo.GetByOwner(ctx, ownerID)
+}
+
+func (s *service) IsVerifiedOwner(ctx context.Context, ownerID uuid.UUID) (bool, error) {
+	org, err := s.repo.GetByOwner(ctx, ownerID)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return false, nil
+		}
+		return false, err
+	}
+	return org.VerificationStatus == "verified", nil
 }
 func (s *service) GetByID(ctx context.Context, id uuid.UUID) (*Organizer, error) {
 	return s.repo.GetByID(ctx, id)

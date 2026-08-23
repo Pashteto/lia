@@ -258,6 +258,17 @@ func (app *App) registerModules() error {
 		}
 	}
 
+	// Pre-moderation gate: events published by organizers who haven't passed
+	// admin verification land in pending_review instead of the public feed.
+	if app.eventsSvc != nil && app.organizersSvc != nil {
+		if setter, ok := app.eventsSvc.(interface {
+			SetOrganizerVerifier(eventsdomain.OrganizerVerifier)
+		}); ok {
+			setter.SetOrganizerVerifier(app.organizersSvc)
+			logger.Log().Info("events wired to organizer verification gate")
+		}
+	}
+
 	// Wire the rsvp lists' event enrichment once events exists. The rsvp
 	// repository attaches events by columns only, so /me/applications and
 	// /me/practices would otherwise carry no venue, organizer or categories.

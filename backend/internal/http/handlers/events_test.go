@@ -442,6 +442,9 @@ func (f *fakeOrganizers) Upsert(_ context.Context, _ uuid.UUID, _ organizersdoma
 	return nil, nil
 }
 func (f *fakeOrganizers) Submit(_ context.Context, _ uuid.UUID) (string, error) { return "", nil }
+func (f *fakeOrganizers) IsVerifiedOwner(_ context.Context, _ uuid.UUID) (bool, error) {
+	return f.org != nil && f.org.VerificationStatus == "verified", f.err
+}
 func (f *fakeOrganizers) EnsureForOwner(_ context.Context, _ uuid.UUID, _ string) (*organizersdomain.Organizer, error) {
 	return f.org, f.err
 }

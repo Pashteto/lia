@@ -895,3 +895,111 @@ func TestCreateNilCheckerNoop(t *testing.T) {
 		t.Fatalf("expected status to stay published, got %s", repo.created.Status)
 	}
 }
+
+// --- QA-23-aug: pre-moderation gate for unverified organizers ---
+
+type stubVerifier struct {
+	verified bool
+	err      error
+}
+
+func (s stubVerifier) IsVerifiedOwner(context.Context, uuid.UUID) (bool, error) {
+	return s.verified, s.err
+}
+
+func strPtr(s string) *string { return &s }
+
+func TestPublishByUnverifiedOrganizerGoesToPendingReview(t *testing.T) {
+	owner := uuid.Must(uuid.NewV4())
+	repo := &mockRepo{get: ownedDraft(owner)}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+	svc.(*service).SetOrganizerVerifier(stubVerifier{verified: false})
+
+	updated, err := svc.Update(context.Background(), repo.get.ID, owner, UpdateParams{Status: strPtr("published")})
+	if err != nil {
+		t.Fatalf("Update returned error: %v", err)
+	}
+	if updated.Status != models.EventPendingReview {
+		t.Fatalf("expected pending_review, got %s", updated.Status)
+	}
+	if updated.PublishedAt != nil {
+		t.Fatal("expected PublishedAt nil for pending_review")
+	}
+}
+
+func TestPublishByVerifiedOrganizerStaysPublished(t *testing.T) {
+	owner := uuid.Must(uuid.NewV4())
+	repo := &mockRepo{get: ownedDraft(owner)}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+	svc.(*service).SetOrganizerVerifier(stubVerifier{verified: true})
+
+	updated, err := svc.Update(context.Background(), repo.get.ID, owner, UpdateParams{Status: strPtr("published")})
+	if err != nil {
+		t.Fatalf("Update returned error: %v", err)
+	}
+	if updated.Status != models.EventPublished {
+		t.Fatalf("expected published, got %s", updated.Status)
+	}
+	if updated.PublishedAt == nil {
+		t.Fatal("expected PublishedAt set")
+	}
+}
+
+func TestEditOfAlreadyPublishedEventNotDemoted(t *testing.T) {
+	owner := uuid.Must(uuid.NewV4())
+	repo := &mockRepo{get: publishedEvent(owner)}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+	svc.(*service).SetOrganizerVerifier(stubVerifier{verified: false})
+
+	title := "Новое название"
+	updated, err := svc.Update(context.Background(), repo.get.ID, owner, UpdateParams{Title: &title})
+	if err != nil {
+		t.Fatalf("Update returned error: %v", err)
+	}
+	if updated.Status != models.EventPublished {
+		t.Fatalf("expected published to survive edit, got %s", updated.Status)
+	}
+}
+
+func TestWithdrawToCancelledSkipsGate(t *testing.T) {
+	owner := uuid.Must(uuid.NewV4())
+	repo := &mockRepo{get: publishedEvent(owner)}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+	svc.(*service).SetOrganizerVerifier(stubVerifier{verified: false})
+
+	updated, err := svc.Update(context.Background(), repo.get.ID, owner, UpdateParams{Status: strPtr("cancelled")})
+	if err != nil {
+		t.Fatalf("Update returned error: %v", err)
+	}
+	if updated.Status != models.EventCancelled {
+		t.Fatalf("expected cancelled, got %s", updated.Status)
+	}
+}
+
+func TestCreatePublishedByUnverifiedGoesToPendingReview(t *testing.T) {
+	repo := &mockRepo{}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+	svc.(*service).SetOrganizerVerifier(stubVerifier{verified: false})
+
+	ev := publishedEvent(uuid.Must(uuid.NewV4()))
+	if err := svc.Create(context.Background(), ev); err != nil {
+		t.Fatalf("Create returned error: %v", err)
+	}
+	if repo.created.Status != models.EventPendingReview {
+		t.Fatalf("expected pending_review, got %s", repo.created.Status)
+	}
+}
+
+func TestNoVerifierWiredIsNoOp(t *testing.T) {
+	owner := uuid.Must(uuid.NewV4())
+	repo := &mockRepo{get: ownedDraft(owner)}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+
+	updated, err := svc.Update(context.Background(), repo.get.ID, owner, UpdateParams{Status: strPtr("published")})
+	if err != nil {
+		t.Fatalf("Update returned error: %v", err)
+	}
+	if updated.Status != models.EventPublished {
+		t.Fatalf("expected published (no verifier wired), got %s", updated.Status)
+	}
+}

@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import { OwnerEventActions } from "@/components/OwnerEventActions";
 import { ownerPanelMode } from "@/lib/owner-actions";
+import { showSignupControls } from "@/lib/signup-availability";
 import { ssrFallbackEvents } from "@/lib/mock-events";
 import type { LiaEvent } from "@/lib/types";
 
@@ -26,6 +27,12 @@ describe("ownerPanelMode", () => {
     expect(ownerPanelMode("cancelled")).toBeNull();
     expect(ownerPanelMode("rejected")).toBeNull();
   });
+
+  it("published + isOwner → published mode; ownerless published stays null", () => {
+    expect(ownerPanelMode("published", true)).toBe("published");
+    expect(ownerPanelMode("published", false)).toBeNull();
+    expect(ownerPanelMode("cancelled", true)).toBeNull();
+  });
 });
 
 describe("OwnerEventActions", () => {
@@ -43,7 +50,23 @@ describe("OwnerEventActions", () => {
     expect(html).toContain(`/events/${base.id}/edit`);
   });
 
-  it("renders nothing for a published event", () => {
+  it("renders nothing for a published event of someone else", () => {
     expect(render({ ...base, status: "published" })).toBe("");
+  });
+
+  it("shows the management strip on the owner's published event", () => {
+    const html = render({ ...base, status: "published", isOwner: true });
+    expect(html).toContain("Ваше событие — опубликовано");
+    expect(html).toContain(`/events/${base.id}/edit`);
+    expect(html).toContain("Мои события");
+    expect(html).not.toContain("Опубликовать");
+  });
+});
+
+describe("showSignupControls", () => {
+  it("hides signup controls from the owner", () => {
+    expect(showSignupControls({ isOwner: true })).toBe(false);
+    expect(showSignupControls({ isOwner: false })).toBe(true);
+    expect(showSignupControls({})).toBe(true);
   });
 });

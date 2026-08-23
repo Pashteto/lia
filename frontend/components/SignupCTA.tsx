@@ -9,7 +9,7 @@ import { cancelRsvp, eventCalendarUrl, EMAIL_NOT_VERIFIED, fetchEventWithAuth, s
 import { googleCalendarUrl } from "@/lib/calendar-links";
 import { useAuth } from "@/lib/auth-context";
 import { extractHttpStatus, rsvpErrorMessage } from "@/lib/rsvp-errors";
-import { signupClosedLabel } from "@/lib/signup-availability";
+import { showSignupControls, signupClosedLabel } from "@/lib/signup-availability";
 import { hostOf } from "@/lib/platforms";
 import type { LiaEvent, RsvpStatus } from "@/lib/types";
 
@@ -248,6 +248,17 @@ export function SignupCTA({ event }: { event: LiaEvent }) {
         <Button className="px-8" disabled>
           Записаться
         </Button>
+        {footer}
+      </div>
+    );
+  }
+
+  // Owners manage their event via the owner strip — never the signup CTA
+  // (the backend rejects owner self-signup anyway).
+  if (!showSignupControls(event)) {
+    return (
+      <div className="flex flex-col items-end gap-2">
+        <span className="cap">Это ваше событие</span>
         {footer}
       </div>
     );

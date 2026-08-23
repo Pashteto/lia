@@ -12,16 +12,19 @@ import type { LiaEvent } from "@/lib/types";
  * owner, so the strip needs no extra ownership check (the backend authorises
  * every mutation anyway). */
 export function OwnerEventActions({ event }: { event: LiaEvent }) {
-  const mode = ownerPanelMode(event.status);
+  const mode = ownerPanelMode(event.status, event.isOwner);
   if (!mode) return null;
+
+  const caption =
+    mode === "draft"
+      ? "Черновик — видно только вам"
+      : mode === "pending"
+        ? "На модерации — опубликуется после одобрения"
+        : "Ваше событие — опубликовано";
 
   return (
     <div className="border-b border-ink bg-cell-blank px-[20px] py-[12px]">
-      <p className="cap">
-        {mode === "draft"
-          ? "Черновик — видно только вам"
-          : "На модерации — опубликуется после одобрения"}
-      </p>
+      <p className="cap">{caption}</p>
       <div className="mt-[8px] flex flex-wrap items-center gap-[10px]">
         {mode === "draft" && <PublishEventButton eventId={event.id} onPublished={() => window.location.reload()} />}
         <Link

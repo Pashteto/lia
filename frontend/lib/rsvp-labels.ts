@@ -8,9 +8,9 @@ export interface RsvpLabel {
 }
 
 const LABELS: Record<RsvpStatus, RsvpLabel> = {
-  going: { long: "Подтверждено", short: "ОК" },
-  accepted: { long: "Подтверждено", short: "ОК" },
-  applied: { long: "Ожидает", short: "ЖДЁМ" },
+  going: { long: "Вы идёте", short: "Иду" },
+  accepted: { long: "Вы идёте", short: "Иду" },
+  applied: { long: "Ждёт ответа", short: "Ждём" },
   waitlist: { long: "В листе ожидания", short: "ЛИСТ" },
   declined: { long: "Отклонена", short: "НЕТ" },
   withdrawn: { long: "Отозвана", short: "ОТОЗВ" },

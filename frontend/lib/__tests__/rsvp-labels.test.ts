@@ -4,12 +4,12 @@ import { statusChipVariant } from "../status-chip";
 import type { RsvpStatus } from "../types";
 
 describe("rsvpStatusLabel", () => {
-  it("confirmed states share the Подтверждено label", () => {
-    expect(rsvpStatusLabel("going")).toEqual({ long: "Подтверждено", short: "ОК" });
-    expect(rsvpStatusLabel("accepted")).toEqual({ long: "Подтверждено", short: "ОК" });
+  it("confirmed states read as Вы идёте", () => {
+    expect(rsvpStatusLabel("going")).toEqual({ long: "Вы идёте", short: "Иду" });
+    expect(rsvpStatusLabel("accepted")).toEqual({ long: "Вы идёте", short: "Иду" });
   });
   it("pending states", () => {
-    expect(rsvpStatusLabel("applied")).toEqual({ long: "Ожидает", short: "ЖДЁМ" });
+    expect(rsvpStatusLabel("applied")).toEqual({ long: "Ждёт ответа", short: "Ждём" });
     expect(rsvpStatusLabel("waitlist")).toEqual({ long: "В листе ожидания", short: "ЛИСТ" });
   });
   it("closed states", () => {

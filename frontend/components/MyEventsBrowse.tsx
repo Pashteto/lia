@@ -39,10 +39,10 @@ const FILTERS: {
   signal?: boolean;
 }[] = [
   { key: "all", label: "Все", shortLabel: "Все" },
-  { key: "published", label: "Опубликовано", shortLabel: "Опубл" },
-  { key: "pending_review", label: "Модерация", shortLabel: "Мод", signal: true },
-  { key: "draft", label: "Черновики", shortLabel: "Черн" },
-  { key: "cancelled", label: "Отменённые", shortLabel: "Отм" },
+  { key: "published", label: "Опубликованные", shortLabel: "Опубликованные" },
+  { key: "pending_review", label: "На проверке", shortLabel: "На проверке", signal: true },
+  { key: "draft", label: "Черновики", shortLabel: "Черновики" },
+  { key: "cancelled", label: "Отменённые", shortLabel: "Отменённые" },
 ];
 
 function matchesFilter(event: LiaEvent, filter: Filter): boolean {
@@ -199,6 +199,14 @@ export function EventRow({
         </span>
         <span className="border-r border-on-surface px-[8px] py-[9px]">
           <SeatsCell event={event} />
+          {(event.pendingApplicationsCount ?? 0) > 0 ? (
+            <Link
+              href={`/organizer/applications?event=${event.id}`}
+              className="swiss-focus cap mt-[3px] block text-signal underline underline-offset-2"
+            >
+              Заявки · {event.pendingApplicationsCount}
+            </Link>
+          ) : null}
         </span>
         <span className="flex items-center justify-start border-r border-on-surface px-[8px] py-[9px]">
           <StatusChip status={statusLabel} className="px-[6px] py-[3px] text-[8px]" />
@@ -241,11 +249,19 @@ export function EventRow({
             type="button"
             onClick={onToggleExpand}
             aria-expanded={expanded}
-            className="swiss-focus flex cursor-pointer items-baseline gap-[6px] hover-invert"
+            className="swiss-focus flex cursor-pointer items-baseline gap-[6px] border border-ink px-[9px] py-[6px] hover-invert"
           >
             <span>Действия</span>
-            <span aria-hidden className="tracking-[0.2em]">···</span>
+            <span aria-hidden>{expanded ? "▴" : "▾"}</span>
           </button>
+          {(event.pendingApplicationsCount ?? 0) > 0 ? (
+            <Link
+              href={`/organizer/applications?event=${event.id}`}
+              className="swiss-focus ml-[10px] border border-signal px-[9px] py-[6px] text-signal hover:bg-signal hover:text-white"
+            >
+              Заявки · {event.pendingApplicationsCount}
+            </Link>
+          ) : null}
         </div>
       </div>
 

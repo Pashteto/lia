@@ -12,6 +12,7 @@ import {
 
 import { demoLogin, getMe, loginWithPassword, registerWithPassword } from "./api";
 import { clearSession, getStoredEmail, getToken, setSession } from "./auth";
+import { extractHttpStatus } from "./rsvp-errors";
 import { shouldRevalidateVerification } from "./verify-revalidate";
 
 interface AuthState {
@@ -110,56 +111,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [roleResolved, setRoleResolved] = useState(false);
   const [emailVerified, setEmailVerified] = useState(false);
 
+  // Shared getMe result handlers. Success resolves the role; failure leaves
+  // roleResolved=false so verification-gated UI (the banner) stays hidden
+  // rather than showing a false "unverified" state off a failed request.
+  // A 401 additionally tears the dead session down.
+  const applyMe = useCallback(
+    (me: Awaited<ReturnType<typeof getMe>>) => {
+      setRole(me?.role ?? null);
+      setEmailVerified(me?.emailVerified ?? false);
+      setRoleResolved(true);
+    },
+    [],
+  );
+  const failMe = useCallback((err: unknown) => {
+    if (extractHttpStatus(err) === 401) {
+      clearSession();
+      notifyAuthListeners();
+    }
+    setRole(null);
+    setEmailVerified(false);
+    setRoleResolved(false);
+  }, []);
+
   // Populate role from the server on mount when a session already exists.
   useEffect(() => {
     if (getToken()) {
-      getMe()
-        .then((me) => {
-          setRole(me?.role ?? null);
-          setEmailVerified(me?.emailVerified ?? false);
-        })
-        .catch(() => {
-          setRole(null);
-          setEmailVerified(false);
-        })
-        .finally(() => setRoleResolved(true));
+      getMe().then(applyMe).catch(failMe);
     }
     // No token → leave roleResolved=false; the gate uses isAuthed first.
-  }, []);
+  }, [applyMe, failMe]);
 
   const login = useCallback(async (loginEmail: string, name?: string) => {
     const token = await demoLogin(loginEmail, name);
     setSession(token, loginEmail);
     notifyAuthListeners();
-    getMe()
-      .then((me) => {
-        setRole(me?.role ?? null);
-        setEmailVerified(me?.emailVerified ?? false);
-      })
-      .catch(() => {
-        setRole(null);
-        setEmailVerified(false);
-      })
-      .finally(() => setRoleResolved(true));
-  }, []);
+    getMe().then(applyMe).catch(failMe);
+  }, [applyMe, failMe]);
 
   const register = useCallback(
     async (regEmail: string, name: string, password: string) => {
       const token = await registerWithPassword(regEmail, name, password);
       setSession(token, regEmail);
       notifyAuthListeners();
-      getMe()
-        .then((me) => {
-          setRole(me?.role ?? null);
-          setEmailVerified(me?.emailVerified ?? false);
-        })
-        .catch(() => {
-          setRole(null);
-          setEmailVerified(false);
-        })
-        .finally(() => setRoleResolved(true));
+      getMe().then(applyMe).catch(failMe);
     },
-    [],
+    [applyMe, failMe],
   );
 
   const loginPassword = useCallback(
@@ -167,33 +163,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const token = await loginWithPassword(loginEmail, password);
       setSession(token, loginEmail);
       notifyAuthListeners();
-      getMe()
-        .then((me) => {
-          setRole(me?.role ?? null);
-          setEmailVerified(me?.emailVerified ?? false);
-        })
-        .catch(() => {
-          setRole(null);
-          setEmailVerified(false);
-        })
-        .finally(() => setRoleResolved(true));
+      getMe().then(applyMe).catch(failMe);
     },
-    [],
+    [applyMe, failMe],
   );
 
   const refresh = useCallback(async () => {
     if (!getToken()) return;
     try {
-      const me = await getMe();
-      setRole(me?.role ?? null);
-      setEmailVerified(me?.emailVerified ?? false);
-    } catch {
-      setRole(null);
-      setEmailVerified(false);
-    } finally {
-      setRoleResolved(true);
+      applyMe(await getMe());
+    } catch (err) {
+      failMe(err);
     }
-  }, []);
+  }, [applyMe, failMe]);
 
   // Verification can be completed anywhere — a second tab, another device, the
   // link in the mail client — and this tab would keep showing the banner until

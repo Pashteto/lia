@@ -654,7 +654,10 @@ export async function getMe(): Promise<{
   createdAt?: string;
 } | null> {
   const res = await fetch(`${API_BASE}/auth/me`, { headers: authHeaders(), cache: "no-store" });
-  if (!res.ok) return null;
+  // Throw instead of returning null: a transient /auth/me failure must be
+  // distinguishable from "verified: false", or the unverified banner shows
+  // for verified users off a flaky request (QA-23-aug №8).
+  if (!res.ok) throw new Error(`auth/me failed: ${res.status}`);
   const data = await res.json();
   return {
     id: data.id,

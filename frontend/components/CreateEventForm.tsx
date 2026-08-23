@@ -26,6 +26,8 @@ import {
   uploadFile,
 } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { CITIES, type CitySlug } from "@/lib/city";
+import { useCity } from "@/lib/city-context";
 import { categoryNumeral } from "@/lib/category-numerals";
 import { cn } from "@/lib/cn";
 import { formatModuleDate } from "@/lib/format";
@@ -181,12 +183,19 @@ const mskClock = new Intl.DateTimeFormat("ru-RU", {
   timeZone: "Europe/Moscow",
 });
 
-export function valuesToInput(v: FormValues, coverFileId?: string): CreateEventInput {
+export function valuesToInput(
+  v: FormValues,
+  coverFileId?: string,
+  citySlug?: CitySlug,
+): CreateEventInput {
   return {
     title: v.title,
     description: v.description || undefined,
     category_ids: v.categoryIds && v.categoryIds.length > 0 ? v.categoryIds : undefined,
     venue_id: v.venueId || undefined,
+    // With a venue the backend derives the city from it; sending our own pick
+    // alongside would 400 on mismatch, so the city travels only venue-less.
+    city: v.venueId ? undefined : citySlug,
     format: v.format,
     status: v.status,
     price_type: v.isFree ? "free" : "from",
@@ -271,6 +280,12 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
       capacityLimited: initial?.capacityLimited ?? false,
     },
   });
+
+  // City: pre-selected to the visitor's current city; a visible choice only
+  // when more than one city is open (GET /cities → context availability).
+  const { city: contextCity, available } = useCity();
+  const availableCities = CITIES.filter((c) => available(c.slug));
+  const [citySlug, setCitySlug] = useState<CitySlug>(contextCity.slug);
 
   const isFree = useWatch({ control, name: "isFree" });
   const signupMode = useWatch({ control, name: "signupMode" });
@@ -359,13 +374,13 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
         const v = getValues();
         const parsed = eventFormSchema.safeParse(v);
         if (!parsed.success) return;
-        const input = valuesToInput(v, coverId);
+        const input = valuesToInput(v, coverId, citySlug);
         const patch: Partial<CreateEventInput> = { ...input };
         if (isPublishedEdit) delete patch.signup_mode;
         autosaveMutate(patch);
       }, 700);
     },
-    [mode, eventId, isDirty, getValues, coverFileId, isPublishedEdit, autosaveMutate],
+    [mode, eventId, isDirty, getValues, coverFileId, isPublishedEdit, autosaveMutate, citySlug],
   );
 
   useEffect(() => {
@@ -397,7 +412,7 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
 
   const onSubmit = (v: FormValues) => {
     setShowCheckBanner(false);
-    const input = valuesToInput(v, coverFileId);
+    const input = valuesToInput(v, coverFileId, citySlug);
 
     if (mode === "edit") {
       // Once published, signup_mode is locked server-side (422 to change it) —
@@ -442,7 +457,7 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
       return;
     }
     setShowCheckBanner(false);
-    draftMutation.mutate(valuesToInput(v, coverFileId));
+    draftMutation.mutate(valuesToInput(v, coverFileId, citySlug));
   };
 
   const firstCat = categories.find((c) => (categoryIds ?? []).includes(c.id));
@@ -638,6 +653,22 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
                   )}
                 />
               </div>
+              {availableCities.length > 1 && (
+                <div className="flex flex-col gap-[5px]">
+                  <span className="cap">Город</span>
+                  <div className="flex gap-[6px]">
+                    {availableCities.map((c) => (
+                      <Chip
+                        key={c.slug}
+                        variant={citySlug === c.slug ? "active" : "default"}
+                        onClick={() => setCitySlug(c.slug)}
+                      >
+                        {c.name}
+                      </Chip>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="flex flex-col gap-[5px]">
                 <span className="cap">Место</span>
                 <div className="border border-ink p-[1px] [&_input]:rounded-none [&_input]:border-0 [&_input]:bg-transparent [&_input]:px-[11px] [&_input]:py-[9px] [&_input]:text-[12.5px] [&_input]:shadow-none [&_input]:ring-0 [&_input]:outline-none [&_input]:swiss-focus">
@@ -646,6 +677,8 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
                     name="venueId"
                     render={({ field }) => (
                       <VenuePicker
+                        key={citySlug}
+                        citySlug={citySlug}
                         value={field.value ?? ""}
                         onChange={field.onChange}
                         onLabelChange={setVenueName}

@@ -16,7 +16,7 @@ import { eventToModuleProps } from "@/lib/event-module";
 import { useAuth } from "@/lib/auth-context";
 import { todayRange, tonightRange, weekendRange, weekRange } from "@/lib/mock-events";
 import { pluralRu } from "@/lib/plural";
-import { CURRENT_CITY, cityTagline } from "@/lib/city";
+import { CURRENT_CITY, cityTagline, type City } from "@/lib/city";
 import type { LiaEvent } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
@@ -47,9 +47,12 @@ const TIME_FILTERS = [
 export function DiscoveryFeed({
   initialEvents,
   categories,
+  city = CURRENT_CITY,
 }: {
   initialEvents: LiaEvent[];
   categories: ApiCategory[];
+  /** The effective city (cookie / ?city= override), resolved by the page. */
+  city?: City;
 }) {
   const { ready, isAuthed } = useAuth();
   const [active, setActive] = useState("all");
@@ -77,10 +80,11 @@ export function DiscoveryFeed({
     queryKey: [
       "events",
       "published",
+      city.slug,
       dateRange?.from.toISOString() ?? null,
       dateRange?.to.toISOString() ?? null,
     ],
-    queryFn: () => fetchPublishedEvents(dateRange?.from, dateRange?.to),
+    queryFn: () => fetchPublishedEvents(dateRange?.from, dateRange?.to, city.slug),
     initialData: dateRange ? undefined : initialEvents,
   });
 
@@ -177,7 +181,7 @@ export function DiscoveryFeed({
       {/* Title block */}
       <div className="border-b border-ink px-[20px] py-[18px]">
         <p className="cap">
-          {CURRENT_CITY.name} · <span className="font-mono">{count}</span>{" "}
+          {city.name} · <span className="font-mono">{count}</span>{" "}
           {pluralRu(count, ["событие", "события", "событий"])}
         </p>
         <h1 className="mt-[8px] max-w-[14ch] text-[38px] font-black leading-[0.94] tracking-[-0.03em] max-sm:text-[22px]">
@@ -188,7 +192,7 @@ export function DiscoveryFeed({
             voice otherwise hides behind the login screen. */}
         {ready && !isAuthed && (
           <p className="mt-[8px] max-w-[52ch] text-[12.5px] leading-[1.45] text-text-dim">
-            {cityTagline(CURRENT_CITY)}
+            {cityTagline(city)}
           </p>
         )}
       </div>

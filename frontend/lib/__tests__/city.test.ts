@@ -2,7 +2,14 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-import { CITIES, CURRENT_CITY, cityTagline, cityLoginCaption } from "@/lib/city";
+import {
+  CITIES,
+  CITY_COOKIE,
+  CURRENT_CITY,
+  cityBySlug,
+  cityTagline,
+  cityLoginCaption,
+} from "@/lib/city";
 
 describe("lib/city", () => {
   it("Moscow is the single available city, with grammar and map center", () => {
@@ -19,6 +26,24 @@ describe("lib/city", () => {
     const spb = CITIES.find((c) => c.code === "СПБ")!;
     expect(cityTagline(spb)).toContain("культурного Петербурга");
     expect(cityLoginCaption(spb)).toBe("События Петербурга");
+  });
+});
+
+describe("cityBySlug", () => {
+  it("resolves known slugs (cookie / ?city= values)", () => {
+    expect(cityBySlug("spb").code).toBe("СПБ");
+    expect(cityBySlug("msk").code).toBe("МСК");
+  });
+
+  it("falls back to the default city for garbage, null and undefined", () => {
+    for (const bad of ["", "СПБ", "ekb", undefined, null]) {
+      expect(cityBySlug(bad).slug).toBe("msk");
+    }
+  });
+
+  it("slugs are backend-compatible latin lowercase and the cookie has a name", () => {
+    expect(CITIES.map((c) => c.slug)).toEqual(["msk", "spb"]);
+    expect(CITY_COOKIE).toBe("lia_city");
   });
 });
 

@@ -38,6 +38,7 @@ export function VenuePicker({
   onChange,
   onLabelChange,
   initialLabel,
+  citySlug,
 }: {
   /** Current venue id ("" = none). Kept in interface for controlled-component API. */
   value: string;
@@ -46,6 +47,8 @@ export function VenuePicker({
   onLabelChange?: (name: string) => void;
   /** Seed the typeahead text (edit mode). */
   initialLabel?: string;
+  /** City the search and inline-create are scoped to (backend defaults msk). */
+  citySlug?: string;
 }) {
   const [query, setQuery] = useState(initialLabel ?? "");
   const [debounced, setDebounced] = useState("");
@@ -78,13 +81,13 @@ export function VenuePicker({
   }, [open]);
 
   const { data: results = [] } = useQuery({
-    queryKey: ["venues", debounced],
-    queryFn: () => searchVenues(debounced),
+    queryKey: ["venues", citySlug ?? null, debounced],
+    queryFn: () => searchVenues(debounced, 20, citySlug),
     enabled: open,
   });
 
   const createMut = useMutation({
-    mutationFn: (name: string) => createVenue({ name }),
+    mutationFn: (name: string) => createVenue({ name, city: citySlug }),
     onSuccess: (venue) => {
       setSelected(venue);
       onChange(venue.id);

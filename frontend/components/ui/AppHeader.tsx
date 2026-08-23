@@ -43,7 +43,7 @@ export function AppHeader({ nav = [], admin, mobileCaption, actions }: AppHeader
     >
       <Link
         href={admin ? "/admin" : "/"}
-        className="swiss-focus text-[13px] font-black tracking-[-0.01em] max-sm:text-[11px]"
+        className="swiss-focus shrink-0 pr-[10px] text-[13px] font-black tracking-[-0.01em] max-sm:text-[11px]"
       >
         {admin ? (
           <>
@@ -71,9 +71,9 @@ export function AppHeader({ nav = [], admin, mobileCaption, actions }: AppHeader
         {actions}
       </nav>
       {(mobileCaption || actions) ? (
-        <div className="flex items-baseline gap-[12px] sm:hidden">
+        <div className="flex min-w-0 items-baseline justify-end gap-[10px] sm:hidden">
           {typeof mobileCaption === "string" ? (
-            <span className="cap">{mobileCaption}</span>
+            <span className="cap whitespace-nowrap">{mobileCaption}</span>
           ) : (
             (mobileCaption ?? null)
           )}

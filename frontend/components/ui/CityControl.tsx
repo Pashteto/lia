@@ -76,7 +76,7 @@ export function CityControl() {
         aria-expanded={open}
         aria-label={`Город: ${CURRENT.name}`}
         onClick={() => setOpen((v) => !v)}
-        className="cap swiss-focus cursor-pointer hover-invert"
+        className="cap swiss-focus cursor-pointer whitespace-nowrap hover-invert"
       >
         {CURRENT.code} ↓
       </button>

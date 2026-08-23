@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
+import { ChipRow } from "@/components/ui/ChipRow";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { EventModule } from "@/components/ui/EventModule";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -196,7 +197,7 @@ export function DiscoveryFeed({
           a full-height ink rule. Topic chips carry their positional numerals
           (the Swiss rule: categories are numerals), which is what visually
           separates them from the when/where chips. */}
-      <div className="flex items-stretch justify-between gap-[10px] overflow-x-auto border-b border-ink px-[20px] py-[9px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <ChipRow className="border-b border-ink" innerClassName="justify-between">
         <div className="flex shrink-0 items-center gap-[6px]">
           <span aria-hidden className="mr-[4px] text-[9px] uppercase tracking-[0.12em] text-muted-2">
             Когда и где
@@ -235,7 +236,7 @@ export function DiscoveryFeed({
             </Chip>
           ))}
         </div>
-      </div>
+      </ChipRow>
 
       {/* Search (retained feature, Swiss field) */}
       <div className="border-b border-rule-inner px-[20px] py-[9px]">

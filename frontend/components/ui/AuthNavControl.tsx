@@ -17,16 +17,16 @@ export function AuthNavControl() {
     );
   }
   return (
-    <span className="flex items-baseline gap-[14px]">
+    <span className="flex min-w-0 items-baseline gap-[14px] max-sm:gap-[10px]">
       {role === "admin" && (
         <Link href="/admin" className={NAV_ITEM}>
           Админ
         </Link>
       )}
-      <span className="max-w-[10rem] truncate font-alt text-[9px] tracking-[0.14em] text-muted-2" title={email ?? undefined}>
+      <span className="max-w-[10rem] truncate font-alt text-[9px] tracking-[0.14em] text-muted-2 max-sm:max-w-[88px]" title={email ?? undefined}>
         {email}
       </span>
-      <button type="button" onClick={logout} className={NAV_ITEM}>
+      <button type="button" onClick={logout} className={`${NAV_ITEM} shrink-0 whitespace-nowrap`}>
         Выйти
       </button>
     </span>

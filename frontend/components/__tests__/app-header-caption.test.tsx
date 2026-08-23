@@ -7,7 +7,7 @@ import { CityControl } from "@/components/ui/CityControl";
 describe("AppHeader mobileCaption", () => {
   it("wraps a string caption in the cap span (unchanged behaviour)", () => {
     const html = renderToStaticMarkup(<AppHeader mobileCaption="ПОДБОР" />);
-    expect(html).toContain('class="cap"');
+    expect(html).toContain('class="cap whitespace-nowrap"');
     expect(html).toContain("ПОДБОР");
   });
 

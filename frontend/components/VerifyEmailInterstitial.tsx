@@ -1,8 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+import { verifyHref } from "@/lib/verify-link";
 
 export function VerifyEmailInterstitial({ onClose }: { onClose?: () => void }) {
+  const pathname = usePathname();
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="rounded-card bg-bg p-5 max-w-sm">
@@ -11,7 +15,7 @@ export function VerifyEmailInterstitial({ onClose }: { onClose?: () => void }) {
           Чтобы выполнить это действие, подтвердите свою электронную почту.
         </p>
         <div className="flex gap-2">
-          <Link href="/auth/verify" className="rounded-capsule bg-accent px-4 py-2 text-white">
+          <Link href={verifyHref(pathname)} className="rounded-capsule bg-accent px-4 py-2 text-white">
             Подтвердить сейчас
           </Link>
           {onClose && (

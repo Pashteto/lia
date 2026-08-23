@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Field";
 import { useAuth } from "@/lib/auth-context";
 import { safeNextPath } from "@/lib/safe-next";
+import { verifyHref } from "@/lib/verify-link";
 
 /** Visible form-level error: bordered alert directly above the submit button.
  * Exported for markup tests (vitest has no DOM to trigger the state). */
@@ -37,6 +38,7 @@ export function AuthForm({
 }) {
   const { register, loginPassword } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const next = currentNext();
   const isRegister = mode === "register";
 
@@ -90,7 +92,7 @@ export function AuthForm({
           Мы отправили 6-значный код на {registeredEmail}. Он действует 24 часа.
         </p>
         <Link
-          href={next ? `/auth/verify?next=${encodeURIComponent(next)}` : "/auth/verify"}
+          href={verifyHref(pathname, next)}
           className="swiss-focus mt-[6px] self-start bg-ink px-[11px] py-[11px] text-[11px] font-bold uppercase tracking-[0.07em] text-white hover:bg-black"
         >
           Ввести код

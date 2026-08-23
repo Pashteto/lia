@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { shouldShowVerifyBanner } from "@/components/verify-banner-visibility";
+import { verifyHref } from "@/lib/verify-link";
 
 /**
  * Persistent, non-dismissible notice shown while a signed-in user's email is
@@ -14,6 +16,7 @@ import { shouldShowVerifyBanner } from "@/components/verify-banner-visibility";
  */
 export function VerifyEmailBanner() {
   const { isAuthed, ready, roleResolved, emailVerified } = useAuth();
+  const pathname = usePathname();
 
   if (!shouldShowVerifyBanner({ ready, isAuthed, roleResolved, emailVerified })) return null;
 
@@ -21,7 +24,7 @@ export function VerifyEmailBanner() {
     <div className="flex items-center justify-between gap-3 bg-amber-50 px-4 py-2 text-[13px] text-amber-900 dark:bg-amber-950 dark:text-amber-100">
       <span>Почта не подтверждена — часть действий недоступна.</span>
       <Link
-        href="/auth/verify"
+        href={verifyHref(pathname)}
         className="shrink-0 rounded-capsule bg-accent px-3 py-1 text-white"
       >
         Подтвердить

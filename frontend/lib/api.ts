@@ -84,6 +84,8 @@ export function apiEventToLia(e: ApiEvent): LiaEvent {
     externalPlatformName: e.external_platform_name,
     capacityLimited: e.capacity_limited,
     moderationRequired: e.moderation_required,
+    isOwner: e.is_owner ?? false,
+    pendingApplicationsCount: e.pending_applications_count ?? 0,
   };
 }
 

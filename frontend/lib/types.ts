@@ -85,6 +85,10 @@ export interface LiaEvent {
   externalPlatformName?: string;
   capacityLimited?: boolean;
   moderationRequired?: boolean;
+  /** True when the authenticated caller owns this event. */
+  isOwner?: boolean;
+  /** Applications awaiting the organizer's decision (owner lists only). */
+  pendingApplicationsCount?: number;
 }
 
 export interface Rsvp {
@@ -147,4 +151,6 @@ export interface ApiEvent {
   external_platform_name?: string;
   capacity_limited?: boolean;
   moderation_required?: boolean;
+  is_owner?: boolean;
+  pending_applications_count?: number;
 }

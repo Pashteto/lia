@@ -21,6 +21,13 @@ function apiPattern() {
 }
 
 const nextConfig: NextConfig = {
+  // Intuitive-but-wrong URLs people actually type (QA-23-aug №12).
+  async redirects() {
+    return [
+      { source: "/auth/signup", destination: "/signup", permanent: false },
+      { source: "/events/create", destination: "/events/new", permanent: false },
+    ];
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },

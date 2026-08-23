@@ -227,7 +227,7 @@ export function MapBrowse() {
   );
 
   const mapPane = (mobile: boolean) => (
-    <div className="relative min-h-0">
+    <div className="relative min-h-0 flex-1">
       <div className="h-full [filter:grayscale(1)_contrast(1.05)]">
         <YandexMap
           center={center}

@@ -263,7 +263,7 @@ export function YandexMap({
     );
   }
   return (
-    <div className="relative">
+    <div className="relative h-full w-full">
       <div ref={elRef} className={className} />
       {/* The tiles take seconds on mobile; without this the block reads as a
        * blank rectangle (QA 14.08, finding 5). aria-hidden: purely visual. */}

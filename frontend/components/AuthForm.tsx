@@ -8,6 +8,20 @@ import { Input } from "@/components/ui/Field";
 import { useAuth } from "@/lib/auth-context";
 import { safeNextPath } from "@/lib/safe-next";
 
+/** Visible form-level error: bordered alert directly above the submit button.
+ * Exported for markup tests (vitest has no DOM to trigger the state). */
+export function FormError({ error }: { error: string | null }) {
+  if (!error) return null;
+  return (
+    <p
+      role="alert"
+      className="border border-signal px-[11px] py-[9px] text-[13px] leading-snug text-signal"
+    >
+      {error}
+    </p>
+  );
+}
+
 function currentNext(): string | null {
   if (typeof window === "undefined") return null;
   const next = new URLSearchParams(window.location.search).get("next");
@@ -95,7 +109,7 @@ export function AuthForm({
       {isRegister && (
         <Input label="Пароль ещё раз" type="password" required value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="••••••••" autoComplete="new-password" error={mismatch ? "Пароли не совпадают" : undefined} />
       )}
-      {error && <p className="text-[11px] text-signal">{error}</p>}
+      <FormError error={error} />
       <Button type="submit" disabled={busy} className="mt-[6px]">
         {busy ? (isRegister ? "Создаём…" : "Вход…") : isRegister ? "Создать аккаунт" : "Войти"}
       </Button>

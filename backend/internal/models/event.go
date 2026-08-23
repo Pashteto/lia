@@ -56,6 +56,10 @@ type Event struct {
 	CapacityLimited         bool   `pg:"capacity_limited,use_zero"`          // external: "мест ограничено", число не хранится
 	ExternalURLVerified     bool   `pg:"external_url_verified,use_zero"`     // snapshot: URL matched whitelist when last checked
 
+	// City is the event's city slug (see Cities). Denormalized: copied from the
+	// venue when one is set, chosen by the organizer for venue-less events.
+	City string `pg:"city,use_zero"`
+
 	// ExternalPlatformName is transient (not a column): the whitelist display
 	// name matched at read time. Populated by the events repository.
 	ExternalPlatformName string `pg:"-"`

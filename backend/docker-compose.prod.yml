@@ -68,11 +68,17 @@ services:
       EVENTS_MONTHLY_LIMIT: "10"
       # Daily orphaned-upload cleanup (24h grace; in-process ticker).
       FILE_CLEANUP_ENABLED: "true"
+      # MaxMind GeoLite2-City database for the /cities geo suggestion.
+      # Bind-mounted from the box (see volumes) — NOT baked into the image;
+      # missing file just disables the suggestion. Refresh by replacing the
+      # file in /opt/lia/geoip and recreating app.
+      GEOIP_MMDB_PATH: "/geoip/GeoLite2-City.mmdb"
     # Persist uploaded blobs across container restarts/redeploys. Without this
     # the local backend writes into the ephemeral FROM-scratch container and
     # every cover image is lost on redeploy.
     volumes:
       - lia_uploads:/data/uploads
+      - /opt/lia/geoip:/geoip:ro
 
 volumes:
   lia_pgdata:

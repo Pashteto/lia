@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { CITY_COOKIE, cityBySlug } from "@/lib/city";
 import { type CityAvailability, CityProvider } from "@/lib/city-context";
+import { CityGeoDefault } from "@/components/ui/CityGeoDefault";
 import { fetchCities } from "@/lib/api";
 import { Golos_Text, Manrope, JetBrains_Mono } from "next/font/google";
 import { Providers } from "./providers";
@@ -58,6 +59,7 @@ export default async function RootLayout({
       <body className="min-h-full bg-paper font-ui text-ink">
         <Providers>
           <CityProvider initialSlug={citySlug} availability={availability}>
+            <CityGeoDefault />
             <VerifyEmailBanner />
             {children}
           </CityProvider>

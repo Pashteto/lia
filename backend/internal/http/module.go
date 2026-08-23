@@ -72,6 +72,7 @@ type Module struct {
 	hygiene            hygienedomain.Service
 	feedback           fbdomain.Service
 	settings           settingsdomain.Service
+	citySuggester      handlers.CitySuggester
 	invitations        invitationsdomain.Service
 	invitationsBaseURL string
 	geocoderKey        string
@@ -144,6 +145,10 @@ func (m *Module) SetFollows(svc followsdomain.Service) { m.follows = svc }
 
 // SetSettings injects the app-settings service. Call before Init.
 func (m *Module) SetSettings(svc settingsdomain.Service) { m.settings = svc }
+
+// SetCitySuggester injects the optional geo-IP city suggester (nil = off).
+// Call before Init.
+func (m *Module) SetCitySuggester(s handlers.CitySuggester) { m.citySuggester = s }
 
 // SetComplaints injects the complaints domain service. Call before Init.
 func (m *Module) SetComplaints(svc complaintsdomain.Service) { m.complaints = svc }
@@ -319,7 +324,7 @@ func (m *Module) initAPI() error {
 
 	// Always registered: with no settings service (no-DB mode) every
 	// non-default city simply reads as unavailable.
-	api.CitiesListCitiesHandler = handlers.NewListCities(m.settings)
+	api.CitiesListCitiesHandler = handlers.NewListCities(m.settings, m.citySuggester)
 
 	if m.venues != nil {
 		api.VenuesListVenuesHandler = handlers.NewListVenues(m.venues)

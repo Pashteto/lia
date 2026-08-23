@@ -20,6 +20,7 @@ import (
 	"github.com/Pashteto/lia/internal/feedback"
 	filesdomain "github.com/Pashteto/lia/internal/files"
 	followsdomain "github.com/Pashteto/lia/internal/follows"
+	"github.com/Pashteto/lia/internal/geoip"
 	grpcmod "github.com/Pashteto/lia/internal/grpc"
 	grpcclientmod "github.com/Pashteto/lia/internal/grpcclient"
 	httpmod "github.com/Pashteto/lia/internal/http"
@@ -305,6 +306,15 @@ func (app *App) registerModules() error {
 		httpModule.SetFilesService(app.filesSvc)
 		httpModule.SetRsvpService(app.rsvpSvc)
 		httpModule.SetSettings(app.settingsSvc)
+		if path := app.config.GeoIPMMDBPath; path != "" {
+			if resolver, gerr := geoip.Open(path); gerr != nil {
+				// Best-effort feature: a missing/corrupt database must not
+				// stop the app — /cities just carries no suggestion.
+				logger.Log().Errorf("geoip disabled: %s", gerr.Error())
+			} else {
+				httpModule.SetCitySuggester(resolver)
+			}
+		}
 		httpModule.SetOrganizers(app.organizersSvc)
 		httpModule.SetFollows(app.followsSvc)
 		httpModule.SetGeocoder(app.config.Geocoder.Key)

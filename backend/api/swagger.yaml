@@ -1219,6 +1219,12 @@ definitions:
         type: string
       available:
         type: boolean
+      suggested:
+        type: boolean
+        description: >-
+          True when the caller's IP geolocates to this city (GeoLite2, best
+          effort). At most one row carries it; absent when geo lookup is
+          disabled or the IP is outside the supported metros.
 
   VenueInput:
     type: object

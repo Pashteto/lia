@@ -111,6 +111,8 @@ func setDefaults() {
 	// Public base URL (used to build invite accept links)
 	viper.SetDefault("public_base_url", "https://presence.tarski.ru")
 	viper.BindEnv("public_base_url", "PUBLIC_BASE_URL") //nolint:errcheck
+	viper.SetDefault("geoip_mmdb_path", "")
+	viper.BindEnv("geoip_mmdb_path", "GEOIP_MMDB_PATH") //nolint:errcheck
 
 	// SMTP defaults (invitations mailer). Blank address degrades to a no-op
 	// mailer, so dev/local runs without SMTP config don't fail invites.

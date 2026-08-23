@@ -115,16 +115,31 @@ export async function searchVenues(q: string, limit = 20, city?: string): Promis
   return (await res.json()) as ApiVenue[];
 }
 
-/** One row of GET /cities: is the city open for discovery? */
+/** One row of GET /cities: is the city open for discovery, and does the
+ * caller's IP geolocate to it (best effort, at most one row). */
 export interface ApiCity {
   code: string;
   available: boolean;
+  suggested?: boolean;
 }
 
 /** Fetches city availability (msk is always available; spb is the
- * cities.spb_available runtime setting). Throws on network/HTTP error. */
+ * cities.spb_available runtime setting). Cached ~60s — fine for availability;
+ * NOTE: `suggested` is per-caller-IP, so it is meaningless through this cached
+ * server-side path — the browser-side geo default uses fetchCitiesFresh.
+ * Throws on network/HTTP error. */
 export async function fetchCities(): Promise<ApiCity[]> {
   const res = await fetch(`${API_V1}/cities`, { next: { revalidate: 60 } });
+  if (!res.ok) {
+    throw new Error(`fetch cities failed: ${res.status}`);
+  }
+  return (await res.json()) as ApiCity[];
+}
+
+/** Uncached GET /cities for the browser: the `suggested` flag reflects the
+ * visitor's own IP (GeoLite2 on the backend). Client-side only. */
+export async function fetchCitiesFresh(): Promise<ApiCity[]> {
+  const res = await fetch(`${API_V1}/cities`, { cache: "no-store" });
   if (!res.ok) {
     throw new Error(`fetch cities failed: ${res.status}`);
   }

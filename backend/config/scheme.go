@@ -180,6 +180,10 @@ type Scheme struct {
 	// Env is the application environment (e.g. prod, dev, local).
 	Env string `mapstructure:"env"`
 
+	// GeoIPMMDBPath points at a MaxMind GeoLite2-City .mmdb file (bind-mounted
+	// on the box). Empty = geo city suggestion disabled.
+	GeoIPMMDBPath string `mapstructure:"geoip_mmdb_path"`
+
 	// PublicBaseURL is the publicly-reachable frontend origin used to build
 	// invite accept links (e.g. "https://presence.tarski.ru").
 	PublicBaseURL string `mapstructure:"public_base_url"`

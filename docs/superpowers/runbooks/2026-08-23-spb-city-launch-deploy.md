@@ -87,6 +87,14 @@ cd /opt/lia/backend && docker compose --env-file .env.prod -f docker-compose.yml
 # при необходимости: migrate down 1 (000027.down.sql на боксе) — вернёт старый индекс, дропнет city
 ```
 
+## Hotfix spb-r3 (frontend)
+
+QA Павла после открытия: в ДЕСКТОПНОЙ шапке переключателя города не было
+вовсе — `CityControl` жил только в мобильном блоке (`mobileCaption`,
+`sm:hidden`). Фикс: AppHeader рендерит `CityControl` в десктопной навигации
+на каждой не-админской странице (`72abc91`). Задеплоен `lia-frontend:spb-r3`
+(тот же rollback-тег), переключение на десктопе проверено live в обе стороны.
+
 ## Gaps / follow-ups
 
 - Гео-IP определение города нового посетителя — НЕ реализовано (нужен выбор

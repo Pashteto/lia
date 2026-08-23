@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/Button";
 import { Cell, CellStrip } from "@/components/ui/Cell";
@@ -16,6 +16,7 @@ import {
   unfollowOrganizer,
 } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { adjustedFollowers } from "@/lib/follow-count";
 import { formatShortDate } from "@/lib/format";
 import { padCount } from "@/lib/org-seats";
 import { tileCount } from "@/lib/tile-count";
@@ -51,6 +52,7 @@ function PublicSkeleton() {
 export function PublicOrganizerView() {
   const params = useParams<{ id: string }>();
   const id = params.id;
+  const qc = useQueryClient();
   const { isAuthed, ready } = useAuth();
   const [followOverride, setFollowOverride] = useState<{ id: string; value: boolean } | null>(
     null,
@@ -95,6 +97,9 @@ export function PublicOrganizerView() {
     try {
       if (next) await followOrganizer(orgQuery.data.id);
       else await unfollowOrganizer(orgQuery.data.id);
+      // Refresh the profile so followers_count (and is_following) come back
+      // from the server instead of staying stale (QA-23-aug №9).
+      void qc.invalidateQueries({ queryKey: ["public-organizer", id] });
     } catch {
       setFollowOverride({ id, value: !next });
     } finally {
@@ -178,7 +183,13 @@ export function PublicOrganizerView() {
         />
         <Cell
           caption="Подписчиков"
-          value={tileCount(org.followers_count)}
+          value={tileCount(
+            adjustedFollowers(
+              org.followers_count,
+              org.is_following ?? false,
+              followOverride?.id === id ? followOverride.value : null,
+            ),
+          )}
           mono
           valueClassName="text-[15px] font-bold"
           className="px-[12px] py-[9px]"
@@ -214,9 +225,13 @@ export function PublicOrganizerView() {
             variant={following ? "ghost" : "primary"}
             onClick={toggleFollow}
             disabled={pending}
-            className="w-full min-h-[44px]"
+            className={
+              following
+                ? "w-full min-h-[44px] border border-ink bg-paper text-ink"
+                : "w-full min-h-[44px]"
+            }
           >
-            {following ? "ВЫ ПОДПИСАНЫ" : "ПОДПИСАТЬСЯ"}
+            {following ? "ВЫ ПОДПИСАНЫ ✓" : "ПОДПИСАТЬСЯ"}
           </Button>
         </div>
       ) : ready ? (

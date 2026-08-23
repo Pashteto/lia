@@ -20,6 +20,7 @@ import {
   EMAIL_NOT_VERIFIED,
   fetchTrustedPlatforms,
   getCategories,
+  getMyOrganizer,
   patchEvent,
   type CreateEventInput,
   uploadFile,
@@ -28,6 +29,7 @@ import { useAuth } from "@/lib/auth-context";
 import { categoryNumeral } from "@/lib/category-numerals";
 import { cn } from "@/lib/cn";
 import { formatModuleDate } from "@/lib/format";
+import { moderationNote } from "@/lib/publish-copy";
 import { hostOf, matchPlatform, type TrustedPlatform } from "@/lib/platforms";
 import { priceLabel } from "@/lib/price-label";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -293,6 +295,13 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
     queryKey: ["categories"],
     queryFn: getCategories,
   });
+
+  // Honest moderation note: verified organizers publish instantly.
+  const { data: myOrganizerData } = useQuery({
+    queryKey: ["my-organizer"],
+    queryFn: () => getMyOrganizer().catch(() => null),
+  });
+  const organizerVerified = myOrganizerData?.verification_status === "verified";
 
   const mutation = useMutation({
     mutationFn: (input: CreateEventInput) => createEvent(input),
@@ -861,7 +870,7 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
 
             {/* Mobile moderation note above CTAs — denser than desktop rail */}
             <div className="mt-auto border-t border-ink pt-[10px] sm:hidden">
-              <p className="cap mb-[5px]">Модерация до 24 часов</p>
+              <p className="cap mb-[5px]">{moderationNote(organizerVerified)}</p>
             </div>
 
             {/* Actions */}

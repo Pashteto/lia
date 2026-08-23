@@ -4,9 +4,13 @@ import { useState } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { useQuery } from "@tanstack/react-query";
+
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { getMyOrganizer } from "@/lib/api";
 import { getToken } from "@/lib/auth";
+import { publishDialogCopy } from "@/lib/publish-copy";
 
 // Self-contained so it does not depend on the (concurrently edited) lib/api.ts.
 const API_V1 = `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"}/api/v1`;
@@ -27,6 +31,13 @@ export function PublishEventButton({
 }) {
   const qc = useQueryClient();
   const [confirming, setConfirming] = useState(false);
+  // Cache-shared with the /me hub; decides which truth the dialog tells.
+  const myOrganizer = useQuery({
+    queryKey: ["my-organizer"],
+    queryFn: () => getMyOrganizer().catch(() => null),
+  });
+  const verified = myOrganizer.data?.verification_status === "verified";
+  const copy = publishDialogCopy(verified);
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -59,16 +70,16 @@ export function PublishEventButton({
         onClick={() => setConfirming(true)}
         disabled={mutation.isPending}
       >
-        {mutation.isPending ? "Публикация…" : "Опубликовать"}
+        {mutation.isPending ? "Отправляем…" : "Опубликовать"}
       </Button>
       {mutation.isError ? (
         <p className="mt-[6px] text-[11px] text-signal">Не удалось опубликовать.</p>
       ) : null}
       {confirming ? (
         <ConfirmModal
-          title="Опубликовать событие?"
-          body="Событие сразу появится в ленте. Его можно будет отредактировать или вернуть в черновики."
-          confirmLabel="Опубликовать"
+          title={copy.title}
+          body={copy.body}
+          confirmLabel={copy.confirmLabel}
           onConfirm={() => {
             setConfirming(false);
             mutation.mutate();

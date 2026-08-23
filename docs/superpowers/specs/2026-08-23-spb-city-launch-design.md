@@ -68,9 +68,10 @@
 
 - Новый эндпоинт `GET /api/v1/cities` → `[{ "code": "msk", "available": true }, { "code": "spb", "available": false }]`.
   Публичный, без авторизации, кешируемый.
-- `available` для `spb` читается из env `CITY_SPB_AVAILABLE` (bool, дефолт false),
-  объявленной в compose по образцу `auto_verify_all` — открытие города не требует
-  пересборки образа, только правку env + recreate контейнера.
+- `available` для `spb` читается из настройки `cities.spb_available` через
+  существующий `settings.Service` (app_settings, как `organizers.auto_verify_all`,
+  дефолт false при отсутствии строки) — открытие города вообще не требует
+  редеплоя: одна SQL/админ-операция над app_settings.
 
 ## 3. Frontend
 
@@ -128,7 +129,8 @@
    Стандартная схема: build-on-Mac → save|ssh|load, тег `:latest` перед
    recreate, rollback-теги, `.sql` scp на бокс, прогон по раннбуку.
 2. **Открытие:** после наполнения контентом (критерий ≥15 событий) —
-   включение настройки + `up -d` без пересборки. Откат = выключить настройку.
+   включение `cities.spb_available` в app_settings (SQL/админ), без редеплоя.
+   Откат = выключить настройку.
 
 ## Вне скоупа
 

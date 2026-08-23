@@ -328,6 +328,8 @@ func (r *pgRepository) Nearby(lat, lon float64, limit int) ([]*NearbyResult, err
 		JOIN venues v ON v.id = e.venue_id
 		WHERE v.geog IS NOT NULL
 		  AND e.status = 'published'
+		  -- Map mirrors the feed: today's (Moscow) events onward, no past ones.
+		  AND e.starts_at >= (date_trunc('day', now() AT TIME ZONE 'Europe/Moscow') AT TIME ZONE 'Europe/Moscow')
 		  AND ST_DWithin(v.geog, ST_SetSRID(ST_MakePoint(?0, ?1), 4326)::geography, 50000)
 		ORDER BY v.geog <-> ST_SetSRID(ST_MakePoint(?0, ?1), 4326)::geography
 		LIMIT ?2`,

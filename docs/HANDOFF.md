@@ -1,6 +1,22 @@
 # Lia — Handoff
 
-> ## ⭐ CURRENT STATE — 2026-08-12 · внешняя регистрация (whitelist) + кликабельные плитки дашбордов (read this first)
+> ## ⭐ CURRENT STATE — 2026-08-23 · полный QA-прогон всех ролей → пакет фиксов №3–12 + пре-модерация (read this first)
+>
+> **`origin/main` = `a92e651` (pushed, in sync). Прод: backend `lia-backend:qa23-r1` + frontend `lia-frontend:qa23-r2` (rollback `*:rollback-qa23-20260823`), БД без миграций.** Отчёт прогона: `superpowers/runbooks/2026-08-23-full-role-qa-run.md` (+HTML-дашборд в `.claude-reports/`), план: `superpowers/plans/2026-08-23-qa23-fixes.md`, деплой+перетест: `superpowers/runbooks/2026-08-23-qa23-fixes-deploy.md`.
+>
+> - **Прогон всех ролей** (гость/зритель/участник free+платно+заявка/организатор/админ, mobile-first, живой Chrome на проде) нашёл 15 багов; №3–№12 исправлены, задеплоены и перепроверены В ТОТ ЖЕ ДЕНЬ.
+> - **Пре-модерация организаторов**: корень «✓Проверен у всех» — глобальный `organizers.auto_verify_all` (включён 26.07) — **ВЫКЛЮЧЕН через /admin/settings**. Новый бэкенд-гейт `events.SetOrganizerVerifier` ← `organizers.IsVerifiedOwner`: публикация неверифицированным → `pending_review` (админ-таб «На проверке» → approve → лента). Копирайт диалога публикации/мастера — условный и честный.
+> - **Owner-права**: `is_owner` в API (detail + /events/mine через `api/swagger.yaml` + `make generate-api`), owner-панель на published, «Это ваше событие» вместо CTA, самозапись владельца → 409.
+> - **Воронка верификации**: `verifyHref()` — после кода возврат на исходную страницу; регрессия r1 (снос сессии по 401 от `/auth/me`) откатана в r2 — **бэкенд отвечает 401 на /auth/me для неверифицированной сессии, это надо терпеть**.
+> - **UX-пакет**: /map починена (высота: `mapPane flex-1` + `YandexMap h-full`), nearby без прошедших (лента=карта), видимые ошибки логина (`FormError`), счётчик подписчиков (оптимистичный + invalidate), мобильная шапка (truncate/nowrap/shrink), `ChipRow` с fade, хаб «Я» с секцией «Организую» + «Создать событие» + «Календарь», статусы «Вы идёте»/«Ждёт ответа»/«На проверке», бейдж «Заявки · N» (`pending_applications_count`), редиректы `/auth/signup`→`/signup`, `/events/create`→`/events/new`.
+> - **Открытые гэпы** (см. деплой-раннбук): нет UI «отозвать верификацию»; счётчик «На проверке · N» нулевой до клика; текст причины в очереди всегда про whitelist; авто-верификация конкретного организатора при выключенном глобальном флаге — только SQL.
+> - Тест-аккаунты (помечены «ТЕСТОВЫЙ», живы): `dodonopavel+qa23v/qa23o/qa23r@gmail.com`; qa23o переведён в `verification_status='pending'`.
+
+> ## ⭐ PREVIOUS STATE — 2026-08-14 · QA-прогон ролей + мобильные фиксы (runbook `2026-08-14-qa-14aug-mobile-fixes-deploy.md`)
+>
+> Frontend-only `lia-frontend:qa14aug-r1`: город-переключатель «МСК ↓» (`lib/city.ts` — единый источник), owner-панель на черновике, «Действия ···» на мобиле, плейсхолдер карты, админ-очередь <900px, «← Лента» в кабинете. Детали в раннбуке.
+
+> ## ⭐ PREVIOUS STATE — 2026-08-12 · внешняя регистрация (whitelist) + кликабельные плитки дашбордов
 >
 > **Две фичи спроектированы, реализованы subagent-циклом, отревьюены и ЗАДЕПЛОЕНЫ LIVE 2026-08-12. `origin/main` = `3607f29` (pushed, in sync).** Prod: **Lia DB 25 → 26**, backend `lia-backend:extreg-r1` (rollback `backend-app:rollback-extreg-20260812`), frontend `lia-frontend:tiles-r1` (rollback `lia-frontend-presence:rollback-tiles-20260812`; промежуточный `rollback-extreg-20260812` тоже на боксе).
 >

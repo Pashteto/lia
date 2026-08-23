@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QA-прогон по всем ролям — PRESENCE</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --panel-2: #fbfbfd;
+      --border: #e5e7eb;
+      --border-strong: #d1d5db;
+      --text: #0f172a;
+      --muted: #64748b;
+      --accent: #2563eb;
+      --accent-soft: #dbeafe;
+      --code-bg: #0f172a;
+      --code-text: #e2e8f0;
+      --pill-new-bg: #dcfce7;     --pill-new-fg: #166534;
+      --pill-mod-bg: #dbeafe;     --pill-mod-fg: #1e40af;
+      --pill-del-bg: #fee2e2;     --pill-del-fg: #991b1b;
+      --pill-gen-bg: #ede9fe;     --pill-gen-fg: #5b21b6;
+      --pill-todo-bg: #fef3c7;    --pill-todo-fg: #92400e;
+      --pill-block-bg: #fee2e2;   --pill-block-fg: #991b1b;
+      --pill-verify-bg: #cffafe;  --pill-verify-fg: #155e75;
+      --pill-oos-bg: #f1f5f9;     --pill-oos-fg: #475569;
+      --shadow: 0 1px 2px rgba(15,23,42,0.04), 0 1px 3px rgba(15,23,42,0.06);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0a0e1a;
+        --panel: #111827;
+        --panel-2: #0f172a;
+        --border: #1f2937;
+        --border-strong: #334155;
+        --text: #e2e8f0;
+        --muted: #94a3b8;
+        --accent: #60a5fa;
+        --accent-soft: #1e3a8a;
+        --code-bg: #020617;
+        --code-text: #e2e8f0;
+        --pill-new-bg: #14532d;     --pill-new-fg: #bbf7d0;
+        --pill-mod-bg: #1e3a8a;     --pill-mod-fg: #bfdbfe;
+        --pill-del-bg: #7f1d1d;     --pill-del-fg: #fecaca;
+        --pill-gen-bg: #4c1d95;     --pill-gen-fg: #ddd6fe;
+        --pill-todo-bg: #78350f;    --pill-todo-fg: #fde68a;
+        --pill-block-bg: #7f1d1d;   --pill-block-fg: #fecaca;
+        --pill-verify-bg: #164e63;  --pill-verify-fg: #a5f3fc;
+        --pill-oos-bg: #1e293b;    --pill-oos-fg: #cbd5e1;
+        --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 1px 3px rgba(0,0,0,0.4);
+      }
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      font-size: 15px;
+    }
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+    .hero { display: flex; flex-direction: column; gap: 0.75rem; padding: 1.75rem 1.75rem 1.5rem; background: var(--panel); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); margin-bottom: 1.25rem; }
+    .hero .eyebrow { display: inline-flex; gap: 0.4rem; align-items: center; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+    .hero .eyebrow .tag { background: var(--accent-soft); color: var(--accent); padding: 0.15rem 0.55rem; border-radius: 999px; }
+    .hero h1 { margin: 0; font-size: 1.9rem; font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; }
+    .hero .meta { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.82rem; color: var(--muted); }
+    .hero .meta span::before { content: "·"; margin-right: 0.5rem; color: var(--border-strong); }
+    .hero .meta span:first-child::before { content: ""; margin: 0; }
+    .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.75rem; margin-bottom: 1.75rem; }
+    .kpi { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.1rem; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+    .kpi::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--accent); }
+    .kpi .v { font-size: 1.7rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+    .kpi .l { font-size: 0.78rem; color: var(--muted); margin-top: 0.2rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+    section { margin-bottom: 1.75rem; }
+    .section-head { display: flex; align-items: baseline; gap: 0.6rem; margin: 0 0 0.85rem; }
+    .section-head .bar { width: 4px; height: 1.05rem; background: var(--accent); border-radius: 2px; }
+    .section-head h2 { margin: 0; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text); }
+    .section-head .hint { color: var(--muted); font-size: 0.78rem; font-weight: 500; }
+    .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 1.1rem 1.25rem; box-shadow: var(--shadow); }
+    .card h3 { margin: 0 0 0.5rem; font-size: 0.95rem; font-weight: 650; letter-spacing: -0.005em; }
+    .card p { margin: 0 0 0.6rem; }
+    .card p:last-child { margin-bottom: 0; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 0.85rem; }
+    .stack { display: flex; flex-direction: column; gap: 0.85rem; }
+    pre { background: var(--code-bg); color: var(--code-text); padding: 0.9rem 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.82rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; line-height: 1.5; margin: 0; }
+    pre code { background: none; padding: 0; color: inherit; }
+    code { background: var(--panel-2); border: 1px solid var(--border); padding: 0.05em 0.4em; border-radius: 4px; font-size: 0.86em; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .code-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; }
+    .code-card .code-head { padding: 0.55rem 0.9rem; background: var(--panel-2); border-bottom: 1px solid var(--border); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.78rem; color: var(--muted); display: flex; justify-content: space-between; align-items: center; }
+    .code-card pre { border-radius: 0; }
+    .files { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+    .files th, .files td { text-align: left; padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--border); }
+    .files tbody tr:last-child td { border-bottom: none; }
+    .files th { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+    .files td.path { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.82rem; }
+    .files td.note { color: var(--muted); }
+    .pill { display: inline-block; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.12em 0.55em; border-radius: 999px; white-space: nowrap; }
+    .pill-new    { background: var(--pill-new-bg);    color: var(--pill-new-fg); }
+    .pill-mod    { background: var(--pill-mod-bg);    color: var(--pill-mod-fg); }
+    .pill-del    { background: var(--pill-del-bg);    color: var(--pill-del-fg); }
+    .pill-gen    { background: var(--pill-gen-bg);    color: var(--pill-gen-fg); }
+    .pill-todo   { background: var(--pill-todo-bg);   color: var(--pill-todo-fg); }
+    .pill-block  { background: var(--pill-block-bg);  color: var(--pill-block-fg); }
+    .pill-verify { background: var(--pill-verify-bg); color: var(--pill-verify-fg); }
+    .pill-oos    { background: var(--pill-oos-bg);    color: var(--pill-oos-fg); }
+    table.matrix { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    table.matrix th, table.matrix td { padding: 0.45rem 0.7rem; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+    table.matrix tbody tr:last-child td { border-bottom: none; }
+    table.matrix th { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+    .step { display: flex; gap: 0.85rem; align-items: flex-start; padding: 0.95rem 1.1rem; }
+    .step .body { flex: 1; }
+    .step .body strong { display: block; margin-bottom: 0.2rem; font-size: 0.95rem; }
+    .step .body p { margin: 0; color: var(--muted); }
+    @media print {
+      body { background: white; }
+      .card, .kpi, .hero, .code-card { break-inside: avoid; box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+
+    <header class="hero">
+      <div class="eyebrow"><span class="tag">qa · prod · mobile-first</span></div>
+      <h1>QA-прогон по всем ролям — PRESENCE (presence.tarski.ru)</h1>
+      <div class="meta">
+        <span>2026-08-23 02:34 (МСК) · обновлён после фиксов</span>
+        <span>~/gateway_fm/REAL_WORLD_ASSETS/1-lia</span>
+        <span>вьюпорт 390×900 + десктоп-чек 1280</span>
+      </div>
+    </header>
+
+    <section class="kpis">
+      <div class="kpi"><div class="v">5</div><div class="l">ролей пройдено</div></div>
+      <div class="kpi"><div class="v">15</div><div class="l">багов / рисков</div></div>
+      <div class="kpi"><div class="v">4</div><div class="l">критичных (P1)</div></div>
+      <div class="kpi"><div class="v">~25</div><div class="l">экранов проверено</div></div>
+      <div class="kpi"><div class="v">0</div><div class="l">тест-следов в ленте</div></div>
+    </section>
+
+    <section>
+      <div class="section-head"><div class="bar"></div><h2>Контекст и задача</h2></div>
+      <div class="card">
+        <p>Запрос: «полный ран со стороны клиентов — оргов, зрителей, участников платных и бесплатных — и админа; посмотреть на продукт глазами всех пользователей и все маршруты; предложить улучшения фронта и дизайна, мобильная версия в первую очередь; предложить методы упростить приложение для каждой роли».</p>
+        <p>Прогон шёл в живом Chrome (расширение Claude-in-Chrome) на <strong>проде</strong> presence.tarski.ru, основная часть — в мобильном вьюпорте 390×900, плюс контрольный десктоп-проход 1280px. Верификационные коды брались напрямую из прод-БД GateGuard (<code>users.email_verification_token</code>), чтобы не ждать почту. Контекст продукта: после Swiss Grid-редизайна и деплоя qa14aug-r1 (14.08) это первый сквозной прогон всех ролей одновременно.</p>
+        <p>Маршруты: гость (лента → город → фильтры-чипы → поиск → карточка события → карта → «Записаться» без логина) → регистрация зрителя + код → запись на платное (1 200 ₽, оплата на месте) и бесплатное → подписка на организатора → календарь → профиль → регистрация организатора → мастер события 4 шага (лекция, площадка из каталога, «по заявке», лимит 10, вопрос кандидату) → черновик → публикация → заявка участника → приём заявки организатором → админ: обзор, очередь модерации, жалобы, пользователи → отклонение тест-события с причиной «тестовые данные».</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><div class="bar"></div><h2>Сводка</h2></div>
+      <div class="card" style="border-color:#16a34a;"><p><strong>Обновление 2026-08-23:</strong> баги №3–№12 и фичи исправлены, задеплоены (backend qa23-r1 + frontend qa23-r2, main a92e651) и перепроверены на проде в тот же день. Корень «Проверен у всех» — глобальный auto-verify, выключен через /admin/settings. Детали: docs/superpowers/runbooks/2026-08-23-qa23-fixes-deploy.md.</p></div>
+      <div class="card" style="margin-top:0.85rem;"><p>Ядро продукта работает: онбординг с кодом, RSVP в один клик, заявочный флоу целиком, мастер создания события с каталогом площадок, календарь и мобильная админ-модерация — всё прошло без сбоев. Найдено 15 багов/рисков, из них 4 критичных: пустая карта на <code>/map</code> (контейнер ymaps высотой 0), бейдж «✓ Проверен» у любого свежего аккаунта, мгновенная публикация в ленту вопреки обещанной модерации, и молчаливый неуспешный логин, который в тесте привёл к действию от чужого имени. Все тестовые следы в проде убраны.</p></div>
+    </section>
+
+    <section>
+      <div class="section-head"><div class="bar"></div><h2>Баги и риски</h2><div class="hint">по убыванию важности</div></div>
+      <div class="card" style="padding: 0.25rem 0.5rem;">
+        <table class="matrix">
+          <thead><tr><th>№</th><th>Prio</th><th>Что</th><th>Детали / доказательство</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td><span class="pill pill-block">P1</span></td><td><strong>/map: карта не рендерится вообще</strong></td><td>И на мобиле, и на десктопе. ymaps инициализируется (42 DOM-узла), но <code>.ymaps-2-1-79-map</code> имеет h=0 при родителе 584px. Список и «Искать в этой области» есть, карты нет. На страницах событий карты работают ⇒ сломан layout именно /map.</td></tr>
+            <tr><td>2</td><td><span class="pill pill-block">P1</span></td><td><strong>«✓ Проверен» у свежего организатора</strong></td><td>Аккаунт возрастом 5 минут («Лекторий Проба») получил бейдж на событии и в ленте. В админке «Верификация 00». Бейдж обесценен; фрод-риск в связке с №3.</td></tr>
+            <tr><td>3</td><td><span class="pill pill-block">P1</span></td><td><strong>Публикация без пре-модерации + противоречивый копирайт</strong></td><td>Событие нового аккаунта мгновенно <code>published</code> и видно всем (проверено в ленте гостя). Мастер обещает «модерация до 24 часов», диалог публикации — «сразу появится в ленте». Очередь «Ждут» — постфактум.</td></tr>
+            <tr><td>4</td><td><span class="pill pill-block">P1</span></td><td><strong>Неудачный логин молчит</strong></td><td>Пустой/ошибочный сабмит /login не показывает никакой ошибки. В тесте это привело к wrong-identity: заявка ушла от организатора, хотя «переключились» на зрителя (rsvp <code>applied</code> с user_id организатора в БД).</td></tr>
+            <tr><td>5</td><td><span class="pill pill-todo">P2</span></td><td>Владелец подаёт заявку на своё событие</td><td>CTA «Подать заявку» виден владельцу опубликованного события; заявка проходит и записывается. В панели заявок владелец «принимает сам себя».</td></tr>
+            <tr><td>6</td><td><span class="pill pill-todo">P2</span></td><td>Owner-панель пропадает после публикации</td><td>«Редактировать / вернуть в черновики / Мои события» видны только в статусе draft. На published-странице владелец видит зрительский CTA.</td></tr>
+            <tr><td>7</td><td><span class="pill pill-todo">P2</span></td><td>Верификация рвёт воронку записи</td><td>Начал запись на концерт → регистрация → код → редирект на ленту, а не назад на событие. Пользователь должен сам найти событие снова.</td></tr>
+            <tr><td>8</td><td><span class="pill pill-todo">P2</span></td><td>Ложный баннер «Почта не подтверждена» у админа</td><td>У poulissimo в БД <code>email_verified = t</code>, баннер висел (протухшая сессия). После свежего логина исчез.</td></tr>
+            <tr><td>9</td><td><span class="pill pill-todo">P2</span></td><td>Подписка: счётчик и состояние</td><td>После «Подписаться» счётчик подписчиков остаётся 00; состояние «Вы подписаны» — серым по серому, почти нечитаемо.</td></tr>
+            <tr><td>10</td><td><span class="pill pill-todo">P2</span></td><td>На мобиле нет входа в кабинет организатора</td><td>Bottom-nav: Лента/Подбор/Карта/Я; в «Я» только зрительские вкладки. /organizer и /events/new — только по прямому URL. На десктопе пункт «Организаторам» есть.</td></tr>
+            <tr><td>11</td><td><span class="pill pill-todo">P3</span></td><td>Мобильная шапка ломается</td><td>На 390px: «PRESENCEПРОФИЛЬ» слипаются, «ВЫЙТИ» обрезан, «МСК ↓» переносится над логотип. Чипы фильтров обрезаются («СЕГОДНЯ ВЕЧЕРО…») без индикатора скролла.</td></tr>
+            <tr><td>12</td><td><span class="pill pill-todo">P3</span></td><td>Счётчики расходятся: лента 5 / карта 7</td><td>Карта включает прошедшие события (16.08, 21.08). Медиация 23.08 16:00 оставалась в ленте после начала.</td></tr>
+            <tr><td>13</td><td><span class="pill pill-todo">P3</span></td><td>Криптичные статусы и бейджи</td><td>«ОК» у записи в профиле; «МОД·0 / ЧЕРН·0 / ОТМ·0» в «Мои события»; «Действия ···» выглядит выключенной; аватар организатора — чёрный квадрат.</td></tr>
+            <tr><td>14</td><td><span class="pill pill-todo">P3</span></td><td>404 по интуитивным URL</td><td><code>/auth/signup</code> и <code>/events/create</code> → 404 (реальные роуты <code>/signup</code>, <code>/events/new</code>).</td></tr>
+            <tr><td>15</td><td><span class="pill pill-oos">by design</span></td><td>Админ-инструменты «от 900px»</td><td>/admin/users и /admin/organizers на мобиле закрыты заглушкой. Модерация и жалобы на мобиле работают. Возможно, стоит открыть read-only.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><div class="bar"></div><h2>Что работает хорошо</h2></div>
+      <div class="grid-2">
+        <div class="card"><h3>Зритель и участник</h3><p>Регистрация с 6-значным кодом (TTL 24 ч), RSVP в один клик на free и платное «оплата на месте», .ics и Google-календарь, отзыв заявки, личный календарь месяц/список, профиль-хаб со счётчиками. Подбор («Что вам сейчас откликается?») — приятный, с чипами и «точными фильтрами».</p></div>
+        <div class="card"><h3>Организатор</h3><p>Мастер 4 шага: категории, автокомплит площадок из каталога (174 венью) с «Создать свою» и «Указать на карте», типы записи открытая/по заявке/внешняя ссылка, вопрос кандидату, лимит мест. Кабинет с метриками, «Мои события» с фильтрами, панель заявок принять/отклонить — заявка прошла цикл целиком.</p></div>
+        <div class="card"><h3>Админ</h3><p>Очередь модерации <em>работает на мобиле</em>: деталь события, причины отклонения чипами («тестовые данные», «нет описания»…), Одобрить/Отклонить/На доработку. Отклонение мгновенно убирает событие из ленты. «Гигиена контента» и авто-бейдж «ТЕСТОВЫЙ» на QA-аккаунтах — отличная механика.</p></div>
+        <div class="card"><h3>Инфраструктура UX</h3><p>Живой поиск по ленте, город-переключатель (СПб «скоро»), модальный логин по месту действия с «Нет аккаунта? Регистрация», карты и маршруты на страницах событий, sticky CTA-бар с ценой.</p></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><div class="bar"></div><h2>Логика и решения прогона</h2><div class="hint">the why</div></div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Коды верификации — из прод-БД, не из почты</h3>
+          <p>Чтобы не зависеть от доставки SendPulse и не просить владельца пересылать письма, 6-значные коды читались напрямую: <code>gateguard.users.email_verification_token</code>. Это же попутно вскрыло баг №8: у админа <code>email_verified = t</code>, а баннер «не подтверждена» висел.</p>
+        </div>
+        <div class="card">
+          <h3>Тестовое событие — полный цикл и уборка через продукт</h3>
+          <p>Событие «QA-тест: Лекция о шрифтах» намеренно названо тестовым и прошло весь цикл: черновик → публикация → заявка → приём → отклонение админом с причиной «тестовые данные». Так одновременно проверились организатор, участник-по-заявке и админ-модерация, а уборка стала частью теста (событие ушло в <code>rejected</code> и пропало из ленты).</p>
+        </div>
+        <div class="card">
+          <h3>Wrong-identity разобран до корня</h3>
+          <p>Заявка «от зрителя» оказалась в БД с user_id организатора. Раскопки показали цепочку: сабмит логина с пустыми полями → никакой ошибки на форме → старая сессия организатора жива → владелец видит «Подать заявку» на своём событии → заявка уходит от него. Это не один баг, а три (№4, №5 и отсутствие индикации аккаунта на пути записи), и каждый вынесен отдельно.</p>
+        </div>
+        <div class="card">
+          <h3>Диагноз /map — через DOM, не через скриншоты</h3>
+          <p>Пустая карта без ошибок в консоли диагностирована JS-зондом: ymaps загружен, 42 узла созданы, но у <code>ymaps-2-1-79-map</code> высота 0 при родителе 584px — карта инициализировалась до/вне layout. Проверено и на десктопе: тоже пусто, т.е. фикс один для всех вьюпортов (высота внутреннего контейнера, а не медиа-квери).</p>
+        </div>
+        <div class="card">
+          <h3>Ролевая изоляция через отдельные аккаунты</h3>
+          <p>Зритель (<code>+qa23v</code>, «Мария Тестова») и организатор (<code>+qa23o</code>, «Лекторий Проба») — раздельные аккаунты, чтобы честно увидеть пустые состояния, онбординг и права каждой роли, а не смотреть на всё из-под админа. Бонус: выяснилось, что админка сама пометила оба «ТЕСТОВЫЙ».</p>
+        </div>
+        <div class="card">
+          <h3>Уборка прода: UI где можно, SQL где надёжнее</h3>
+          <p>Событие убрано через админ-флоу (это тоже тест). Тестовые RSVP на реальные события (концерт, кинопоказ) и подписка на «Еврейский музей» удалены точечным SQL по <code>event_rsvps</code> и <code>organizer_follows</code> (фильтр по email <code>%qa23%</code>, в транзакции, с проверкой count=0), потому что UI-логин флейки (баг №4) делал уборку через интерфейс ненадёжной. Аккаунты оставлены для будущих прогонов.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><div class="bar"></div><h2>Как упростить продукт — методы по ролям</h2></div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Зритель: убрать стену перед «Записаться»</h3>
+          <p>1) Верификация <em>после</em> записи: записался → «подтвердите почту до события», а не код перед CTA. 2) После верификации возвращать на событие и автозавершать запись (deep-link continuation). 3) «Записаться» прямо в карточке ленты. 4) Статус одной строкой: «Вы идёте · 26.08» вместо бейджа «ОК».</p>
+        </div>
+        <div class="card">
+          <h3>Организатор: один хаб и повторное использование</h3>
+          <p>1) «Я» — хаб с секциями «Участвую» / «Организую» + большая кнопка «Создать событие» (закрывает баг №10 без нового пункта навигации). 2) «Дублировать прошлое событие» — для регулярных лекториев это 80% созданий. 3) Человеческие статусы: Черновик / На проверке / Опубликовано / Отменено. 4) Счётчик новых заявок прямо в списке событий и owner-панель на published-странице.</p>
+        </div>
+        <div class="card">
+          <h3>Админ: сделать «Проверен» настоящим гейтом</h3>
+          <p>Новые организаторы публикуются через пре-модерацию, проверенные — сразу. Это одним решением чинит баги №2 и №3 и делает копирайт «модерация до 24 часов» правдой. Плюс уведомление (почта/пуш) о новых событиях в очереди — «Ждут·9» лежали с 15.08.</p>
+        </div>
+        <div class="card">
+          <h3>Все роли: честная обратная связь интерфейса</h3>
+          <p>1) Показывать ошибки форм — логин/регистрация не должны молчать (самое дешёвое из критичного). 2) Починить /map (по DOM — одна строка высоты контейнера). 3) Прибрать мобильную шапку: бургер или сокращённый e-mail, чтобы «Выйти» не обрезался. 4) Единые счётчики ленты/карты (скрывать прошедшие или помечать их).</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><div class="bar"></div><h2>Изменения</h2></div>
+      <div class="card" style="padding: 0.25rem 0.5rem;">
+        <table class="files">
+          <thead><tr><th>Статус</th><th>Путь / объект</th><th>Заметка</th></tr></thead>
+          <tbody>
+            <tr><td><span class="pill pill-new">new</span></td><td class="path">docs/superpowers/runbooks/2026-08-23-full-role-qa-run.md</td><td class="note">текстовый отчёт прогона в репо</td></tr>
+            <tr><td><span class="pill pill-new">new</span></td><td class="path">.claude-reports/2026-08-23-0234-full-role-qa-run.html</td><td class="note">этот дашборд</td></tr>
+            <tr><td><span class="pill pill-new">new</span></td><td class="path">prod: аккаунты dodonopavel+qa23v / +qa23o @gmail.com</td><td class="note">оставлены, авто-помечены «ТЕСТОВЫЙ»</td></tr>
+            <tr><td><span class="pill pill-mod">mod</span></td><td class="path">prod: событие «QA-тест: Лекция о шрифтах»</td><td class="note">status=rejected, из ленты убрано</td></tr>
+            <tr><td><span class="pill pill-del">del</span></td><td class="path">prod: event_rsvps ×3, organizer_follows ×1</td><td class="note">тестовые записи удалены, count=0 проверен</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><div class="bar"></div><h2>Доказательства</h2></div>
+      <div class="stack">
+        <div class="code-card">
+          <div class="code-head"><span>диагноз /map — JS-зонд в живой странице</span><span>output</span></div>
+<pre><code>ymapsLoaded: true, узлов [class*="ymaps"]: 42
+.ymaps-2-1-79-map        w=325  h=0   ← карта схлопнута
+.ymaps-2-1-79-ground-pane w=0   h=0
+родитель: .flex.h-[calc(100vh-210px)].min-h-[360px]  w=325 h=584  ← место есть</code></pre>
+        </div>
+        <div class="code-card">
+          <div class="code-head"><span>wrong-identity: заявка ушла от организатора</span><span>psql · lia_prod</span></div>
+<pre><code>select r.event_id, r.status, r.created_at, u.email
+from event_rsvps r left join users u on u.uuid = r.user_id
+where r.created_at &gt; now() - interval '2 hours';
+
+ b000...0006 | going   | 22:17:47 | dodonopavel+qa23v@gmail.com   ← зритель, ок
+ b000...0008 | going   | 22:23:54 | dodonopavel+qa23v@gmail.com   ← зритель, ок
+ 1267...4a82 | applied | 22:39:34 | dodonopavel+qa23o@gmail.com   ← ОРГАНИЗАТОР
+                                     на своём же событии</code></pre>
+        </div>
+        <div class="code-card">
+          <div class="code-head"><span>пост-модерация: событие сразу published</span><span>psql · lia_prod</span></div>
+<pre><code>-- сразу после клика «Опубликовать» (без участия админа):
+select title, status from events where title like 'QA-%';
+ QA-тест: Лекция о шрифтах | published   ← и видно гостю в ленте
+
+-- после отклонения админом с причиной «тестовые данные»:
+ QA-тест: Лекция о шрифтах | rejected    ← из ленты пропало</code></pre>
+        </div>
+        <div class="code-card">
+          <div class="code-head"><span>ложный баннер «почта не подтверждена» у админа</span><span>psql · gateguard</span></div>
+<pre><code>select email, email_verified, email_verification_token from users where ...;
+ poulissimo@gmail.com        | t | ''       ← верифицирован, но баннер висел
+ dodonopavel+qa23v@gmail.com | f | 657161   ← код для входа зрителя
+ (после ввода кода — верифицирован, вход ок)</code></pre>
+        </div>
+        <div class="code-card">
+          <div class="code-head"><span>уборка тестовых данных</span><span>psql · lia_prod</span></div>
+<pre><code>BEGIN;
+DELETE FROM event_rsvps       WHERE user_id IN (SELECT uuid FROM users WHERE email LIKE '%qa23%');  -- 3
+DELETE FROM organizer_follows WHERE user_id  IN (SELECT uuid FROM users WHERE email LIKE '%qa23%');  -- 1
+COMMIT;
+-- контроль: rsvps=0, follows=0 ✓</code></pre>
+        </div>
+        <div class="card"><p>Скриншоты шагов делались через Chrome-расширение и просматривались в сессии, но на диск не сохранялись — при необходимости прогон воспроизводим по маршруту из раздела «Контекст» (тестовые аккаунты живы, коды — из <code>gateguard.users.email_verification_token</code>).</p></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head"><div class="bar"></div><h2>Следующие шаги</h2></div>
+      <div class="stack">
+        <div class="card step">
+          <span class="pill pill-new">done</span>
+          <div class="body"><strong>Починить /map</strong><p>Дать внутреннему контейнеру карты высоту (h-full / явный height) — по DOM это одна правка, чинит мобилу и десктоп разом.</p></div>
+        </div>
+        <div class="card step">
+          <span class="pill pill-new">done</span>
+          <div class="body"><strong>Гейт «Проверен» + пре-модерация новичков</strong><p>Бейдж только после ручной верификации; события неверифицированных — через очередь до публикации. Синхронизировать копирайт мастера и диалога публикации.</p></div>
+        </div>
+        <div class="card step">
+          <span class="pill pill-new">done</span>
+          <div class="body"><strong>Ошибки форм логина/регистрации</strong><p>Любой неуспешный сабмит должен показывать сообщение. Плюс скрыть «Подать заявку» у владельца своего события.</p></div>
+        </div>
+        <div class="card step">
+          <span class="pill pill-new">done</span>
+          <div class="body"><strong>Воронка верификации</strong><p>Возврат на событие после кода (а лучше — верификация после записи). Починить редирект и protection от потери контекста.</p></div>
+        </div>
+        <div class="card step">
+          <span class="pill pill-new">done</span>
+          <div class="body"><strong>Мобильные мелочи одним батчем</strong><p>Шапка (слипание/обрезка), вход в кабинет организатора из «Я», человеческие статусы вместо МОД/ЧЕРН/ОТМ и «ОК», индикатор скролла чипов, счётчик подписчиков.</p></div>
+        </div>
+        <div class="card step">
+          <span class="pill pill-new">done</span>
+          <div class="body"><strong>Owner-панель на published</strong><p>Проверить после фикса: владелец опубликованного события должен видеть «Редактировать / в черновики» (код owner-actions существовал в qa14aug — возможно, регрессия условия статуса).</p></div>
+        </div>
+        <div class="card step">
+          <span class="pill pill-oos">out-of-scope</span>
+          <div class="body"><strong>Не проверялось в этом прогоне</strong><p>Внешняя регистрация (TimePad-whitelist), почтовые нотификации до реального инбокса, пост-ивент фидбек, платёжные сценарии сверх «оплата на месте» (их в продукте нет), веб-доступность (a11y-аудит).</p></div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</body>
+</html>

@@ -14,7 +14,7 @@ type cityCapturingRepo struct {
 	searchCity string
 }
 
-func (m *cityCapturingRepo) Search(city, q string, limit int) ([]*models.Venue, error) {
+func (m *cityCapturingRepo) Search(city, _ string, _ int) ([]*models.Venue, error) {
 	m.searchCity = city
 	return m.searchResult, nil
 }

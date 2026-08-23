@@ -12,8 +12,8 @@ import (
 )
 
 type fakeCitySettings struct {
-	spb bool
 	err error
+	spb bool
 }
 
 func (f *fakeCitySettings) Bool(context.Context, string) (bool, error) {

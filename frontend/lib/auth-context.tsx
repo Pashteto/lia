@@ -12,7 +12,6 @@ import {
 
 import { demoLogin, getMe, loginWithPassword, registerWithPassword } from "./api";
 import { clearSession, getStoredEmail, getToken, setSession } from "./auth";
-import { extractHttpStatus } from "./rsvp-errors";
 import { shouldRevalidateVerification } from "./verify-revalidate";
 
 interface AuthState {
@@ -114,7 +113,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Shared getMe result handlers. Success resolves the role; failure leaves
   // roleResolved=false so verification-gated UI (the banner) stays hidden
   // rather than showing a false "unverified" state off a failed request.
-  // A 401 additionally tears the dead session down.
   const applyMe = useCallback(
     (me: Awaited<ReturnType<typeof getMe>>) => {
       setRole(me?.role ?? null);
@@ -123,11 +121,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     },
     [],
   );
-  const failMe = useCallback((err: unknown) => {
-    if (extractHttpStatus(err) === 401) {
-      clearSession();
-      notifyAuthListeners();
-    }
+  // NB: no clearSession on 401 — the backend answers 401 on /auth/me for a
+  // freshly registered (still unverified) session, and tearing it down there
+  // would log the user out mid-verification (found on prod re-test).
+  const failMe = useCallback((_err: unknown) => {
     setRole(null);
     setEmailVerified(false);
     setRoleResolved(false);

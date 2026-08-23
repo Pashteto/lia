@@ -938,7 +938,9 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
             <div className="mt-auto border-t border-ink pt-[10px]">
               <p className="cap mb-[5px]">После отправки</p>
               <p className="text-[10.5px] leading-[1.45] text-text-dim">
-                Событие появляется в ленте сразу после публикации. Модераторы могут снять его, если оно нарушает правила.
+                {organizerVerified
+                  ? "Событие появляется в ленте сразу после публикации. Модераторы могут снять его, если оно нарушает правила."
+                  : "Событие уйдёт на модерацию — обычно до 24 часов. После одобрения оно появится в ленте."}
               </p>
             </div>
           </aside>

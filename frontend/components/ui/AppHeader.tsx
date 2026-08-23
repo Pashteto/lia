@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { CityControl } from "@/components/ui/CityControl";
 import { cn } from "@/lib/cn";
 import type { ReactNode } from "react";
 
@@ -68,6 +69,9 @@ export function AppHeader({ nav = [], admin, mobileCaption, actions }: AppHeader
             {item.label}
           </Link>
         ))}
+        {/* The city switcher is global state, so the desktop header carries it
+            on every non-admin page (mobile gets it via mobileCaption). */}
+        {!admin && <CityControl />}
         {actions}
       </nav>
       {(mobileCaption || actions) ? (

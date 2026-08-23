@@ -1,11 +1,13 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { AuthForm } from "@/components/AuthForm";
-import { CURRENT_CITY, cityLoginCaption } from "@/lib/city";
+import { CITY_COOKIE, cityBySlug, cityLoginCaption } from "@/lib/city";
 
 export const metadata = { title: "Вход — PRESENCE" };
 
 /** U7: split screen — ink brand panel left, paper form right; stacked on mobile. */
-export default function LoginPage() {
+export default async function LoginPage() {
+  const city = cityBySlug((await cookies()).get(CITY_COOKIE)?.value);
   return (
     <main className="grid min-h-screen grid-cols-2 max-md:grid-cols-1">
       <div
@@ -17,7 +19,7 @@ export default function LoginPage() {
           <h1 className="max-w-[16ch] text-[34px] font-black leading-[0.94] tracking-[-0.03em] max-md:text-[22px]">
             Медиации, лекции и разговоры об искусстве
           </h1>
-          <p className="cap">{cityLoginCaption(CURRENT_CITY)}</p>
+          <p className="cap">{cityLoginCaption(city)}</p>
         </div>
       </div>
       <div className="flex flex-col justify-center gap-[14px] p-[20px] md:px-[48px]">

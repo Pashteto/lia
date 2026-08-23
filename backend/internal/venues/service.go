@@ -18,8 +18,10 @@ var ErrInvalidInput = errors.New("invalid input")
 
 // Service is the venues business-logic interface.
 type Service interface {
-	// Search returns venues matching q (see Repository.Search).
-	Search(ctx context.Context, q string, limit int) ([]*models.Venue, error)
+	// Search returns venues of the given city matching q (see
+	// Repository.Search). Empty city defaults to models.DefaultCity; an
+	// unknown slug is ErrInvalidInput.
+	Search(ctx context.Context, city, q string, limit int) ([]*models.Venue, error)
 	// GetByID returns a single venue by id.
 	GetByID(ctx context.Context, id uuid.UUID) (*models.Venue, error)
 	// Create validates (name required), trims the name, and find-or-creates.
@@ -43,8 +45,14 @@ func NewService(repo Repository) Service {
 	return &service{repo: repo}
 }
 
-func (s *service) Search(_ context.Context, q string, limit int) ([]*models.Venue, error) {
-	list, err := s.repo.Search(q, limit)
+func (s *service) Search(_ context.Context, city, q string, limit int) ([]*models.Venue, error) {
+	if city == "" {
+		city = models.DefaultCity
+	}
+	if !models.ValidCity(city) {
+		return nil, fmt.Errorf("%w: unknown city %q", ErrInvalidInput, city)
+	}
+	list, err := s.repo.Search(city, q, limit)
 	if err != nil {
 		return nil, fmt.Errorf("search venues: %w", err)
 	}
@@ -87,6 +95,12 @@ func (s *service) Create(_ context.Context, v *models.Venue) (*models.Venue, err
 	v.Address = strings.TrimSpace(v.Address)
 	v.Metro = strings.TrimSpace(v.Metro)
 	v.District = strings.TrimSpace(v.District)
+	if v.City == "" {
+		v.City = models.DefaultCity
+	}
+	if !models.ValidCity(v.City) {
+		return nil, fmt.Errorf("%w: unknown city %q", ErrInvalidInput, v.City)
+	}
 
 	if err := ValidateCoords(v.Lat, v.Lon); err != nil {
 		return nil, err

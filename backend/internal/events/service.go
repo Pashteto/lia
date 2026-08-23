@@ -84,7 +84,10 @@ type Service interface {
 	GetByID(ctx context.Context, id string) (*models.Event, error)
 	// List returns events filtered by status, optionally restricted to a
 	// [from, to) start-time window (nil bounds mean "unbounded" on that side).
-	List(ctx context.Context, status string, from, to *time.Time, organizerOwnerID *uuid.UUID) ([]*models.Event, error)
+	// List returns events matching the filters. city, when non-empty, must be
+	// a valid slug (models.Cities) and restricts to that city; empty = all
+	// cities (internal callers).
+	List(ctx context.Context, status string, from, to *time.Time, organizerOwnerID *uuid.UUID, city string) ([]*models.Event, error)
 	// ListByOrganizer returns all events (any status) created by the given user.
 	ListByOrganizer(ctx context.Context, organizerID uuid.UUID) ([]*models.Event, error)
 	// Nearby returns published events nearest to (lat, lon), within 50 km,
@@ -126,6 +129,41 @@ type UpdateParams struct {
 	ExternalRegistrationURL *string
 	Capacity                *int
 	CapacityLimited         *bool
+	// City is honored only for venue-less events; with a venue the city always
+	// follows the venue (a conflicting explicit value is rejected).
+	City *string
+}
+
+// applyCity resolves an event's city. With a venue the city is the venue's —
+// an explicit conflicting value (create: event.City pre-set; update: explicit)
+// is rejected so the denormalized column can never contradict the join. For
+// venue-less events explicit wins, empty falls back to the default, and
+// anything outside the slug whitelist is rejected.
+func applyCity(event *models.Event, venue *models.Venue, explicit *string) error {
+	if venue != nil {
+		target := venue.City
+		if target == "" { // venue predating the city column — behaves as default
+			target = models.DefaultCity
+		}
+		if explicit != nil && *explicit != "" && *explicit != target {
+			return fmt.Errorf("%w: город события определяется площадкой", ErrInvalidInput)
+		}
+		if event.City != "" && event.City != target {
+			return fmt.Errorf("%w: город события определяется площадкой", ErrInvalidInput)
+		}
+		event.City = target
+		return nil
+	}
+	if explicit != nil {
+		event.City = *explicit
+	}
+	if event.City == "" {
+		event.City = models.DefaultCity
+	}
+	if !models.ValidCity(event.City) {
+		return fmt.Errorf("%w: unknown city %q", ErrInvalidInput, event.City)
+	}
+	return nil
 }
 
 // ownerSettableStatus reports whether an owner may set the given status via the
@@ -312,6 +350,10 @@ func (s *service) Create(ctx context.Context, event *models.Event) error {
 	}
 	event.Venue = venue
 
+	if err := applyCity(event, venue, nil); err != nil {
+		return err
+	}
+
 	if err := s.applyExternalURLPolicy(ctx, event, true); err != nil {
 		return err
 	}
@@ -491,6 +533,29 @@ func (s *service) Update(ctx context.Context, id, ownerID uuid.UUID, p UpdatePar
 			return nil, fmt.Errorf("validate venue: %w", err)
 		}
 		event.Venue = venue
+		// The city follows the new venue; the stale value is not an "explicit"
+		// choice, so clear it before resolving. When the venue is being
+		// REMOVED (zero id → venue == nil), the event stays in its city —
+		// applyCity keeps a non-empty event.City for venue-less events.
+		if venue != nil {
+			event.City = ""
+		}
+		if err := applyCity(event, venue, p.City); err != nil {
+			return nil, err
+		}
+	} else if p.City != nil {
+		if event.VenueID != uuid.Nil {
+			// Venue unchanged: its city is already denormalized onto the event,
+			// so an explicit different value is a contradiction.
+			if *p.City != "" && *p.City != event.City {
+				return nil, fmt.Errorf("%w: город события определяется площадкой", ErrInvalidInput)
+			}
+		} else {
+			event.City = ""
+			if err := applyCity(event, nil, p.City); err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	if err := event.Validate(); err != nil {
@@ -564,14 +629,17 @@ func (s *service) Update(ctx context.Context, id, ownerID uuid.UUID, p UpdatePar
 	return reloaded, nil
 }
 
-func (s *service) List(_ context.Context, status string, from, to *time.Time, organizerOwnerID *uuid.UUID) ([]*models.Event, error) {
+func (s *service) List(_ context.Context, status string, from, to *time.Time, organizerOwnerID *uuid.UUID, city string) ([]*models.Event, error) {
 	if status != "" {
 		if _, err := models.EventStatusFromString(status); err != nil {
 			return nil, fmt.Errorf("%w: %s", ErrInvalidInput, err.Error())
 		}
 	}
+	if city != "" && !models.ValidCity(city) {
+		return nil, fmt.Errorf("%w: unknown city %q", ErrInvalidInput, city)
+	}
 
-	filter := ListFilter{Status: status, From: from, To: to}
+	filter := ListFilter{Status: status, From: from, To: to, City: city}
 	if organizerOwnerID != nil {
 		filter.OrganizerIDs = []uuid.UUID{*organizerOwnerID}
 	}

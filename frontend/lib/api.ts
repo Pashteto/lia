@@ -70,6 +70,7 @@ export function apiEventToLia(e: ApiEvent): LiaEvent {
     coverUrl: e.cover_url,
     signupMode: e.signup_mode,
     capacity: e.capacity,
+    city: e.city,
     seatsRemaining: e.seats_remaining,
     // The backend has no attendee count — it sends seats_remaining
     // (= capacity − going, clamped at 0). Derive the count the «Места» cell
@@ -100,16 +101,34 @@ export interface ApiVenue {
   lon?: number;
 }
 
-/** Searches venues by name substring. Throws on network/HTTP error. */
-export async function searchVenues(q: string, limit = 20): Promise<ApiVenue[]> {
+/** Searches venues by name substring, scoped to a city (backend defaults to
+ * msk when omitted). Throws on network/HTTP error. */
+export async function searchVenues(q: string, limit = 20, city?: string): Promise<ApiVenue[]> {
   const params = new URLSearchParams();
   if (q.trim()) params.set("q", q.trim());
   params.set("limit", String(limit));
+  if (city) params.set("city", city);
   const res = await fetch(`${API_V1}/venues?${params.toString()}`);
   if (!res.ok) {
     throw new Error(`search venues failed: ${res.status}`);
   }
   return (await res.json()) as ApiVenue[];
+}
+
+/** One row of GET /cities: is the city open for discovery? */
+export interface ApiCity {
+  code: string;
+  available: boolean;
+}
+
+/** Fetches city availability (msk is always available; spb is the
+ * cities.spb_available runtime setting). Throws on network/HTTP error. */
+export async function fetchCities(): Promise<ApiCity[]> {
+  const res = await fetch(`${API_V1}/cities`, { next: { revalidate: 60 } });
+  if (!res.ok) {
+    throw new Error(`fetch cities failed: ${res.status}`);
+  }
+  return (await res.json()) as ApiCity[];
 }
 
 /** Creates (find-or-create) a venue. Throws on network/HTTP error. */
@@ -118,6 +137,7 @@ export async function createVenue(input: {
   address?: string;
   metro?: string;
   district?: string;
+  city?: string;
   lat?: number;
   lon?: number;
 }): Promise<ApiVenue> {
@@ -195,10 +215,12 @@ export function feedWindowStart(now: Date = new Date()): Date {
 export async function fetchPublishedEvents(
   from?: Date,
   to?: Date,
+  city?: string,
 ): Promise<LiaEvent[]> {
   const params = new URLSearchParams({ status: "published" });
   params.set("from", (from ?? feedWindowStart()).toISOString());
   if (to) params.set("to", to.toISOString());
+  if (city) params.set("city", city);
   const res = await fetch(`${API_V1}/events?${params.toString()}`, {
     // Revalidate every 30s on the server; always fresh enough for discovery.
     next: { revalidate: 30 },
@@ -307,6 +329,8 @@ export interface CreateEventInput {
   description?: string;
   category_ids?: string[];
   venue_id?: string;
+  /** City slug; honored only for venue-less events (else follows the venue). */
+  city?: string;
   status?: EventStatus;
   format?: EventFormat;
   price_type?: PriceType;

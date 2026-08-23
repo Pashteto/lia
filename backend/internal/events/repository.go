@@ -31,6 +31,10 @@ type ListFilter struct {
 	// IDs, when non-empty, restricts to events with one of these primary keys
 	// (used to re-enrich a known set, e.g. merged calendar rows).
 	IDs []uuid.UUID
+	// City, when non-empty, restricts to events in that city (slug, see
+	// models.Cities). Public handlers always pass one; internal callers
+	// (my-events, calendar re-enrich) leave it empty = all cities.
+	City string
 	// From / To, when set, restrict to events whose starts_at is in [From, To).
 	From *time.Time
 	To   *time.Time
@@ -139,7 +143,7 @@ func (r *pgRepository) Update(event *models.Event) error {
 				"format", "price_type", "price_min", "price_max",
 				"external_ticket_url", "starts_at", "ends_at", "published_at",
 				"signup_mode", "capacity", "curator_question", "external_registration_url",
-				"capacity_limited", "external_url_verified",
+				"capacity_limited", "external_url_verified", "city",
 				"updated_at",
 			).
 			WherePK().
@@ -232,6 +236,10 @@ func (r *pgRepository) List(filter ListFilter) ([]*models.Event, error) {
 
 	if len(filter.IDs) > 0 {
 		query = query.Where("id IN (?)", pg.In(filter.IDs))
+	}
+
+	if filter.City != "" {
+		query = query.Where("city = ?", filter.City)
 	}
 
 	if filter.From != nil {

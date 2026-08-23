@@ -9,23 +9,28 @@ import {
   type GeoResult,
 } from "@/lib/geocode";
 import { updateVenue, type ApiVenue } from "@/lib/api";
+import { cityBySlug } from "@/lib/city";
 
 const YandexMap = dynamic(
   () => import("@/components/map/YandexMap").then((m) => m.YandexMap),
   { ssr: false },
 );
 
-const MOSCOW: [number, number] = [55.7558, 37.6173];
+
 
 export function VenueGeoModal({
   venue,
   onSaved,
   onClose,
+  citySlug,
 }: {
   venue: ApiVenue;
   onSaved: (v: ApiVenue) => void;
   onClose: () => void;
+  /** Scopes the Yandex lookups' viewport bias and the fallback map center. */
+  citySlug?: string;
 }) {
+  const cityCenter = cityBySlug(citySlug).center;
   const [q, setQ] = useState(venue.address ?? venue.name);
   const [debounced, setDebounced] = useState("");
   const [results, setResults] = useState<GeoResult[]>([]);
@@ -47,7 +52,7 @@ export function VenueGeoModal({
   useEffect(() => {
     if (debounced.trim() === "") return;
     let live = true;
-    Promise.allSettled([searchPlaces(debounced), geocodeAddress(debounced)]).then(
+    Promise.allSettled([searchPlaces(debounced, citySlug), geocodeAddress(debounced, citySlug)]).then(
       ([places, addrs]) => {
         if (!live) return;
         const lookup = mergeVenueLookups(places, addrs);
@@ -58,7 +63,7 @@ export function VenueGeoModal({
     return () => {
       live = false;
     };
-  }, [debounced]);
+  }, [debounced, citySlug]);
 
   const save = async () => {
     if (!pos) return;
@@ -117,7 +122,7 @@ export function VenueGeoModal({
           </div>
         )}
         <YandexMap
-          center={pos ?? MOSCOW}
+          center={pos ?? cityCenter}
           marker={pos ?? undefined}
           draggableMarker
           onMarkerMove={(lat, lon) => setPos([lat, lon])}

@@ -217,6 +217,12 @@ paths:
           required: false
           type: string
           format: uuid
+        - name: city
+          in: query
+          description: City slug. Defaults to msk when omitted (legacy clients).
+          required: false
+          type: string
+          enum: [msk, spb]
       responses:
         200:
           description: List of events
@@ -431,6 +437,24 @@ paths:
           schema:
             $ref: "#/definitions/Error"
 
+  /cities:
+    get:
+      summary: List cities
+      description: >-
+        Known cities and whether each is open for discovery. msk is always
+        available; spb is gated by the cities.spb_available runtime setting.
+      operationId: listCities
+      tags:
+        - cities
+      security: []
+      responses:
+        200:
+          description: City list
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/City"
+
   /venues/{id}:
     patch:
       summary: Update venue
@@ -483,6 +507,12 @@ paths:
           description: Max results (default 20)
           required: false
           type: integer
+        - name: city
+          in: query
+          description: City slug the search is scoped to. Defaults to msk when omitted.
+          required: false
+          type: string
+          enum: [msk, spb]
       responses:
         200:
           description: List of venues
@@ -490,6 +520,10 @@ paths:
             type: array
             items:
               $ref: "#/definitions/Venue"
+        400:
+          description: Invalid input (unknown city)
+          schema:
+            $ref: "#/definitions/Error"
         503:
           description: Service unavailable (database disabled)
           schema:
@@ -955,6 +989,10 @@ definitions:
       my_rsvp_status:
         type: string
         readOnly: true
+      city:
+        type: string
+        description: City slug (msk|spb), read-only — derived from the venue or set at creation
+        readOnly: true
       is_owner:
         type: boolean
         description: True when the authenticated caller owns this event (read-only)
@@ -1001,6 +1039,10 @@ definitions:
       venue_id:
         type: string
         format: uuid
+      city:
+        type: string
+        enum: [msk, spb]
+        description: Honored only for venue-less events; with a venue the city follows the venue. Defaults to msk.
       title:
         type: string
         minLength: 1
@@ -1113,6 +1155,10 @@ definitions:
       venue_id:
         type: string
         format: uuid
+      city:
+        type: string
+        enum: [msk, spb]
+        description: Honored only for venue-less events; with a venue the city follows the venue
       cover_file_id:
         type: string
         format: uuid
@@ -1150,6 +1196,9 @@ definitions:
         type: string
       district:
         type: string
+      city:
+        type: string
+        readOnly: true
       lat:
         type: number
         format: double
@@ -1158,6 +1207,18 @@ definitions:
         type: number
         format: double
         x-nullable: true
+
+  City:
+    type: object
+    description: A supported city and whether discovery is open there.
+    required:
+      - code
+      - available
+    properties:
+      code:
+        type: string
+      available:
+        type: boolean
 
   VenueInput:
     type: object
@@ -1173,6 +1234,10 @@ definitions:
         type: string
       district:
         type: string
+      city:
+        type: string
+        enum: [msk, spb]
+        description: City the venue is in. Defaults to msk.
       lat:
         type: number
         format: double

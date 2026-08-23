@@ -18,7 +18,7 @@ type fakeEvents struct {
 	err       error
 }
 
-func (f *fakeEvents) List(_ context.Context, status string, _, _ *time.Time, _ *uuid.UUID) ([]*models.Event, error) {
+func (f *fakeEvents) List(_ context.Context, status string, _, _ *time.Time, _ *uuid.UUID, _ string) ([]*models.Event, error) {
 	f.gotStatus = status
 	return f.events, f.err
 }

@@ -34,7 +34,7 @@ func TestGeocodeParsesFeatureMembers(t *testing.T) {
 	c := NewClient("test-key")
 	c.endpoint = srv.URL
 
-	got, err := c.Geocode(context.Background(), "Москва")
+	got, err := c.Geocode(context.Background(), "Москва", "")
 	if err != nil {
 		t.Fatalf("Geocode: %v", err)
 	}
@@ -51,7 +51,7 @@ func TestGeocodeParsesFeatureMembers(t *testing.T) {
 
 func TestGeocodeBlankQuerySkipsRequest(t *testing.T) {
 	c := NewClient("k")
-	got, err := c.Geocode(context.Background(), "   ")
+	got, err := c.Geocode(context.Background(), "   ", "")
 	if err != nil {
 		t.Fatalf("err = %v, want nil", err)
 	}
@@ -75,7 +75,7 @@ func TestSearchPlacesParsesBusinesses(t *testing.T) {
 	defer srv.Close()
 	c := NewClient("").WithPlacesKey("k")
 	c.placesEndpoint = srv.URL // test hook
-	got, err := c.SearchPlaces(context.Background(), "Дом Радио")
+	got, err := c.SearchPlaces(context.Background(), "Дом Радио", "")
 	if err != nil {
 		t.Fatal(err)
 	}

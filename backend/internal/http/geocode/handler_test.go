@@ -14,11 +14,11 @@ import (
 
 type fakeGeocoder struct{ results []geo.Result }
 
-func (f fakeGeocoder) Geocode(_ context.Context, _ string) ([]geo.Result, error) {
+func (f fakeGeocoder) Geocode(_ context.Context, _, _ string) ([]geo.Result, error) {
 	return f.results, nil
 }
 
-func (f fakeGeocoder) SearchPlaces(_ context.Context, _ string) ([]geo.Result, error) {
+func (f fakeGeocoder) SearchPlaces(_ context.Context, _, _ string) ([]geo.Result, error) {
 	return f.results, nil
 }
 

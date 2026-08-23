@@ -458,7 +458,7 @@ type stubEvents struct {
 	calledWith string
 }
 
-func (s *stubEvents) List(_ context.Context, status string, _, _ *time.Time, _ *uuid.UUID) ([]*domain.Event, error) {
+func (s *stubEvents) List(_ context.Context, status string, _, _ *time.Time, _ *uuid.UUID, _ string) ([]*domain.Event, error) {
 	s.calledWith = status
 	return s.list, nil
 }

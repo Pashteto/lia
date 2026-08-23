@@ -10,7 +10,7 @@ import { Chip } from "@/components/ui/Chip";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { fetchNearbyEvents } from "@/lib/api";
-import { CURRENT_CITY } from "@/lib/city";
+import { CURRENT_CITY, type City } from "@/lib/city";
 import { cn } from "@/lib/cn";
 import { distanceLabel, haversineKm, type LatLon } from "@/lib/geo";
 import { createLatestRequestGate } from "@/lib/latest-request-gate";
@@ -24,8 +24,8 @@ const YandexMap = dynamic(() => import("@/components/map/YandexMap").then((m) =>
 });
 
 // Handoff U5 default view.
-// Default map center = the current city (single source in lib/city).
-const MOSCOW: LatLon = CURRENT_CITY.center;
+// Default map center = the effective city (cookie / ?city=), passed by the
+// page; falls back to the default city for callers that pass nothing.
 const SEARCH_LIMIT = 200;
 const PIN_CAP = 100;
 const NEAR_KM = 5;
@@ -58,15 +58,20 @@ function getServerMobileViewportSnapshot(): boolean {
   return false;
 }
 
-export function MapBrowse() {
+export function MapBrowse({ city = CURRENT_CITY }: { city?: City }) {
+  // Identity keyed on the slug: the city prop crosses the RSC boundary and is
+  // a fresh object every server render, which would otherwise retrigger the
+  // initial-load effect below.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const CITY_CENTER: LatLon = useMemo(() => city.center, [city.slug]);
   const mobile = useSyncExternalStore(
     subscribeMobileViewport,
     getMobileViewportSnapshot,
     getServerMobileViewportSnapshot,
   );
   const requestGateRef = useRef(createLatestRequestGate());
-  const [center, setCenter] = useState<LatLon>(MOSCOW);
-  const [searchCenter, setSearchCenter] = useState<LatLon>(MOSCOW);
+  const [center, setCenter] = useState<LatLon>(CITY_CENTER);
+  const [searchCenter, setSearchCenter] = useState<LatLon>(CITY_CENTER);
   const [viewport, setViewport] = useState<MapViewport | null>(null);
   const [events, setEvents] = useState<LiaEvent[]>([]);
   const [truncated, setTruncated] = useState(false);
@@ -106,7 +111,7 @@ export function MapBrowse() {
     // Deferred a microtask: load() flips `loading` synchronously, which the
     // set-state-in-effect rule (rightly) flags when called from the effect
     // body itself. `loading` already starts true, so nothing visibly changes.
-    void Promise.resolve().then(() => load(MOSCOW));
+    void Promise.resolve().then(() => load(CITY_CENTER));
     if (!navigator.geolocation) return;
     let cancelled = false;
     navigator.geolocation.getCurrentPosition(
@@ -118,7 +123,7 @@ export function MapBrowse() {
           if (count > 0) {
             setCenter(at);
           } else {
-            void load(MOSCOW);
+            void load(CITY_CENTER);
           }
         });
       },
@@ -128,7 +133,7 @@ export function MapBrowse() {
     return () => {
       cancelled = true;
     };
-  }, [load]);
+  }, [load, CITY_CENTER]);
 
   const visible = useMemo(() => {
     if (filter === "free") return events.filter((e) => e.priceType === "free");

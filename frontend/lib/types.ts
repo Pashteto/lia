@@ -69,6 +69,8 @@ export interface LiaEvent {
   priceType: PriceType;
   priceMin?: number; // RUB
   capacity?: number;
+  /** City slug (msk|spb). */
+  city?: string;
   attendeeCount?: number;
   coverUrl?: string;
   /** Optional: the backend exposes organizer_id only (no profile join yet). */
@@ -144,6 +146,7 @@ export interface ApiEvent {
   cover_url?: string;
   signup_mode?: SignupMode;
   capacity?: number;
+  city?: string;
   seats_remaining?: number;
   my_rsvp_status?: RsvpStatus | "";
   curator_question?: string;

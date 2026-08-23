@@ -19,6 +19,7 @@ import {
 import { rankDiscover, type DiscoverHit } from "@/lib/discover-rank";
 import { eventToModuleProps } from "@/lib/event-module";
 import type { LatLon } from "@/lib/geo";
+import { CURRENT_CITY, type City } from "@/lib/city";
 import type { LiaEvent } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -44,9 +45,12 @@ function getMaxSmServerSnapshot() {
 export function DiscoverBrowse({
   initialEvents,
   categories,
+  city = CURRENT_CITY,
 }: {
   initialEvents: LiaEvent[];
   categories: ApiCategory[];
+  /** The effective city (cookie / ?city= override), resolved by the page. */
+  city?: City;
 }) {
   const router = useRouter();
   const isMaxSm = useSyncExternalStore(
@@ -63,8 +67,8 @@ export function DiscoverBrowse({
   const [now] = useState(() => new Date());
 
   const { data: events = initialEvents, isError, refetch } = useQuery({
-    queryKey: ["events", "published", null, null],
-    queryFn: () => fetchPublishedEvents(),
+    queryKey: ["events", "published", city.slug, null, null],
+    queryFn: () => fetchPublishedEvents(undefined, undefined, city.slug),
     initialData: initialEvents,
   });
 

@@ -34,10 +34,20 @@ func (h *ListVenues) Handle(params venuesops.ListVenuesParams) middleware.Respon
 	if params.Limit != nil {
 		limit = int(*params.Limit)
 	}
+	// No city = msk (legacy clients see the pre-city behavior); the enum
+	// (msk|spb) is validated by the go-swagger binding before this runs.
+	city := ""
+	if params.City != nil {
+		city = *params.City
+	}
 
-	list, err := h.venues.Search(params.HTTPRequest.Context(), q, limit)
+	list, err := h.venues.Search(params.HTTPRequest.Context(), city, q, limit)
 	if err != nil {
 		logger.Log().Errorf("search venues: %s", err.Error())
+		if errors.Is(err, venuesdomain.ErrInvalidInput) {
+			return venuesops.NewListVenuesBadRequest().
+				WithPayload(DefaultError(http.StatusBadRequest, err, nil))
+		}
 		return venuesops.NewListVenuesServiceUnavailable().
 			WithPayload(DefaultError(http.StatusServiceUnavailable, err, nil))
 	}
@@ -70,6 +80,7 @@ func (h *CreateVenue) Handle(params venuesops.CreateVenueParams) middleware.Resp
 		domain.Address = in.Address
 		domain.Metro = in.Metro
 		domain.District = in.District
+		domain.City = in.City
 		domain.Lat = in.Lat
 		domain.Lon = in.Lon
 	}

@@ -18,12 +18,12 @@ const DefaultSearchLimit = 20
 
 // Repository defines venue persistence operations.
 type Repository interface {
-	// Search returns venues whose name, address or metro matches q
-	// (case-insensitive substring, diacritics folded), plus name near-misses
-	// by trigram similarity. Name hits rank first, then closer trigram
-	// matches, then name order. Empty q returns the first `limit` venues by
-	// name.
-	Search(q string, limit int) ([]*models.Venue, error)
+	// Search returns venues in the given city whose name, address or metro
+	// matches q (case-insensitive substring, diacritics folded), plus name
+	// near-misses by trigram similarity. Name hits rank first, then closer
+	// trigram matches, then name order. Empty q returns the first `limit`
+	// venues of the city by name. city is required (the service defaults it).
+	Search(city, q string, limit int) ([]*models.Venue, error)
 	// GetByID returns a single venue by primary key.
 	GetByID(id uuid.UUID) (*models.Venue, error)
 	// GetByIDs returns the venues matching the given ids.
@@ -84,12 +84,12 @@ const trigramThreshold = "0.45"
 // address/metro hits, then closer trigram matches, then alphabetical order.
 //
 // unaccent() and the pg_trgm `%` operator come from migration 000022.
-func (r *pgRepository) Search(q string, limit int) ([]*models.Venue, error) {
+func (r *pgRepository) Search(city, q string, limit int) ([]*models.Venue, error) {
 	if limit <= 0 {
 		limit = DefaultSearchLimit
 	}
 	var list []*models.Venue
-	query := r.db.Model(&list)
+	query := r.db.Model(&list).Where("city = ?", city)
 	if trimmed := strings.TrimSpace(q); trimmed != "" {
 		var (
 			match      []string
@@ -164,6 +164,8 @@ func (r *pgRepository) FindOrCreateByName(v *models.Venue) (*models.Venue, error
 	existing := new(models.Venue)
 	err := r.db.Model(existing).
 		Where("lower(name) = lower(?)", v.Name).
+		// Same name in another city is a different venue (e.g. «Манеж»).
+		Where("city = ?", v.City).
 		Limit(1).
 		Select()
 	if err == nil {

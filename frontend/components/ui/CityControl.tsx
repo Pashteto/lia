@@ -1,54 +1,63 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { CITIES, CURRENT_CITY } from "@/lib/city";
+import { CITIES } from "@/lib/city";
+import { useCity } from "@/lib/city-context";
 import { cn } from "@/lib/cn";
 
 /** The city list lives in lib/city (single source shared with the feed copy,
  * login caption and map center); re-exported here for existing imports. */
 export const CITY_OPTIONS = CITIES;
 
-const CURRENT = CURRENT_CITY;
-
 /** Dropdown list under the header control. Split out so the open-state markup
- * is testable without simulating a click. */
+ * is testable without simulating a click. Availability comes from the city
+ * context (GET /cities → the cities.spb_available runtime setting). */
 export function CityMenu({ onClose }: { onClose: () => void }) {
+  const { city: current, available, setCity } = useCity();
   return (
     <ul
       role="listbox"
       aria-label="Город"
       className="absolute right-0 top-[calc(100%+6px)] z-40 min-w-[196px] border border-ink bg-paper shadow-[0_2px_0_0_var(--color-ink)]"
     >
-      {CITY_OPTIONS.map((city) => (
-        <li key={city.code} role="option" aria-selected={city === CURRENT}>
-          <button
-            type="button"
-            disabled={!city.available}
-            onClick={onClose}
-            className={cn(
-              "flex w-full items-baseline justify-between gap-[14px] px-[12px] py-[9px] text-left text-[12px]",
-              city.available
-                ? "swiss-focus cursor-pointer font-bold hover-invert"
-                : "cursor-default text-text-dim",
-            )}
-          >
-            <span>{city.name}</span>
-            {city === CURRENT ? (
-              <span aria-hidden className="font-mono text-[11px]">✓</span>
-            ) : (
-              <span className="cap">Скоро</span>
-            )}
-          </button>
-        </li>
-      ))}
+      {CITY_OPTIONS.map((city) => {
+        const isAvailable = available(city.slug);
+        return (
+          <li key={city.code} role="option" aria-selected={city.slug === current.slug}>
+            <button
+              type="button"
+              disabled={!isAvailable}
+              onClick={() => {
+                if (city.slug !== current.slug) setCity(city.slug);
+                onClose();
+              }}
+              className={cn(
+                "flex w-full items-baseline justify-between gap-[14px] px-[12px] py-[9px] text-left text-[12px]",
+                isAvailable
+                  ? "swiss-focus cursor-pointer font-bold hover-invert"
+                  : "cursor-default text-text-dim",
+              )}
+            >
+              <span>{city.name}</span>
+              {city.slug === current.slug ? (
+                <span aria-hidden className="font-mono text-[11px]">✓</span>
+              ) : isAvailable ? null : (
+                <span className="cap">Скоро</span>
+              )}
+            </button>
+          </li>
+        );
+      })}
     </ul>
   );
 }
 
 /** Header city control: looks like the old «МСК» caption but is an honest
- * button — opens a one-real-option list so «СПб скоро» is announced instead
- * of a dead label (QA 14.08, finding 3). */
+ * button — opens the city list; unavailable cities are announced as «Скоро»
+ * instead of a dead label (QA 14.08, finding 3). Picking an available city
+ * writes the lia_city cookie and re-renders server data (city-context). */
 export function CityControl() {
+  const { city: current } = useCity();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -74,11 +83,11 @@ export function CityControl() {
         type="button"
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-label={`Город: ${CURRENT.name}`}
+        aria-label={`Город: ${current.name}`}
         onClick={() => setOpen((v) => !v)}
         className="cap swiss-focus cursor-pointer whitespace-nowrap hover-invert"
       >
-        {CURRENT.code} ↓
+        {current.code} ↓
       </button>
       {open ? <CityMenu onClose={() => setOpen(false)} /> : null}
     </div>

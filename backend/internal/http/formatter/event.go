@@ -24,6 +24,7 @@ func VenueToAPI(v *domainModels.Venue) *apiModels.Venue {
 		Address:  v.Address,
 		Metro:    v.Metro,
 		District: v.District,
+		City:     v.City,
 	}
 	// Lat/Lon are *float64 in both the domain model and the generated API model.
 	// Assign pointers directly so coordless venues omit the fields (omitempty).
@@ -59,6 +60,7 @@ func EventToAPI(event *domainModels.Event) *apiModels.Event {
 		Status:            &status,
 		Format:            event.Format,
 		PriceType:         event.PriceType,
+		City:              event.City,
 		ExternalTicketURL: event.ExternalURL,
 		CreatedAt:         strfmt.DateTime(event.CreatedAt),
 		UpdatedAt:         strfmt.DateTime(event.UpdatedAt),
@@ -163,6 +165,9 @@ func EventFromAPIInput(in *apiModels.EventInput) (*domainModels.Event, error) {
 		SignupMode:              defaultStr(in.SignupMode, "open"),
 		CuratorQuestion:         in.CuratorQuestion,
 		ExternalRegistrationURL: in.ExternalRegistrationURL,
+		// City is resolved by the service: with a venue it follows the venue
+		// (a conflicting explicit value is a 400), venue-less defaults to msk.
+		City: in.City,
 	}
 	if in.Capacity != nil {
 		c := int(*in.Capacity)
@@ -278,6 +283,10 @@ func EventPatchToUpdateParams(in *apiModels.EventPatch) eventsdomain.UpdateParam
 	}
 	if id, ok := parseOptionalUUID(in.VenueID); ok {
 		p.VenueID = &id
+	}
+	if in.City != "" {
+		v := in.City
+		p.City = &v
 	}
 	if in.CoverFileID != nil {
 		if id, ok := parseOptionalUUID(*in.CoverFileID); ok {

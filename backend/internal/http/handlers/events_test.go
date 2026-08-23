@@ -317,6 +317,9 @@ type stubRsvpStatus struct{ status domainmodels.RsvpStatus }
 func (s stubRsvpStatus) StatusForUser(context.Context, uuid.UUID, uuid.UUID) (domainmodels.RsvpStatus, error) {
 	return s.status, nil
 }
+func (stubRsvpStatus) CountPendingApplications(context.Context, []uuid.UUID) (map[uuid.UUID]int, error) {
+	return map[uuid.UUID]int{}, nil
+}
 func (stubRsvpStatus) SignUp(context.Context, uuid.UUID, uuid.UUID, string) (*domainmodels.Rsvp, error) {
 	return nil, nil
 }

@@ -955,6 +955,14 @@ definitions:
       my_rsvp_status:
         type: string
         readOnly: true
+      is_owner:
+        type: boolean
+        description: True when the authenticated caller owns this event (read-only)
+      pending_applications_count:
+        type: integer
+        format: int64
+        description: Applications awaiting the organizer's decision (owner lists only, read-only)
+        readOnly: true
 
   Organizer:
     type: object

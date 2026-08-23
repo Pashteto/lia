@@ -44,6 +44,9 @@ type Service interface {
 	// StatusForUser returns the caller's RSVP status on an event, or "" when
 	// they have none. Used to render the correct join/apply state on reload.
 	StatusForUser(ctx context.Context, eventID, userID uuid.UUID) (models.RsvpStatus, error)
+	// CountPendingApplications returns applied-rsvp counts per event — the
+	// «Заявки · N» badge on the organizer's event list.
+	CountPendingApplications(ctx context.Context, eventIDs []uuid.UUID) (map[uuid.UUID]int, error)
 	// SetEventEnricher wires a full-event loader (events.GetEnriched). The rsvp
 	// repository attaches events by columns only, so without it /me/practices
 	// and /me/applications carry no venue, organizer or categories. Optional —
@@ -107,6 +110,10 @@ func (s *service) enrichEvents(ctx context.Context, rows []*models.Rsvp) {
 }
 
 func isNoRows(err error) bool { return errors.Is(err, pg.ErrNoRows) }
+
+func (s *service) CountPendingApplications(_ context.Context, eventIDs []uuid.UUID) (map[uuid.UUID]int, error) {
+	return s.repo.CountPendingApplications(eventIDs)
+}
 
 func (s *service) SignUp(_ context.Context, eventID, userID uuid.UUID, answer string) (*models.Rsvp, error) {
 	if eventID == uuid.Nil || userID == uuid.Nil {

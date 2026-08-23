@@ -122,6 +122,21 @@ func (f *fakeRepo) ListByEvent(eventID uuid.UUID, st []models.RsvpStatus) ([]*mo
 }
 func (f *fakeRepo) LoadApplicantNames(_ []*models.Rsvp) error { return nil }
 
+func (f *fakeRepo) CountPendingApplications(eventIDs []uuid.UUID) (map[uuid.UUID]int, error) {
+	out := map[uuid.UUID]int{}
+	for _, r := range f.rsvps {
+		if r.Status != models.RsvpApplied {
+			continue
+		}
+		for _, id := range eventIDs {
+			if r.EventID == id {
+				out[id]++
+			}
+		}
+	}
+	return out, nil
+}
+
 func openEvent(cap *int) *models.Event {
 	return &models.Event{ID: uuid.Must(uuid.NewV4()), OrganizerID: uuid.Must(uuid.NewV4()), SignupMode: "open", Capacity: cap}
 }
@@ -482,5 +497,28 @@ func TestApplyOwnEventForbidden(t *testing.T) {
 	svc := NewService(newFake(e))
 	if _, err := svc.SignUp(context.Background(), e.ID, e.OrganizerID, "мой ответ"); !errors.Is(err, ErrForbidden) {
 		t.Fatalf("want ErrForbidden, got %v", err)
+	}
+}
+
+// --- QA-23-aug: pending-applications counter for /events/mine ---
+
+func TestCountPendingApplicationsPassthrough(t *testing.T) {
+	e := openEvent(nil)
+	f := newFake(e)
+	svc := NewService(f)
+	u1, u2 := uuid.Must(uuid.NewV4()), uuid.Must(uuid.NewV4())
+	e.SignupMode = "application"
+	if _, err := svc.SignUp(context.Background(), e.ID, u1, "a"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := svc.SignUp(context.Background(), e.ID, u2, "b"); err != nil {
+		t.Fatal(err)
+	}
+	counts, err := svc.CountPendingApplications(context.Background(), []uuid.UUID{e.ID})
+	if err != nil {
+		t.Fatalf("CountPendingApplications: %v", err)
+	}
+	if counts[e.ID] != 2 {
+		t.Fatalf("want 2 applied, got %d", counts[e.ID])
 	}
 }

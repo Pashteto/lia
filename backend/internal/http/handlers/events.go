@@ -176,7 +176,9 @@ func (h *GetEventByID) Handle(params eventsops.GetEventByIDParams) middleware.Re
 			WithPayload(DefaultError(http.StatusNotFound, errors.New("event not found"), nil))
 	}
 
-	return eventsops.NewGetEventByIDOK().WithPayload(formatter.EventToAPI(event))
+	payload := formatter.EventToAPI(event)
+	payload.IsOwner = isOwner
+	return eventsops.NewGetEventByIDOK().WithPayload(payload)
 }
 
 // quotaMessage renders a rejected create in Russian. The daily cap is
@@ -281,11 +283,13 @@ func (h *CreateEvent) Handle(params eventsops.CreateEventParams, principal *apim
 // by the authenticated user.
 type ListMyEvents struct {
 	events eventsdomain.Service
+	rsvp   rsvpdomain.Service // optional: pending-application counters
 }
 
-// NewListMyEvents constructs a ListMyEvents handler.
-func NewListMyEvents(svc eventsdomain.Service) *ListMyEvents {
-	return &ListMyEvents{events: svc}
+// NewListMyEvents constructs a ListMyEvents handler. rsvp may be nil — the
+// list then simply omits pending_applications_count.
+func NewListMyEvents(svc eventsdomain.Service, rsvp rsvpdomain.Service) *ListMyEvents {
+	return &ListMyEvents{events: svc, rsvp: rsvp}
 }
 
 // Handle returns the caller's own events.
@@ -307,9 +311,29 @@ func (h *ListMyEvents) Handle(params eventsops.ListMyEventsParams, principal *ap
 			WithPayload(DefaultError(http.StatusServiceUnavailable, err, nil))
 	}
 
+	// Pending-application counters for the «Заявки · N» badge. Best-effort:
+	// a failed count must not break the list.
+	var pending map[uuid.UUID]int
+	if h.rsvp != nil {
+		ids := make([]uuid.UUID, 0, len(list))
+		for _, e := range list {
+			ids = append(ids, e.ID)
+		}
+		if counts, err := h.rsvp.CountPendingApplications(params.HTTPRequest.Context(), ids); err == nil {
+			pending = counts
+		} else {
+			logger.Log().Errorf("count pending applications: %s", err.Error())
+		}
+	}
+
 	payload := make([]*apimodels.Event, 0, len(list))
 	for _, e := range list {
-		payload = append(payload, formatter.EventToAPI(e))
+		out := formatter.EventToAPI(e)
+		out.IsOwner = true // /events/mine is owner-only by construction
+		if n, ok := pending[e.ID]; ok {
+			out.PendingApplicationsCount = int64(n)
+		}
+		payload = append(payload, out)
 	}
 
 	return eventsops.NewListMyEventsOK().WithPayload(payload)

@@ -296,7 +296,7 @@ func (m *Module) initAPI() error {
 	// i.e. when the database module is enabled).
 	if m.events != nil {
 		api.EventsListEventsHandler = handlers.NewListEvents(m.events, m.organizers)
-		api.EventsListMyEventsHandler = handlers.NewListMyEvents(m.events)
+		api.EventsListMyEventsHandler = handlers.NewListMyEvents(m.events, m.rsvp)
 		api.EventsGetEventByIDHandler = handlers.NewGetEventByID(m.events, m.rsvp, m.auth.CheckAuth)
 		api.EventsCreateEventHandler = handlers.NewCreateEvent(m.events, m.organizers)
 		api.EventsNearbyEventsHandler = handlers.NewNearbyEvents(m.events)

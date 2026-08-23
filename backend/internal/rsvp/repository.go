@@ -41,6 +41,9 @@ type Repository interface {
 	// LoadApplicantNames populates ApplicantName on each row from the users
 	// table in a single query (no N+1). Name only — email is excluded.
 	LoadApplicantNames(rows []*models.Rsvp) error
+	// CountPendingApplications returns applied-rsvp counts per event in a
+	// single query (no N+1). Events with no pending applications are absent.
+	CountPendingApplications(eventIDs []uuid.UUID) (map[uuid.UUID]int, error)
 }
 
 type pgRepository struct{ db *pg.DB }
@@ -69,6 +72,28 @@ func (r *pgRepository) GetRsvpByID(id uuid.UUID) (*models.Rsvp, error) {
 	out := &models.Rsvp{ID: id}
 	if err := r.db.Model(out).WherePK().Select(); err != nil {
 		return nil, fmt.Errorf("get rsvp %s: %w", id, err)
+	}
+	return out, nil
+}
+
+func (r *pgRepository) CountPendingApplications(eventIDs []uuid.UUID) (map[uuid.UUID]int, error) {
+	if len(eventIDs) == 0 {
+		return map[uuid.UUID]int{}, nil
+	}
+	var rows []struct {
+		EventID uuid.UUID `pg:"event_id"`
+		N       int       `pg:"n"`
+	}
+	_, err := r.db.Query(&rows, `
+		SELECT event_id, COUNT(*) AS n FROM event_rsvps
+		 WHERE event_id IN (?) AND status = ?
+		 GROUP BY event_id`, pg.In(eventIDs), models.RsvpApplied)
+	if err != nil {
+		return nil, fmt.Errorf("count pending applications: %w", err)
+	}
+	out := make(map[uuid.UUID]int, len(rows))
+	for _, row := range rows {
+		out[row.EventID] = row.N
 	}
 	return out, nil
 }

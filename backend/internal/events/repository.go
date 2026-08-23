@@ -143,7 +143,7 @@ func (r *pgRepository) Update(event *models.Event) error {
 				"format", "price_type", "price_min", "price_max",
 				"external_ticket_url", "starts_at", "ends_at", "published_at",
 				"signup_mode", "capacity", "curator_question", "external_registration_url",
-				"capacity_limited", "external_url_verified",
+				"capacity_limited", "external_url_verified", "city",
 				"updated_at",
 			).
 			WherePK().

@@ -53,6 +53,7 @@ export default function EditEventPage() {
     coverFileId?: string;
     coverPreviewUrl?: string;
     venueName?: string;
+    citySlug?: string;
   } = {
     title: event.title,
     description: event.description,
@@ -71,6 +72,7 @@ export default function EditEventPage() {
     externalRegistrationUrl: event.externalRegistrationUrl,
     capacityLimited: event.capacityLimited,
     coverPreviewUrl: event.coverUrl,
+    citySlug: event.city,
   };
 
   return <CreateEventForm mode="edit" eventId={event.id} initial={initial} />;

@@ -166,6 +166,7 @@ export function VenuePicker({
       {selected && <MapPinButton onClick={() => setGeoOpen(true)} />}
       {geoOpen && selected && (
         <VenueGeoModal
+          citySlug={citySlug}
           venue={selected}
           onSaved={(v) => {
             setSelected(v);

@@ -9,13 +9,14 @@ export interface GeoResult {
 
 // Forward geocoding via the auth-gated backend Yandex proxy.
 // The backend never exposes the geocoder key to the browser.
-export async function geocodeAddress(q: string): Promise<GeoResult[]> {
+export async function geocodeAddress(q: string, city?: string): Promise<GeoResult[]> {
   const query = q.trim();
   if (query === "") return [];
   const token = getToken();
   if (!token) throw new Error("not authenticated");
+  const cityParam = city ? `&city=${encodeURIComponent(city)}` : "";
   const res = await fetch(
-    `${API_BASE}/api/v1/geocode?q=${encodeURIComponent(query)}`,
+    `${API_BASE}/api/v1/geocode?q=${encodeURIComponent(query)}${cityParam}`,
     {
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",
@@ -26,12 +27,13 @@ export async function geocodeAddress(q: string): Promise<GeoResult[]> {
 }
 
 /** Venue/organization NAME search via the auth-gated backend Yandex Places proxy. */
-export async function searchPlaces(q: string): Promise<GeoResult[]> {
+export async function searchPlaces(q: string, city?: string): Promise<GeoResult[]> {
   const query = q.trim();
   if (query === "") return [];
   const token = getToken();
   if (!token) throw new Error("not authenticated");
-  const res = await fetch(`${API_BASE}/api/v1/places?q=${encodeURIComponent(query)}`, {
+  const cityParam = city ? `&city=${encodeURIComponent(city)}` : "";
+  const res = await fetch(`${API_BASE}/api/v1/places?q=${encodeURIComponent(query)}${cityParam}`, {
     headers: { Authorization: `Bearer ${token}` },
     cache: "no-store",
   });

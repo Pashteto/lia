@@ -45,7 +45,7 @@ func (h *ListVenues) Handle(params venuesops.ListVenuesParams) middleware.Respon
 	if err != nil {
 		logger.Log().Errorf("search venues: %s", err.Error())
 		if errors.Is(err, venuesdomain.ErrInvalidInput) {
-			return venuesops.NewListVenuesServiceUnavailable().
+			return venuesops.NewListVenuesBadRequest().
 				WithPayload(DefaultError(http.StatusBadRequest, err, nil))
 		}
 		return venuesops.NewListVenuesServiceUnavailable().

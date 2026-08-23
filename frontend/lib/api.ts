@@ -70,6 +70,7 @@ export function apiEventToLia(e: ApiEvent): LiaEvent {
     coverUrl: e.cover_url,
     signupMode: e.signup_mode,
     capacity: e.capacity,
+    city: e.city,
     seatsRemaining: e.seats_remaining,
     // The backend has no attendee count — it sends seats_remaining
     // (= capacity − going, clamped at 0). Derive the count the «Места» cell

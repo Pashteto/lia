@@ -226,6 +226,8 @@ export interface CreateEventFormProps {
     coverFileId?: string;
     coverPreviewUrl?: string;
     venueName?: string;
+    /** Edit mode: the event's own city — beats the visitor's cookie city. */
+    citySlug?: string;
   };
 }
 
@@ -285,7 +287,13 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
   // when more than one city is open (GET /cities → context availability).
   const { city: contextCity, available } = useCity();
   const availableCities = CITIES.filter((c) => available(c.slug));
-  const [citySlug, setCitySlug] = useState<CitySlug>(contextCity.slug);
+  // Edit mode seeds from the EVENT's city, not the visitor's — otherwise a
+  // Moscow visitor's autosave would silently relocate a Petersburg event.
+  const [citySlug, setCitySlug] = useState<CitySlug>(
+    () => (CITIES.some((c) => c.slug === initial?.citySlug)
+      ? (initial!.citySlug as CitySlug)
+      : contextCity.slug),
+  );
 
   const isFree = useWatch({ control, name: "isFree" });
   const signupMode = useWatch({ control, name: "signupMode" });

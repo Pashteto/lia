@@ -533,9 +533,13 @@ func (s *service) Update(ctx context.Context, id, ownerID uuid.UUID, p UpdatePar
 			return nil, fmt.Errorf("validate venue: %w", err)
 		}
 		event.Venue = venue
-		// The city follows the (possibly new) venue; the stale value is not an
-		// "explicit" choice, so clear it before resolving.
-		event.City = ""
+		// The city follows the new venue; the stale value is not an "explicit"
+		// choice, so clear it before resolving. When the venue is being
+		// REMOVED (zero id → venue == nil), the event stays in its city —
+		// applyCity keeps a non-empty event.City for venue-less events.
+		if venue != nil {
+			event.City = ""
+		}
 		if err := applyCity(event, venue, p.City); err != nil {
 			return nil, err
 		}

@@ -11,9 +11,12 @@ DROP INDEX IF EXISTS venue_name_lower_idx;
 CREATE INDEX IF NOT EXISTS venue_city_name_lower_idx
     ON venues (city, lower(name));
 
--- Public listing filters by city and orders by start time.
-CREATE INDEX IF NOT EXISTS events_city_starts_at_idx
-    ON events (city, starts_at);
+-- The public listing predicate is status AND city AND starts_at. Replace the
+-- old (status, starts_at) index (migration 000004) with the full three-column
+-- form — the old one is its prefix, so nothing else regresses.
+DROP INDEX IF EXISTS event_status_starts_at_idx;
+CREATE INDEX IF NOT EXISTS events_status_city_starts_at_idx
+    ON events (status, city, starts_at);
 
 -- Backfill correction: the 2026-07/08 venue seed batches already included
 -- Petersburg venues; without this they would all read as default 'msk'.

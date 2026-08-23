@@ -108,6 +108,24 @@ func TestUpdate_VenueChangeCarriesItsCity(t *testing.T) {
 	}
 }
 
+func TestUpdate_VenueRemovalKeepsTheCity(t *testing.T) {
+	owner := uuid.Must(uuid.NewV4())
+	ev := publishedEvent(owner)
+	ev.VenueID = uuid.Must(uuid.NewV4())
+	ev.City = models.CitySPB
+	// venues.Validate returns (nil, nil) for the zero id — venue removal.
+	repo := &mockRepo{get: ev}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 0)
+
+	zero := uuid.Nil
+	if _, err := svc.Update(context.Background(), ev.ID, owner, UpdateParams{VenueID: &zero}); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if repo.updated.City != models.CitySPB {
+		t.Fatalf("venue removal must keep city %q, got %q", models.CitySPB, repo.updated.City)
+	}
+}
+
 func TestUpdate_ExplicitCityOnVenuelessEvent(t *testing.T) {
 	owner := uuid.Must(uuid.NewV4())
 	ev := publishedEvent(owner)

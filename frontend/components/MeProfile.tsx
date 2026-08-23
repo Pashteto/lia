@@ -15,9 +15,12 @@ import { StatusChip } from "@/components/ui/StatusChip";
 import {
   fetchFollowedOrganizers,
   fetchMyApplications,
+  fetchMyEvents,
   fetchMyPractices,
   getMe,
+  getMyOrganizer,
 } from "@/lib/api";
+import { OrganizerSection } from "@/components/MeOrganizerSection";
 import { useAuth } from "@/lib/auth-context";
 import { formatShortDate, formatStartTime } from "@/lib/format";
 import { memberSince } from "@/lib/member-since";
@@ -160,6 +163,23 @@ export function MeProfile() {
     queryFn: fetchFollowedOrganizers,
     enabled: authed,
   });
+  // «Организую» hub data. Both tolerate "not an organizer yet" (null / []).
+  const myOrganizer = useQuery({
+    queryKey: ["my-organizer"],
+    queryFn: () => getMyOrganizer().catch(() => null),
+    enabled: authed,
+  });
+  const myEvents = useQuery({
+    queryKey: ["my-events"],
+    queryFn: () => fetchMyEvents().catch(() => []),
+    enabled: authed,
+  });
+  const organizerEventsCount = myEvents.data?.length ?? 0;
+  const pendingApplicationsTotal = (myEvents.data ?? []).reduce(
+    (sum, e) => sum + (e.pendingApplicationsCount ?? 0),
+    0,
+  );
+  const hasOrganizer = Boolean(myOrganizer.data) || organizerEventsCount > 0;
 
   const header = <AppHeader nav={USER_NAV} actions={<AuthNavControl />} mobileCaption="ПРОФИЛЬ" />;
 
@@ -232,10 +252,11 @@ export function MeProfile() {
               href="/me?tab=follows"
             />
           </div>
-          <div className="grid grid-cols-3 border-b border-ink md:hidden [&>*+*]:border-l [&>*+*]:border-on-surface">
+          <div className="grid grid-cols-4 border-b border-ink md:hidden [&>*+*]:border-l [&>*+*]:border-on-surface">
             <Cell caption="Посещено" value={countLabel(counts.past)} mono className="px-[10px] py-[8px]" href="/me?tab=past" />
             <Cell caption="Заявки" value={countLabel(counts.applications)} mono className="px-[10px] py-[8px]" href="/me?tab=applications" />
             <Cell caption="Подписки" value={countLabel(counts.follows)} mono className="px-[10px] py-[8px]" href="/me?tab=follows" />
+            <Cell caption="Календарь" value="→" mono className="px-[10px] py-[8px]" href="/me/calendar" />
           </div>
         </div>
 
@@ -325,6 +346,12 @@ export function MeProfile() {
             }
           />
         )}
+
+        <OrganizerSection
+          hasOrganizer={hasOrganizer}
+          eventsCount={organizerEventsCount}
+          pendingApplications={pendingApplicationsTotal}
+        />
       </main>
     </>
   );

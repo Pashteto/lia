@@ -14,6 +14,8 @@ type fakeRepo struct {
 	reinstateErr   error
 	approveErr     error
 	approveCalled  bool
+	reviewCalled   bool
+	reviewErr      error
 	counts         Counts
 }
 
@@ -25,6 +27,10 @@ func (f *fakeRepo) Reinstate(_ context.Context, _, _ uuid.UUID) error { return f
 func (f *fakeRepo) Approve(_ context.Context, _, _ uuid.UUID) error {
 	f.approveCalled = true
 	return f.approveErr
+}
+func (f *fakeRepo) Review(_ context.Context, _, _ uuid.UUID) error {
+	f.reviewCalled = true
+	return f.reviewErr
 }
 func (f *fakeRepo) Counts(_ context.Context) (Counts, error)                    { return f.counts, nil }
 func (f *fakeRepo) LatestReason(_ context.Context, _ uuid.UUID) (string, error) { return "", nil }
@@ -65,5 +71,25 @@ func TestApprove_PropagatesInvalidTransition(t *testing.T) {
 	err := svc.Approve(context.Background(), uuid.Must(uuid.NewV4()), uuid.Must(uuid.NewV4()))
 	if !errors.Is(err, ErrInvalidTransition) {
 		t.Fatalf("err = %v, want ErrInvalidTransition", err)
+	}
+}
+
+// «Одобрить» on an already-published event used to be a client-side no-op, so
+// the post-moderation queue never drained. It now goes through the repository.
+func TestReview_DelegatesToRepo(t *testing.T) {
+	repo := &fakeRepo{}
+	if err := NewService(repo).Review(context.Background(), uuid.Must(uuid.NewV4()), uuid.Must(uuid.NewV4())); err != nil {
+		t.Fatalf("Review: %v", err)
+	}
+	if !repo.reviewCalled {
+		t.Fatal("expected repo.Review to be called")
+	}
+}
+
+func TestReview_PropagatesInvalidTransition(t *testing.T) {
+	repo := &fakeRepo{reviewErr: ErrInvalidTransition}
+	err := NewService(repo).Review(context.Background(), uuid.Must(uuid.NewV4()), uuid.Must(uuid.NewV4()))
+	if err != ErrInvalidTransition {
+		t.Fatalf("want ErrInvalidTransition, got %v", err)
 	}
 }

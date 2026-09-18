@@ -38,6 +38,8 @@ type stubMod struct {
 	takedownErr  error
 	reinstateErr error
 	approveErr   error
+	reviewErr    error
+	reviewedID   *uuid.UUID
 }
 
 func (s stubMod) Overview(context.Context) (moderation.Counts, error) {
@@ -45,6 +47,16 @@ func (s stubMod) Overview(context.Context) (moderation.Counts, error) {
 		return moderation.Counts{}, s.overviewErr
 	}
 	return moderation.Counts{EventsTotal: 3, EventsPublished: 2, EventsRemoved: 1}, nil
+}
+
+func (s stubMod) Review(_ context.Context, id uuid.UUID, _ uuid.UUID) error {
+	if s.reviewErr != nil {
+		return s.reviewErr
+	}
+	if s.reviewedID != nil {
+		*s.reviewedID = id
+	}
+	return nil
 }
 
 func (s stubMod) Takedown(ctx context.Context, id uuid.UUID, by uuid.UUID, reason string) error {
@@ -454,12 +466,21 @@ func TestHygiene_503WhenUnwired(t *testing.T) {
 // coerce to published).
 type stubEvents struct {
 	eventsdomain.Service
-	list       []*domain.Event
-	calledWith string
+	list           []*domain.Event
+	calledWith     string
+	modCalledWith  string
+	modCalledLimit int
 }
 
 func (s *stubEvents) List(_ context.Context, status string, _, _ *time.Time, _ *uuid.UUID, _ string) ([]*domain.Event, error) {
 	s.calledWith = status
+	return s.list, nil
+}
+
+func (s *stubEvents) ListForModeration(_ context.Context, status string, limit int) ([]*domain.Event, error) {
+	s.calledWith = status
+	s.modCalledWith = status
+	s.modCalledLimit = limit
 	return s.list, nil
 }
 
@@ -510,7 +531,7 @@ func TestListEvents_CarriesPublishedAt(t *testing.T) {
 func TestListEvents_PendingReviewStatus(t *testing.T) {
 	events := &stubEvents{list: []*domain.Event{
 		{ID: uuid.Must(uuid.NewV4()), Title: "На проверке", StatusSQL: "pending_review",
-			StartsAt: time.Date(2026, 8, 20, 9, 0, 0, 0, time.UTC),
+			StartsAt:                time.Date(2026, 8, 20, 9, 0, 0, 0, time.UTC),
 			ExternalRegistrationURL: "https://sketchy.example.com/reg",
 			ExternalPlatformName:    "",
 		},
@@ -819,5 +840,69 @@ func TestSearchOrganizers_CarriesCounts(t *testing.T) {
 	}
 	if got[0]["complaints_count"] != float64(3) {
 		t.Fatalf("complaints_count = %v, want 3", got[0]["complaints_count"])
+	}
+}
+
+// The queue must never be cut to the public DefaultListLimit: with 63 published
+// events and a 50-row cap, taking one down just pulled the 51st in and «Ждут»
+// stayed at 50 forever (prod, 2026-09-18).
+func TestListEvents_UsesModerationQueryWithFullLimit(t *testing.T) {
+	ev := &stubEvents{list: []*domain.Event{}}
+	h := NewHandler(Deps{Authenticate: authFn("admin"), Moderation: stubMod{}, Events: ev})
+	req := httptest.NewRequest("GET", "/api/v1/admin/moderation/events?status=published", nil)
+	req.Header.Set("Authorization", "Bearer t")
+	h.ServeHTTP(httptest.NewRecorder(), req)
+
+	if ev.modCalledWith != "published" {
+		t.Fatalf("queue must go through ListForModeration, got status %q", ev.modCalledWith)
+	}
+	if ev.modCalledLimit != ModerationQueueLimit {
+		t.Fatalf("limit = %d, want %d", ev.modCalledLimit, ModerationQueueLimit)
+	}
+}
+
+// «Одобрить» on a published event: post-moderation has no status to move to, so
+// the endpoint stamps reviewed_at and the event leaves the queue.
+func TestReview_MarksEventReviewed(t *testing.T) {
+	id := uuid.Must(uuid.NewV4())
+	var got uuid.UUID
+	h := NewHandler(Deps{Authenticate: authFn("admin"), Moderation: stubMod{reviewedID: &got}})
+	req := httptest.NewRequest("POST", "/api/v1/admin/moderation/events/"+id.String()+"/review", nil)
+	req.Header.Set("Authorization", "Bearer t")
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200 (body %s)", rec.Code, rec.Body.String())
+	}
+	if got != id {
+		t.Fatalf("reviewed id = %s, want %s", got, id)
+	}
+}
+
+func TestReview_ConflictWhenAlreadyReviewed(t *testing.T) {
+	h := NewHandler(Deps{
+		Authenticate: authFn("admin"),
+		Moderation:   stubMod{reviewErr: moderation.ErrInvalidTransition},
+	})
+	req := httptest.NewRequest("POST", "/api/v1/admin/moderation/events/"+uuid.Must(uuid.NewV4()).String()+"/review", nil)
+	req.Header.Set("Authorization", "Bearer t")
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusConflict {
+		t.Fatalf("status = %d, want 409", rec.Code)
+	}
+}
+
+func TestReview_RejectsNonStaff(t *testing.T) {
+	h := NewHandler(Deps{Authenticate: authFn("user"), Moderation: stubMod{}})
+	req := httptest.NewRequest("POST", "/api/v1/admin/moderation/events/"+uuid.Must(uuid.NewV4()).String()+"/review", nil)
+	req.Header.Set("Authorization", "Bearer t")
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+
+	if rec.Code == http.StatusOK {
+		t.Fatalf("non-staff must not reach review, got %d", rec.Code)
 	}
 }

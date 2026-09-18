@@ -88,6 +88,7 @@ type Service interface {
 	// a valid slug (models.Cities) and restricts to that city; empty = all
 	// cities (internal callers).
 	List(ctx context.Context, status string, from, to *time.Time, organizerOwnerID *uuid.UUID, city string) ([]*models.Event, error)
+	ListForModeration(ctx context.Context, status string, limit int) ([]*models.Event, error)
 	// ListByOrganizer returns all events (any status) created by the given user.
 	ListByOrganizer(ctx context.Context, organizerID uuid.UUID) ([]*models.Event, error)
 	// Nearby returns published events nearest to (lat, lon), within 50 km,
@@ -649,6 +650,28 @@ func (s *service) List(_ context.Context, status string, from, to *time.Time, or
 		return nil, fmt.Errorf("list events: %w", err)
 	}
 
+	return list, nil
+}
+
+// ListForModeration backs the admin queue. It differs from List in two ways the
+// queue depends on: the caller sets the row cap (the public DefaultListLimit of
+// 50 silently truncated a 63-event backlog, so taking one event down just
+// pulled the 51st in and the counter never moved), and the `published` queue
+// hides events an admin has already cleared.
+func (s *service) ListForModeration(_ context.Context, status string, limit int) ([]*models.Event, error) {
+	if status != "" {
+		if _, err := models.EventStatusFromString(status); err != nil {
+			return nil, fmt.Errorf("%w: %s", ErrInvalidInput, err.Error())
+		}
+	}
+	list, err := s.repo.List(ListFilter{
+		Status:         status,
+		Limit:          limit,
+		UnreviewedOnly: status == "published",
+	})
+	if err != nil {
+		return nil, fmt.Errorf("list events for moderation: %w", err)
+	}
 	return list, nil
 }
 

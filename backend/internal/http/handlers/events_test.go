@@ -51,6 +51,10 @@ func (m *mockEventsService) Update(_ context.Context, id, ownerID uuid.UUID, _ e
 func (m *mockEventsService) GetByID(context.Context, string) (*domainmodels.Event, error) {
 	return m.getByID, nil
 }
+func (m *mockEventsService) ListForModeration(_ context.Context, _ string, _ int) ([]*domainmodels.Event, error) {
+	return nil, nil
+}
+
 func (m *mockEventsService) List(_ context.Context, status string, from, to *time.Time, organizerOwnerID *uuid.UUID, _ string) ([]*domainmodels.Event, error) {
 	m.listStatusArg = status
 	m.listFromArg = from

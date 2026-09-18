@@ -9,7 +9,7 @@ import { Chip } from "@/components/ui/Chip";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { adminShortId } from "@/lib/admin-id";
-import { nextQueueIndex } from "@/lib/admin-queue";
+import { type ModerationOutcome, nextQueueIndex, queueEffect } from "@/lib/admin-queue";
 import {
   REJECT_REASON_CHIPS,
   concatenateReasons,
@@ -24,6 +24,7 @@ import {
   fetchEventWithAuth,
   listModerationEvents,
   reinstateEvent,
+  reviewEvent,
   takedownEvent,
 } from "@/lib/api";
 import { cn } from "@/lib/cn";
@@ -206,14 +207,31 @@ export function AdminModeration() {
     setActionError("");
   }
 
-  function advanceWithoutRemoval(currentId: string) {
-    const idx = queue.findIndex((e) => e.id === currentId);
+  /**
+   * The row stays in the queue but changes status — the «Все» filter lists
+   * published AND rejected, so a taken-down event still belongs there (marked
+   * «снято»). Dropping it locally made it vanish until the next reload, which
+   * read as «действие не сохранилось».
+   */
+  function advanceAfterStatusChange(changedId: string, status: string) {
+    const idx = queue.findIndex((e) => e.id === changedId);
+    setQueue((prev) => prev.map((e) => (e.id === changedId ? { ...e, status } : e)));
+    setWaitingCount((c) => Math.max(0, c - 1));
     setReasons(new Set());
     setActionError("");
-    if (idx < 0) return;
-    if (idx + 1 < queue.length) {
-      setSelectedId(queue[idx + 1]!.id);
+    if (idx >= 0 && idx + 1 < queue.length) setSelectedId(queue[idx + 1]!.id);
+  }
+
+  /**
+   * Single exit point after a moderation action: queueEffect decides whether
+   * the row leaves the list the admin is looking at or only changes status.
+   */
+  function advance(id: string, outcome: ModerationOutcome) {
+    if (queueEffect(filter, outcome) === "restatus") {
+      advanceAfterStatusChange(id, outcome);
+      return;
     }
+    advanceAfterRemoval(id);
   }
 
   async function onApprove() {
@@ -224,12 +242,16 @@ export function AdminModeration() {
     try {
       if (row.status === "pending_review") {
         await approveEvent(row.id);
-        advanceAfterRemoval(row.id);
+        advance(row.id, "published");
       } else if (row.status === "rejected") {
         await reinstateEvent(row.id);
-        advanceAfterRemoval(row.id);
+        advance(row.id, "published");
       } else {
-        advanceWithoutRemoval(row.id);
+        // Post-moderation: the event is already live, so «одобрить» records
+        // that a human checked it. Before this call existed the button only
+        // moved the selection and the queue never drained.
+        await reviewEvent(row.id);
+        advance(row.id, "reviewed");
       }
     } catch {
       setActionError("Не удалось одобрить");
@@ -247,7 +269,7 @@ export function AdminModeration() {
     setBusy(true);
     try {
       await takedownEvent(selectedId, concatenateReasons([...reasons]));
-      advanceAfterRemoval(selectedId);
+      advance(selectedId, "rejected");
     } catch {
       setActionError("Не удалось отклонить");
     } finally {
@@ -264,7 +286,7 @@ export function AdminModeration() {
     setBusy(true);
     try {
       await takedownEvent(selectedId, revisionReason([...reasons]));
-      advanceAfterRemoval(selectedId);
+      advance(selectedId, "rejected");
     } catch {
       setActionError("Не удалось отправить на доработку");
     } finally {

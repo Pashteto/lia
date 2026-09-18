@@ -52,6 +52,7 @@ func NewHandler(deps Deps) http.Handler {
 	h.mux.HandleFunc("POST /api/v1/admin/moderation/events/{id}/takedown", h.staff(h.takedown))
 	h.mux.HandleFunc("POST /api/v1/admin/moderation/events/{id}/reinstate", h.staff(h.reinstate))
 	h.mux.HandleFunc("POST /api/v1/admin/moderation/events/{id}/approve", h.staff(h.approve))
+	h.mux.HandleFunc("POST /api/v1/admin/moderation/events/{id}/review", h.staff(h.review))
 	h.mux.HandleFunc("GET /api/v1/admin/moderation/organizers", h.staff(h.listOrganizers))
 	h.mux.HandleFunc("GET /api/v1/admin/organizers", h.staff(h.searchOrganizers))
 	h.mux.HandleFunc("GET /api/v1/admin/organizers/{id}", h.staff(h.organizerDetail))
@@ -181,7 +182,10 @@ func (h *handler) listEvents(w http.ResponseWriter, r *http.Request, _ *domain.U
 	if status != "published" && status != "rejected" && status != "pending_review" {
 		status = "published"
 	}
-	events, err := h.deps.Events.List(r.Context(), status, nil, nil, nil, "")
+	// ModerationQueueLimit, not the public default of 50: the queue must show
+	// the whole backlog, otherwise clearing one event silently pulls the next
+	// one in and the counter never moves (prod, 2026-09-18).
+	events, err := h.deps.Events.ListForModeration(r.Context(), status, ModerationQueueLimit)
 	if err != nil {
 		writeErr(w, http.StatusInternalServerError, "list failed")
 		return
@@ -213,6 +217,10 @@ func (h *handler) listEvents(w http.ResponseWriter, r *http.Request, _ *domain.U
 	writeJSON(w, http.StatusOK, out)
 }
 
+// ModerationQueueLimit caps the admin queue. High enough to be the real backlog
+// rather than a page, low enough to stay one cheap query.
+const ModerationQueueLimit = 500
+
 func (h *handler) takedown(w http.ResponseWriter, r *http.Request, u *domain.User) {
 	id, ok := pathID(w, r)
 	if !ok {
@@ -231,6 +239,23 @@ func (h *handler) takedown(w http.ResponseWriter, r *http.Request, u *domain.Use
 		writeErr(w, http.StatusConflict, "Событие нельзя снять из текущего статуса")
 	default:
 		writeErr(w, http.StatusInternalServerError, "takedown failed")
+	}
+}
+
+// review is «одобрить» for an already-published event: post-moderation has no
+// status to move to, so it stamps reviewed_at and the event leaves the queue.
+func (h *handler) review(w http.ResponseWriter, r *http.Request, u *domain.User) {
+	id, ok := pathID(w, r)
+	if !ok {
+		return
+	}
+	switch err := h.deps.Moderation.Review(r.Context(), id, u.UUID); err {
+	case nil:
+		writeJSON(w, http.StatusOK, map[string]string{"status": "reviewed"})
+	case moderation.ErrInvalidTransition:
+		writeErr(w, http.StatusConflict, "Событие уже проверено или снято")
+	default:
+		writeErr(w, http.StatusInternalServerError, "review failed")
 	}
 }
 

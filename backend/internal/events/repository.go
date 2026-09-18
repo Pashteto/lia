@@ -38,6 +38,9 @@ type ListFilter struct {
 	// From / To, when set, restrict to events whose starts_at is in [From, To).
 	From *time.Time
 	To   *time.Time
+	// UnreviewedOnly keeps only events with reviewed_at IS NULL (the admin
+	// post-moderation queue).
+	UnreviewedOnly bool
 	// Limit caps the number of rows returned (defaults to DefaultListLimit).
 	Limit int
 }
@@ -240,6 +243,12 @@ func (r *pgRepository) List(filter ListFilter) ([]*models.Event, error) {
 
 	if filter.City != "" {
 		query = query.Where("city = ?", filter.City)
+	}
+
+	// Post-moderation queue: events no admin has cleared yet. Unmapped on the
+	// model on purpose — nothing outside the moderation queue reads it.
+	if filter.UnreviewedOnly {
+		query = query.Where("reviewed_at IS NULL")
 	}
 
 	if filter.From != nil {

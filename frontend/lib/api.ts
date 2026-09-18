@@ -767,6 +767,20 @@ export async function takedownEvent(id: string, reason: string): Promise<void> {
   if (!res.ok) throw new Error(`takedown: ${res.status}`);
 }
 
+/**
+ * Admin: marks an already-published event as checked. Post-moderation has no
+ * status to move to — the event is live — so «одобрить» stamps reviewed_at and
+ * the event leaves the queue. Until 2026-09-18 this call did not exist and the
+ * button was a client-side no-op, so the queue never drained.
+ */
+export async function reviewEvent(id: string): Promise<void> {
+  const res = await fetch(`${API_V1}/admin/moderation/events/${id}/review`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(`review: ${res.status}`);
+}
+
 export async function reinstateEvent(id: string): Promise<void> {
   const res = await fetch(`${API_V1}/admin/moderation/events/${id}/reinstate`, {
     method: "POST",

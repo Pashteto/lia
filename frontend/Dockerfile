@@ -1,6 +1,15 @@
-# Lia frontend — demo deploy image (Next.js 16, pnpm).
-# Runs `next start` on :3001; image optimization via sharp works on Debian/arm64.
-FROM node:22-slim
+# Lia frontend — deploy image (Next.js 16, pnpm), two stages.
+#
+# Stage 1 builds with the full dev toolchain; stage 2 ships ONLY Next's traced
+# standalone server. Result: ~200-300 MB instead of the ~1.06 GB single-stage
+# image. Reason (2026-09-16): the Selectel box has a 20 GB disk and every
+# frontend redeploy adds another image until the old ones are pruned.
+#
+# Requires `output: "standalone"` in next.config.ts — keep the two in sync.
+# Runs `node server.js` on :3001 (standalone has its own server; `next start`
+# would need the whole node_modules tree and is NOT used here).
+
+FROM node:22-slim AS builder
 
 WORKDIR /app
 RUN npm install -g pnpm@10
@@ -25,5 +34,25 @@ ENV NEXT_PUBLIC_YANDEX_MAPS_KEY=$NEXT_PUBLIC_YANDEX_MAPS_KEY
 
 RUN pnpm build
 
+FROM node:22-slim AS runner
+
+WORKDIR /app
+ENV NODE_ENV=production
+ENV PORT=3001
+ENV HOSTNAME=0.0.0.0
+
+# next/image optimisation needs sharp at runtime. It is only a transitive
+# optional dep of Next (see pnpm-workspace.yaml onlyBuiltDependencies), so the
+# standalone trace may not carry it — install it explicitly instead of finding
+# out in prod that every cover 500s.
+RUN npm install --no-save --omit=dev sharp \
+    && npm cache clean --force
+
+# Static assets are NOT part of the standalone bundle: they must be copied next
+# to it, keeping the .next/static path.
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+
 EXPOSE 3001
-CMD ["pnpm", "start", "-p", "3001"]
+CMD ["node", "server.js"]

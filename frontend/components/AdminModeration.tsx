@@ -53,9 +53,20 @@ function externalUrlDomain(url: string): string {
   }
 }
 
+/**
+ * The conveyor shell. `h-full` resolves against the admin layout's viewport-height
+ * flex column (see app/admin/layout.tsx); `grid-rows-[minmax(0,1fr)]` is the other
+ * half of the fix — an implicit `auto` row is sized to max-content and would let
+ * the queue overflow the bounded container instead of scrolling inside it.
+ * Below 900px the panes stack and the page scrolls normally.
+ */
+const CONVEYOR_GRID =
+  "grid min-h-[360px] grid-cols-[250px_1fr] grid-rows-[minmax(0,1fr)] " +
+  "min-[900px]:h-full max-[899px]:grid-cols-1 max-[899px]:grid-rows-none";
+
 function ModerationSkeleton() {
   return (
-    <div className="grid min-h-[360px] grid-cols-[250px_1fr] max-[899px]:grid-cols-1">
+    <div className={CONVEYOR_GRID}>
       <div className="flex flex-col gap-[8px] border-r border-paper p-[14px] max-[899px]:border-r-0 max-[899px]:border-b">
         <Skeleton className="h-[28px] w-full" />
         <Skeleton className="h-[64px] w-full" />
@@ -297,7 +308,7 @@ export function AdminModeration() {
   const testTitle = isLikelyTestContent(titleText);
 
   return (
-    <div className="grid min-h-[360px] grid-cols-[250px_1fr] max-[899px]:grid-cols-1">
+    <div className={CONVEYOR_GRID}>
       {/* Queue — filter chips stay mounted even when empty so staff can switch to «Все» */}
       <div className="flex flex-col border-r border-paper max-[899px]:border-r-0 max-[899px]:border-b">
         <div className="flex gap-[5px] border-b border-paper px-[14px] py-[9px]">
@@ -498,7 +509,11 @@ export function AdminModeration() {
                 </div>
               </>
             )}
-            <div className="flex-1 px-[16px] py-[12px]">
+            {/* min-h-0 + scroll: in the bounded shell this region absorbs the
+                leftover height, and long content (wrapped reason chips, a long
+                external URL) must scroll here rather than push the action bar
+                out of the viewport again. */}
+            <div className="min-h-0 flex-1 overflow-y-auto px-[16px] py-[12px]">
               {isPendingReview ? (
                 <>
                   <p className="cap mb-[6px] text-muted-2">

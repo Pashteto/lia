@@ -147,6 +147,9 @@ func (r *pgRepository) Update(event *models.Event) error {
 				"external_ticket_url", "starts_at", "ends_at", "published_at",
 				"signup_mode", "capacity", "curator_question", "external_registration_url",
 				"capacity_limited", "external_url_verified", "city",
+				// Without these two an edit silently dropped the source: Create
+				// wrote it, Update did not (the column list here is explicit).
+				"source_url", "source_label",
 				"updated_at",
 			).
 			WherePK().

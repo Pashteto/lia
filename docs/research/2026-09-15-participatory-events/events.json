@@ -1,0 +1,786 @@
+[
+ {
+  "key": "part-01",
+  "event_input": {
+   "title": "Групповая импровизация «Случайный порядок» на «Пушкинской-10»",
+   "description": "Музыкальный воркшоп в галерее «Арт-Лига», где участники вместе импровизируют, а не слушают. Нотная грамота и музыкальная школа не нужны: можно принести свой инструмент или взять калимбу, металлофон, шейкеры или колокольчики на месте. Встреча длится около полутора часов.",
+   "city": "spb",
+   "venue_id": null,
+   "category_ids": [],
+   "status": "published",
+   "format": "offline",
+   "price_type": "fixed",
+   "price_min": 500,
+   "starts_at": "2026-09-17T19:30:00+03:00",
+   "ends_at": "2026-09-17T21:00:00+03:00",
+   "signup_mode": "external",
+   "external_registration_url": "https://docs.google.com/forms/d/e/1FAIpQLSc83TVObxQXqsSf0721PJofMGd3P3QcHiE-u8DwoyzX7OrEBg/viewform",
+   "cover_file_id": null
+  },
+  "category_slugs": [
+   "workshop",
+   "performance"
+  ],
+  "venue": {
+   "catalogue_match": null,
+   "prod_venue_id": null,
+   "is_new": true,
+   "name": "Арт-центр «Пушкинская-10»",
+   "address": "Пушкинская улица, 10 (вход со стороны Лиговского проспекта)",
+   "city": "spb"
+  },
+  "meta": {
+   "source_url": "https://p-10.ru/events/gruppovaya-improvizaciya-sluchajnyj-poryadok/",
+   "organizer_registration_url": null,
+   "registration_url_whitelisted": false,
+   "participation": [
+    "коллективная музыкальная импровизация без подготовки"
+   ],
+   "cover_image_url": null,
+   "age": null,
+   "notes": "500 ₽; регистрация через Google Form (не whitelist → pending_review). Галерея «Арт-Лига» внутри арт-центра. Окончание рассчитано по заявленной длительности 1,5 ч."
+  }
+ },
+ {
+  "key": "part-02",
+  "event_input": {
+   "title": "Книжный клуб «Читаем с RM»: «Письма к молодому поэту» Рильке",
+   "description": "Ежемесячный книжный клуб Некрасовки: участники заранее читают выбранную книгу, а на встрече обсуждают её вместе. В сентябре читают «Письма к молодому поэту» Райнера Марии Рильке и два стихотворения из «Часослова». Встречу ведёт сотрудница библиотеки Алёна Беляева.",
+   "city": "msk",
+   "venue_id": null,
+   "category_ids": [],
+   "status": "published",
+   "format": "offline",
+   "price_type": "free",
+   "starts_at": "2026-09-17T19:30:00+03:00",
+   "ends_at": null,
+   "signup_mode": "external",
+   "external_registration_url": "https://nekrasovka.ru/afisha/17-09-2026/8998",
+   "cover_file_id": null
+  },
+  "category_slugs": [
+   "reading-group"
+  ],
+  "venue": {
+   "catalogue_match": "Библиотека им. Н.А. Некрасова (конференц-зал/аудитории)",
+   "prod_venue_id": "f129d60f-c656-5a46-ac9b-c703508984e8",
+   "is_new": false,
+   "city": "msk"
+  },
+  "meta": {
+   "source_url": "https://nekrasovka.ru/afisha/17-09-2026/8998",
+   "organizer_registration_url": null,
+   "registration_url_whitelisted": false,
+   "participation": [
+    "обсуждение заранее прочитанной книги"
+   ],
+   "cover_image_url": null,
+   "age": "18+",
+   "notes": "Бесплатно, регистрация на странице (не whitelist → pending_review). Клуб собирается каждый третий четверг месяца."
+  }
+ },
+ {
+  "key": "part-03",
+  "event_input": {
+   "title": "ART inside: визит в мастерские объединения «Непокорённые»",
+   "description": "Арт-прогулка проекта «ИСКУССТВО внутри» по мастерским художников в бывшем ракетном заводе на проспекте Непокорённых. Вместо кураторского рассказа — разговор с авторами в их рабочих пространствах: участники заходят в студии, видят незаконченные работы и задают вопросы художникам. Маршрут «10 художников — разное искусство» проходит через студии Ильи Гапонова, Ивана Плюща, Алисы Гореловой, Семёна Мотолянца и других.",
+   "city": "spb",
+   "venue_id": null,
+   "category_ids": [],
+   "status": "published",
+   "format": "offline",
+   "price_type": "fixed",
+   "price_min": 1980,
+   "starts_at": "2026-09-19T12:00:00+03:00",
+   "ends_at": null,
+   "signup_mode": "external",
+   "external_registration_url": "https://kudago.com/spb/event/ekskursiya-ekskursii-v-masterskie-sovremennyih-hudozhnikov/",
+   "cover_file_id": null
+  },
+  "category_slugs": [
+   "walk"
+  ],
+  "venue": {
+   "catalogue_match": null,
+   "prod_venue_id": null,
+   "is_new": true,
+   "name": "Творческое объединение «Непокорённые»",
+   "address": "проспект Непокорённых, 17, корп. 4 (крайний вход справа, красная табличка «Непокорённые»)",
+   "city": "spb"
+  },
+  "meta": {
+   "source_url": "https://kudago.com/spb/event/ekskursiya-ekskursii-v-masterskie-sovremennyih-hudozhnikov/",
+   "organizer_registration_url": "https://artinside-spb.ru/",
+   "registration_url_whitelisted": true,
+   "participation": [
+    "визит в мастерские и живой диалог с художниками"
+   ],
+   "cover_image_url": "https://media.kudago.com/images/event/2c/ce/2cce5818d259360128d6578c1e9688e9.jpg",
+   "age": "12+",
+   "notes": "KudaGo id 222684 (серия). 1980 ₽. На KudaGo есть и 17.09 12:00, но маршрут на эту дату не назван — не взят. Покупка у организатора на artinside-spb.ru."
+  }
+ },
+ {
+  "key": "part-04",
+  "event_input": {
+   "title": "«Диалоги об искусстве» на английском в Новой Голландии: Звук",
+   "description": "Семинар-разговор на английском языке в пространстве «Сообщество». Участники вслушиваются в окружающие звуки, обсуждают, что такое музыка и как звучит тишина, и разбирают фрагменты исследований о звуке («The Soundscape of Modernity», «Noise: A Human History of Sound & Listening»). Ведут преподаватель литературы Том Бетелл и филолог Дарья Ларина; рекомендуемый уровень английского — A2+.",
+   "city": "spb",
+   "venue_id": null,
+   "category_ids": [],
+   "status": "published",
+   "format": "offline",
+   "price_type": "fixed",
+   "price_min": 300,
+   "starts_at": "2026-09-19T14:00:00+03:00",
+   "ends_at": null,
+   "signup_mode": "external",
+   "external_registration_url": "https://newholland.timepad.ru/event/4176627/",
+   "cover_file_id": null
+  },
+  "category_slugs": [
+   "reading-group"
+  ],
+  "venue": {
+   "catalogue_match": "Новая Голландия (парк)",
+   "prod_venue_id": "2b563440-ee97-5010-8c45-ca88108117cf",
+   "is_new": false,
+   "city": "spb"
+  },
+  "meta": {
+   "source_url": "https://www.newhollandsp.ru/events/education/dialogues-sound/",
+   "organizer_registration_url": null,
+   "registration_url_whitelisted": true,
+   "participation": [
+    "дискуссия на английском",
+    "упражнения на слушание",
+    "разбор текстов"
+   ],
+   "cover_image_url": null,
+   "age": null,
+   "notes": "300 ₽ — входной билет в «Сообщество» (действует весь день); регистрация на Timepad отдельно. Язык — английский, A2+."
+  }
+ },
+ {
+  "key": "part-05",
+  "event_input": {
+   "title": "«Вне стен»: медиаторская прогулка по Музеону",
+   "description": "Городская медиация Дома культуры «ГЭС-2» в парке «Музеон». Вместе с медиатором участники исследуют жизнь парка и обсуждают, какую роль монументальная скульптура играет в современном городе, а свои впечатления собирают в небольшой зин. Сбор у скульптуры «Садовая лопатка».",
+   "city": "msk",
+   "venue_id": null,
+   "category_ids": [],
+   "status": "published",
+   "format": "offline",
+   "price_type": "free",
+   "starts_at": "2026-09-20T12:30:00+03:00",
+   "ends_at": "2026-09-20T14:30:00+03:00",
+   "signup_mode": "external",
+   "external_registration_url": "https://ges-2.zapomni.ru/events/60196264-d1af-4ee8-aa7d-0e273dca5292",
+   "cover_file_id": null
+  },
+  "category_slugs": [
+   "mediation",
+   "walk"
+  ],
+  "venue": {
+   "catalogue_match": "Парк искусств «Музеон»",
+   "prod_venue_id": "d8011821-d7c4-5157-b873-1d29c50ba9df",
+   "is_new": false,
+   "city": "msk"
+  },
+  "meta": {
+   "source_url": "https://ges-2.org/outside-the-walls-a-walk-in-muzeon-park",
+   "organizer_registration_url": null,
+   "registration_url_whitelisted": false,
+   "participation": [
+    "медиаторская прогулка с обсуждением",
+    "создание собственного зина"
+   ],
+   "cover_image_url": null,
+   "age": "16+",
+   "notes": "Сессия 20.09 12:30–14:30 взята из календаря ges-2.org/calendar?date=2026-09-20; программа идёт до 28.09. Медиации ГЭС-2 бесплатны (ges-2.org/mediation/tour), регистрация на zapomni.ru (не whitelist → pending_review). На странице возраст указан двояко (16+ и 12+) — взят 16+."
+  }
+ },
+ {
+  "key": "part-06",
+  "event_input": {
+   "title": "Книжный клуб «Читай / мысли» в БИРО",
+   "description": "Книжный клуб в Библиотеке роста и карьеры, где книги обсуждают без академических формальностей: участники делятся впечатлениями, спорят о героях и собирают личный список чтения. Встречи модерирует журналист Виталий Толстов. Книга для этой встречи в анонсе на KudaGo не указана; её сообщают при регистрации на Timepad.",
+   "city": "spb",
+   "venue_id": null,
+   "category_ids": [],
+   "status": "published",
+   "format": "offline",
+   "price_type": "free",
+   "starts_at": "2026-09-22T19:00:00+03:00",
+   "ends_at": null,
+   "signup_mode": "external",
+   "external_registration_url": "https://biro.timepad.ru/event/3892541/",
+   "cover_file_id": null
+  },
+  "category_slugs": [
+   "reading-group"
+  ],
+  "venue": {
+   "catalogue_match": null,
+   "prod_venue_id": null,
+   "is_new": true,
+   "name": "Библиотека роста и карьеры (БИРО)",
+   "address": "Московский проспект, 150",
+   "city": "spb"
+  },
+  "meta": {
+   "source_url": "https://kudago.com/spb/event/vstrecha-knizhnogo-kluba-chitajmyisli/",
+   "organizer_registration_url": null,
+   "registration_url_whitelisted": true,
+   "participation": [
+    "обсуждение книги в клубе, модерируемая дискуссия"
+   ],
+   "cover_image_url": "https://media.kudago.com/images/event/5c/84/5c844a20d2c1fc83926adac76d312459.jpg",
+   "age": "16+",
+   "notes": "KudaGo id 224566; Timepad-ссылка из анонса KudaGo (biro.timepad.ru/event/3892541) — может вести на серию/прошлую встречу, проверить при загрузке; запасной вариант — KudaGo-страница (тоже whitelist). Тема 22.09 не объявлена."
+  }
+ },
+ {
+  "key": "part-07",
+  "event_input": {
+   "title": "«Зарисовки в Кабинете художника»: мастерская с Алимом Велитовым",
+   "description": "Художник Алим Велитов ведёт практическое занятие по быстрым зарисовкам: участники делают короткие упражнения, фиксируя линии архитектуры, жесты людей и свет, и работают с цветом, ритмом и композицией. Часть встречи — разбор работ старых мастеров, приёмы которых группа затем пробует в собственных набросках. Специальная подготовка не нужна.",
+   "city": "msk",
+   "venue_id": null,
+   "category_ids": [],
+   "status": "published",
+   "format": "offline",
+   "price_type": "free",
+   "starts_at": "2026-09-23T15:00:00+03:00",
+   "ends_at": null,
+   "signup_mode": "external",
+   "external_registration_url": "https://kudago.com/msk/event/master-klass-zarisovki-v-kabinete-hudozhnika/",
+   "cover_file_id": null
+  },
+  "category_slugs": [
+   "workshop"
+  ],
+  "venue": {
+   "catalogue_match": "Российская государственная библиотека для молодёжи",
+   "prod_venue_id": "dd7468b5-c573-44af-b857-82057aa7c307",
+   "is_new": false,
+   "city": "msk"
+  },
+  "meta": {
+   "source_url": "https://kudago.com/msk/event/master-klass-zarisovki-v-kabinete-hudozhnika/",
+   "organizer_registration_url": null,
+   "registration_url_whitelisted": true,
+   "participation": [
+    "рисование под руководством художника",
+    "разбор работ мастеров и применение приёмов в своих набросках"
+   ],
+   "cover_image_url": "https://media.kudago.com/images/event/96/c0/96c01d4b3b3f72b068e45d8d95d1f447",
+   "age": "12+",
+   "notes": "KudaGo id 223330; ещё сессия 16.09 15:00 (в день загрузки — пропущена). Бесплатно. URL совпадает с API site_url."
+  }
+ },
+ {
+  "key": "part-08",
+  "event_input": {
+   "title": "Дискуссия «В мире волшебных сказок»",
+   "description": "Встреча творческой мастерской Лермонтовки в формате дискуссии о волшебной сказке. Участники обсуждают происхождение жанра, типовые сюжеты и героев, вспоминают любимые сказки и разбирают «Морфологию волшебной сказки» Владимира Проппа.",
+   "city": "spb",
+   "venue_id": null,
+   "category_ids": [],
+   "status": "published",
+   "format": "offline",
+   "price_type": "free",
+   "starts_at": "2026-09-24T15:00:00+03:00",
+   "ends_at": null,
+   "signup_mode": "external",
+   "external_registration_url": "https://kudago.com/spb/event/diskussiya-v-mire-volshebnyih-skazok/",
+   "cover_file_id": null
+  },
+  "category_slugs": [
+   "reading-group"
+  ],
+  "venue": {
+   "catalogue_match": "Центральная библиотека имени Лермонтова",
+   "prod_venue_id": "85250222-9b05-4531-8230-1b1a5bd22e64",
+   "is_new": false,
+   "city": "spb"
+  },
+  "meta": {
+   "source_url": "https://kudago.com/spb/event/diskussiya-v-mire-volshebnyih-skazok/",
+   "organizer_registration_url": null,
+   "registration_url_whitelisted": true,
+   "participation": [
+    "дискуссия участников, обсуждение текстов"
+   ],
+   "cover_image_url": "https://media.kudago.com/images/event/0f/fe/0ffeed7fb6d5d65edd228f266ba2b246.jpg",
+   "age": "16+",
+   "notes": "KudaGo id 226427. Бесплатно."
+  }
+ },
+ {
+  "key": "part-09",
+  "event_input": {
+   "title": "Читательский клуб «Читаем с Гоголем»: «Человек-невидимка» Уэллса",
+   "description": "Встреча читательского клуба Дома Гоголя, посвящённая роману Герберта Уэллса «Человек-невидимка». Ведущие рассказывают об источниках мотива невидимости и истории издания, а затем вместе с участниками обсуждают, как менялось восприятие книги. Роман желательно прочитать заранее.",
+   "city": "msk",
+   "venue_id": null,
+   "category_ids": [],
+   "status": "published",
+   "format": "offline",
+   "price_type": "free",
+   "starts_at": "2026-09-24T19:00:00+03:00",
+   "ends_at": null,
+   "signup_mode": "external",
+   "external_registration_url": "https://kudago.com/msk/event/vstrecha-chitaem-s-gogolem-gerbert-uells---chelovek-nevidimka/",
+   "cover_file_id": null
+  },
+  "category_slugs": [
+   "reading-group"
+  ],
+  "venue": {
+   "catalogue_match": "Дом Николая Гоголя",
+   "prod_venue_id": "fec35b61-0c2c-40aa-b3ad-8b8cb4d29736",
+   "is_new": false,
+   "city": "msk"
+  },
+  "meta": {
+   "source_url": "https://kudago.com/msk/event/vstrecha-chitaem-s-gogolem-gerbert-uells---chelovek-nevidimka/",
+   "organizer_registration_url": null,
+   "registration_url_whitelisted": true,
+   "participation": [
+    "обсуждение романа в читательском клубе"
+   ],
+   "cover_image_url": "https://media.kudago.com/images/event/38/d4/38d4129ae7cc6e52f66313c3984e7533",
+   "age": "12+",
+   "notes": "KudaGo id 226546. В анонсе есть вводная часть от ведущих — формат ближе к «клуб + комментарий»; оставлен как читательский клуб. «Роман желательно прочитать» — стандартное условие клуба, в анонсе прямо не сказано."
+  }
+ },
+ {
+  "key": "part-10",
+  "event_input": {
+   "title": "Книжный клуб «Феникс»: обсуждаем «Посёлок» Кира Булычёва",
+   "description": "Встреча книжного клуба «Феникс», где участники обсуждают роман Кира Булычёва «Посёлок»: его место в цикле о Владиславе Павлыше и мультфильм «Перевал», снятый по первой части книги. Это разговор, а не лекция: собравшиеся делятся впечатлениями и спорят о героях и идеях романа. Читать предыдущие книги цикла заранее не обязательно.",
+   "city": "msk",
+   "venue_id": null,
+   "category_ids": [],
+   "status": "published",
+   "format": "offline",
+   "price_type": "free",
+   "starts_at": "2026-09-24T19:30:00+03:00",
+   "ends_at": null,
+   "signup_mode": "external",
+   "external_registration_url": "https://kudago.com/msk/event/vstrecha-obsuzhdenie-romana-posyolok-kira-bulyichyova/",
+   "cover_file_id": null
+  },
+  "category_slugs": [
+   "reading-group"
+  ],
+  "venue": {
+   "catalogue_match": "Российская государственная библиотека для молодёжи",
+   "prod_venue_id": "dd7468b5-c573-44af-b857-82057aa7c307",
+   "is_new": false,
+   "city": "msk"
+  },
+  "meta": {
+   "source_url": "https://kudago.com/msk/event/vstrecha-obsuzhdenie-romana-posyolok-kira-bulyichyova/",
+   "organizer_registration_url": null,
+   "registration_url_whitelisted": true,
+   "participation": [
+    "обсуждение прочитанного романа в формате книжного клуба"
+   ],
+   "cover_image_url": "https://media.kudago.com/images/event/01/60/016098c91dce8a27d186bd1186a7da06",
+   "age": "16+",
+   "notes": "KudaGo id 226489. Бесплатно. Время окончания не указано."
+  }
+ },
+ {
+  "key": "part-11",
+  "event_input": {
+   "title": "Книжный клуб «Настояща_Я»: «Анна Каренина»",
+   "description": "Утренняя встреча книжного клуба в Лермонтовке, посвящённая «Анне Карениной» Льва Толстого. Участницы обсуждают решения Анны, Вронского и Левина, темы семьи, долга и веры и то, как роман откликается в жизни современной женщины. Нужна предварительная регистрация на сайте библиотеки.",
+   "city": "spb",
+   "venue_id": null,
+   "category_ids": [],
+   "status": "published",
+   "format": "offline",
+   "price_type": "free",
+   "starts_at": "2026-09-26T11:00:00+03:00",
+   "ends_at": null,
+   "signup_mode": "external",
+   "external_registration_url": "https://kudago.com/spb/event/vstrecha-literaturnaya-vstrecha-knizhnogo-kluba-nastoyaschaya/",
+   "cover_file_id": null
+  },
+  "category_slugs": [
+   "reading-group"
+  ],
+  "venue": {
+   "catalogue_match": "Центральная библиотека имени Лермонтова",
+   "prod_venue_id": "85250222-9b05-4531-8230-1b1a5bd22e64",
+   "is_new": false,
+   "city": "spb"
+  },
+  "meta": {
+   "source_url": "https://kudago.com/spb/event/vstrecha-literaturnaya-vstrecha-knizhnogo-kluba-nastoyaschaya/",
+   "organizer_registration_url": null,
+   "registration_url_whitelisted": true,
+   "participation": [
+    "обсуждение романа в книжном клубе"
+   ],
+   "cover_image_url": "https://media.kudago.com/images/event/11/78/11786cddf65e9f5206e53e84d43b32e6.jpg",
+   "age": "18+",
+   "notes": "KudaGo id 220220. Клуб ориентирован на женскую аудиторию («участницы»). Регистрация — на сайте библиотеки; как ссылка использована KudaGo-страница."
+  }
+ },
+ {
+  "key": "part-12",
+  "event_input": {
+   "title": "«Громко сказано»: книжный клуб чтения вслух — «Любовь к жизни» Джека Лондона",
+   "description": "Клуб, где книгу читают вслух и обсуждают вместе. Библиотекари Некрасовки Анна Данилова и Нюра Бобракова предлагают участникам читать любимые отрывки рассказа Джека Лондона «Любовь к жизни» и слушать, как меняется смысл текста от разных интонаций. Затем прочитанное обсуждают.",
+   "city": "msk",
+   "venue_id": null,
+   "category_ids": [],
+   "status": "published",
+   "format": "offline",
+   "price_type": "free",
+   "starts_at": "2026-09-26T16:30:00+03:00",
+   "ends_at": null,
+   "signup_mode": "external",
+   "external_registration_url": "https://nekrasovka.ru/afisha/26-09-2026/8994",
+   "cover_file_id": null
+  },
+  "category_slugs": [
+   "reading-group"
+  ],
+  "venue": {
+   "catalogue_match": "Библиотека им. Н.А. Некрасова (конференц-зал/аудитории)",
+   "prod_venue_id": "f129d60f-c656-5a46-ac9b-c703508984e8",
+   "is_new": false,
+   "city": "msk"
+  },
+  "meta": {
+   "source_url": "https://nekrasovka.ru/afisha/26-09-2026/8994",
+   "organizer_registration_url": null,
+   "registration_url_whitelisted": false,
+   "participation": [
+    "чтение отрывков вслух",
+    "обсуждение прочитанного"
+   ],
+   "cover_image_url": null,
+   "age": "16+",
+   "notes": "Бесплатно, регистрация на странице Некрасовки (не whitelist → pending_review). Конференц-зал, 5 этаж, ул. Бауманская, 58/25, стр. 14."
+  }
+ },
+ {
+  "key": "part-13",
+  "event_input": {
+   "title": "«Медленное чтение на английском»: «Королева фей» Спенсера",
+   "description": "Цикл медленного чтения английской поэзии в Центре культур англоязычных стран «Иностранки». Участники вместе разбирают строфы в оригинале: язык, образный ряд, форму и звучание текста. По анонсу вторая встреча цикла посвящена «Королеве фей» Эдмунда Спенсера. Ведёт переводчик Маргарита Щеглова.",
+   "city": "msk",
+   "venue_id": null,
+   "category_ids": [],
+   "status": "published",
+   "format": "offline",
+   "price_type": "free",
+   "starts_at": "2026-09-29T13:00:00+03:00",
+   "ends_at": null,
+   "signup_mode": "external",
+   "external_registration_url": "https://kudago.com/msk/event/literaturnyie-chteniya-medlennoe-chtenie-na-anglijskom-yazyike/",
+   "cover_file_id": null
+  },
+  "category_slugs": [
+   "reading-group"
+  ],
+  "venue": {
+   "catalogue_match": "Библиотека иностранной литературы («Иностранка»)",
+   "prod_venue_id": "eebfdc9e-280c-5e2e-8b2b-48bc0bf65e0c",
+   "is_new": false,
+   "city": "msk"
+  },
+  "meta": {
+   "source_url": "https://kudago.com/msk/event/literaturnyie-chteniya-medlennoe-chtenie-na-anglijskom-yazyike/",
+   "organizer_registration_url": null,
+   "registration_url_whitelisted": true,
+   "participation": [
+    "совместное чтение и разбор текста в оригинале"
+   ],
+   "cover_image_url": "https://media.kudago.com/images/event/55/a5/55a5650c79fd9cf390be8da543aaf771",
+   "age": "16+",
+   "notes": "KudaGo id 226506, даты 15.09 и 29.09 13:00; тема 29.09 (Спенсер) выведена из порядка встреч в анонсе — формулировка осторожная. Нужен базовый английский."
+  }
+ },
+ {
+  "key": "part-14",
+  "event_input": {
+   "title": "«С чего начинаются комиксы?»: мастер-класс по раскадровке",
+   "description": "Практическое занятие для тех, кто рисует комиксы или хочет начать. Преподаватель Школы дизайна ВШЭ Алексей Иорш объясняет, как раскадровка превращает сценарий в визуальный рассказ, как расставлять кадры, чтобы история читалась, и как управлять вниманием читателя; участники пробуют эти приёмы сами. Занятие рассчитано на молодёжь 14–22 лет.",
+   "city": "msk",
+   "venue_id": null,
+   "category_ids": [],
+   "status": "published",
+   "format": "offline",
+   "price_type": "free",
+   "starts_at": "2026-09-30T19:00:00+03:00",
+   "ends_at": "2026-09-30T21:00:00+03:00",
+   "signup_mode": "external",
+   "external_registration_url": "https://forms.yandex.ru/u/6aa969126d2d738350bbccad",
+   "cover_file_id": null
+  },
+  "category_slugs": [
+   "workshop"
+  ],
+  "venue": {
+   "catalogue_match": "Еврейский музей",
+   "prod_venue_id": "a0000000-0000-0000-0000-000000000008",
+   "is_new": false,
+   "city": "msk"
+  },
+  "meta": {
+   "source_url": "https://www.jewish-museum.ru/events/s-chego-nachinayutsya-komiksy-pravila-raskadrovki/",
+   "organizer_registration_url": null,
+   "registration_url_whitelisted": false,
+   "participation": [
+    "практическое занятие по раскадровке комикса"
+   ],
+   "cover_image_url": null,
+   "age": "14–22",
+   "notes": "Бесплатно, регистрация через Яндекс Форму (не whitelist → pending_review). Аудитории 2–3 Еврейского музея и центра толерантности. Практическая часть выведена из формата «мастер-класс»; в анонсе упор на объяснение приёмов."
+  }
+ },
+ {
+  "key": "part-15",
+  "event_input": {
+   "title": "ART inside: андеграунд-маршрут по «Пушкинской-10»",
+   "description": "Арт-прогулка проекта «ИСКУССТВО внутри» по арт-центру «Пушкинская-10» с заходом в мастерские Семёна Мотолянца и Дмитрия Жеравова. Художники показывают, как рождаются работы, и отвечают на вопросы: Мотолянец делает картины и керамику из использованных кусочков мыла, Жеравов экспериментирует с живописью, графикой и инсталляцией. Встреча в холле, вход со стороны Лиговского проспекта.",
+   "city": "spb",
+   "venue_id": null,
+   "category_ids": [],
+   "status": "published",
+   "format": "offline",
+   "price_type": "fixed",
+   "price_min": 1980,
+   "starts_at": "2026-10-03T12:00:00+03:00",
+   "ends_at": null,
+   "signup_mode": "external",
+   "external_registration_url": "https://kudago.com/spb/event/ekskursiya-ekskursii-v-masterskie-sovremennyih-hudozhnikov/",
+   "cover_file_id": null
+  },
+  "category_slugs": [
+   "walk"
+  ],
+  "venue": {
+   "catalogue_match": null,
+   "prod_venue_id": null,
+   "is_new": true,
+   "name": "Арт-центр «Пушкинская-10»",
+   "address": "Пушкинская улица, 10 (вход со стороны Лиговского проспекта)",
+   "city": "spb"
+  },
+  "meta": {
+   "source_url": "https://kudago.com/spb/event/ekskursiya-ekskursii-v-masterskie-sovremennyih-hudozhnikov/",
+   "organizer_registration_url": "https://artinside-spb.ru/",
+   "registration_url_whitelisted": true,
+   "participation": [
+    "визит в мастерские и живой диалог с художниками"
+   ],
+   "cover_image_url": "https://media.kudago.com/images/event/2c/ce/2cce5818d259360128d6578c1e9688e9.jpg",
+   "age": "12+",
+   "notes": "KudaGo id 222684 (та же страница серии, что и 19.09). Цена 1980 ₽ — общая для серии на KudaGo."
+  }
+ },
+ {
+  "key": "part-16",
+  "event_input": {
+   "title": "«Диалоги об искусстве» на английском в Новой Голландии: Осязание",
+   "description": "Продолжение цикла разговоров на английском об искусстве и чувствах в пространстве «Сообщество». Участники обсуждают осязание как способ познавать мир через литературу, музыку и кино, опираясь на Делёза, Микеланджело и Шанталь Акерман. Ведут Том Бетелл и Дарья Ларина; рекомендуемый уровень английского — A2+.",
+   "city": "spb",
+   "venue_id": null,
+   "category_ids": [],
+   "status": "published",
+   "format": "offline",
+   "price_type": "fixed",
+   "price_min": 300,
+   "starts_at": "2026-10-10T14:00:00+03:00",
+   "ends_at": null,
+   "signup_mode": "external",
+   "external_registration_url": "https://www.newhollandsp.ru/events/education/dialogues-touch/",
+   "cover_file_id": null
+  },
+  "category_slugs": [
+   "reading-group"
+  ],
+  "venue": {
+   "catalogue_match": "Новая Голландия (парк)",
+   "prod_venue_id": "2b563440-ee97-5010-8c45-ca88108117cf",
+   "is_new": false,
+   "city": "spb"
+  },
+  "meta": {
+   "source_url": "https://www.newhollandsp.ru/events/education/dialogues-touch/",
+   "organizer_registration_url": null,
+   "registration_url_whitelisted": false,
+   "participation": [
+    "дискуссия на английском"
+   ],
+   "cover_image_url": null,
+   "age": null,
+   "notes": "Регистрация на Timepad откроется позже — пока ссылка на страницу Новой Голландии (не whitelist → pending_review); при загрузке заменить на newholland.timepad.ru, если появится. 300 ₽ — вход в «Сообщество». Есть ещё сессии 24.10 «Зрение» и 14.11 «Обоняние» 14:00."
+  }
+ },
+ {
+  "key": "part-17",
+  "event_input": {
+   "title": "«Излучение голоса»: вокальная лаборатория в ГЭС-2",
+   "description": "Лаборатория для взрослых без опыта пения: участники осваивают дыхание, опору, работу мышц лица и естественные резонаторы, а к концу цикла собирают общий вокальный перформанс. Программа открыта для зрячих, незрячих и слабовидящих: на каждое занятие шесть бесплатных мест отведено незрячим участникам. Можно прийти на одно занятие или купить абонемент.",
+   "city": "msk",
+   "venue_id": null,
+   "category_ids": [],
+   "status": "published",
+   "format": "offline",
+   "price_type": "fixed",
+   "price_min": 800,
+   "starts_at": "2026-10-17T15:00:00+03:00",
+   "ends_at": "2026-10-17T17:00:00+03:00",
+   "signup_mode": "external",
+   "external_registration_url": "https://ges-2.zapomni.ru/events?spot=d6eca7d0-701f-4186-958b-1b2ae4607e00",
+   "cover_file_id": null
+  },
+  "category_slugs": [
+   "workshop",
+   "performance"
+  ],
+  "venue": {
+   "catalogue_match": "Дом культуры «ГЭС-2»",
+   "prod_venue_id": "a0000000-0000-0000-0000-000000000002",
+   "is_new": false,
+   "city": "msk"
+  },
+  "meta": {
+   "source_url": "https://ges-2.org/voice-radiation",
+   "organizer_registration_url": null,
+   "registration_url_whitelisted": false,
+   "participation": [
+    "вокальные упражнения в группе",
+    "коллективный вокальный перформанс в финале цикла"
+   ],
+   "cover_image_url": null,
+   "age": "16+",
+   "notes": "Цикл по субботам 19.09–21.11, 15:00–17:00 (10 занятий); 17.10 подтверждено календарём ges-2.org/calendar?date=2026-10-17 (также 14.11). 800 ₽ за занятие, абонементы со скидкой. zapomni.ru не в whitelist → pending_review."
+  }
+ },
+ {
+  "key": "part-18",
+  "event_input": {
+   "title": "«Один день с Гоголем»: читательский клуб по «Шинели»",
+   "description": "Встреча открытого читательского клуба в рамках программы «Один день с Гоголем». Участники обсуждают, как была написана повесть «Шинель»; организаторы ждут активного участия в разговоре и просят заранее перечитать текст. Ведут Даниил Рясов и Светлана Панченко.",
+   "city": "msk",
+   "venue_id": null,
+   "category_ids": [],
+   "status": "published",
+   "format": "offline",
+   "price_type": "free",
+   "starts_at": "2026-10-18T16:00:00+03:00",
+   "ends_at": null,
+   "signup_mode": "external",
+   "external_registration_url": "https://www.domgogolya.ru/recital/22613/",
+   "cover_file_id": null
+  },
+  "category_slugs": [
+   "reading-group"
+  ],
+  "venue": {
+   "catalogue_match": "Дом Николая Гоголя",
+   "prod_venue_id": "fec35b61-0c2c-40aa-b3ad-8b8cb4d29736",
+   "is_new": false,
+   "city": "msk"
+  },
+  "meta": {
+   "source_url": "https://www.domgogolya.ru/recital/22613/",
+   "organizer_registration_url": null,
+   "registration_url_whitelisted": false,
+   "participation": [
+    "обсуждение повести в читательском клубе"
+   ],
+   "cover_image_url": null,
+   "age": "6+",
+   "notes": "Бесплатно, по предварительной регистрации (gogolinfo@yandex.ru, +7 495 695-75-47). В тот же день в 13:00 — мастер-класс «Гербарий Гоголя» (6+), не включён: ремесленное занятие без связи с выставкой. Третье событие площадки в подборке."
+  }
+ },
+ {
+  "key": "part-19",
+  "event_input": {
+   "title": "«Диалоги об искусстве» на английском в Новой Голландии: Зрение",
+   "description": "Встреча цикла разговоров на английском об искусстве и чувствах в пространстве «Сообщество». Участники на примерах классического искусства обсуждают, как зрение связано с представлениями о красоте и совпадает ли то, что общество называет красивым, с личным восприятием. Ведут Том Бетелл и Дарья Ларина; рекомендуемый уровень английского — A2+.",
+   "city": "spb",
+   "venue_id": null,
+   "category_ids": [],
+   "status": "published",
+   "format": "offline",
+   "price_type": "fixed",
+   "price_min": 300,
+   "starts_at": "2026-10-24T14:00:00+03:00",
+   "ends_at": null,
+   "signup_mode": "external",
+   "external_registration_url": "https://www.newhollandsp.ru/events/education/dialogues-sight/",
+   "cover_file_id": null
+  },
+  "category_slugs": [
+   "reading-group"
+  ],
+  "venue": {
+   "catalogue_match": "Новая Голландия (парк)",
+   "prod_venue_id": "2b563440-ee97-5010-8c45-ca88108117cf",
+   "is_new": false,
+   "city": "spb"
+  },
+  "meta": {
+   "source_url": "https://www.newhollandsp.ru/events/education/dialogues-sight/",
+   "organizer_registration_url": null,
+   "registration_url_whitelisted": false,
+   "participation": [
+    "дискуссия на английском"
+   ],
+   "cover_image_url": null,
+   "age": null,
+   "notes": "Регистрация откроется позже — пока ссылка на страницу Новой Голландии (не whitelist → pending_review); при загрузке заменить на newholland.timepad.ru. 300 ₽ — вход в «Сообщество». Третье и последнее событие площадки в подборке."
+  }
+ },
+ {
+  "key": "part-20",
+  "event_input": {
+   "title": "Читательский клуб «Читаем с Гоголем»: «Женщина в белом» Уилки Коллинза",
+   "description": "Открытый читательский клуб Дома Гоголя обсуждает роман Уилки Коллинза «Женщина в белом». Ведущие Даниил Рясов и Светлана Панченко приглашают участников активно спорить и делиться мнениями, а роман советуют прочитать заранее, чтобы разговор был содержательнее.",
+   "city": "msk",
+   "venue_id": null,
+   "category_ids": [],
+   "status": "published",
+   "format": "offline",
+   "price_type": "free",
+   "starts_at": "2026-10-29T19:00:00+03:00",
+   "ends_at": null,
+   "signup_mode": "external",
+   "external_registration_url": "https://www.domgogolya.ru/recital/22615/",
+   "cover_file_id": null
+  },
+  "category_slugs": [
+   "reading-group"
+  ],
+  "venue": {
+   "catalogue_match": "Дом Николая Гоголя",
+   "prod_venue_id": "fec35b61-0c2c-40aa-b3ad-8b8cb4d29736",
+   "is_new": false,
+   "city": "msk"
+  },
+  "meta": {
+   "source_url": "https://www.domgogolya.ru/recital/22615/",
+   "organizer_registration_url": null,
+   "registration_url_whitelisted": false,
+   "participation": [
+    "дискуссия о прочитанном романе"
+   ],
+   "cover_image_url": null,
+   "age": "12+",
+   "notes": "Бесплатно, по предварительной регистрации (gogolinfo@yandex.ru, +7 495 695-75-47); отдельной ссылки нет — использована страница события. Театральный салон Дома Гоголя."
+  }
+ }
+]

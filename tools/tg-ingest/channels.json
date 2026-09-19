@@ -1,0 +1,55 @@
+{
+  "organizer_id": "b9f7a9aa-ad06-4885-a8e9-f89c99bac567",
+  "api_base": "https://presencehq.ru",
+  "channels": [
+    {
+      "username": "f5noisegraph",
+      "title": "F5 / График шума",
+      "city": "spb",
+      "default_venue": {
+        "id": "e4987eab-9a6c-4373-8b46-2052aa4ce018",
+        "name": "Пространство F5"
+      },
+      "default_category": "concert",
+      "permission": "granted",
+      "permission_date": "2026-09-19",
+      "permission_terms": "Републикация разрешена при условии ссылки на канал в каждом событии (source_url/source_label). Тексты постов и фотографии не копируем: описание пишет редактор своими словами."
+    },
+    {
+      "username": "audio_klub",
+      "title": "аудио клуб",
+      "city": "spb",
+      "default_venue": {
+        "id": "9793b771-2c14-40a9-a4f6-5f55726adf93",
+        "name": "Аудио клуб"
+      },
+      "default_category": "concert",
+      "permission": "granted",
+      "permission_date": "2026-09-19",
+      "permission_terms": "Републикация разрешена при условии ссылки на канал в каждом событии (source_url/source_label). Тексты постов и фотографии не копируем: описание пишет редактор своими словами."
+    },
+    {
+      "username": "nefiktiv",
+      "title": "Нефиктивное образование / Галерея «Сети»",
+      "city": "spb",
+      "default_venue": {
+        "id": "fb1e621e-d363-4198-87f2-8f593d7d6027",
+        "name": "Галерея «Сети»"
+      },
+      "default_category": "lecture",
+      "permission": "granted",
+      "permission_date": "2026-09-19",
+      "permission_terms": "Републикация разрешена при условии ссылки на канал в каждом событии (source_url/source_label). Тексты постов и фотографии не копируем: описание пишет редактор своими словами."
+    }
+  ],
+  "known_venues": {
+    "мося": {
+      "id": "31b07cb2-d15f-4d6c-949a-fb6ff55fa8aa",
+      "name": "Галерея «Мося»"
+    },
+    "эрмитаж": {
+      "id": null,
+      "name": "Государственный Эрмитаж"
+    }
+  }
+}

@@ -1,0 +1,902 @@
+[
+  {
+    "key": "incl-01",
+    "event_input": {
+      "title": "Перформативно-танцевальный класс по выставке «Школа Званцевой»: Петров-Водкин. Пространство",
+      "description": "Занятие, на котором идеи живописи с выставки «Школа Званцевой. Лаборатория модернизма» исследуют через движение и танец; опыт танца не нужен. Программа инклюзивная: её ведут вместе с незрячей междисциплинарной художницей Татьяной Власенко при участии программы «Особый взгляд». Встреча длится около двух часов.",
+      "city": "msk",
+      "venue_id": null,
+      "category_ids": [],
+      "status": "published",
+      "format": "offline",
+      "price_type": "free",
+      "price_min": null,
+      "price_max": null,
+      "starts_at": "2026-09-20T15:00:00+03:00",
+      "ends_at": "2026-09-20T17:00:00+03:00",
+      "signup_mode": "external",
+      "external_registration_url": "https://www.rusimp.su/events/performativno-tancevalnye-klassy-po-motivam-vystavki-shkola-zvancevoy-laboratoriya-modernizma",
+      "cover_file_id": null
+    },
+    "category_slugs": [
+      "workshop"
+    ],
+    "venue": {
+      "catalogue_match": null,
+      "match_method": null,
+      "is_new": true,
+      "name": "Музей русского импрессионизма",
+      "address": "Ленинградский проспект, 15, стр. 11",
+      "city": "msk"
+    },
+    "meta": {
+      "source_url": "https://www.rusimp.su/events/performativno-tancevalnye-klassy-po-motivam-vystavki-shkola-zvancevoy-laboratoriya-modernizma",
+      "organizer_registration_url": "https://www.rusimp.su/events/performativno-tancevalnye-klassy-po-motivam-vystavki-shkola-zvancevoy-laboratoriya-modernizma",
+      "registration_url_whitelisted": false,
+      "accessibility": [
+        "адаптировано для незрячих и слабовидящих",
+        "инклюзивная группа"
+      ],
+      "cover_image_url": "https://cdn.reflowapp.pro/assets/65b4dd0d2253653d392436e9/images/6a9597e42238565b01837e82_rusimp_1810_1_1_1_.jpg",
+      "age": null,
+      "notes": "Free; sign-up by e-mail inclusion@rusimp.org (page URL used as registration link; rusimp.su NOT whitelisted → pending_review). Further sessions 23.09 18:30, 27.09 17:00, 30.09 18:30. Cover may be the generic exhibition image. Replaces the ongoing «Школа Званцевой» exhibition entry from KudaGo (id 226760)."
+    }
+  },
+  {
+    "key": "incl-02",
+    "event_input": {
+      "title": "Кинопоказ «Тихое материнство» и обсуждение с режиссёром",
+      "description": "Документальный фильм Александра Терона о глухой женщине, ставшей приёмной мамой восьмерых глухих детей. Картина снята на русском жестовом языке и дополнена озвучкой и субтитрами, поэтому доступна и слышащим, и глухим зрителям. Показ приурочен к Международной неделе глухих, после него — встреча с режиссёром.",
+      "city": "msk",
+      "venue_id": null,
+      "category_ids": [],
+      "status": "published",
+      "format": "offline",
+      "price_type": "free",
+      "price_min": null,
+      "price_max": null,
+      "starts_at": "2026-09-22T17:00:00+03:00",
+      "ends_at": null,
+      "signup_mode": "external",
+      "external_registration_url": "https://kudago.com/msk/event/kinopokaz-tihoe-materinstvo-2025/",
+      "cover_file_id": null
+    },
+    "category_slugs": [
+      "film"
+    ],
+    "venue": {
+      "catalogue_match": null,
+      "match_method": null,
+      "is_new": true,
+      "name": "Российская государственная библиотека для молодёжи",
+      "address": "Большая Черкизовская улица, 4, корп. 1",
+      "city": "msk"
+    },
+    "meta": {
+      "source_url": "https://kudago.com/msk/event/kinopokaz-tihoe-materinstvo-2025/",
+      "organizer_registration_url": "https://kudago.com/msk/event/kinopokaz-tihoe-materinstvo-2025/",
+      "registration_url_whitelisted": true,
+      "accessibility": [
+        "РЖЯ",
+        "субтитры"
+      ],
+      "cover_image_url": "https://media.kudago.com/images/event/fd/df/fddf77d3c099c898553cc313959c510a",
+      "age": "12+",
+      "notes": "KudaGo id 226486; address on KudaGo is «ул. Большая Черкизовская, д. 4/1»"
+    }
+  },
+  {
+    "key": "incl-03",
+    "event_input": {
+      "title": "Кинолекторий с тифлокомментированием и встреча с режиссёром Янной Мазазолиной",
+      "description": "Показ двух российских короткометражных фильмов о жизни людей с инвалидностью из программы инклюзивного фестиваля «Кино без барьеров». Оба фильма идут с живым тифлокомментированием для незрячих и слабовидящих зрителей. После показа — обсуждение с режиссёром.",
+      "city": "msk",
+      "venue_id": null,
+      "category_ids": [],
+      "status": "published",
+      "format": "offline",
+      "price_type": "free",
+      "price_min": null,
+      "price_max": null,
+      "starts_at": "2026-09-23T19:00:00+03:00",
+      "ends_at": null,
+      "signup_mode": "external",
+      "external_registration_url": "https://bilet.mos.ru/event/720106257/",
+      "cover_file_id": null
+    },
+    "category_slugs": [
+      "film"
+    ],
+    "venue": {
+      "catalogue_match": null,
+      "match_method": null,
+      "is_new": true,
+      "name": "Дом Николая Гоголя",
+      "address": "Никитский бульвар, 7А",
+      "city": "msk"
+    },
+    "meta": {
+      "source_url": "https://www.domgogolya.ru/recital/22492/",
+      "organizer_registration_url": "https://bilet.mos.ru/event/720106257/",
+      "registration_url_whitelisted": true,
+      "accessibility": [
+        "тифлокомментарий"
+      ],
+      "cover_image_url": "https://media.kudago.com/images/event/31/13/3113950cee4aeeb8c695dac30f65a67e.jpg",
+      "age": "12+",
+      "notes": "KudaGo id 226642 (kudago.com/msk/event/kinolektorij-s-tiflokommentariyami-i-vstrechej-s-rezhissyorom-yannoj-mazazolinoj/); also on domgogolya.ru. Free, registration via bilet.mos.ru (whitelisted)."
+    }
+  },
+  {
+    "key": "incl-04",
+    "event_input": {
+      "title": "«Открытая Люстра»: коллажи из цветного пластика с Ириной Светличной",
+      "description": "Встреча из инклюзивного цикла «Открытая Люстра» для людей с ментальной инвалидностью. Художница коротко рассказывает о своей практике, а затем участники делают в мастерской коллажи из цветного полупрозрачного пластика, похожие на витражи, и дополняют их рисунками и надписями.",
+      "city": "msk",
+      "venue_id": null,
+      "category_ids": [],
+      "status": "published",
+      "format": "offline",
+      "price_type": "free",
+      "price_min": null,
+      "price_max": null,
+      "starts_at": "2026-09-24T19:00:00+03:00",
+      "ends_at": "2026-09-24T20:30:00+03:00",
+      "signup_mode": "external",
+      "external_registration_url": "https://garagemca.zapomni.ru/events/5aa61c80-1831-4ff4-9437-f4631be6ec12?date=2026-09-24&hall=bc9f65ae-22db-423c-b412-8764d4214785&time=19:00",
+      "cover_file_id": null
+    },
+    "category_slugs": [
+      "workshop"
+    ],
+    "venue": {
+      "catalogue_match": "Музей «Гараж»",
+      "match_method": "exact-name",
+      "is_new": false,
+      "name": "Музей «Гараж»",
+      "address": "ул. Крымский Вал, 9, стр. 32",
+      "city": "msk"
+    },
+    "meta": {
+      "source_url": "https://garagemca.org/event/a-series-of-inclusive-meetings-open-chandelier",
+      "organizer_registration_url": "https://garagemca.zapomni.ru/events/5aa61c80-1831-4ff4-9437-f4631be6ec12?date=2026-09-24&hall=bc9f65ae-22db-423c-b412-8764d4214785&time=19:00",
+      "registration_url_whitelisted": false,
+      "accessibility": [
+        "для людей с ментальными особенностями"
+      ],
+      "cover_image_url": "https://cdn-ec-static.garagemca.org/storage/event/5/3/5346/cover_cover_image-613bef69-4ce4-420c-bb7f-d450820cf75d.jpg",
+      "age": "12+",
+      "notes": "Детская мастерская Гаража. Free with pre-registration (zapomni.ru — NOT whitelisted → pending_review). Series runs every other Thursday; later dates not yet published."
+    }
+  },
+  {
+    "key": "incl-05",
+    "event_input": {
+      "title": "«Цветы для Элджернона» с тифлокомментированием (РАМТ)",
+      "description": "Спектакль Юрия Грымова по роману Дэниела Киза о молодом человеке с особенностями ментального развития, которому делают экспериментальную операцию. На этом показе работает тифлокомментатор для незрячих и слабовидящих зрителей.",
+      "city": "msk",
+      "venue_id": null,
+      "category_ids": [],
+      "status": "published",
+      "format": "offline",
+      "price_type": "fixed",
+      "price_min": 1250,
+      "price_max": 1250,
+      "starts_at": "2026-09-24T19:00:00+03:00",
+      "ends_at": "2026-09-24T22:20:00+03:00",
+      "signup_mode": "external",
+      "external_registration_url": "https://specialviewportal.ru/event/events2126/",
+      "cover_file_id": null
+    },
+    "category_slugs": [
+      "performance"
+    ],
+    "venue": {
+      "catalogue_match": null,
+      "match_method": null,
+      "is_new": true,
+      "name": "Российский академический Молодёжный театр (РАМТ)",
+      "address": "Театральная площадь, 2",
+      "city": "msk"
+    },
+    "meta": {
+      "source_url": "https://specialviewportal.ru/event/events2126/",
+      "organizer_registration_url": "https://specialviewportal.ru/event/events2126/",
+      "registration_url_whitelisted": false,
+      "accessibility": [
+        "тифлокомментарий"
+      ],
+      "cover_image_url": "https://ramt.ru/upload/resize_cache/iblock/4b4/1920_1920_1/aizafe5wmgxp51st197epgfuva72p60g.jpg",
+      "age": "18+",
+      "notes": "Session confirmed on ramt.ru (which does not mention тифлокомментарий); audio-described session + 1250 ₽ price per the «Особый взгляд» portal. Audio-described seats are booked via the portal coordinator (Елена Кудрявцева, +7 903 148-53-26), no online form. A second audio-described session is listed for 10.10.2026 19:00. specialviewportal.ru is NOT whitelisted → event would go to pending_review (admin approves)."
+    }
+  },
+  {
+    "key": "incl-06",
+    "event_input": {
+      "title": "«Манюня» с тифлокомментированием (РАМТ)",
+      "description": "Смешная и тёплая история о дружбе двух девочек в маленьком армянском городке по прозе Наринэ Абгарян. Показ сопровождается тифлокомментарием для незрячих и слабовидящих зрителей.",
+      "city": "msk",
+      "venue_id": null,
+      "category_ids": [],
+      "status": "published",
+      "format": "offline",
+      "price_type": "fixed",
+      "price_min": 500,
+      "price_max": 500,
+      "starts_at": "2026-09-26T19:00:00+03:00",
+      "ends_at": "2026-09-26T21:40:00+03:00",
+      "signup_mode": "external",
+      "external_registration_url": "https://specialviewportal.ru/event/spektakl_ramta_manyunya/",
+      "cover_file_id": null
+    },
+    "category_slugs": [
+      "performance"
+    ],
+    "venue": {
+      "catalogue_match": null,
+      "match_method": null,
+      "is_new": true,
+      "name": "Российский академический Молодёжный театр (РАМТ)",
+      "address": "Театральная площадь, 2",
+      "city": "msk"
+    },
+    "meta": {
+      "source_url": "https://specialviewportal.ru/event/spektakl_ramta_manyunya/",
+      "organizer_registration_url": "https://specialviewportal.ru/event/spektakl_ramta_manyunya/",
+      "registration_url_whitelisted": false,
+      "accessibility": [
+        "тифлокомментарий"
+      ],
+      "cover_image_url": "https://ramt.ru/upload/iblock/260/nw3nati5i6w4a2mxlwm3nku4nd7aak5d.jpg",
+      "age": "12+",
+      "notes": "Session confirmed on ramt.ru; 500 ₽ is the portal's rate for audio-described seats (booked via coordinator +7 903 148-53-26). Regular ticket price not verified. specialviewportal.ru NOT whitelisted → pending_review."
+    }
+  },
+  {
+    "key": "incl-07",
+    "event_input": {
+      "title": "Сказки братьев Гримм: комментированное чтение на русском жестовом языке",
+      "description": "Интерактивное занятие для глухих и слабослышащих детей и подростков. Сказки братьев Гримм читают и разбирают в формате комментированного чтения на русском жестовом языке.",
+      "city": "msk",
+      "venue_id": null,
+      "category_ids": [],
+      "status": "published",
+      "format": "offline",
+      "price_type": "free",
+      "price_min": null,
+      "price_max": null,
+      "starts_at": "2026-09-27T12:30:00+03:00",
+      "ends_at": null,
+      "signup_mode": "external",
+      "external_registration_url": "https://kudago.com/msk/event/interaktivnaya-lektsiya-skazki-bratev-grimm/",
+      "cover_file_id": null
+    },
+    "category_slugs": [
+      "reading-group"
+    ],
+    "venue": {
+      "catalogue_match": null,
+      "match_method": null,
+      "is_new": true,
+      "name": "Российская государственная библиотека для молодёжи",
+      "address": "Большая Черкизовская улица, 4, корп. 1",
+      "city": "msk"
+    },
+    "meta": {
+      "source_url": "https://kudago.com/msk/event/interaktivnaya-lektsiya-skazki-bratev-grimm/",
+      "organizer_registration_url": "https://kudago.com/msk/event/interaktivnaya-lektsiya-skazki-bratev-grimm/",
+      "registration_url_whitelisted": true,
+      "accessibility": [
+        "РЖЯ",
+        "для глухих и слабослышащих"
+      ],
+      "cover_image_url": "https://media.kudago.com/images/event/78/bf/78bfe8663cf5109d0e584802ff40abed",
+      "age": "6+",
+      "notes": "KudaGo id 226490"
+    }
+  },
+  {
+    "key": "incl-08",
+    "event_input": {
+      "title": "Экскурсия по выставке «Фёдор Шехтель. Грёзы русского модерна» на русском жестовом языке",
+      "description": "Экскурсия на РЖЯ, которую ведёт глухой экскурсовод: о Шехтеле как архитекторе особняков и Ярославского вокзала, иллюстраторе и театральном художнике. Сбор в фойе у кассы за 5 минут до начала.",
+      "city": "msk",
+      "venue_id": null,
+      "category_ids": [],
+      "status": "published",
+      "format": "offline",
+      "price_type": "fixed",
+      "price_min": 600,
+      "price_max": 600,
+      "starts_at": "2026-10-01T18:30:00+03:00",
+      "ends_at": "2026-10-01T20:00:00+03:00",
+      "signup_mode": "external",
+      "external_registration_url": "https://muarevents.timepad.ru/event/4038048/",
+      "cover_file_id": null
+    },
+    "category_slugs": [
+      "mediation"
+    ],
+    "venue": {
+      "catalogue_match": null,
+      "match_method": null,
+      "is_new": true,
+      "name": "Государственный музей архитектуры им. А.В. Щусева (МУАР)",
+      "address": "улица Воздвиженка, 5/25",
+      "city": "msk"
+    },
+    "meta": {
+      "source_url": "https://muar.ru/excursions/ekskursii-po-vystavke-fyedor-shekhtel-gryezy-russkogo-moderna-na-russkom-zhestovom-yazyke/",
+      "organizer_registration_url": "https://muarevents.timepad.ru/event/4038048/",
+      "registration_url_whitelisted": true,
+      "accessibility": [
+        "РЖЯ",
+        "глухой экскурсовод"
+      ],
+      "cover_image_url": "https://muar.ru/upload/resize_cache/iblock/5c8/udsrtqykthnwdv37gi6rne2d4zxzhyba/595_422_1/shekh.jpg",
+      "age": null,
+      "notes": "600 ₽ = 300 ₽ discounted entry + 300 ₽ discounted tour, paid at the box office; Timepad registration required (whitelisted). Exhibition closes 04.10. Venue probably already in prod — the 2026-08-24 KudaGo MSK seed included the Щусев museum «АЗС» exhibition, but that venue row is not in the repo files."
+    }
+  },
+  {
+    "key": "incl-09",
+    "event_input": {
+      "title": "«Дядя Ваня» с тифлокомментарием (Московский Губернский театр)",
+      "description": "Чеховские «сцены из деревенской жизни» в постановке Сергея Безрукова — о людях, проживших жизнь без взаимной любви. Спектакль можно смотреть с тифлокомментарием для незрячих и слабовидящих зрителей; наушники бронируются заранее в кассе.",
+      "city": "msk",
+      "venue_id": null,
+      "category_ids": [],
+      "status": "published",
+      "format": "offline",
+      "price_type": "from",
+      "price_min": 2000,
+      "price_max": 8000,
+      "starts_at": "2026-10-02T19:00:00+03:00",
+      "ends_at": "2026-10-02T22:30:00+03:00",
+      "signup_mode": "external",
+      "external_registration_url": "https://iframeab-pre0049.intickets.ru/event/11532387/",
+      "cover_file_id": null
+    },
+    "category_slugs": [
+      "performance"
+    ],
+    "venue": {
+      "catalogue_match": null,
+      "match_method": null,
+      "is_new": true,
+      "name": "Московский Губернский театр",
+      "address": "Волгоградский проспект, 121",
+      "city": "msk"
+    },
+    "meta": {
+      "source_url": "https://m-g-t.ru/performance/dyadya-vanya/",
+      "organizer_registration_url": "https://iframeab-pre0049.intickets.ru/event/11532387/",
+      "registration_url_whitelisted": true,
+      "accessibility": [
+        "тифлокомментарий"
+      ],
+      "cover_image_url": "https://api.m-g-t.ru/upload/resize_cache/iblock/e64/2560_1440_1/dlpaipgqr3x27j437g67nw4qboply6js.jpg",
+      "age": "16+",
+      "notes": "Theatre page says the show can be accompanied by тифлокомментарий; specialviewportal.ru lists 02.10.2026 19:00 as an audio-described session. Headset booking by phone +7 495 378-65-75. Stage smoke is used. Ticket URL is on intickets.ru (whitelisted)."
+    }
+  },
+  {
+    "key": "incl-10",
+    "event_input": {
+      "title": "«Научи меня»: музейные профессии для подростков с переводом на РЖЯ",
+      "description": "Первая встреча курса Музея «Гараж» о профессиях в музее современного искусства: рассказ сотрудника музея сочетается с практикой. Все встречи курса идут с переводом на русский жестовый язык и доступны глухим и слабослышащим подросткам.",
+      "city": "msk",
+      "venue_id": null,
+      "category_ids": [],
+      "status": "published",
+      "format": "offline",
+      "price_type": "free",
+      "price_min": null,
+      "price_max": null,
+      "starts_at": "2026-10-10T12:00:00+03:00",
+      "ends_at": "2026-10-10T14:00:00+03:00",
+      "signup_mode": "external",
+      "external_registration_url": "https://garagemca.org/event/teach-me-an-introduction-to-museum-professions-for-teenagers",
+      "cover_file_id": null
+    },
+    "category_slugs": [
+      "workshop"
+    ],
+    "venue": {
+      "catalogue_match": "Музей «Гараж»",
+      "match_method": "exact-name",
+      "is_new": false,
+      "name": "Музей «Гараж»",
+      "address": "ул. Крымский Вал, 9, стр. 32",
+      "city": "msk"
+    },
+    "meta": {
+      "source_url": "https://garagemca.org/event/teach-me-an-introduction-to-museum-professions-for-teenagers",
+      "organizer_registration_url": "https://garagemca.org/event/teach-me-an-introduction-to-museum-professions-for-teenagers",
+      "registration_url_whitelisted": false,
+      "accessibility": [
+        "РЖЯ",
+        "для глухих и слабослышащих"
+      ],
+      "cover_image_url": "https://cdn-ec-static.garagemca.org/storage/event/5/4/5424/cover_preview_image-6496dcff-3553-4864-9ad6-23f7fc3e0d50.jpg",
+      "age": "12+ (для 14–18)",
+      "notes": "10.10 12:00–14:00 «Встреча с менеджером детско-семейной программы», confirmed on the page; registration opens 28.09. Further sessions 17, 24, 31.10, 7, 14.11 at 12:00. garagemca.org NOT whitelisted → pending_review."
+    }
+  },
+  {
+    "key": "incl-11",
+    "event_input": {
+      "title": "Кинолекторий «Осень» с тифлокомментарием ко Дню белой трости",
+      "description": "Лекция и показ фильма Андрея Смирнова «Осень» (1974) о двух немолодых людях, пытающихся заново найти счастье. Показ приурочен к Международному дню белой трости и идёт с живым тифлокомментарием; ведёт тифлокомментатор Светлана Панченко.",
+      "city": "msk",
+      "venue_id": null,
+      "category_ids": [],
+      "status": "published",
+      "format": "offline",
+      "price_type": "free",
+      "price_min": null,
+      "price_max": null,
+      "starts_at": "2026-10-14T15:00:00+03:00",
+      "ends_at": null,
+      "signup_mode": "external",
+      "external_registration_url": "https://www.domgogolya.ru/recital/22610/",
+      "cover_file_id": null
+    },
+    "category_slugs": [
+      "film"
+    ],
+    "venue": {
+      "catalogue_match": null,
+      "match_method": null,
+      "is_new": true,
+      "name": "Дом Николая Гоголя",
+      "address": "Никитский бульвар, 7А",
+      "city": "msk"
+    },
+    "meta": {
+      "source_url": "https://www.domgogolya.ru/recital/22610/",
+      "organizer_registration_url": "https://www.domgogolya.ru/recital/22610/",
+      "registration_url_whitelisted": false,
+      "accessibility": [
+        "тифлокомментарий"
+      ],
+      "cover_image_url": null,
+      "age": "16+",
+      "notes": "Free, entry by registration (phone +7 495 695-75-47 or gogolinfo@yandex.ru). Supported by the «Свет» foundation. domgogolya.ru NOT whitelisted → pending_review. No cover found."
+    }
+  },
+  {
+    "key": "incl-12",
+    "event_input": {
+      "title": "Обзорная экскурсия по музею «АТОМ» на русском жестовом языке",
+      "description": "Обзорная экскурсия по музею «АТОМ» на ВДНХ для глухих и слабослышащих посетителей, которая идёт на русском и русском жестовом языках. Рассказ охватывает советский атомный проект от первых разработок до мирного атома. Группа до 15 человек, около часа.",
+      "city": "msk",
+      "venue_id": null,
+      "category_ids": [],
+      "status": "published",
+      "format": "offline",
+      "price_type": "free",
+      "price_min": null,
+      "price_max": null,
+      "starts_at": "2026-10-15T17:00:00+03:00",
+      "ends_at": "2026-10-15T18:00:00+03:00",
+      "signup_mode": "external",
+      "external_registration_url": "https://atom.museum/",
+      "cover_file_id": null
+    },
+    "category_slugs": [
+      "mediation"
+    ],
+    "venue": {
+      "catalogue_match": null,
+      "match_method": null,
+      "is_new": true,
+      "name": "Музей «АТОМ» на ВДНХ",
+      "address": "проспект Мира, 119, стр. 19а (ВДНХ, павильон № 19)",
+      "city": "msk"
+    },
+    "meta": {
+      "source_url": "https://vdnh.ru/events/3921/",
+      "organizer_registration_url": "https://atom.museum/",
+      "registration_url_whitelisted": false,
+      "accessibility": [
+        "РЖЯ",
+        "для глухих и слабослышащих"
+      ],
+      "cover_image_url": "https://s3.vdnh.ru/vdnhru/cache/2026/09/11/593792f3e763286099c089a35fefb9770530dee1.JPG",
+      "age": "6+",
+      "notes": "Free ticket + pre-registration on atom.museum (NOT whitelisted → pending_review). Every third Thursday; next sessions 19.11 and 17.12 at 17:00. Address should be geocoded — the pavilion address was not independently confirmed."
+    }
+  },
+  {
+    "key": "incl-13",
+    "event_input": {
+      "title": "«Ревизор» — Театр мимики и жеста",
+      "description": "Интерактивная комедия по Гоголю в исполнении труппы глухих актёров. Спектакль идёт на русском жестовом языке с синхронным голосовым переводом: актёры-переводчики работают прямо на сцене, а действие выходит в зрительный зал.",
+      "city": "msk",
+      "venue_id": null,
+      "category_ids": [],
+      "status": "published",
+      "format": "offline",
+      "price_type": "from",
+      "price_min": 1200,
+      "price_max": null,
+      "starts_at": "2026-11-06T19:00:00+03:00",
+      "ends_at": "2026-11-06T21:45:00+03:00",
+      "signup_mode": "external",
+      "external_registration_url": "https://afisha.yandex.ru/moscow/theatre/places/teatr-mimiki-i-zhesta",
+      "cover_file_id": null
+    },
+    "category_slugs": [
+      "performance"
+    ],
+    "venue": {
+      "catalogue_match": null,
+      "match_method": null,
+      "is_new": true,
+      "name": "Театр мимики и жеста",
+      "address": "Измайловский бульвар, 39/41",
+      "city": "msk"
+    },
+    "meta": {
+      "source_url": "https://teatrmig.ru/afisha/revizor/",
+      "organizer_registration_url": "https://afisha.yandex.ru/moscow/theatre/places/teatr-mimiki-i-zhesta",
+      "registration_url_whitelisted": true,
+      "accessibility": [
+        "РЖЯ",
+        "голосовой перевод",
+        "инклюзивная труппа"
+      ],
+      "cover_image_url": "https://teatrmig.ru/media/images/5W9A7291.2e16d0ba.fill-500x750.jpg",
+      "age": "12+",
+      "notes": "06.11 19:00 listed on teatrmig.ru afisha and Yandex Afisha («от 1 200 ₽»). Registration URL is the Yandex Afisha venue page (whitelisted), not a per-session link."
+    }
+  },
+  {
+    "key": "incl-14",
+    "event_input": {
+      "title": "Тактильная экскурсия по выставке «В мастерской художника театра» (Шереметевский дворец)",
+      "description": "Экскурсия по выставке о работе театрального художника в Шереметевском дворце — Музее музыки с тактильными материалами. Проходит в рамках городской программы «Многомерность культуры» для молодых людей 16–45 лет с инвалидностью; участие бесплатное, по предварительной регистрации. Около часа.",
+      "city": "spb",
+      "venue_id": null,
+      "category_ids": [],
+      "status": "published",
+      "format": "offline",
+      "price_type": "free",
+      "price_min": null,
+      "price_max": null,
+      "starts_at": "2026-09-17T14:30:00+03:00",
+      "ends_at": "2026-09-17T15:30:00+03:00",
+      "signup_mode": "external",
+      "external_registration_url": "https://spbcult.ru/projects/mnogomernost-kultury/",
+      "cover_file_id": null
+    },
+    "category_slugs": [
+      "mediation"
+    ],
+    "venue": {
+      "catalogue_match": null,
+      "match_method": null,
+      "is_new": true,
+      "name": "Шереметевский дворец — Музей музыки",
+      "address": "набережная реки Фонтанки, 34",
+      "city": "spb"
+    },
+    "meta": {
+      "source_url": "https://spbcult.ru/articles/gotovye-resheniya-kuda-poyti/inklyuzivnyy-peterburg-14-20-sentyabrya-2026-goda/",
+      "organizer_registration_url": "https://spbcult.ru/projects/mnogomernost-kultury/",
+      "registration_url_whitelisted": false,
+      "accessibility": [
+        "тактильная",
+        "для людей с инвалидностью 16–45 лет"
+      ],
+      "cover_image_url": null,
+      "age": "16+",
+      "notes": "Only source: the city culture portal digest «Инклюзивный Петербург: 14–20 сентября 2026» (spbcult.ru) — 17.09 14:30, 1 h, free, registration via «Многомерность культуры» (spbicp@mail.ru, +7 812 246-73-06). The project page itself does not list this date. Audience restricted to programme participants (disabled youth 16–45). spbcult.ru NOT whitelisted → pending_review. Lowest-confidence SPb item; drop if a second source is required."
+    }
+  },
+  {
+    "key": "incl-15",
+    "event_input": {
+      "title": "«Ау» — инклюзивный спектакль Яны Туминой на Малой сцене БДТ",
+      "description": "Спектакль-лаборатория, в котором вместе с профессиональными актёрами играют молодые люди с расстройством аутистического спектра. История птицелова рассказана особым «птичьим языком» — это спектакль о свободе и привязанности. Идёт 1 час 15 минут без антракта.",
+      "city": "spb",
+      "venue_id": null,
+      "category_ids": [],
+      "status": "published",
+      "format": "offline",
+      "price_type": "from",
+      "price_min": 1000,
+      "price_max": null,
+      "starts_at": "2026-09-23T19:00:00+03:00",
+      "ends_at": "2026-09-23T20:15:00+03:00",
+      "signup_mode": "external",
+      "external_registration_url": "https://afisha.yandex.ru/saint-petersburg/theatre_show/au-iana-tumina",
+      "cover_file_id": null
+    },
+    "category_slugs": [
+      "performance"
+    ],
+    "venue": {
+      "catalogue_match": null,
+      "match_method": null,
+      "is_new": true,
+      "name": "Малая сцена БДТ",
+      "address": "набережная реки Фонтанки, 65",
+      "city": "spb"
+    },
+    "meta": {
+      "source_url": "https://bdt.spb.ru/afisha/",
+      "organizer_registration_url": "https://afisha.yandex.ru/saint-petersburg/theatre_show/au-iana-tumina",
+      "registration_url_whitelisted": true,
+      "accessibility": [
+        "инклюзивная труппа",
+        "артисты с РАС"
+      ],
+      "cover_image_url": "https://bdt.spb.ru/upload/iblock/f8d/2ab9663t7w618yb7h1l8i1mopie22lz7/%D0%B2%D0%B8%D0%B4%D0%B6%D0%B5%D1%82%20%D0%90%D0%A3.jpg",
+      "age": "16+",
+      "notes": "23.09 19:00 Малая сцена confirmed on bdt.spb.ru/afisha («Инклюзивный спектакль»); BDT site text: «вместе с профессиональными актерами участвуют молодые люди с РАС». «от 1 000 ₽» from the Yandex Afisha schedule (research agent), not re-checked. Catalogue has «Большой драматический театр им. Г.А. Товстоногова (БДТ)» at Большая Конюшенная 27 — the Малая сцена is a different building, so a separate venue is proposed."
+    }
+  },
+  {
+    "key": "incl-16",
+    "event_input": {
+      "title": "Театральная лаборатория для слышащих и глухих взрослых в Манеже",
+      "description": "Первое занятие бесплатной театральной лаборатории, где вместе работают слышащие, глухие и слабослышащие взрослые. Цикл продлится до 25 октября и завершится итоговым показом; все занятия идут с переводом на русский жестовый язык. Участие по заявке, мест немного.",
+      "city": "spb",
+      "venue_id": null,
+      "category_ids": [],
+      "status": "published",
+      "format": "offline",
+      "price_type": "free",
+      "price_min": null,
+      "price_max": null,
+      "starts_at": "2026-09-26T12:00:00+03:00",
+      "ends_at": "2026-09-26T15:30:00+03:00",
+      "signup_mode": "external",
+      "external_registration_url": "https://forms.yandex.ru/u/6aa169e249363909218f669e/",
+      "cover_file_id": null
+    },
+    "category_slugs": [
+      "workshop"
+    ],
+    "venue": {
+      "catalogue_match": "ЦВЗ «Манеж»",
+      "match_method": "exact-name",
+      "is_new": false,
+      "name": "ЦВЗ «Манеж»",
+      "address": "Исаакиевская площадь, 1",
+      "city": "spb"
+    },
+    "meta": {
+      "source_url": "https://manege.spb.ru/events/teatralnaya-laboratoriya-dlya-slyshashhih-i-gluhih-vzroslyh/",
+      "organizer_registration_url": "https://forms.yandex.ru/u/6aa169e249363909218f669e/",
+      "registration_url_whitelisted": false,
+      "accessibility": [
+        "РЖЯ",
+        "для глухих и слабослышащих",
+        "инклюзивная группа"
+      ],
+      "cover_image_url": null,
+      "age": "18+",
+      "notes": "Application form open until 22.09 23:00, answer by 24.09. Series: 26.09, 1, 3, 10, 15, 17, 22.10, final 25.10. forms.yandex.ru is NOT whitelisted (only afisha.yandex.ru) → pending_review; the manege.spb.ru page could be used instead (also not whitelisted). No og:image."
+    }
+  },
+  {
+    "key": "incl-17",
+    "event_input": {
+      "title": "Тактильное занятие «Морская душа Петербурга: служение флоту и городу»",
+      "description": "Интерактивное занятие для людей с нарушением зрения о том, как служба флоту повлияла на облик Петербурга и судьбы горожан. Участники знакомятся с тактильными макетами морских памятников города — крейсера «Аврора», Ростральных колонн, Адмиралтейства, Биржи и других.",
+      "city": "spb",
+      "venue_id": null,
+      "category_ids": [],
+      "status": "published",
+      "format": "offline",
+      "price_type": "free",
+      "price_min": null,
+      "price_max": null,
+      "starts_at": "2026-09-26T13:00:00+03:00",
+      "ends_at": "2026-09-26T14:30:00+03:00",
+      "signup_mode": "external",
+      "external_registration_url": "https://biblioteka-tochki-zreniya.timepad.ru/event/4114550/",
+      "cover_file_id": null
+    },
+    "category_slugs": [
+      "workshop"
+    ],
+    "venue": {
+      "catalogue_match": null,
+      "match_method": null,
+      "is_new": true,
+      "name": "Библиотека для слепых и слабовидящих «Библиотека Точки Зрения»",
+      "address": "Стрельнинская улица, 11",
+      "city": "spb"
+    },
+    "meta": {
+      "source_url": "https://www.gbs.spb.ru/ru/events/2782/",
+      "organizer_registration_url": "https://biblioteka-tochki-zreniya.timepad.ru/event/4114550/",
+      "registration_url_whitelisted": true,
+      "accessibility": [
+        "тактильная",
+        "для незрячих и слабовидящих"
+      ],
+      "cover_image_url": null,
+      "age": "12+",
+      "notes": "Full name: Санкт-Петербургская государственная библиотека для слепых и слабовидящих. End time differs: library site 15:00, Timepad 14:30 (Timepad used). Free per Timepad (registration required). No cover found."
+    }
+  },
+  {
+    "key": "incl-18",
+    "event_input": {
+      "title": "Тактильное занятие «Морская слава России: 330 лет под парусами. Как осязать историю?»",
+      "description": "Занятие при выставке к 330-летию флота, подготовленной вместе с филиалом ЦВММ «Кронштадтская крепость». Участники изучают тактильные экспонаты — детали кораблей, якоря, макеты памятников — а также издания крупным шрифтом, шрифтом Брайля и рельефно-графические пособия. Разговор о том, как сделать морскую историю доступной людям с нарушением зрения.",
+      "city": "spb",
+      "venue_id": null,
+      "category_ids": [],
+      "status": "published",
+      "format": "offline",
+      "price_type": "free",
+      "price_min": null,
+      "price_max": null,
+      "starts_at": "2026-09-26T16:00:00+03:00",
+      "ends_at": "2026-09-26T17:00:00+03:00",
+      "signup_mode": "external",
+      "external_registration_url": "https://biblioteka-tochki-zreniya.timepad.ru/event/4117385/",
+      "cover_file_id": null
+    },
+    "category_slugs": [
+      "workshop"
+    ],
+    "venue": {
+      "catalogue_match": null,
+      "match_method": null,
+      "is_new": true,
+      "name": "Библиотека для слепых и слабовидящих «Библиотека Точки Зрения»",
+      "address": "Стрельнинская улица, 11",
+      "city": "spb"
+    },
+    "meta": {
+      "source_url": "https://www.gbs.spb.ru/ru/events/2783/",
+      "organizer_registration_url": "https://biblioteka-tochki-zreniya.timepad.ru/event/4117385/",
+      "registration_url_whitelisted": true,
+      "accessibility": [
+        "тактильная",
+        "шрифт Брайля",
+        "для незрячих и слабовидящих"
+      ],
+      "cover_image_url": "https://www.gbs.spb.ru/media/cache/56/c5/56c5d66d654a85363d6104923a5cd283.jpg",
+      "age": "12+",
+      "notes": "Library site: 16:00–17:00, free; Timepad end 17:30. Registration via Timepad or +7 (812) 417-52-42. The exhibition is also shown on Wed/Fri at 17:00 (spbcult.ru digest)."
+    }
+  },
+  {
+    "key": "incl-19",
+    "event_input": {
+      "title": "«Цирк Фибоначчи» — инклюзивный спектакль Упсала-Цирка",
+      "description": "Инклюзивный спектакль режиссёра Яны Туминой и «Упсала-Цирка» — цирковая фантазия о красоте в природе, математике и отношениях между людьми. По данным прессы, вместе выходят артисты с синдромом Дауна и артисты-«хулиганы» Упсалы, им помогают тьюторы. Около часа.",
+      "city": "spb",
+      "venue_id": null,
+      "category_ids": [],
+      "status": "published",
+      "format": "offline",
+      "price_type": "from",
+      "price_min": 1300,
+      "price_max": null,
+      "starts_at": "2026-10-24T19:00:00+03:00",
+      "ends_at": "2026-10-24T20:00:00+03:00",
+      "signup_mode": "external",
+      "external_registration_url": "https://afisha.yandex.ru/saint-petersburg/show/fibonachchi",
+      "cover_file_id": null
+    },
+    "category_slugs": [
+      "performance"
+    ],
+    "venue": {
+      "catalogue_match": null,
+      "match_method": null,
+      "is_new": true,
+      "name": "Упсала-Цирк",
+      "address": "Свердловская набережная, 44Ю",
+      "city": "spb"
+    },
+    "meta": {
+      "source_url": "https://afisha.yandex.ru/saint-petersburg/show/fibonachchi",
+      "organizer_registration_url": "https://afisha.yandex.ru/saint-petersburg/show/fibonachchi",
+      "registration_url_whitelisted": true,
+      "accessibility": [
+        "инклюзивная труппа",
+        "артисты с синдромом Дауна"
+      ],
+      "cover_image_url": "https://img14.rl0.ru/afisha/e1050x600p0x115f2220x1269q85i/s4.afisha.ru/mediastorage/d9/34/be5fc3c77f6b441a826c424834d9.jpg",
+      "age": "12+",
+      "notes": "Yandex Afisha confirms 24.10, 25.10, 14.11, 15.11 at 19:00 and «Инклюзивный спектакль Яны Туминой и Упсала-цирка»; the cast detail (Down syndrome) is from press (Sobaka.ru, Фонтанка). «от 1 300 ₽» from Afisha.ru (research agent), not shown on Yandex. End time = start + 60 min duration. Tent at БЦ «Зима»."
+    }
+  },
+  {
+    "key": "incl-20",
+    "event_input": {
+      "title": "«Ау» — инклюзивный спектакль Яны Туминой на Малой сцене БДТ",
+      "description": "Экспериментальный спектакль, в котором профессиональные актёры играют вместе с молодыми людьми с аутизмом. Действие строится на «птичьем языке» и истории птицелова. 75 минут без антракта.",
+      "city": "spb",
+      "venue_id": null,
+      "category_ids": [],
+      "status": "published",
+      "format": "offline",
+      "price_type": "from",
+      "price_min": 1000,
+      "price_max": null,
+      "starts_at": "2026-10-27T19:00:00+03:00",
+      "ends_at": "2026-10-27T20:15:00+03:00",
+      "signup_mode": "external",
+      "external_registration_url": "https://afisha.yandex.ru/saint-petersburg/theatre_show/au-iana-tumina",
+      "cover_file_id": null
+    },
+    "category_slugs": [
+      "performance"
+    ],
+    "venue": {
+      "catalogue_match": null,
+      "match_method": null,
+      "is_new": true,
+      "name": "Малая сцена БДТ",
+      "address": "набережная реки Фонтанки, 65",
+      "city": "spb"
+    },
+    "meta": {
+      "source_url": "https://afisha.yandex.ru/saint-petersburg/theatre_show/au-iana-tumina",
+      "organizer_registration_url": "https://afisha.yandex.ru/saint-petersburg/theatre_show/au-iana-tumina",
+      "registration_url_whitelisted": true,
+      "accessibility": [
+        "инклюзивная труппа",
+        "артисты с РАС"
+      ],
+      "cover_image_url": "https://bdt.spb.ru/upload/iblock/f8d/2ab9663t7w618yb7h1l8i1mopie22lz7/%D0%B2%D0%B8%D0%B4%D0%B6%D0%B5%D1%82%20%D0%90%D0%A3.jpg",
+      "age": "16+",
+      "notes": "Second session of the same show (research agent: 27.10 19:00 on the Yandex Afisha show page and BDT schedule; also 03.11). Optional — drop if one session per show is preferred."
+    }
+  },
+  {
+    "key": "incl-21",
+    "event_input": {
+      "title": "«Цирк Фибоначчи» — инклюзивный спектакль Упсала-Цирка",
+      "description": "Цирковая фантазия Яны Туминой и «Упсала-Цирка» о том, как искать красоту и принимать другого. Инклюзивный спектакль, в котором вместе выступают особые артисты и артисты Упсалы. Около часа.",
+      "city": "spb",
+      "venue_id": null,
+      "category_ids": [],
+      "status": "published",
+      "format": "offline",
+      "price_type": "from",
+      "price_min": 1300,
+      "price_max": null,
+      "starts_at": "2026-11-14T19:00:00+03:00",
+      "ends_at": "2026-11-14T20:00:00+03:00",
+      "signup_mode": "external",
+      "external_registration_url": "https://afisha.yandex.ru/saint-petersburg/show/fibonachchi",
+      "cover_file_id": null
+    },
+    "category_slugs": [
+      "performance"
+    ],
+    "venue": {
+      "catalogue_match": null,
+      "match_method": null,
+      "is_new": true,
+      "name": "Упсала-Цирк",
+      "address": "Свердловская набережная, 44Ю",
+      "city": "spb"
+    },
+    "meta": {
+      "source_url": "https://afisha.yandex.ru/saint-petersburg/show/fibonachchi",
+      "organizer_registration_url": "https://afisha.yandex.ru/saint-petersburg/show/fibonachchi",
+      "registration_url_whitelisted": true,
+      "accessibility": [
+        "инклюзивная труппа",
+        "артисты с синдромом Дауна"
+      ],
+      "cover_image_url": "https://avatars.mds.yandex.net/get-afishanew/4395007/6e3f7122b45e48592b7e0eeb9cddb189/orig",
+      "age": "12+",
+      "notes": "Second session (Yandex Afisha: 14.11 19:00; also 15.11). Optional — drop if one session per show is preferred. Price from Afisha.ru."
+    }
+  }
+]

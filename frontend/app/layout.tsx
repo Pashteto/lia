@@ -8,6 +8,7 @@ import { Golos_Text, Manrope, JetBrains_Mono } from "next/font/google";
 import { Providers } from "./providers";
 import { TabBarGate } from "@/components/ui/TabBarGate";
 import { VerifyEmailBanner } from "@/components/VerifyEmailBanner";
+import { SessionExpiredBanner } from "@/components/SessionExpiredBanner";
 import "./globals.css";
 
 /* Swiss Grid faces. The handoff specifies Archivo / Space Grotesk, which have
@@ -60,6 +61,7 @@ export default async function RootLayout({
         <Providers>
           <CityProvider initialSlug={citySlug} availability={availability}>
             <CityGeoDefault />
+            <SessionExpiredBanner />
             <VerifyEmailBanner />
             {children}
           </CityProvider>

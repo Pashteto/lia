@@ -1,12 +1,16 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 import { AppHeader, ADMIN_NAV } from "@/components/ui/AppHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/cn";
+
+/** How long state 3 may last before it is treated as a stall, not a load. */
+const ROLE_RESOLVE_TIMEOUT_MS = 5000;
 
 function adminMobileCaption(pathname: string): string {
   if (pathname === "/admin") return "ОБЗОР";
@@ -22,6 +26,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { ready, isAuthed, role, roleResolved } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  // Last-resort guard. An expired token now tears its own session down, so the
+  // usual dead end is gone — but a token that is refused for some other reason
+  // is still indistinguishable from one in flight, and state 3 would otherwise
+  // hold this skeleton forever (prod, 2026-09-19).
+  const [roleStalled, setRoleStalled] = useState(false);
 
   useEffect(() => {
     // State 2: no session at all — redirect immediately, no need to wait for role.
@@ -35,10 +44,39 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }, [ready, isAuthed, role, roleResolved, router]);
 
+  useEffect(() => {
+    if (!ready || !isAuthed || roleResolved) return;
+    const t = setTimeout(() => setRoleStalled(true), ROLE_RESOLVE_TIMEOUT_MS);
+    // Cleanup, not a synchronous reset: re-entering state 3 (a fresh sign-in)
+    // must start the clock over rather than show a stall left from last time.
+    return () => {
+      clearTimeout(t);
+      setRoleStalled(false);
+    };
+  }, [ready, isAuthed, roleResolved]);
+
   // State 1: still hydrating — render nothing.
   if (!ready) return null;
   // State 2: no session — redirect in effect above; render nothing while it lands.
   if (!isAuthed) return null;
+  // State 3a: the role never settled — say so instead of loading forever.
+  if (!roleResolved && roleStalled)
+    return (
+      <div data-surface="ink" className="min-h-screen bg-surface text-on-surface">
+        <div className="mx-auto flex max-w-[1360px] flex-col items-start gap-[12px] px-[20px] py-[26px]">
+          <p className="text-[15px] font-bold">Не удалось проверить сессию</p>
+          <p className="cap text-muted-2">
+            Возможно, она истекла. Войдите заново, чтобы открыть админку.
+          </p>
+          <Link
+            href="/login"
+            className="swiss-focus inline-flex min-h-[44px] items-center justify-center bg-paper px-[11px] py-[11px] text-[11px] font-bold uppercase tracking-[0.07em] text-ink"
+          >
+            Войти
+          </Link>
+        </div>
+      </div>
+    );
   // State 3: session exists but role fetch still in flight — ink Skeleton gate.
   if (!roleResolved)
     return (

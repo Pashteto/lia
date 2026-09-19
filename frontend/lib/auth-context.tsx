@@ -11,7 +11,7 @@ import {
 } from "react";
 
 import { demoLogin, getMe, loginWithPassword, registerWithPassword } from "./api";
-import { clearSession, getStoredEmail, getToken, setSession } from "./auth";
+import { clearSession, getStoredEmail, getToken, isTokenExpired, setSession } from "./auth";
 import { shouldRevalidateVerification } from "./verify-revalidate";
 
 interface AuthState {
@@ -33,6 +33,13 @@ interface AuthState {
   roleResolved: boolean;
   /** Whether the signed-in user's email is verified, per the server. False when unknown/signed out. */
   emailVerified: boolean;
+  /**
+   * True when the stored session was found past its own expiry and torn down.
+   * Drives the notice that tells the user — of any role — to sign in again;
+   * before it existed an expired token left the admin gate on its skeleton
+   * forever, with nothing on screen to explain why.
+   */
+  sessionExpired: boolean;
   /** Demo-login with an email; persists the session. Throws on failure. */
   login: (email: string, name?: string) => Promise<void>;
   /** Register with email + password; persists the session. Throws on failure. */
@@ -109,6 +116,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [role, setRole] = useState<string | null>(null);
   const [roleResolved, setRoleResolved] = useState(false);
   const [emailVerified, setEmailVerified] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
+
+  /**
+   * Tears down a session whose token is past its own `exp` and raises the
+   * notice. Returns whether it acted, so callers can skip the request that
+   * would only come back 401.
+   */
+  const dropIfExpired = useCallback((): boolean => {
+    if (!isTokenExpired(getToken())) return false;
+    clearSession();
+    setRole(null);
+    setEmailVerified(false);
+    setRoleResolved(false);
+    setSessionExpired(true);
+    notifyAuthListeners();
+    return true;
+  }, []);
 
   // Shared getMe result handlers. Success resolves the role; failure leaves
   // roleResolved=false so verification-gated UI (the banner) stays hidden
@@ -125,22 +149,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // freshly registered (still unverified) session, and tearing it down there
   // would log the user out mid-verification (found on prod re-test).
   const failMe = useCallback((_err: unknown) => {
+    // An expired token is the one 401 we CAN identify, and it is a dead end:
+    // leave it in place and the gate waits on roleResolved forever.
+    if (dropIfExpired()) return;
     setRole(null);
     setEmailVerified(false);
     setRoleResolved(false);
-  }, []);
+  }, [dropIfExpired]);
 
   // Populate role from the server on mount when a session already exists.
   useEffect(() => {
-    if (getToken()) {
-      getMe().then(applyMe).catch(failMe);
+    const token = getToken();
+    if (!token) return; // the gate uses isAuthed first; roleResolved stays false
+    // Checked before the request: a token we already know is stale would only
+    // earn a 401, and the user is better told than made to wait for it. The
+    // teardown is deferred a tick because setting state synchronously inside an
+    // effect cascades renders (and eslint rightly refuses it).
+    if (isTokenExpired(token)) {
+      queueMicrotask(dropIfExpired);
+      return;
     }
-    // No token → leave roleResolved=false; the gate uses isAuthed first.
-  }, [applyMe, failMe]);
+    getMe().then(applyMe).catch(failMe);
+  }, [applyMe, failMe, dropIfExpired]);
 
   const login = useCallback(async (loginEmail: string, name?: string) => {
     const token = await demoLogin(loginEmail, name);
     setSession(token, loginEmail);
+    setSessionExpired(false);
     notifyAuthListeners();
     getMe().then(applyMe).catch(failMe);
   }, [applyMe, failMe]);
@@ -149,6 +184,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async (regEmail: string, name: string, password: string) => {
       const token = await registerWithPassword(regEmail, name, password);
       setSession(token, regEmail);
+      setSessionExpired(false);
       notifyAuthListeners();
       getMe().then(applyMe).catch(failMe);
     },
@@ -159,6 +195,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async (loginEmail: string, password: string) => {
       const token = await loginWithPassword(loginEmail, password);
       setSession(token, loginEmail);
+      setSessionExpired(false);
       notifyAuthListeners();
       getMe().then(applyMe).catch(failMe);
     },
@@ -203,6 +240,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setRole(null);
     setRoleResolved(false);
     setEmailVerified(false);
+    // Signing out deliberately is not an expiry — clear the notice so it does
+    // not follow the user onto the login screen.
+    setSessionExpired(false);
     notifyAuthListeners();
   }, []);
 
@@ -214,13 +254,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       role,
       roleResolved,
       emailVerified,
+      sessionExpired,
       login,
       register,
       loginPassword,
       logout,
       refresh,
     }),
-    [email, ready, role, roleResolved, emailVerified, login, register, loginPassword, logout, refresh],
+    [email, ready, role, roleResolved, emailVerified, sessionExpired, login, register, loginPassword, logout, refresh],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

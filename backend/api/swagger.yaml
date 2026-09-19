@@ -978,6 +978,12 @@ definitions:
       capacity_limited:
         type: boolean
         description: Seats are limited but the count is managed on the external platform
+      source_url:
+        type: string
+        description: Ссылка на первоисточник анонса (пост в канале, страница площадки)
+      source_label:
+        type: string
+        description: Подпись источника в карточке; пусто — подставляется хост из source_url
       moderation_required:
         type: boolean
         description: True when the event is pending_review (read-only)
@@ -1103,6 +1109,10 @@ definitions:
       capacity_limited:
         type: boolean
         x-nullable: true
+      source_url:
+        type: string
+      source_label:
+        type: string
 
   EventPatch:
     type: object
@@ -1177,6 +1187,10 @@ definitions:
       capacity_limited:
         type: boolean
         x-nullable: true
+      source_url:
+        type: string
+      source_label:
+        type: string
 
   Venue:
     type: object

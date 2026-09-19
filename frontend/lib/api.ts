@@ -83,6 +83,8 @@ export function apiEventToLia(e: ApiEvent): LiaEvent {
     curatorQuestion: e.curator_question,
     externalRegistrationUrl: e.external_registration_url,
     externalPlatformName: e.external_platform_name,
+    sourceUrl: e.source_url,
+    sourceLabel: e.source_label,
     capacityLimited: e.capacity_limited,
     moderationRequired: e.moderation_required,
     isOwner: e.is_owner ?? false,
@@ -359,6 +361,8 @@ export interface CreateEventInput {
   capacity_limited?: boolean;
   curator_question?: string;
   external_registration_url?: string;
+  source_url?: string;
+  source_label?: string;
 }
 
 /**
@@ -643,6 +647,9 @@ export interface AdminEvent {
   /** The URL under judgment for a pending_review row (unknown-domain external registration). */
   external_registration_url?: string;
   external_platform_name?: string;
+  /** Откуда взят анонс — видно модератору до решения по событию. */
+  source_url?: string;
+  source_label?: string;
 }
 
 export type ComplaintCategory =

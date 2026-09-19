@@ -536,6 +536,20 @@ export function AdminModeration() {
                 external URL) must scroll here rather than push the action bar
                 out of the viewport again. */}
             <div className="min-h-0 flex-1 overflow-y-auto px-[16px] py-[12px]">
+              {/* Attribution first: an imported event is judged together with
+                  the credit it carries — the venues let us republish exactly on
+                  that condition. Shown as text, not a link, for the same reason
+                  the registration URL below is not clickable. */}
+              {selected.source_url ? (
+                <div className="mb-[10px] border border-rule-inner px-[10px] py-[8px]">
+                  <div className="cap mb-[3px] text-muted-2">Источник анонса</div>
+                  <p className="break-all text-[11px] leading-[1.4] text-ink">
+                    {selected.source_label
+                      ? `${selected.source_label} — ${selected.source_url}`
+                      : selected.source_url}
+                  </p>
+                </div>
+              ) : null}
               {isPendingReview ? (
                 <>
                   <p className="cap mb-[6px] text-muted-2">

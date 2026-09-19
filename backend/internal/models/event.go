@@ -3,6 +3,8 @@ package models
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -59,6 +61,15 @@ type Event struct {
 	// City is the event's city slug (see Cities). Denormalized: copied from the
 	// venue when one is set, chosen by the organizer for venue-less events.
 	City string `pg:"city,use_zero"`
+
+	// Source attribution (migration 000029). Kept apart from
+	// ExternalRegistrationURL on purpose: that one is where a visitor signs up,
+	// this one is whom we took the announcement from. Telegram channels are not
+	// on the signup whitelist, so reusing the registration field for credit
+	// would have pushed every imported event into moderation.
+	// Empty for events an organizer posts about themselves.
+	SourceURL   string `pg:"source_url,use_zero"`
+	SourceLabel string `pg:"source_label,use_zero"`
 
 	// ExternalPlatformName is transient (not a column): the whitelist display
 	// name matched at read time. Populated by the events repository.
@@ -125,7 +136,54 @@ func (e *Event) Validate() error {
 		return newValidationError("capacity", "лимит мест должен быть больше нуля")
 	}
 
+	if err := e.validateSource(); err != nil {
+		return err
+	}
+
 	return nil
+}
+
+// validateSource keeps the attribution honest: a credit the reader cannot
+// follow is not a credit, and only links a browser will actually open count.
+func (e *Event) validateSource() error {
+	if e.SourceURL == "" {
+		if e.SourceLabel != "" {
+			return newValidationError("source_url", "нужна ссылка на источник рядом с его названием")
+		}
+
+		return nil
+	}
+
+	u, err := url.Parse(e.SourceURL)
+	if err != nil {
+		return newValidationError("source_url", "ссылка на источник неразборчива")
+	}
+
+	if u.Scheme != "http" && u.Scheme != "https" {
+		return newValidationError("source_url", "ссылка на источник должна начинаться с http:// или https://")
+	}
+
+	if u.Host == "" {
+		return newValidationError("source_url", "в ссылке на источник нет адреса сайта")
+	}
+
+	return nil
+}
+
+// NormalizeSource trims the pair and, when only a link is given, lets the host
+// stand in for the label — a bare URL in the card reads worse than "t.me".
+// Importers always pass a label; a human editing the form often will not.
+func (e *Event) NormalizeSource() {
+	e.SourceURL = strings.TrimSpace(e.SourceURL)
+	e.SourceLabel = strings.TrimSpace(e.SourceLabel)
+
+	if e.SourceURL == "" || e.SourceLabel != "" {
+		return
+	}
+
+	if u, err := url.Parse(e.SourceURL); err == nil && u.Host != "" {
+		e.SourceLabel = u.Host
+	}
 }
 
 // BeforeInsert generates a UUID if missing and serializes the Status enum.

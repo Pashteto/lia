@@ -60,6 +60,8 @@ export const eventFormSchema = z
     curatorQuestion: z.string().optional(),
     externalRegistrationUrl: z.string().optional(),
     capacityLimited: z.boolean().optional(),
+    sourceUrl: z.string().optional(),
+    sourceLabel: z.string().optional(),
   })
   .superRefine((v, ctx) => {
     if (v.signupMode === "application" && !v.curatorQuestion?.trim()) {
@@ -67,6 +69,21 @@ export const eventFormSchema = z
         code: z.ZodIssueCode.custom,
         path: ["curatorQuestion"],
         message: "Для режима «по заявке» нужен вопрос кандидату",
+      });
+    }
+    const src = v.sourceUrl?.trim() ?? "";
+    if (src && !/^https?:\/\/.+/.test(src)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["sourceUrl"],
+        message: "Ссылка на источник должна начинаться с http:// или https://",
+      });
+    }
+    if (!src && v.sourceLabel?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["sourceUrl"],
+        message: "Подпись без ссылки — не атрибуция: укажите ссылку на источник",
       });
     }
     if (v.signupMode === "external") {
@@ -213,6 +230,8 @@ export function valuesToInput(
     external_registration_url:
       v.signupMode === "external" ? v.externalRegistrationUrl?.trim() || undefined : undefined,
     capacity_limited: v.signupMode === "external" ? (v.capacityLimited ?? false) : undefined,
+    source_url: v.sourceUrl?.trim() || undefined,
+    source_label: v.sourceLabel?.trim() || undefined,
   };
 }
 
@@ -279,6 +298,8 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
       capacity: initial?.capacity,
       curatorQuestion: initial?.curatorQuestion,
       externalRegistrationUrl: initial?.externalRegistrationUrl,
+      sourceUrl: initial?.sourceUrl,
+      sourceLabel: initial?.sourceLabel,
       capacityLimited: initial?.capacityLimited ?? false,
     },
   });
@@ -817,6 +838,24 @@ export function CreateEventForm({ mode = "create", eventId, initial }: CreateEve
                   error={errors.curatorQuestion?.message}
                   placeholder="Покажется в форме заявки. Например: «Над чем работаете?»"
                   {...register("curatorQuestion")}
+                />
+              </div>
+              {/* Источник анонса. Отдельно от ссылки регистрации: та ведёт
+                  туда, где записываются, эта — на того, у кого мы взяли анонс.
+                  Заполняется у импортированных событий; у своих пусто. */}
+              <div className="flex flex-col gap-[8px]">
+                <Input
+                  label="Ссылка на источник"
+                  type="url"
+                  error={errors.sourceUrl?.message}
+                  placeholder="https://t.me/канал/123 — если анонс взят из чужого канала"
+                  {...register("sourceUrl")}
+                />
+                <Input
+                  label="Подпись источника"
+                  error={errors.sourceLabel?.message}
+                  placeholder="Телеграм-канал «…» — пусто: подставим адрес сайта"
+                  {...register("sourceLabel")}
                 />
               </div>
               <div hidden={signupMode !== "external"} className="flex flex-col gap-[8px]">

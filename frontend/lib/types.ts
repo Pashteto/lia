@@ -85,6 +85,11 @@ export interface LiaEvent {
   curatorQuestion?: string;
   externalRegistrationUrl?: string;
   externalPlatformName?: string;
+  /** Откуда взят анонс: ссылка на первоисточник и его подпись. Пусто у
+   *  событий, которые организатор публикует о себе сам. Это НЕ ссылка
+   *  регистрации — она живёт в externalRegistrationUrl. */
+  sourceUrl?: string;
+  sourceLabel?: string;
   capacityLimited?: boolean;
   moderationRequired?: boolean;
   /** True when the authenticated caller owns this event. */
@@ -151,6 +156,8 @@ export interface ApiEvent {
   my_rsvp_status?: RsvpStatus | "";
   curator_question?: string;
   external_registration_url?: string;
+  source_url?: string;
+  source_label?: string;
   external_platform_name?: string;
   capacity_limited?: boolean;
   moderation_required?: boolean;

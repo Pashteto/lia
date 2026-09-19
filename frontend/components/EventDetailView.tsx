@@ -123,6 +123,22 @@ export function EventDetailView({
               {event.description}
             </p>
           )}
+          {/* Attribution. The venues whose channels we republish agreed on one
+              condition: every imported event credits its source with a link.
+              Absent for events an organizer posts about themselves. */}
+          {event.sourceUrl && (
+            <p className="max-w-[52ch] text-[10px] uppercase leading-[1.45] tracking-[0.07em] text-text-dim">
+              Источник:{" "}
+              <a
+                href={event.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                className="swiss-focus underline underline-offset-2 hover:text-ink"
+              >
+                {event.sourceLabel || event.sourceUrl}
+              </a>
+            </p>
+          )}
         </div>
         <div className="flex flex-col border-l border-rule-inner px-[14px] py-[10px] max-md:hidden">
           <span className="cap">Цена</span>

@@ -70,6 +70,8 @@ export default function EditEventPage() {
     capacity: event.capacity,
     curatorQuestion: event.curatorQuestion,
     externalRegistrationUrl: event.externalRegistrationUrl,
+    sourceUrl: event.sourceUrl,
+    sourceLabel: event.sourceLabel,
     capacityLimited: event.capacityLimited,
     coverPreviewUrl: event.coverUrl,
     citySlug: event.city,

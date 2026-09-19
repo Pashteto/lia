@@ -123,6 +123,8 @@ func EventToAPI(event *domainModels.Event) *apiModels.Event {
 	out.SignupMode = event.SignupMode
 	out.CuratorQuestion = event.CuratorQuestion
 	out.ExternalRegistrationURL = event.ExternalRegistrationURL
+	out.SourceURL = event.SourceURL
+	out.SourceLabel = event.SourceLabel
 	out.ExternalPlatformName = event.ExternalPlatformName
 	out.CapacityLimited = event.CapacityLimited
 	out.ModerationRequired = event.Status == domainModels.EventPendingReview
@@ -165,6 +167,10 @@ func EventFromAPIInput(in *apiModels.EventInput) (*domainModels.Event, error) {
 		SignupMode:              defaultStr(in.SignupMode, "open"),
 		CuratorQuestion:         in.CuratorQuestion,
 		ExternalRegistrationURL: in.ExternalRegistrationURL,
+		// Source attribution travels separately from the signup link: it says
+		// whom we took the announcement from, and is not whitelist-checked.
+		SourceURL:   in.SourceURL,
+		SourceLabel: in.SourceLabel,
 		// City is resolved by the service: with a venue it follows the venue
 		// (a conflicting explicit value is a 400), venue-less defaults to msk.
 		City: in.City,
@@ -325,6 +331,14 @@ func EventPatchToUpdateParams(in *apiModels.EventPatch) eventsdomain.UpdateParam
 	if in.ExternalRegistrationURL != "" {
 		v := in.ExternalRegistrationURL
 		p.ExternalRegistrationURL = &v
+	}
+	if in.SourceURL != "" {
+		v := in.SourceURL
+		p.SourceURL = &v
+	}
+	if in.SourceLabel != "" {
+		v := in.SourceLabel
+		p.SourceLabel = &v
 	}
 	if in.Capacity != nil {
 		c := int(*in.Capacity)

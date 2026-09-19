@@ -171,6 +171,10 @@ type adminEventJSON struct {
 	// not publicly visible, so the admin detail pane can't always load them.
 	ExternalRegistrationURL string `json:"external_registration_url,omitempty"`
 	ExternalPlatformName    string `json:"external_platform_name,omitempty"`
+	// Source attribution: the moderator judges the credit together with the
+	// event, before it goes live.
+	SourceURL   string `json:"source_url,omitempty"`
+	SourceLabel string `json:"source_label,omitempty"`
 }
 
 func (h *handler) listEvents(w http.ResponseWriter, r *http.Request, _ *domain.User) {
@@ -200,6 +204,8 @@ func (h *handler) listEvents(w http.ResponseWriter, r *http.Request, _ *domain.U
 			CoverURL:                e.CoverURL,
 			ExternalRegistrationURL: e.ExternalRegistrationURL,
 			ExternalPlatformName:    e.ExternalPlatformName,
+			SourceURL:               e.SourceURL,
+			SourceLabel:             e.SourceLabel,
 		}
 		if e.PublishedAt != nil {
 			j.PublishedAt = e.PublishedAt.UTC().Format("2006-01-02T15:04:05Z07:00")

@@ -133,6 +133,10 @@ type UpdateParams struct {
 	// City is honored only for venue-less events; with a venue the city always
 	// follows the venue (a conflicting explicit value is rejected).
 	City *string
+	// Source attribution: whom the announcement was taken from. Separate from
+	// ExternalRegistrationURL, which is where a visitor signs up.
+	SourceURL   *string
+	SourceLabel *string
 }
 
 // applyCity resolves an event's city. With a venue the city is the venue's —
@@ -329,6 +333,10 @@ func (s *service) Create(ctx context.Context, event *models.Event) error {
 		return fmt.Errorf("%w: event is required", ErrInvalidInput)
 	}
 
+	// A link without a label renders as a bare URL in the card; fill it in
+	// before validating so the pair is either complete or absent.
+	event.NormalizeSource()
+
 	if err := event.Validate(); err != nil {
 		return fmt.Errorf("%w: %s", ErrInvalidInput, err.Error())
 	}
@@ -485,6 +493,12 @@ func (s *service) Update(ctx context.Context, id, ownerID uuid.UUID, p UpdatePar
 	if p.CapacityLimited != nil {
 		event.CapacityLimited = *p.CapacityLimited
 	}
+	if p.SourceURL != nil {
+		event.SourceURL = *p.SourceURL
+	}
+	if p.SourceLabel != nil {
+		event.SourceLabel = *p.SourceLabel
+	}
 	if p.VenueID != nil {
 		event.VenueID = *p.VenueID
 	}
@@ -558,6 +572,8 @@ func (s *service) Update(ctx context.Context, id, ownerID uuid.UUID, p UpdatePar
 			}
 		}
 	}
+
+	event.NormalizeSource()
 
 	if err := event.Validate(); err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrInvalidInput, err.Error())

@@ -9,7 +9,12 @@ import { Chip } from "@/components/ui/Chip";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { adminShortId } from "@/lib/admin-id";
-import { type ModerationOutcome, nextQueueIndex, queueEffect } from "@/lib/admin-queue";
+import {
+  type ModerationOutcome,
+  nextQueueIndex,
+  queueEffect,
+  queueKeyTarget,
+} from "@/lib/admin-queue";
 import {
   REJECT_REASON_CHIPS,
   concatenateReasons,
@@ -177,6 +182,38 @@ export function AdminModeration() {
   const detailReady = selectedId != null && detailForId === selectedId;
   const detailLoading = selectedId != null && !detailReady;
   const shownDetail = detailReady ? detail : null;
+  // Arrow keys walk the queue. Moderation is a conveyor, and reaching for the
+  // mouse between every event is the slowest part of it. The listener sits on
+  // document because focus may be anywhere by then — a row, an action button,
+  // or nothing at all after the previous decision.
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      // cmd+↓ / ctrl+↓ / alt+↓ belong to the browser, not to us.
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const el = e.target as HTMLElement | null;
+      const tag = el?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (el?.isContentEditable) return;
+
+      const from = queue.findIndex((ev) => ev.id === selectedId);
+      const to = queueKeyTarget(e.key, from, queue.length);
+      if (to === null) return;
+      // Without this the arrow ALSO scrolls the queue rail, carrying the row we
+      // just selected out of view.
+      e.preventDefault();
+
+      const row = queue[to]!;
+      setSelectedId(row.id);
+      setReasons(new Set());
+      setActionError("");
+      document
+        .querySelector(`[data-id="${row.id}"]`)
+        ?.scrollIntoView({ block: "nearest" });
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [queue, selectedId]);
+
   function selectRow(id: string) {
     setSelectedId(id);
     setReasons(new Set());
@@ -364,6 +401,11 @@ export function AdminModeration() {
           >
             На проверке · {linksCount}
           </Chip>
+        </div>
+        {/* A shortcut nobody can see is a shortcut nobody uses. Desktop only —
+            a touch keyboard has no arrows to offer. */}
+        <div className="cap border-b border-rule-inner px-[14px] py-[6px] text-muted-2 max-[899px]:hidden">
+          ↑ ↓ — переход между событиями
         </div>
         {/* Capped on mobile so the record card stays within one screen. */}
         <div className="min-h-0 flex-1 overflow-y-auto max-[899px]:max-h-[220px]">

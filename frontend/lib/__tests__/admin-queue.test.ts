@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { nextQueueIndex, queueEffect } from "../admin-queue";
+import { nextQueueIndex, queueEffect, queueKeyTarget } from "../admin-queue";
 
 describe("nextQueueIndex", () => {
   it("stays on same index when a later item remains", () => {
@@ -31,5 +31,31 @@ describe("queueEffect", () => {
   });
   it("removes a reinstated event from «Все» — it is reviewed now", () => {
     expect(queueEffect("all", "published")).toBe("remove");
+  });
+});
+
+describe("queueKeyTarget", () => {
+  it("steps down and up through the queue", () => {
+    expect(queueKeyTarget("ArrowDown", 0, 5)).toBe(1);
+    expect(queueKeyTarget("ArrowUp", 3, 5)).toBe(2);
+  });
+
+  // Clamping, not wrapping: in a conveyor, jumping from the last event back to
+  // the first reads as "the list ended" and loses the moderator's place.
+  it("stops at both ends instead of wrapping", () => {
+    expect(queueKeyTarget("ArrowDown", 4, 5)).toBe(null);
+    expect(queueKeyTarget("ArrowUp", 0, 5)).toBe(null);
+  });
+
+  it("ignores every other key", () => {
+    expect(queueKeyTarget("Enter", 1, 5)).toBe(null);
+    expect(queueKeyTarget("ArrowLeft", 1, 5)).toBe(null);
+    expect(queueKeyTarget("j", 1, 5)).toBe(null);
+  });
+
+  it("does nothing on an empty queue or with nothing selected", () => {
+    expect(queueKeyTarget("ArrowDown", 0, 0)).toBe(null);
+    expect(queueKeyTarget("ArrowDown", -1, 5)).toBe(0);
+    expect(queueKeyTarget("ArrowUp", -1, 5)).toBe(null);
   });
 });

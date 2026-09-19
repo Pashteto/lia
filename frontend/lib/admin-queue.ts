@@ -37,3 +37,31 @@ export function queueEffect(
   if (filter === "all" && outcome === "rejected") return "restatus";
   return "remove";
 }
+
+/**
+ * Which queue row an arrow key should move to, or null when the key is not
+ * ours or the move would leave the list.
+ *
+ * Clamps at both ends rather than wrapping: moderation is a conveyor worked
+ * top to bottom, and a silent jump from the last event back to the first reads
+ * as "the queue ended" — the moderator loses their place.
+ *
+ * `index` is -1 when nothing is selected yet; ArrowDown then opens the first
+ * row, which is how a keyboard user enters the list at all.
+ */
+export function queueKeyTarget(
+  key: string,
+  index: number,
+  length: number,
+): number | null {
+  if (length === 0) return null;
+  if (key === "ArrowDown") {
+    const next = index + 1;
+    return next < length ? next : null;
+  }
+  if (key === "ArrowUp") {
+    const prev = index - 1;
+    return prev >= 0 ? prev : null;
+  }
+  return null;
+}

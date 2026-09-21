@@ -32,6 +32,7 @@ import {
   reviewEvent,
   takedownEvent,
 } from "@/lib/api";
+import { venueSummary } from "@/lib/admin-venue";
 import { cn } from "@/lib/cn";
 import { formatModuleDate, formatPrice } from "@/lib/format";
 import type { LiaEvent } from "@/lib/types";
@@ -364,6 +365,13 @@ export function AdminModeration() {
     shownDetail?.organizer?.name?.trim() || selected?.organizer_name?.trim() || "—";
   const categoryLabel = shownDetail?.categories?.[0]?.label ?? "—";
   const titleText = shownDetail?.title || selected?.title || "—";
+  // Two cities share the queue since the Petersburg launch, and the venue name
+  // alone does not always say which — so the moderator gets both.
+  const venue = venueSummary({
+    venue: shownDetail?.venue,
+    format: shownDetail?.format,
+    city: shownDetail?.city,
+  });
   const testTitle = isLikelyTestContent(titleText);
 
   return (
@@ -564,6 +572,24 @@ export function AdminModeration() {
                     valueClassName="text-[11px]"
                   />
                 </CellStrip>
+
+                {/* «Площадка», not «Место»: the cell strip above already says
+                    «Мест» for the seat limit, and the two would read as one
+                    thing. A row of its own rather than a fifth cell — the strip
+                    holds short values, a venue with its address runs 60-80
+                    characters and would break the grid on a narrow screen. */}
+                <div className="flex-none border-b border-rule-inner px-[16px] py-[12px]">
+                  <div className="cap mb-[5px]">Площадка</div>
+                  <p
+                    className={cn(
+                      "text-[11.5px] leading-[1.45]",
+                      venue.missing ? "text-signal" : "text-text-dim",
+                    )}
+                  >
+                    {venue.text}
+                  </p>
+                  {venue.city ? <div className="cap mt-[3px]">{venue.city}</div> : null}
+                </div>
 
                 <div className="flex-none border-b border-rule-inner px-[16px] py-[12px]">
                   <div className="cap mb-[5px]">Описание</div>

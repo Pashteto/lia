@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/go-pg/pg/v10"
@@ -129,6 +130,9 @@ func (r *pgRepository) Create(event *models.Event) error {
 		return nil
 	})
 	if err != nil {
+		if isDuplicateSource(err) {
+			return fmt.Errorf("%w: это событие уже заведено из того же источника", ErrInvalidInput)
+		}
 		return fmt.Errorf("create event %q: %w", event.Title, err)
 	}
 
@@ -710,4 +714,19 @@ func (r *pgRepository) WriteEditAudit(ctx context.Context, eventID, actorID uuid
 		return fmt.Errorf("insert edit audit: %w", err)
 	}
 	return nil
+}
+
+// sourceUniqueIndex is the partial unique index from migration 31: one imported
+// announcement (source_url) may produce one event per start time.
+const sourceUniqueIndex = "events_source_url_starts_at_idx"
+
+// isDuplicateSource reports whether err is Postgres rejecting a re-import.
+// Translated at the repository edge so the HTTP layer answers "уже заведено"
+// instead of a 503 nobody can act on.
+func isDuplicateSource(err error) bool {
+	var pgErr pg.Error
+	if !errors.As(err, &pgErr) {
+		return false
+	}
+	return pgErr.Field('C') == "23505" && strings.Contains(pgErr.Field('n'), sourceUniqueIndex)
 }

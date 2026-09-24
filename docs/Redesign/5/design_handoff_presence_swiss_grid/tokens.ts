@@ -1,3 +1,13 @@
+export const brand = {
+  name: 'Сообща',
+  wordmark: 'сообща',
+  domain: 'soobscha.ru',
+  monogram: 'сб',
+  wordmarkSize: 15,
+  wordmarkSizeMobile: 13,
+  wordmarkTracking: '-0.04em',
+} as const;
+
 export const color = {
   ink: '#111111',
   paper: '#F2F0EC',

@@ -1,4 +1,6 @@
-# Handoff: Presence — Swiss Grid redesign (full system)
+# Handoff: Сообща (ex-Presence) — Swiss Grid redesign (full system)
+
+> **Rebrand, Sept 2026.** The product is now **Сообща** (transliterated domain `soobscha.ru`). "Presence" below refers to the same product and codebase; wherever the spec or the older reference file says `PRESENCE` in a header, the built product shows the wordmark **сообща** (lowercase, Archivo 900, tracking −.04em, 15px desktop / 13px mobile). Use `Soobscha Swiss Grid - Full System.dc.html` as the visual reference — it is the same 17 screens with the new mark applied. Brand rationale and lockups: `Presence Brand - Сообща.dc.html`. The first-visit splash is specified in `INTRO-SPLASH.md`.
 
 ## Overview
 Presence (presence.tarski.ru) is a Moscow platform for participatory cultural events —
@@ -125,10 +127,10 @@ Build these six before any screen. Each maps to a prototype class.
 
 ### 1. `AppHeader` (`.hd` / `.hdm`)
 Padding `13px 20px` desktop / `11px 14px` mobile. `display:flex; justify-content:space-between;
-align-items:baseline`. Left: wordmark `PRESENCE` (Archivo 900, 13px desktop / 11px mobile,
-tracking -0.01em). Right: nav (`.nv`) — 9px uppercase, 0.14em tracking, 14px gap; the active
+align-items:baseline`. Left: wordmark `сообща` (lowercase, Archivo 900, 15px desktop / 13px mobile,
+tracking -0.04em, line-height 1). Right: nav (`.nv`) — 9px uppercase, 0.14em tracking, 14px gap; the active
 item carries `border-bottom: 2px solid currentColor; padding-bottom: 2px`. Admin variant:
-wordmark is `PRESENCE / ADMIN`, colours inverted, bottom rule `1px solid #F2F0EC`.
+wordmark is `сообща` followed by `ADMIN` (8px, 0.2em tracking, `#8A857C`, margin-left 6px), colours inverted, bottom rule `1px solid #F2F0EC`.
 Mobile header shows a context caption instead of nav.
 
 ### 2. `Chip` (`.chip`)
@@ -491,7 +493,7 @@ system. See `map-embed.html` for the exact treatment. Reimplement natively:
   Self-host in production; preload the Archivo 900 and JetBrains Mono 700 subsets.
 - **Icons** — the system deliberately has almost none. The tab bar uses plain squares; `✓`,
   `→`, `←`, `♡`, `⌕`, `···` are typographic characters. **Do not introduce an icon library.**
-- **No illustrations, no logos beyond the `PRESENCE` wordmark set in Archivo 900.**
+- **No illustrations, no logos beyond the `сообща` wordmark set in Archivo 900.** App icon / favicon: monogram `сб` (Archivo 900, tracking −.08em) white on `#111` square.
 
 ## Files in this bundle
 | File | What it is |
@@ -500,7 +502,10 @@ system. See `map-embed.html` for the exact treatment. Reimplement natively:
 | `CLAUDE.md` | Build brief for an agent implementing this in a codebase. |
 | `tokens.css` | Design tokens as CSS custom properties. |
 | `tokens.ts` | The same tokens as a typed TS object. |
-| `Presence Swiss Grid - Full System.dc.html` | The 17-screen design reference. Open in a browser. |
+| `Soobscha Swiss Grid - Full System.dc.html` | **Primary** 17-screen design reference with the Сообща wordmark. Open in a browser. |
+| `Presence Swiss Grid - Full System.dc.html` | Same screens, pre-rebrand. Kept for diff only. |
+| `Presence Brand - Сообща.dc.html` | Brand sheet: wordmark directions, icons, header/footer/admin lockups, domain scheme. |
+| `INTRO-SPLASH.md` + `intro/` | First-visit splash animation: spec + playable references (desktop 1440×900, mobile 390×844). |
 | `Presence Map Screens.html` | Earlier map explorations. |
 | `map-embed.html` | The Leaflet/OSM map treatment to reproduce. |
 | `image-slot.js` | Design-time image placeholder. Not for production. |

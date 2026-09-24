@@ -1,4 +1,8 @@
 :root{
+  /* brand */
+  --brand-name:"сообща";
+  --brand-domain:"soobscha.ru";
+  --wordmark-size:15px; --wordmark-size-mobile:13px; --wordmark-tracking:-0.04em;
   /* colour */
   --ink:#111111;
   --paper:#F2F0EC;

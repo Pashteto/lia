@@ -1,9 +1,10 @@
-# Build brief — Presence Swiss Grid
+# Build brief — Сообща (Swiss Grid)
 
 You are implementing the design specified in `README.md` (read it fully before writing code).
 
 ## Ground rules
-- `README.md` is the specification. `Presence Swiss Grid - Full System.dc.html` is a **visual
+- The product name is **Сообща**, domain `soobscha.ru`. Never render "Presence" in UI.
+- `README.md` is the specification. `Soobscha Swiss Grid - Full System.dc.html` is a **visual
   reference only** — open it to check a layout, never copy its markup, its `<x-dc>`/`<sc-for>`
   tags, or `support.js`.
 - Use `tokens.css` / `tokens.ts`. Never hardcode a hex value or a font size that isn't in the
@@ -26,5 +27,11 @@ radii and a bespoke spacing set). react-leaflet for maps.
   arrays.
 - Russian copy matches the reference unless the content team supplied a replacement.
 
+## First-visit splash
+Implement `INTRO-SPLASH.md` as a CSS-only `<IntroSplash>` (no animation libraries, no engine
+files from `intro/`). Plays once per session, skippable, disabled under prefers-reduced-motion.
+Its final frame must be pixel-identical to the U1 feed header so the handoff is seamless.
+
 ## Order
-Follow README → *Build order*. Ship the public core (U1, U2, U7, U8) before anything else.
+Follow README → *Build order*. Ship the public core (U1, U2, U7, U8) before anything else; the
+splash comes right after U1.

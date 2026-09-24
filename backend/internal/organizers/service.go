@@ -44,8 +44,12 @@ type Organizer struct {
 	VerifiedAt         *time.Time `pg:"verified_at"` // nullable; ORM scans NULL → nil
 	// DailyEventLimit overrides the global daily event-creation cap for this
 	// organizer. nil means "use the default"; 0 means uncapped.
-	DailyEventLimit *int   `pg:"daily_event_limit"`
-	LatestReason    string `pg:"-"` // transient, not a column
+	DailyEventLimit *int `pg:"daily_event_limit"`
+	// MonthlyEventLimit overrides the global monthly event-creation cap for
+	// this organizer. nil means "use the default"; 0 means uncapped. An
+	// editorial account that imports announcements in batches lives on 0.
+	MonthlyEventLimit *int   `pg:"monthly_event_limit"`
+	LatestReason      string `pg:"-"` // transient, not a column
 	// Registry columns «Событий» / «Жалоб». Transient, batch-loaded by List.
 	EventsCount     int `pg:"-"`
 	ComplaintsCount int `pg:"-"`
@@ -93,6 +97,7 @@ type Repository interface {
 	Revoke(ctx context.Context, id, actorID uuid.UUID, reason string) error
 	SetAutoVerify(ctx context.Context, id, actorID uuid.UUID, enabled bool) error
 	SetDailyEventLimit(ctx context.Context, id, actorID uuid.UUID, limit *int) error
+	SetMonthlyEventLimit(ctx context.Context, id, actorID uuid.UUID, limit *int) error
 	List(ctx context.Context, f ListFilter) ([]Organizer, error)
 	History(ctx context.Context, id uuid.UUID) ([]HistoryEntry, error)
 	Counts(ctx context.Context) (Counts, error)
@@ -110,6 +115,9 @@ type Service interface {
 	// DailyEventLimit reports an owner's per-day event cap override. ok is
 	// false when they have none and the global default applies.
 	DailyEventLimit(ctx context.Context, ownerID uuid.UUID) (limit int, ok bool, err error)
+	// MonthlyEventLimit reports an owner's per-month event cap override. ok is
+	// false when they have none and the global default applies.
+	MonthlyEventLimit(ctx context.Context, ownerID uuid.UUID) (limit int, ok bool, err error)
 	// IsVerifiedOwner reports whether the owner's organizer profile passed
 	// admin verification. Missing profile → false (not an error).
 	IsVerifiedOwner(ctx context.Context, ownerID uuid.UUID) (bool, error)
@@ -119,6 +127,8 @@ type Service interface {
 	SetAutoVerify(ctx context.Context, id, actorID uuid.UUID, enabled bool) error
 	// SetDailyEventLimit overrides (nil clears) this organizer's daily cap.
 	SetDailyEventLimit(ctx context.Context, id, actorID uuid.UUID, limit *int) error
+	// SetMonthlyEventLimit overrides (nil clears) this organizer's monthly cap.
+	SetMonthlyEventLimit(ctx context.Context, id, actorID uuid.UUID, limit *int) error
 	List(ctx context.Context, f ListFilter) ([]Organizer, error)
 	GetWithHistory(ctx context.Context, id uuid.UUID) (*Organizer, []HistoryEntry, error)
 	Overview(ctx context.Context) (Counts, error)
@@ -230,6 +240,26 @@ func (s *service) DailyEventLimit(ctx context.Context, ownerID uuid.UUID) (int, 
 
 func (s *service) SetDailyEventLimit(ctx context.Context, id, actorID uuid.UUID, limit *int) error {
 	return s.repo.SetDailyEventLimit(ctx, id, actorID, limit)
+}
+
+// MonthlyEventLimit reads the owner's override, with the same "missing profile
+// is not an error" contract as DailyEventLimit.
+func (s *service) MonthlyEventLimit(ctx context.Context, ownerID uuid.UUID) (int, bool, error) {
+	org, err := s.repo.GetByOwner(ctx, ownerID)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return 0, false, nil
+		}
+		return 0, false, err
+	}
+	if org == nil || org.MonthlyEventLimit == nil {
+		return 0, false, nil
+	}
+	return *org.MonthlyEventLimit, true, nil
+}
+
+func (s *service) SetMonthlyEventLimit(ctx context.Context, id, actorID uuid.UUID, limit *int) error {
+	return s.repo.SetMonthlyEventLimit(ctx, id, actorID, limit)
 }
 
 func (s *service) Verify(ctx context.Context, id, actorID uuid.UUID) error {

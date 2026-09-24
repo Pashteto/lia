@@ -209,6 +209,11 @@ type VenueValidator interface {
 // organizers.Service.DailyEventLimit.
 type DailyLimitLookup func(ctx context.Context, ownerID uuid.UUID) (limit int, ok bool, err error)
 
+// MonthlyLimitLookup returns an organizer's own monthly cap. ok is false when
+// they have no override and the global default applies. Satisfied by
+// organizers.Service.MonthlyEventLimit.
+type MonthlyLimitLookup func(ctx context.Context, ownerID uuid.UUID) (limit int, ok bool, err error)
+
 // PlatformChecker judges whether an external registration URL belongs to a
 // whitelisted platform. Satisfied by platforms.Service.Check directly.
 type PlatformChecker interface {
@@ -220,6 +225,7 @@ type service struct {
 	categories      CategoryValidator
 	venues          VenueValidator
 	monthlyLimit    int
+	monthlyLookup   MonthlyLimitLookup
 	dailyLimit      int
 	dailyLookup     DailyLimitLookup
 	platformChecker PlatformChecker
@@ -269,6 +275,14 @@ func (s *service) SetDailyLimit(defaultLimit int, lookup DailyLimitLookup) {
 	s.dailyLookup = lookup
 }
 
+// SetMonthlyLimitLookup wires the per-organizer override of the monthly cap.
+// The default itself comes from the constructor; this only adds the per-owner
+// axis, and is wired after construction because the organizers module is built
+// later. Left nil in tests/deployments without the registry.
+func (s *service) SetMonthlyLimitLookup(lookup MonthlyLimitLookup) {
+	s.monthlyLookup = lookup
+}
+
 // SetPlatformChecker wires the external-registration whitelist checker.
 // Wired after construction (like SetDailyLimit) because the platforms module
 // is built independently. Left nil in tests/deployments where the feature is
@@ -301,6 +315,24 @@ func (s *service) applyExternalURLPolicy(ctx context.Context, event *models.Even
 	event.ExternalURLVerified = false
 	event.Status = models.EventPendingReview
 	return nil
+}
+
+// monthlyLimitFor resolves the monthly cap for one organizer: their override
+// when set, otherwise the global default. A failing lookup falls back to the
+// default rather than blocking the create, exactly as dailyLimitFor does.
+func (s *service) monthlyLimitFor(ctx context.Context, ownerID uuid.UUID) int {
+	if s.monthlyLookup == nil {
+		return s.monthlyLimit
+	}
+	limit, ok, err := s.monthlyLookup(ctx, ownerID)
+	if err != nil {
+		logger.Log().Errorf("monthly limit lookup for %s: %s", ownerID, err.Error())
+		return s.monthlyLimit
+	}
+	if !ok {
+		return s.monthlyLimit
+	}
+	return limit
 }
 
 // dailyLimitFor resolves the cap for one organizer: their override when set,
@@ -372,14 +404,16 @@ func (s *service) Create(ctx context.Context, event *models.Event) error {
 
 	// Quota check: if a monthly limit is configured, reject once the organizer
 	// has reached it for the current calendar month (Europe/Moscow).
-	if s.monthlyLimit > 0 && event.OrganizerID != uuid.Nil {
-		since := startOfMonthMoscow(time.Now())
-		n, err := s.repo.CountByOrganizerSince(event.OrganizerID, since)
-		if err != nil {
-			return fmt.Errorf("quota check: %w", err)
-		}
-		if n >= s.monthlyLimit {
-			return fmt.Errorf("%w: %d/%d this month", ErrQuotaExceeded, n, s.monthlyLimit)
+	if event.OrganizerID != uuid.Nil {
+		if limit := s.monthlyLimitFor(ctx, event.OrganizerID); limit > 0 {
+			since := startOfMonthMoscow(time.Now())
+			n, err := s.repo.CountByOrganizerSince(event.OrganizerID, since)
+			if err != nil {
+				return fmt.Errorf("quota check: %w", err)
+			}
+			if n >= limit {
+				return &QuotaError{Limit: limit, Used: n, Period: "month"}
+			}
 		}
 	}
 

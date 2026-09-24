@@ -194,20 +194,26 @@ func (h *GetEventByID) Handle(params eventsops.GetEventByIDParams) middleware.Re
 	return eventsops.NewGetEventByIDOK().WithPayload(payload)
 }
 
-// quotaMessage renders a rejected create in Russian. The daily cap is
-// configurable and can be raised per organizer, so its message is built from
-// the actual number rather than hardcoded; the monthly cap keeps its
-// spec-mandated wording.
+// quotaMessage renders a rejected create in Russian. Both caps are configurable
+// and can be overridden per organizer, so both messages are built from the
+// actual number. At the default monthly cap of 10 the wording is identical to
+// the spec-mandated one, which is also the fallback for an untyped error.
 func quotaMessage(err error) string {
 	var q *eventsdomain.QuotaError
-	if errors.As(err, &q) && q.Period == "day" {
-		return fmt.Sprintf(
-			"Достигнут дневной лимит: %s. Лимит обновится завтра.",
-			plural(q.Limit, "событие", "события", "событий"),
-		)
+	if errors.As(err, &q) {
+		switch q.Period {
+		case "day":
+			return fmt.Sprintf(
+				"Достигнут дневной лимит: %s. Лимит обновится завтра.",
+				plural(q.Limit, "событие", "события", "событий"),
+			)
+		case "month":
+			return fmt.Sprintf(
+				"Достигнут лимит: %s в месяц. Лимит обновится 1-го числа.",
+				plural(q.Limit, "событие", "события", "событий"),
+			)
+		}
 	}
-	// NOTE: "10 событий в месяц" is intentionally hardcoded per spec.
-	// Keep in sync with the EVENTS_MONTHLY_LIMIT config value.
 	return "Достигнут лимит: 10 событий в месяц. Лимит обновится 1-го числа."
 }
 

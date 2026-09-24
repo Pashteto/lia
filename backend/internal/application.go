@@ -245,6 +245,15 @@ func (app *App) registerModules() error {
 			setter.SetDailyLimit(app.config.EventsDailyLimit, lookup)
 			logger.Log().Infof("events daily limit = %d", app.config.EventsDailyLimit)
 		}
+		// Same story for the monthly cap: the default came in via the
+		// constructor, the per-organizer override lives in the registry.
+		if setter, ok := app.eventsSvc.(interface {
+			SetMonthlyLimitLookup(eventsdomain.MonthlyLimitLookup)
+		}); ok && app.organizersSvc != nil {
+			setter.SetMonthlyLimitLookup(app.organizersSvc.MonthlyEventLimit)
+			logger.Log().Infof("events monthly limit = %d (per-organizer override wired)",
+				app.config.EventsMonthlyLimit)
+		}
 	}
 
 	// Wire the external-registration whitelist checker once the repository

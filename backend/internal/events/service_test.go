@@ -1003,3 +1003,85 @@ func TestNoVerifierWiredIsNoOp(t *testing.T) {
 		t.Fatalf("expected published (no verifier wired), got %s", updated.Status)
 	}
 }
+
+// --- Per-organizer monthly cap ---
+//
+// The monthly cap used to be global only: one number for everybody, changed by
+// redeploying. An editorial account that imports announcements in batches hit it
+// every time, so the cap grew a per-organizer axis, mirroring the daily one.
+
+func TestCreate_MonthlyOverrideBeatsTheDefault(t *testing.T) {
+	repo := &mockRepo{countByOrganizer: 50}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 10)
+	svc.(*service).SetMonthlyLimitLookup(func(context.Context, uuid.UUID) (int, bool, error) {
+		return 100, true, nil // the import account was granted a higher cap
+	})
+
+	if err := svc.Create(context.Background(), validEventWithOrganizer()); err != nil {
+		t.Fatalf("override was ignored: %v", err)
+	}
+}
+
+func TestCreate_MonthlyOverrideOfZeroMeansUncapped(t *testing.T) {
+	repo := &mockRepo{countByOrganizer: 500}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 10)
+	svc.(*service).SetMonthlyLimitLookup(func(context.Context, uuid.UUID) (int, bool, error) {
+		return 0, true, nil
+	})
+
+	if err := svc.Create(context.Background(), validEventWithOrganizer()); err != nil {
+		t.Fatalf("a zero override should lift the cap, got: %v", err)
+	}
+}
+
+func TestCreate_MonthlyOverrideCanTightenTheDefault(t *testing.T) {
+	repo := &mockRepo{countByOrganizer: 3}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 10)
+	svc.(*service).SetMonthlyLimitLookup(func(context.Context, uuid.UUID) (int, bool, error) {
+		return 2, true, nil
+	})
+
+	err := svc.Create(context.Background(), validEventWithOrganizer())
+	var q *QuotaError
+	if !errors.As(err, &q) {
+		t.Fatalf("err = %v; want a *QuotaError", err)
+	}
+	if q.Limit != 2 || q.Period != "month" {
+		t.Errorf("quota = %+v; want limit 2 for the month", q)
+	}
+}
+
+// A registry hiccup must not stop somebody publishing an event.
+func TestCreate_MonthlyLookupFailureFallsBackToTheDefault(t *testing.T) {
+	repo := &mockRepo{countByOrganizer: 5}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 10)
+	svc.(*service).SetMonthlyLimitLookup(func(context.Context, uuid.UUID) (int, bool, error) {
+		return 0, false, errors.New("registry down")
+	})
+
+	if err := svc.Create(context.Background(), validEventWithOrganizer()); err != nil {
+		t.Fatalf("create blocked by a failing lookup: %v", err)
+	}
+}
+
+// The HTTP layer renders the Russian message from these numbers, so the monthly
+// rejection has to carry them the way the daily one does.
+func TestCreate_MonthlyQuotaErrorCarriesTheNumbers(t *testing.T) {
+	repo := &mockRepo{countByOrganizer: 10}
+	svc := NewService(repo, &mockValidator{}, &mockVenueValidator{}, 10)
+
+	err := svc.Create(context.Background(), validEventWithOrganizer())
+	if !errors.Is(err, ErrQuotaExceeded) {
+		t.Fatalf("err = %v; want ErrQuotaExceeded", err)
+	}
+	var q *QuotaError
+	if !errors.As(err, &q) {
+		t.Fatalf("err = %v; want a *QuotaError carrying the numbers", err)
+	}
+	if q.Limit != 10 || q.Used != 10 || q.Period != "month" {
+		t.Errorf("quota = %+v; want 10/10 for the month", q)
+	}
+	if want := startOfMonthMoscow(time.Now()); !repo.countSinceArg.Equal(want) {
+		t.Errorf("since = %v; want startOfMonthMoscow(now) = %v", repo.countSinceArg, want)
+	}
+}

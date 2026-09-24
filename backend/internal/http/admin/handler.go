@@ -4,6 +4,7 @@
 package admin
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -64,6 +65,7 @@ func NewHandler(deps Deps) http.Handler {
 	h.mux.HandleFunc("POST /api/v1/admin/moderation/organizers/{id}/revoke", h.staff(h.revokeOrganizer))
 	h.mux.HandleFunc("POST /api/v1/admin/organizers/{id}/auto-verify", h.staff(h.setAutoVerify))
 	h.mux.HandleFunc("POST /api/v1/admin/organizers/{id}/daily-limit", h.staff(h.setDailyLimit))
+	h.mux.HandleFunc("POST /api/v1/admin/organizers/{id}/monthly-limit", h.staff(h.setMonthlyLimit))
 	h.mux.HandleFunc("GET /api/v1/admin/settings", h.staff(h.getSettings))
 	h.mux.HandleFunc("PUT /api/v1/admin/settings", h.staff(h.putSettings))
 	h.mux.HandleFunc("GET /api/v1/admin/complaints", h.staff(h.listComplaints))
@@ -330,6 +332,9 @@ type adminOrganizerJSON struct {
 	// DailyEventLimit is this organizer's override of the global daily
 	// creation cap. Absent means "use the default".
 	DailyEventLimit *int `json:"daily_event_limit,omitempty"`
+	// MonthlyEventLimit is this organizer's override of the global monthly
+	// cap; nil means the default applies, 0 means uncapped.
+	MonthlyEventLimit *int `json:"monthly_event_limit,omitempty"`
 }
 
 func toAdminOrganizerJSON(o organizers.Organizer) adminOrganizerJSON {
@@ -337,7 +342,8 @@ func toAdminOrganizerJSON(o organizers.Organizer) adminOrganizerJSON {
 		ID: o.ID.String(), Name: o.Name, Description: o.Description, WebsiteURL: o.WebsiteURL,
 		VerificationStatus: o.VerificationStatus, AutoVerify: o.AutoVerify, LatestReason: o.LatestReason,
 		EventsCount: o.EventsCount, ComplaintsCount: o.ComplaintsCount,
-		DailyEventLimit: o.DailyEventLimit,
+		DailyEventLimit:   o.DailyEventLimit,
+		MonthlyEventLimit: o.MonthlyEventLimit,
 	}
 }
 
@@ -450,6 +456,22 @@ func (h *handler) organizerDetail(w http.ResponseWriter, r *http.Request, _ *dom
 // setDailyLimit sets or clears an organizer's daily event-creation override.
 // Body: {"limit": 5} to set, {"limit": null} to fall back to the global default.
 func (h *handler) setDailyLimit(w http.ResponseWriter, r *http.Request, u *domain.User) {
+	h.setEventLimit(w, r, u, func(ctx context.Context, id, actor uuid.UUID, limit *int) error {
+		return h.deps.Organizers.SetDailyEventLimit(ctx, id, actor, limit)
+	})
+}
+
+// setMonthlyLimit does the same for the monthly cap. 0 means uncapped, which is
+// what the editorial import account runs on.
+func (h *handler) setMonthlyLimit(w http.ResponseWriter, r *http.Request, u *domain.User) {
+	h.setEventLimit(w, r, u, func(ctx context.Context, id, actor uuid.UUID, limit *int) error {
+		return h.deps.Organizers.SetMonthlyEventLimit(ctx, id, actor, limit)
+	})
+}
+
+// setEventLimit carries the body parsing and error mapping both caps share.
+func (h *handler) setEventLimit(w http.ResponseWriter, r *http.Request, u *domain.User,
+	apply func(ctx context.Context, id, actor uuid.UUID, limit *int) error) {
 	if h.deps.Organizers == nil {
 		writeErr(w, http.StatusServiceUnavailable, "organizers service not available")
 		return
@@ -469,7 +491,7 @@ func (h *handler) setDailyLimit(w http.ResponseWriter, r *http.Request, u *domai
 		writeErr(w, http.StatusBadRequest, "Лимит не может быть отрицательным")
 		return
 	}
-	if err := h.deps.Organizers.SetDailyEventLimit(r.Context(), id, u.UUID, body.Limit); err != nil {
+	if err := apply(r.Context(), id, u.UUID, body.Limit); err != nil {
 		if err == organizers.ErrNotFound {
 			writeErr(w, http.StatusNotFound, "not found")
 			return

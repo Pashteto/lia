@@ -44,6 +44,9 @@ func (f *fakeRepo) SetAutoVerify(context.Context, uuid.UUID, uuid.UUID, bool) er
 func (f *fakeRepo) SetDailyEventLimit(context.Context, uuid.UUID, uuid.UUID, *int) error {
 	return nil
 }
+func (f *fakeRepo) SetMonthlyEventLimit(context.Context, uuid.UUID, uuid.UUID, *int) error {
+	return nil
+}
 func (f *fakeRepo) List(context.Context, ListFilter) ([]Organizer, error)      { return nil, nil }
 func (f *fakeRepo) History(context.Context, uuid.UUID) ([]HistoryEntry, error) { return nil, nil }
 func (f *fakeRepo) Counts(context.Context) (Counts, error)                     { return Counts{}, nil }
@@ -157,5 +160,44 @@ func TestEnsureForOwnerFallsBackWhenTheUserHasNoName(t *testing.T) {
 	}
 	if repo.upsertName != "Организатор" {
 		t.Errorf("upsert name = %q; want the fallback", repo.upsertName)
+	}
+}
+
+// --- Monthly event limit ---
+
+func TestMonthlyEventLimit_NoProfileFallsBackToTheDefault(t *testing.T) {
+	svc := NewService(&fakeRepo{}, fakeSettings{})
+
+	limit, ok, err := svc.MonthlyEventLimit(context.Background(), uuid.Must(uuid.NewV4()))
+	if err != nil {
+		t.Fatalf("missing profile reported as an error: %v", err)
+	}
+	if ok || limit != 0 {
+		t.Errorf("limit=%d ok=%v; want the global default to apply", limit, ok)
+	}
+}
+
+func TestMonthlyEventLimit_UnsetOverrideFallsBackToTheDefault(t *testing.T) {
+	svc := NewService(&fakeRepo{owner: &Organizer{Name: "Редакция"}}, fakeSettings{})
+
+	_, ok, err := svc.MonthlyEventLimit(context.Background(), uuid.Must(uuid.NewV4()))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if ok {
+		t.Error("ok=true without an override; want the global default to apply")
+	}
+}
+
+func TestMonthlyEventLimit_ReadsTheOverride(t *testing.T) {
+	zero := 0
+	svc := NewService(&fakeRepo{owner: &Organizer{Name: "Редакция", MonthlyEventLimit: &zero}}, fakeSettings{})
+
+	limit, ok, err := svc.MonthlyEventLimit(context.Background(), uuid.Must(uuid.NewV4()))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !ok || limit != 0 {
+		t.Errorf("limit=%d ok=%v; want the uncapped override (0, true)", limit, ok)
 	}
 }

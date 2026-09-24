@@ -461,6 +461,12 @@ func (f *fakeOrganizers) DailyEventLimit(_ context.Context, _ uuid.UUID) (int, b
 func (f *fakeOrganizers) SetDailyEventLimit(_ context.Context, _, _ uuid.UUID, _ *int) error {
 	return nil
 }
+func (f *fakeOrganizers) MonthlyEventLimit(_ context.Context, _ uuid.UUID) (int, bool, error) {
+	return 0, false, nil
+}
+func (f *fakeOrganizers) SetMonthlyEventLimit(_ context.Context, _, _ uuid.UUID, _ *int) error {
+	return nil
+}
 func (f *fakeOrganizers) Verify(_ context.Context, _, _ uuid.UUID) error { return nil }
 func (f *fakeOrganizers) Reject(_ context.Context, _, _ uuid.UUID, _ string) error {
 	return nil
@@ -563,7 +569,29 @@ func TestQuotaMessage_DailyUsesTheActualLimit(t *testing.T) {
 	}
 }
 
-func TestQuotaMessage_MonthlyKeepsItsWording(t *testing.T) {
+// The monthly cap is per-organizer now, so the message is built from the actual
+// number. At the default of 10 the wording must stay exactly as it was.
+func TestQuotaMessage_MonthlyUsesTheActualLimit(t *testing.T) {
+	cases := []struct {
+		limit int
+		want  string
+	}{
+		{10, "Достигнут лимит: 10 событий в месяц. Лимит обновится 1-го числа."},
+		{1, "Достигнут лимит: 1 событие в месяц. Лимит обновится 1-го числа."},
+		{2, "Достигнут лимит: 2 события в месяц. Лимит обновится 1-го числа."},
+		{100, "Достигнут лимит: 100 событий в месяц. Лимит обновится 1-го числа."},
+	}
+	for _, c := range cases {
+		err := &eventsdomain.QuotaError{Limit: c.limit, Used: c.limit, Period: "month"}
+		if got := quotaMessage(err); got != c.want {
+			t.Errorf("limit %d: got %q, want %q", c.limit, got, c.want)
+		}
+	}
+}
+
+// An untyped quota error can still reach here (any caller that wraps
+// ErrQuotaExceeded without the numbers); it falls back to the default wording.
+func TestQuotaMessage_UntypedFallsBackToTheDefaultWording(t *testing.T) {
 	err := fmt.Errorf("%w: 10/10 this month", eventsdomain.ErrQuotaExceeded)
 	const want = "Достигнут лимит: 10 событий в месяц. Лимит обновится 1-го числа."
 	if got := quotaMessage(err); got != want {

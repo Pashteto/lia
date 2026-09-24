@@ -313,15 +313,19 @@ def analyse(post: dict, cfg: dict, channel_cfg: dict, horizon_days: int):
         "format": ("online" if re.search(r"полностью онлайн|только онлайн|\bZOOM\b", text, re.I)
                    else "offline"),
         "starts_at": starts.isoformat(),
-        "signup_mode": "external",
-        "external_registration_url": (post["links"][0] if post["links"] else f"https://t.me/{post['post']}"),
         # Атрибуция: площадки разрешили републикацию при условии ссылки на канал.
-        # Это НЕ ссылка регистрации: t.me не в whitelist платформ, и подстановка
-        # канала в external_registration_url отправила бы событие на модерацию.
+        # Это НЕ ссылка регистрации, см. signup ниже.
         "source_url": f"https://t.me/{post['post']}",
         "source_label": f"Телеграм-канал «{channel_cfg['title']}»",
         "organizer_id": cfg["organizer_id"],
     }
+    # Режим записи. Ссылку на сам пост в external_registration_url подставлять
+    # НЕЛЬЗЯ: t.me не в whitelist платформ, и applyExternalURLPolicy при публикации
+    # уводит такое событие в pending_review — так все телеграм-события и осели в
+    # модерации (разбор 24.09). У анонса без ссылки регистрации нет вообще: на
+    # концерт приходят и платят на входе, это режим «open».
+    body.update({"signup_mode": "external", "external_registration_url": post["links"][0]}
+                if post["links"] else {"signup_mode": "open"})
     body.update(price or {"price_type": "free"})
     if not price:
         notes.append("цена не найдена — поставлено «бесплатно», проверить")

@@ -5,8 +5,9 @@ import { AppHeader, USER_NAV } from "@/components/ui/AppHeader";
 import { AuthNavControl } from "@/components/ui/AuthNavControl";
 import { CityCookieSync } from "@/components/ui/CityCookieSync";
 import { CITIES, CITY_COOKIE, cityBySlug } from "@/lib/city";
+import { pageTitle } from "@/lib/brand";
 
-export const metadata = { title: "Карта — PRESENCE" };
+export const metadata = { title: pageTitle("Карта") };
 
 // U5 · Карта. Public route — no auth gate. City (cookie / ?city= override)
 // sets the initial map center; the search itself is coordinate-driven.

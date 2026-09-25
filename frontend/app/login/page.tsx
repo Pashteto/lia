@@ -3,8 +3,9 @@ import { cookies } from "next/headers";
 import { AuthForm } from "@/components/AuthForm";
 import { Wordmark } from "@/components/ui/Wordmark";
 import { CITY_COOKIE, cityBySlug, cityLoginCaption } from "@/lib/city";
+import { pageTitle } from "@/lib/brand";
 
-export const metadata = { title: "Вход — PRESENCE" };
+export const metadata = { title: pageTitle("Вход") };
 
 /** U7: split screen — ink brand panel left, paper form right; stacked on mobile. */
 export default async function LoginPage() {

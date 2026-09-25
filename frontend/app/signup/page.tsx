@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { AuthForm } from "@/components/AuthForm";
 import { Wordmark } from "@/components/ui/Wordmark";
+import { pageTitle } from "@/lib/brand";
 
-export const metadata = { title: "Регистрация — PRESENCE" };
+export const metadata = { title: pageTitle("Регистрация") };
 
 export default function SignupPage() {
   return (

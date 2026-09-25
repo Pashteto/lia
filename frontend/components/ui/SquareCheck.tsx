@@ -5,7 +5,7 @@ import { cn } from "@/lib/cn";
 /**
  * Square ink checkbox. The token sheet has no colour outside it, so a native
  * `<input type="checkbox">` — which paints the platform blue — is not usable on
- * any Presence surface. This is the same hairline square the rest of the system
+ * any Сообща surface. This is the same hairline square the rest of the system
  * is built from: an empty box that fills with paper (or ink, off the admin
  * surface) and carries the mark when on.
  */

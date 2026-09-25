@@ -7,8 +7,9 @@ import { CityCookieSync } from "@/components/ui/CityCookieSync";
 import { fetchPublishedEvents, getCategories } from "@/lib/api";
 import { CITIES, CITY_COOKIE, cityBySlug } from "@/lib/city";
 import { ssrFallbackEvents } from "@/lib/mock-events";
+import { pageTitle } from "@/lib/brand";
 
-export const metadata = { title: "Подбор — PRESENCE" };
+export const metadata = { title: pageTitle("Подбор") };
 
 // U3 · AI-подбор. Public route — deterministic smart-filter (LLM deferred).
 // City resolution mirrors the feed: cookie, with a shareable ?city= override.

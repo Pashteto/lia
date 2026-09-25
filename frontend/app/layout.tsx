@@ -9,6 +9,7 @@ import { Providers } from "./providers";
 import { TabBarGate } from "@/components/ui/TabBarGate";
 import { VerifyEmailBanner } from "@/components/VerifyEmailBanner";
 import { SessionExpiredBanner } from "@/components/SessionExpiredBanner";
+import { BRAND, pageTitle } from "@/lib/brand";
 import "./globals.css";
 
 /* Swiss Grid faces. The handoff specifies Archivo / Space Grotesk, which have
@@ -36,7 +37,8 @@ const jbmono = JetBrains_Mono({
 export async function generateMetadata(): Promise<Metadata> {
   const city = cityBySlug((await cookies()).get(CITY_COOKIE)?.value);
   return {
-    title: "PRESENCE — События",
+    title: pageTitle(),
+    applicationName: BRAND.name,
     description: `Медиации, лекции и разговоры об искусстве. Участливые культурные события ${city.genitive}.`,
   };
 }

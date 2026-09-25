@@ -62,7 +62,7 @@ func (m *smtpMailer) SendEventInvitation(_ context.Context, to, eventTitle, acce
 func RenderInvitationEmail(eventTitle, acceptURL string) (string, string) {
 	safeTitle := html.EscapeString(eventTitle)
 	safeURL := html.EscapeString(acceptURL)
-	subject := "Subject: Presence: приглашение на событие"
+	subject := "Subject: Сообща: приглашение на событие"
 	body := fmt.Sprintf(`<!DOCTYPE html><html lang="ru"><body style="font-family:Arial,sans-serif;background:#f4f4f4;padding:20px;">
 <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:8px;padding:24px;line-height:1.5;">
 <h2>Вас пригласили на событие</h2>

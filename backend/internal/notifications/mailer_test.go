@@ -29,3 +29,10 @@ func TestRenderInvitationEmail_EscapesHTML(t *testing.T) {
 		t.Fatalf("body missing escaped ampersand: %s", body)
 	}
 }
+
+func TestRenderInvitationEmail_Brand(t *testing.T) {
+	subject, _ := notifications.RenderInvitationEmail("Лекция", "https://example.test/invite/x")
+	if subject != "Subject: Сообща: приглашение на событие" {
+		t.Fatalf("unexpected subject %q", subject)
+	}
+}

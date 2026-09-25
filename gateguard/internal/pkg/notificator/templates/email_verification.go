@@ -29,5 +29,5 @@ func (t EmailVerification) GetTemplateAsString(ctx context.Context) (string, err
 func (t EmailVerification) TemplateName() string { return emailVerificationTemplateName }
 
 func (t EmailVerification) Subject() string {
-	return "Subject: Presence: код подтверждения почты"
+	return "Subject: Сообща: код подтверждения почты"
 }

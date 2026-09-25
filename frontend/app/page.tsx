@@ -27,6 +27,14 @@ export default async function DiscoveryPage({
   const cookieSlug = (await cookies()).get(CITY_COOKIE)?.value;
   const override = CITIES.find((c) => c.slug === cityParam);
   const city = override ?? cityBySlug(cookieSlug);
+  // The splash sign only names a city once the page knows it for sure (a
+  // city cookie, or a valid ?city= override) — the geo default resolves
+  // client-side after paint, so guessing here would show the wrong city on
+  // many first visits. The year is computed server-side to avoid hydration
+  // drift with a client Date().
+  const year = new Date().getFullYear();
+  const cityKnown = Boolean(override) || CITIES.some((c) => c.slug === cookieSlug);
+  const sign = cityKnown ? `${city.name.toUpperCase()} · ${year}` : String(year);
 
   const [initialEvents, categories] = await Promise.all([
     fetchPublishedEvents(undefined, undefined, city.slug).catch(() => ssrFallbackEvents()),
@@ -39,7 +47,7 @@ export default async function DiscoveryPage({
           lives here (server component) rather than inside the client
           component so React never renders a <script> on the client. */}
       <script dangerouslySetInnerHTML={{ __html: INTRO_INLINE_SCRIPT }} />
-      <IntroSplash />
+      <IntroSplash sign={sign} />
       {override ? <CityCookieSync slug={override.slug} /> : null}
       <AppHeader nav={USER_NAV} actions={<AuthNavControl />} mobileCaption={<CityControl />} />
       <div className="intro-content">

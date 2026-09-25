@@ -27,6 +27,9 @@ describe("brand", () => {
 });
 
 describe("rebrand guard", () => {
+  // Deliberately does not scan public/ or next.config.ts: those still carry
+  // the old hosts (tarski.ru/presence.tarski.ru) as live infrastructure until
+  // the domain move, so "presence" there is expected, not a rebrand miss.
   it("no source file under app/, components/, lib/ says Presence", () => {
     const root = join(__dirname, "..", "..");
     const offenders = ["app", "components", "lib"]

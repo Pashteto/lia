@@ -3,6 +3,7 @@ import {
   INTRO_INLINE_SCRIPT, INTRO_SEEN_KEY, INTRO_START_BUDGET_MS, SCATTER_DESKTOP, SCATTER_MOBILE,
   landingTransform, markSeen, readSeen, shouldPlayIntro, shouldStartIntro,
 } from "../intro-splash";
+import { BRAND } from "../brand";
 
 const mem = (init: Record<string, string> = {}) => {
   const m = new Map(Object.entries(init));
@@ -53,6 +54,11 @@ describe("scatter offsets (INTRO-SPLASH.md)", () => {
     expect(SCATTER_DESKTOP[0]).toEqual({ x: -560, y: -300, r: -18 });
     expect(SCATTER_DESKTOP[5]).toEqual({ x: -140, y: 380, r: -24 });
     expect(SCATTER_MOBILE[3]).toEqual({ x: 150, y: 260, r: -14 });
+  });
+  it("has exactly one offset per letter of BRAND.wordmark (IntroSplash indexes by i)", () => {
+    const letterCount = [...BRAND.wordmark].length;
+    expect(SCATTER_DESKTOP.length).toBe(letterCount);
+    expect(SCATTER_MOBILE.length).toBe(letterCount);
   });
 });
 

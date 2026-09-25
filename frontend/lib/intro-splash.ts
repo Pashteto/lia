@@ -7,6 +7,9 @@ export const INTRO_SEEN_KEY = "soobscha:intro-seen";
 type StorageGet = Pick<Storage, "getItem">;
 type StorageSet = Pick<Storage, "setItem">;
 
+// readSeen/shouldPlayIntro are the reference behaviour that INTRO_INLINE_SCRIPT
+// must mirror exactly (production decides via that inline script, before any
+// framework code runs); kept here, unused in prod, so this logic stays unit-tested.
 export function readSeen(storage: StorageGet | null): boolean {
   if (!storage) return true;
   try {

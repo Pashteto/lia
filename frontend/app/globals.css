@@ -244,3 +244,78 @@ html {
   text-transform: uppercase;
   color: var(--muted-2);
 }
+
+/* ── Intro splash (handoff INTRO-SPLASH.md) ─────────────────────────── */
+/* html[data-intro] is set before paint by INTRO_INLINE_SCRIPT (feed only).
+ * Every run-state rule is prefixed with html[data-intro="play"] so it
+ * outranks the base overlay rule (otherwise intro-lift never applies). */
+.intro { display: none; }
+html[data-intro="play"] .intro {
+  position: fixed; inset: 0; z-index: 100; display: block;
+  background: var(--paper); color: var(--ink); cursor: pointer;
+  animation: intro-failsafe 0s 4.5s forwards;
+}
+@keyframes intro-failsafe { to { visibility: hidden; pointer-events: none; } }
+/* Scroll lock that expires on its own, so a page that never hydrates is not
+ * left unscrollable. */
+html[data-intro="play"] { animation: intro-scroll-lock 4.5s step-end; }
+@keyframes intro-scroll-lock { 0%, 100% { overflow: hidden; } }
+
+.intro-stage { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+.intro-word { display: block; font-size: 220px; white-space: nowrap; }
+.intro-letter { display: inline-block; opacity: 0;
+  --x: var(--xd); --y: var(--yd); --r: var(--rd);
+  transform: translate(var(--x), var(--y)) rotate(var(--r)); }
+@media (max-width: 639px) {
+  .intro-word { font-size: 84px; }
+  .intro-letter { --x: var(--xm); --y: var(--ym); --r: var(--rm); }
+}
+.intro-rule { height: 2px; background: var(--ink); transform: scaleX(0); transform-origin: left; margin-top: 12px; }
+.intro-sign { display: flex; justify-content: space-between; margin-top: 10px; opacity: 0;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; color: var(--muted-2); }
+.intro-caption { position: absolute; left: 0; right: 0; bottom: 40px; text-align: center; opacity: 0;
+  font-family: var(--font-alt); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted-2); }
+
+/* Everything below is gated on data-state="run" (fonts ready + target measured). */
+html[data-intro="play"] .intro[data-state="run"] .intro-letter {
+  animation:
+    intro-in 0.3s cubic-bezier(.33,1,.68,1) calc(var(--i) * 0.05s) forwards,
+    intro-gather 0.75s cubic-bezier(.76,0,.24,1) calc(0.5s + var(--i) * 0.025s) forwards;
+}
+@keyframes intro-in { to { opacity: 1; } }
+@keyframes intro-gather { from { opacity: 1; } to { opacity: 1; transform: none; } }
+
+html[data-intro="play"] .intro[data-state="run"] .intro-caption { animation: intro-caption 1.4s linear 0.7s forwards; }
+@keyframes intro-caption { 0% { opacity: 0 } 20% { opacity: 1 } 80% { opacity: 1 } 100% { opacity: 0 } }
+
+html[data-intro="play"] .intro[data-state="run"] .intro-rule {
+  animation: intro-rule 0.4s cubic-bezier(.33,1,.68,1) 1.4s forwards, intro-fade 0.25s linear 2.1s forwards;
+}
+@keyframes intro-rule { to { transform: scaleX(1); } }
+html[data-intro="play"] .intro[data-state="run"] .intro-sign {
+  animation: intro-show 0.3s linear 1.6s forwards, intro-fade 0.25s linear 2.1s forwards;
+}
+@keyframes intro-show { to { opacity: 1; } }
+@keyframes intro-fade { from { opacity: 1; } to { opacity: 0; } }
+
+/* Open: the word flies onto the measured header wordmark. */
+.intro-flight { transform-origin: 0 0; }
+html[data-intro="play"] .intro[data-state="run"] .intro-flight {
+  animation: intro-flight 0.7s cubic-bezier(.65,0,.35,1) 2.1s forwards;
+}
+@keyframes intro-flight { to { transform: translate(var(--dx), var(--dy)) scale(var(--s)); } }
+
+/* Paper lifts off the already-rendered feed; the real header word sits exactly under the landed word. */
+html[data-intro="play"] .intro[data-state="run"] {
+  animation: intro-lift 0.45s cubic-bezier(.33,1,.68,1) 2.8s forwards, intro-failsafe 0s 4.5s forwards;
+}
+@keyframes intro-lift { to { background-color: transparent; } }
+/* Content rise. Without a run (no hydration) it still appears at the fail-safe. */
+html[data-intro="play"] .intro-content {
+  opacity: 0; transform: translateY(18px);
+  animation: intro-content 0.45s cubic-bezier(.33,1,.68,1) 4.5s forwards;
+}
+html[data-intro="play"] .intro[data-state="run"] ~ .intro-content { animation-delay: 2.8s; }
+html[data-intro="done"] .intro-content { animation: intro-content 0.45s cubic-bezier(.33,1,.68,1) forwards; }
+@keyframes intro-content { to { opacity: 1; transform: none; } }
+html[data-intro="done"] .intro { display: none; }

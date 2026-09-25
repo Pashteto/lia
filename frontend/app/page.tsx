@@ -1,12 +1,14 @@
 import { cookies } from "next/headers";
 
 import { DiscoveryFeed } from "@/components/DiscoveryFeed";
+import { IntroSplash } from "@/components/IntroSplash";
 import { AppHeader, USER_NAV } from "@/components/ui/AppHeader";
 import { AuthNavControl } from "@/components/ui/AuthNavControl";
 import { CityControl } from "@/components/ui/CityControl";
 import { CityCookieSync } from "@/components/ui/CityCookieSync";
 import { fetchPublishedEvents, getCategories } from "@/lib/api";
 import { CITIES, CITY_COOKIE, cityBySlug } from "@/lib/city";
+import { INTRO_INLINE_SCRIPT } from "@/lib/intro-splash";
 import { ssrFallbackEvents } from "@/lib/mock-events";
 
 // U1 · Лента событий. SSR both the events and the ordered category taxonomy
@@ -33,9 +35,16 @@ export default async function DiscoveryPage({
 
   return (
     <>
+      {/* First-visit splash. The pre-paint script sets html[data-intro]; it
+          lives here (server component) rather than inside the client
+          component so React never renders a <script> on the client. */}
+      <script dangerouslySetInnerHTML={{ __html: INTRO_INLINE_SCRIPT }} />
+      <IntroSplash />
       {override ? <CityCookieSync slug={override.slug} /> : null}
       <AppHeader nav={USER_NAV} actions={<AuthNavControl />} mobileCaption={<CityControl />} />
-      <DiscoveryFeed initialEvents={initialEvents} categories={categories} city={city} />
+      <div className="intro-content">
+        <DiscoveryFeed initialEvents={initialEvents} categories={categories} city={city} />
+      </div>
     </>
   );
 }

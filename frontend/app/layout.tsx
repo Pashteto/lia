@@ -57,6 +57,8 @@ export default async function RootLayout({
   return (
     <html
       lang="ru"
+      // The intro splash's pre-paint script sets data-intro before hydration.
+      suppressHydrationWarning
       className={`h-full antialiased ${golos.variable} ${manrope.variable} ${jbmono.variable}`}
     >
       <body className="min-h-full bg-paper font-ui text-ink">

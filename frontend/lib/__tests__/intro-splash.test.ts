@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
-  INTRO_SEEN_KEY, SCATTER_DESKTOP, SCATTER_MOBILE,
-  landingTransform, markSeen, readSeen, shouldPlayIntro,
+  INTRO_INLINE_SCRIPT, INTRO_SEEN_KEY, INTRO_START_BUDGET_MS, SCATTER_DESKTOP, SCATTER_MOBILE,
+  landingTransform, markSeen, readSeen, shouldPlayIntro, shouldStartIntro,
 } from "../intro-splash";
 
 const mem = (init: Record<string, string> = {}) => {
@@ -68,5 +68,46 @@ describe("landingTransform", () => {
   it("is the identity when boxes coincide", () => {
     const b = { left: 1, top: 2, width: 3, height: 4 };
     expect(landingTransform(b, b)).toEqual({ dx: 0, dy: 0, scale: 1 });
+  });
+});
+
+describe("shouldStartIntro (start budget)", () => {
+  it("is 1500 ms", () => {
+    expect(INTRO_START_BUDGET_MS).toBe(1500);
+  });
+  it("starts within the budget, skips past it", () => {
+    expect(shouldStartIntro(0)).toBe(true);
+    expect(shouldStartIntro(1500)).toBe(true);
+    expect(shouldStartIntro(1501)).toBe(false);
+  });
+});
+
+describe("INTRO_INLINE_SCRIPT", () => {
+  /** Runs the pre-paint script against a fake document/window. */
+  const run = (o: { reduced?: boolean; storage: ReturnType<typeof mem> | typeof throwing }) => {
+    const documentElement = { dataset: {} as Record<string, string> };
+    new Function("document", "matchMedia", "sessionStorage", INTRO_INLINE_SCRIPT)(
+      { documentElement },
+      () => ({ matches: !!o.reduced }),
+      o.storage,
+    );
+    return documentElement.dataset.intro;
+  };
+  it("plays on a fresh session and burns the flag at once", () => {
+    const s = mem();
+    expect(run({ storage: s })).toBe("play");
+    expect(s.m.get(INTRO_SEEN_KEY)).toBe("1");
+  });
+  it("skips (and does not write) once seen", () => {
+    const s = mem({ [INTRO_SEEN_KEY]: "1" });
+    expect(run({ storage: s })).toBe("skip");
+  });
+  it("skips without burning the flag under reduced motion", () => {
+    const s = mem();
+    expect(run({ storage: s, reduced: true })).toBe("skip");
+    expect(s.m.has(INTRO_SEEN_KEY)).toBe(false);
+  });
+  it("skips when storage throws", () => {
+    expect(run({ storage: throwing })).toBe("skip");
   });
 });

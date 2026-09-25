@@ -248,17 +248,23 @@ html {
 /* ── Intro splash (handoff INTRO-SPLASH.md) ─────────────────────────── */
 /* html[data-intro] is set before paint by INTRO_INLINE_SCRIPT (feed only).
  * Every run-state rule is prefixed with html[data-intro="play"] so it
- * outranks the base overlay rule (otherwise intro-lift never applies). */
+ * outranks the base overlay rule (otherwise intro-lift never applies).
+ * Two clocks: the base fail-safes (6 s) start at first paint and only
+ * rescue a page whose JS never runs the show; the run-state animations use
+ * NEW names so they start when data-state="run" is set. The component only
+ * starts a run within INTRO_START_BUDGET_MS (1.5 s) of navigation, so
+ * run + 4.2 s always ends before the 6 s base fail-safe. */
 .intro { display: none; }
 html[data-intro="play"] .intro {
   position: fixed; inset: 0; z-index: 100; display: block;
   background: var(--paper); color: var(--ink); cursor: pointer;
-  animation: intro-failsafe 0s 4.5s forwards;
+  animation: intro-failsafe 0s 6s forwards;
 }
 @keyframes intro-failsafe { to { visibility: hidden; pointer-events: none; } }
+@keyframes intro-failsafe-run { to { visibility: hidden; pointer-events: none; } }
 /* Scroll lock that expires on its own, so a page that never hydrates is not
  * left unscrollable. */
-html[data-intro="play"] { animation: intro-scroll-lock 4.5s step-end; }
+html[data-intro="play"] { animation: intro-scroll-lock 6s step-end; }
 @keyframes intro-scroll-lock { 0%, 100% { overflow: hidden; } }
 
 .intro-stage { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
@@ -307,15 +313,21 @@ html[data-intro="play"] .intro[data-state="run"] .intro-flight {
 
 /* Paper lifts off the already-rendered feed; the real header word sits exactly under the landed word. */
 html[data-intro="play"] .intro[data-state="run"] {
-  animation: intro-lift 0.45s cubic-bezier(.33,1,.68,1) 2.8s forwards, intro-failsafe 0s 4.5s forwards;
+  animation:
+    intro-lift 0.45s cubic-bezier(.33,1,.68,1) 2.8s forwards,
+    intro-failsafe 0s 6s forwards,
+    intro-failsafe-run 0s 4.2s forwards;
 }
 @keyframes intro-lift { to { background-color: transparent; } }
-/* Content rise. Without a run (no hydration) it still appears at the fail-safe. */
+/* Content rise. Without a run (no hydration) it still appears at the fail-safe;
+ * once data-intro leaves "play" the hidden state no longer applies at all. */
 html[data-intro="play"] .intro-content {
   opacity: 0; transform: translateY(18px);
-  animation: intro-content 0.45s cubic-bezier(.33,1,.68,1) 4.5s forwards;
+  animation: intro-content 0.45s cubic-bezier(.33,1,.68,1) 6s forwards;
 }
-html[data-intro="play"] .intro[data-state="run"] ~ .intro-content { animation-delay: 2.8s; }
-html[data-intro="done"] .intro-content { animation: intro-content 0.45s cubic-bezier(.33,1,.68,1) forwards; }
+html[data-intro="play"] .intro[data-state="run"] ~ .intro-content {
+  animation: intro-content-run 0.45s cubic-bezier(.33,1,.68,1) 2.8s forwards;
+}
 @keyframes intro-content { to { opacity: 1; transform: none; } }
+@keyframes intro-content-run { to { opacity: 1; transform: none; } }
 html[data-intro="done"] .intro { display: none; }

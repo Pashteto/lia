@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { BRAND } from "@/lib/brand";
-import { SCATTER_DESKTOP, SCATTER_MOBILE, landingTransform, markSeen } from "@/lib/intro-splash";
+import { SCATTER_DESKTOP, SCATTER_MOBILE, landingTransform, markSeen, shouldStartIntro } from "@/lib/intro-splash";
 
 function storage(): Storage | null {
   try {
@@ -40,11 +40,15 @@ export function IntroSplash() {
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const finish = () => {
+      if (html.dataset.intro !== "play") return;
       markSeen(storage());
       html.dataset.intro = "done";
     };
     document.fonts.ready.then(() => {
       if (cancelled || !word.current) return;
+      // Too late to start (slow hydration/fonts): skip cleanly to the feed
+      // rather than let the paint-relative CSS fail-safe cut the show.
+      if (!shouldStartIntro(performance.now())) return finish();
       const target = document.querySelector("header [data-wordmark]");
       if (!target) return finish();
       const t = landingTransform(word.current.getBoundingClientRect(), target.getBoundingClientRect());
@@ -58,11 +62,13 @@ export function IntroSplash() {
     };
     el.addEventListener("animationend", onEnd);
     el.addEventListener("click", finish);
+    window.addEventListener("keydown", finish);
     return () => {
       cancelled = true;
       clearTimeout(timer);
       el.removeEventListener("animationend", onEnd);
       el.removeEventListener("click", finish);
+      window.removeEventListener("keydown", finish);
     };
   }, []);
 

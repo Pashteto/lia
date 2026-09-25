@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AuthForm } from "@/components/AuthForm";
+import { Wordmark } from "@/components/ui/Wordmark";
 
 export const metadata = { title: "Регистрация — PRESENCE" };
 
@@ -10,7 +11,7 @@ export default function SignupPage() {
         data-surface="ink"
         className="flex flex-col justify-between bg-surface p-[20px] text-on-surface max-md:min-h-[220px]"
       >
-        <span className="text-[13px] font-black tracking-[-0.01em]">PRESENCE</span>
+        <Wordmark />
         <div className="flex flex-col gap-[10px]">
           <h1 className="max-w-[16ch] text-[34px] font-black leading-[0.94] tracking-[-0.03em] max-md:text-[22px]">
             Участвуйте, а не только смотрите

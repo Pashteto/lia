@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CityControl } from "@/components/ui/CityControl";
+import { Wordmark } from "@/components/ui/Wordmark";
+import { BRAND } from "@/lib/brand";
 import { cn } from "@/lib/cn";
 import type { ReactNode } from "react";
 
@@ -13,7 +15,7 @@ export interface NavItem {
 
 export interface AppHeaderProps {
   nav?: NavItem[];
-  /** Admin variant: wordmark PRESENCE / ADMIN, paper bottom rule (inside data-surface="ink"). */
+  /** Admin variant: wordmark сообща + ADMIN suffix, paper bottom rule (inside data-surface="ink"). */
   admin?: boolean;
   /** Mobile shows a context caption instead of nav. A string gets the cap
    * style; a ReactNode (e.g. the city control) renders as-is. */
@@ -42,18 +44,8 @@ export function AppHeader({ nav = [], admin, mobileCaption, actions }: AppHeader
         admin ? "border-paper" : "border-ink",
       )}
     >
-      <Link
-        href={admin ? "/admin" : "/"}
-        className="swiss-focus shrink-0 pr-[10px] text-[13px] font-black tracking-[-0.01em] max-sm:text-[11px]"
-      >
-        {admin ? (
-          <>
-            <span className="sm:hidden">ADMIN</span>
-            <span className="hidden sm:inline">PRESENCE / ADMIN</span>
-          </>
-        ) : (
-          "PRESENCE"
-        )}
+      <Link href={admin ? "/admin" : "/"} aria-label={admin ? `${BRAND.name} — администрирование` : BRAND.name} className="swiss-focus shrink-0 pr-[10px]">
+        <Wordmark admin={admin} />
       </Link>
       <nav aria-label="Основная навигация" className="flex items-baseline gap-[14px] max-sm:hidden">
         {nav.map((item) => (

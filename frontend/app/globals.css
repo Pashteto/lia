@@ -218,3 +218,29 @@ html {
   background: var(--paper);
   color: var(--ink);
 }
+
+/* Сообща wordmark (handoff README → Header; tokens.css brand block).
+ * Archivo 900 in the spec → Golos Text 900 (Archivo has no Cyrillic).
+ * display: inline-block so the box's rendered height is the line-height
+ * box (1em), not the font content-area (~1.2em) an inline span would
+ * report — the intro splash (Task 6) measures getBoundingClientRect(). */
+.wordmark {
+  display: inline-block;
+  font-family: var(--font-ui);
+  font-weight: 900;
+  font-size: 15px;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  text-transform: lowercase;
+}
+@media (max-width: 639px) {
+  .wordmark { font-size: 13px; }
+}
+.wordmark-suffix {
+  margin-left: 6px;
+  font-size: 8px;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+}

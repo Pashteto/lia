@@ -31,7 +31,8 @@ describe("rebrand guard", () => {
     const root = join(__dirname, "..", "..");
     const offenders = ["app", "components", "lib"]
       .flatMap((d) => sourceFiles(join(root, d)))
-      .filter((f) => /presence/i.test(readFileSync(f, "utf8")));
+      // Exempt the design handoff directory name; it is historical and points to spec
+      .filter((f) => /presence/i.test(readFileSync(f, "utf8").replaceAll("design_handoff_presence_swiss_grid", "")));
     expect(offenders).toEqual([]);
   });
 });

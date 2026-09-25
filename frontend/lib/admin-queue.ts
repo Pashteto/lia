@@ -65,3 +65,21 @@ export function queueKeyTarget(
   }
   return null;
 }
+
+/** A moderation list the admin screen can ask the API for. */
+export type ModerationStatus = "published" | "rejected" | "pending_review";
+
+/**
+ * Which lists the screen must load for `filter` — the one it shows, plus the
+ * ones its tab counters are built from.
+ *
+ * The counters used to be set only from whatever list was being displayed, so
+ * «На проверке» showed its initial zero until somebody opened it. Nobody opens
+ * a tab that claims to be empty, and three events sat unnoticed in
+ * pre-moderation (prod, 2026-09-24). Both counted lists are now loaded whatever
+ * the admin is looking at.
+ */
+export function countedStatuses(filter: ModerationFilter): ModerationStatus[] {
+  const counted: ModerationStatus[] = ["published", "pending_review"];
+  return filter === "all" ? [...counted, "rejected"] : counted;
+}

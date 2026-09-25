@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { adminShortId } from "@/lib/admin-id";
 import {
+  countedStatuses,
   type ModerationOutcome,
   nextQueueIndex,
   queueEffect,
@@ -109,38 +110,28 @@ export function AdminModeration() {
     let cancelled = false;
     (async () => {
       try {
-        if (filter === "waiting") {
-          const published = await listModerationEvents("published");
-          if (cancelled) return;
-          setWaitingCount(published.length);
-          setQueue(published);
-          setSelectedId((prev) => {
-            if (prev && published.some((e) => e.id === prev)) return prev;
-            return published[0]?.id ?? null;
-          });
-        } else if (filter === "links") {
-          const pending = await listModerationEvents("pending_review");
-          if (cancelled) return;
-          setLinksCount(pending.length);
-          setQueue(pending);
-          setSelectedId((prev) => {
-            if (prev && pending.some((e) => e.id === prev)) return prev;
-            return pending[0]?.id ?? null;
-          });
-        } else {
-          const [published, rejected] = await Promise.all([
-            listModerationEvents("published"),
-            listModerationEvents("rejected"),
-          ]);
-          if (cancelled) return;
-          const merged = mergeQueue(published, rejected);
-          setWaitingCount(published.length);
-          setQueue(merged);
-          setSelectedId((prev) => {
-            if (prev && merged.some((e) => e.id === prev)) return prev;
-            return merged[0]?.id ?? null;
-          });
-        }
+        // Both counted lists load whatever is on screen, so neither tab can
+        // advertise a zero it never checked — see countedStatuses.
+        const statuses = countedStatuses(filter);
+        const lists = await Promise.all(statuses.map(listModerationEvents));
+        if (cancelled) return;
+        const loaded = new Map(statuses.map((s, i) => [s, lists[i]]));
+        const published = loaded.get("published") ?? [];
+        const pending = loaded.get("pending_review") ?? [];
+        setWaitingCount(published.length);
+        setLinksCount(pending.length);
+
+        const next =
+          filter === "waiting"
+            ? published
+            : filter === "links"
+              ? pending
+              : mergeQueue(published, loaded.get("rejected") ?? []);
+        setQueue(next);
+        setSelectedId((prev) => {
+          if (prev && next.some((e) => e.id === prev)) return prev;
+          return next[0]?.id ?? null;
+        });
         setError(false);
         setReasons(new Set());
         setActionError("");

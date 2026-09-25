@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { nextQueueIndex, queueEffect, queueKeyTarget } from "../admin-queue";
+import {
+  countedStatuses,
+  nextQueueIndex,
+  queueEffect,
+  queueKeyTarget,
+} from "../admin-queue";
 
 describe("nextQueueIndex", () => {
   it("stays on same index when a later item remains", () => {
@@ -57,5 +62,34 @@ describe("queueKeyTarget", () => {
     expect(queueKeyTarget("ArrowDown", 0, 0)).toBe(null);
     expect(queueKeyTarget("ArrowDown", -1, 5)).toBe(0);
     expect(queueKeyTarget("ArrowUp", -1, 5)).toBe(null);
+  });
+});
+
+describe("countedStatuses", () => {
+  // The regression: «На проверке · 0» on every fresh load, however many events
+  // were actually waiting. The screen only ever fetched the list it was about
+  // to show, so the other tab's counter kept its initial zero — and nobody
+  // clicks a tab that says there is nothing behind it. Three telegram events
+  // sat unseen in pre-moderation because of it (prod, 2026-09-24).
+  it("loads pending_review even when the waiting queue is on screen", () => {
+    expect(countedStatuses("waiting")).toContain("pending_review");
+  });
+
+  it("loads published even when the pre-moderation queue is on screen", () => {
+    expect(countedStatuses("links")).toContain("published");
+  });
+
+  it("still loads both halves of «Все», counters included", () => {
+    const statuses = countedStatuses("all");
+    expect(statuses).toContain("published");
+    expect(statuses).toContain("rejected");
+    expect(statuses).toContain("pending_review");
+  });
+
+  it("asks for each status once", () => {
+    for (const filter of ["waiting", "links", "all"] as const) {
+      const statuses = countedStatuses(filter);
+      expect(new Set(statuses).size).toBe(statuses.length);
+    }
   });
 });

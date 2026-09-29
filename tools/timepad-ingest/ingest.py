@@ -207,6 +207,10 @@ def main() -> int:
             }
             if end:
                 body["ends_at"] = end.isoformat()
+            # Постеры TimePad не перезаливаем (права у площадки) — вместо них
+            # заранее загруженное изображение самой площадки, если оно задано.
+            if src["venue"].get("cover_file_id"):
+                body["cover_file_id"] = src["venue"]["cover_file_id"]
             body.update(price)
 
             item = {

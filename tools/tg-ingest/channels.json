@@ -8,7 +8,8 @@
       "city": "spb",
       "default_venue": {
         "id": "e4987eab-9a6c-4373-8b46-2052aa4ce018",
-        "name": "Пространство F5"
+        "name": "Пространство F5",
+        "cover_file_id": "7da73355-1517-4508-b4ec-b2a49b9602c7"
       },
       "default_category": "concert",
       "permission": "granted",
@@ -21,7 +22,8 @@
       "city": "spb",
       "default_venue": {
         "id": "9793b771-2c14-40a9-a4f6-5f55726adf93",
-        "name": "Аудио клуб"
+        "name": "Аудио клуб",
+        "cover_file_id": "69521d67-898e-46b8-a92a-115957d0b709"
       },
       "default_category": "concert",
       "permission": "granted",
@@ -34,7 +36,8 @@
       "city": "spb",
       "default_venue": {
         "id": "fb1e621e-d363-4198-87f2-8f593d7d6027",
-        "name": "Галерея «Сети»"
+        "name": "Галерея «Сети»",
+        "cover_file_id": "d3d26966-9f16-4568-a855-ac58cfd30870"
       },
       "default_category": "lecture",
       "permission": "granted",

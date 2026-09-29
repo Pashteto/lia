@@ -326,6 +326,11 @@ def analyse(post: dict, cfg: dict, channel_cfg: dict, horizon_days: int):
     # концерт приходят и платят на входе, это режим «open».
     body.update({"signup_mode": "external", "external_registration_url": post["links"][0]}
                 if post["links"] else {"signup_mode": "open"})
+    # Обложка по умолчанию — изображение площадки (логотип или типографский
+    # плейсхолдер), загруженное заранее; его id лежит в default_venue. Только
+    # когда событие на домашней площадке канала: у «площадки из текста» своя.
+    if venue is channel_cfg["default_venue"] and venue.get("cover_file_id"):
+        body["cover_file_id"] = venue["cover_file_id"]
     body.update(price or {"price_type": "free"})
     if not price:
         notes.append("цена не найдена — поставлено «бесплатно», проверить")

@@ -46,6 +46,7 @@ const nextConfig: NextConfig = {
       // time, so switching the backend to a new host without rebuilding the
       // frontend makes next/image answer 400 and every cover disappears
       // (hit in prod 2026-09-02 during the presencehq.ru migration).
+      { protocol: "https", hostname: "soobshcha.ru" },
       { protocol: "https", hostname: "presencehq.ru" },
       { protocol: "https", hostname: "api.tarski.ru" },
       { protocol: "https", hostname: "p.tarski.ru" },

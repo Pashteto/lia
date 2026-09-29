@@ -1,11 +1,11 @@
 /** Brand identity (handoff tokens.ts → brand). The only place brand strings
  * live — headers, titles, icons and the intro splash all read from here.
- * `domain` is pending a registrar decision (soobscha.ru is third-party owned
- * as of 2026-09-24); change it here and nowhere else. */
+ * `domain` is soobshcha.ru, not the handoff's soobscha.ru: that one belongs to
+ * a third party (whois 2026-09-29). Change it here and nowhere else. */
 export const BRAND = {
   name: "Сообща",
   wordmark: "сообща",
-  domain: "soobscha.ru",
+  domain: "soobshcha.ru",
   monogram: "сб",
 } as const;
 

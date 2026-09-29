@@ -16,7 +16,7 @@ describe("brand", () => {
     expect(BRAND.name).toBe("Сообща");
     expect(BRAND.wordmark).toBe("сообща");
     expect(BRAND.monogram).toBe("сб");
-    expect(BRAND.domain).toBe("soobscha.ru");
+    expect(BRAND.domain).toBe("soobshcha.ru");
   });
   it("titles a section page as «<section> — Сообща»", () => {
     expect(pageTitle("Вход")).toBe("Вход — Сообща");

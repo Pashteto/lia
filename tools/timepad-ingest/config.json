@@ -1,5 +1,6 @@
 {
   "organizer_id": "b9f7a9aa-ad06-4885-a8e9-f89c99bac567",
+  "api_base": "https://presencehq.ru",
   "source_label": "TimePad Европейского университета",
   "sources": [
     {

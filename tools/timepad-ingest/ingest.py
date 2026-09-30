@@ -34,6 +34,22 @@ def fetch(url: str) -> str:
         return r.read().decode("utf-8", "ignore")
 
 
+def load_categories(api_base: str) -> dict:
+    """slug → id категорий из живого API.
+
+    В теле события нужны id, а в конфиге у источника записан slug. Без этой
+    подстановки событие уходит с пустым category_ids: в карточке вместо рубрики
+    прочерк, и в фильтры по теме оно не попадает (так завелись девять событий
+    в сентябре 2026). API недоступен — не падаем: черновик без рубрики лучше,
+    чем никакого, но об этом говорим вслух.
+    """
+    try:
+        return {c["slug"]: c["id"] for c in json.loads(fetch(api_base.rstrip("/") + "/api/v1/categories"))}
+    except Exception as e:                       # сеть, 5xx, не-JSON — всё равно
+        print(f"категории не загрузились ({e}) — черновики будут без рубрики", file=sys.stderr)
+        return {}
+
+
 def text_of(chunk: str) -> str:
     return " ".join(html.unescape(re.sub(r"<[^>]+>", " ", chunk)).split())
 
@@ -147,6 +163,7 @@ def main() -> int:
 
     cfg = json.load(open(f"{HERE}/config.json", encoding="utf-8"))
     state = json.load(open(f"{HERE}/state.json", encoding="utf-8"))
+    categories = load_categories(cfg["api_base"])
     now = datetime.now(MSK)
 
     candidates, unsure, rejected = [], [], []
@@ -195,7 +212,8 @@ def main() -> int:
                 "description": "",           # пишет редактор своими словами
                 "city": src["city"],
                 "venue_id": src["venue"]["id"],
-                "category_ids": [],
+                "category_ids": ([categories[src["default_category"]]]
+                                 if src["default_category"] in categories else []),
                 "status": "draft",
                 "format": "offline",
                 "starts_at": start.isoformat(),

@@ -40,6 +40,22 @@ def fetch(url: str) -> str:
         return r.read().decode("utf-8", "ignore")
 
 
+def load_categories(api_base: str) -> dict:
+    """slug → id категорий из живого API.
+
+    В теле события нужны id, а в конфиге у источника записан slug. Без этой
+    подстановки событие уходит с пустым category_ids: в карточке вместо рубрики
+    прочерк, и в фильтры по теме оно не попадает (так завелись девять событий
+    в сентябре 2026). API недоступен — не падаем: черновик без рубрики лучше,
+    чем никакого, но об этом говорим вслух.
+    """
+    try:
+        return {c["slug"]: c["id"] for c in json.loads(fetch(api_base.rstrip("/") + "/api/v1/categories"))}
+    except Exception as e:                       # сеть, 5xx, не-JSON — всё равно
+        print(f"категории не загрузились ({e}) — черновики будут без рубрики", file=sys.stderr)
+        return {}
+
+
 def strip_tags(chunk: str) -> str:
     chunk = re.sub(r"<br\s*/?>", "\n", chunk)
     chunk = re.sub(r"<[^>]+>", "", chunk)
@@ -308,7 +324,8 @@ def analyse(post: dict, cfg: dict, channel_cfg: dict, horizon_days: int):
         "description": "",                      # пишет редактор своими словами
         "city": channel_cfg["city"],
         "venue_id": venue.get("id"),
-        "category_ids": [],
+        "category_ids": ([cfg["_categories"][channel_cfg["default_category"]]]
+                         if channel_cfg["default_category"] in cfg.get("_categories", {}) else []),
         "status": "draft",
         "format": ("online" if re.search(r"полностью онлайн|только онлайн|\bZOOM\b", text, re.I)
                    else "offline"),
@@ -358,6 +375,7 @@ def main() -> int:
 
     cfg = json.load(open(f"{HERE}/channels.json", encoding="utf-8"))
     state = json.load(open(f"{HERE}/state.json", encoding="utf-8"))
+    cfg["_categories"] = load_categories(cfg["api_base"])
     chans = [c for c in cfg["channels"] if not args.channel or c["username"] == args.channel]
     if not chans:
         print("канал не найден в channels.json", file=sys.stderr)

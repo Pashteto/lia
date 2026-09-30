@@ -1,0 +1,24 @@
+; tarski.ru — полная зона из nic.ru DNS-master (DP2607017708), снята 2026-09-30.
+; Источник: кабинет nic.ru → DNS-хостинг → tarski.ru → «Экспорт»; DKIM-значения целиком — из публичного DNS.
+; Нужна для переноса зоны в бесплатный DNS Selectel (аккаунт 684546) до окончания оплаченного периода.
+$TTL 3600
+$ORIGIN tarski.ru.
+; apex + www = сайт проекта Tarski на GitHub Pages (не наш сервер)
+@                       IN A     185.199.108.153
+@                       IN A     185.199.109.153
+@                       IN A     185.199.110.153
+@                       IN A     185.199.111.153
+www                     IN CNAME anton-gorokhovatsky.github.io.
+; старые имена Lia → прод-VM (nginx отдаёт 301 на soobshcha.ru)
+api             300     IN A     135.106.216.153
+api.presence    300     IN A     135.106.216.153
+p               300     IN A     135.106.216.153
+presence        300     IN A     135.106.216.153
+; почта: ящики на nic.ru («Почта 1», TAR7793883), отправка сайта — SendPulse
+@                       IN MX 5  mx02.nicmail.ru.
+@                       IN MX 10 mx01.nicmail.ru.
+@                       IN MX 20 mx03.nicmail.ru.
+@                       IN TXT   "v=spf1 include:mxsspf.sendpulse.com include:dc1.nicmail.ru include:dc2.nicmail.ru ?all"
+_dmarc                  IN TXT   "v=DMARC1; p=quarantine"
+nicmail20230706._domainkey IN TXT "v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmPP1E5p9XlmyNMULIbFLR6wc6TTdjQ69Ry+6+3wj/CZNUGw3ieUSRHxlTyCaqABmS8i0kJGYCkLiBKR0zECSy74M/FmxJ1Z6BB5WplEpdgmZljRFWJM0zxpRuSS6kKibSvB+XYWGH8KfQa4DsGMTT5e6wGG6xAgHQefGPGCbnTEF8iJ84qOojZ27dDWRUA1KSBWj3aJ6E5oYJjd3Qbw1cHr9v+Kq0nzCMY7DVECn+kcx9W1pV/PYT8hyFzzJc9gZEXBk8Kr47wFHYuSfxBCH1FPyTyl/RYD2Ds3ntSh3hrpCVBZGv3r8J53xpOZnN3aGK+mxXer3OXoXR7pn/ueRoQIDAQAB"
+sign._domainkey         IN TXT   "v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCx4Nb1V6Tt1ya42eHvGjG03nDiSBH3/riCS8yDKjo4hCdii/5i5NoNBWX7OeoJwP9VgdeyKJM0KUyfPt7GJXQ3LhHnKbZ0enk+oo6Japr9D1uG12n/Zify5IS8GYmJsgXzN2YrDH2SOmoeU5TXArWphjSU9u8BQ0d4LjdR8feluQIDAQAB"

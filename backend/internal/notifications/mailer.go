@@ -5,9 +5,20 @@ import (
 	"errors"
 	"fmt"
 	"html"
+	"net/mail"
 	"net/smtp"
 	"strings"
 )
+
+// senderName is what recipients see next to the address.
+const senderName = "Сообща"
+
+// FromHeader renders the From header: the brand name (RFC 2047-encoded) plus
+// the address. Only the header carries the name — the SMTP envelope (MAIL FROM)
+// must stay a bare address.
+func FromHeader(addr string) string {
+	return (&mail.Address{Name: senderName, Address: addr}).String()
+}
 
 // Mailer sends transactional email for the Lia app.
 type Mailer interface {
@@ -47,7 +58,7 @@ func (m *smtpMailer) SendEventInvitation(_ context.Context, to, eventTitle, acce
 	headers := []string{
 		"MIME-version: 1.0;",
 		`Content-Type: text/html; charset="UTF-8";`,
-		fmt.Sprintf("From: %s", m.from),
+		fmt.Sprintf("From: %s", FromHeader(m.from)),
 		fmt.Sprintf("To: %s", to),
 		subject,
 	}

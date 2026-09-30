@@ -1,6 +1,7 @@
 package notifications_test
 
 import (
+	"net/mail"
 	"strings"
 	"testing"
 
@@ -34,5 +35,21 @@ func TestRenderInvitationEmail_Brand(t *testing.T) {
 	subject, _ := notifications.RenderInvitationEmail("Лекция", "https://example.test/invite/x")
 	if subject != "Subject: Сообща: приглашение на событие" {
 		t.Fatalf("unexpected subject %q", subject)
+	}
+}
+
+func TestFromHeader_NamesTheSender(t *testing.T) {
+	h := notifications.FromHeader("info@tarski.ru")
+	for _, r := range h {
+		if r > 127 {
+			t.Fatalf("From header must be ASCII (RFC 2047-encoded), got %q", h)
+		}
+	}
+	addr, err := mail.ParseAddress(h)
+	if err != nil {
+		t.Fatalf("From header %q does not parse: %v", h, err)
+	}
+	if addr.Name != "Сообща" || addr.Address != "info@tarski.ru" {
+		t.Fatalf("got name %q address %q", addr.Name, addr.Address)
 	}
 }

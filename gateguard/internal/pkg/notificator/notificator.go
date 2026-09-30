@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/mail"
 	"net/smtp"
 	"strings"
 
@@ -11,6 +12,16 @@ import (
 
 	"gateguard/internal/pkg/notificator/templates"
 )
+
+// senderName is what recipients see next to the address.
+const senderName = "Сообща"
+
+// fromHeader renders the From header: the brand name (RFC 2047-encoded) plus
+// the address. Only the header carries the name — the SMTP envelope (MAIL FROM)
+// must stay a bare address.
+func fromHeader(addr string) string {
+	return (&mail.Address{Name: senderName, Address: addr}).String()
+}
 
 type SMTPNotificator struct {
 	log      *clog.CustomLogger
@@ -63,7 +74,7 @@ func (s *SMTPNotificator) sendTemplate(ctx context.Context, to string, template 
 	headers := []string{
 		"MIME-version: 1.0;",
 		"Content-Type: text/html; charset=\"UTF-8\";",
-		fmt.Sprintf("From: %s", s.from),
+		fmt.Sprintf("From: %s", fromHeader(s.from)),
 		fmt.Sprintf("To: %s", to),
 		template.Subject(),
 	}

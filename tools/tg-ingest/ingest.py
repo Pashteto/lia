@@ -124,15 +124,23 @@ def _date_in(fragment: str, posted: datetime, allow_range: bool = False):
                 return datetime(year, month, day, tzinfo=MSK), "явная дата"
             except ValueError:
                 pass
-        return _fix_year(month, day, posted), "дата без года"
+        date = _fix_year(month, day, posted)
+        if date:
+            return date, "дата без года"
     for m in re.finditer(r"\b(\d{1,2})\s+(" + "|".join(MONTHS) + r")\w*", fragment, re.I):
         if not allow_range and RANGE_PREFIX.search(fragment[:m.start()]):
             continue
-        return _fix_year(MONTHS[m.group(2).lower()], int(m.group(1)), posted), "дата словом"
+        date = _fix_year(MONTHS[m.group(2).lower()], int(m.group(1)), posted)
+        if date:
+            return date, "дата словом"
     return None, None
 
 
-def _fix_year(month: int, day: int, posted: datetime) -> datetime:
+def _fix_year(month: int, day: int, posted: datetime):
+    """Ближайший будущий год для дня и месяца. None — если такой даты нет
+    ни в одном году («0 мая», «31.02»): это не дата, а число в тексте."""
+    if not 1 <= day <= 31:
+        return None
     for year in (posted.year, posted.year + 1):
         try:
             cand = datetime(year, month, day, tzinfo=MSK)
@@ -140,7 +148,10 @@ def _fix_year(month: int, day: int, posted: datetime) -> datetime:
             continue
         if (cand.date() - posted.date()).days >= -1:
             return cand
-    return datetime(posted.year, month, day, tzinfo=MSK)
+    try:
+        return datetime(posted.year, month, day, tzinfo=MSK)
+    except ValueError:
+        return None
 
 
 def parse_datetime(text: str, posted: datetime):
@@ -166,16 +177,6 @@ def parse_datetime(text: str, posted: datetime):
 def parse_date(text: str, posted: datetime):
     """Дату ищем в порядке надёжности. Год в постах почти никогда не указан —
     берём ближайший будущий относительно даты публикации."""
-    def fix_year(month: int, day: int) -> datetime:
-        for year in (posted.year, posted.year + 1):
-            try:
-                cand = datetime(year, month, day, tzinfo=MSK)
-            except ValueError:
-                continue
-            if (cand.date() - posted.date()).days >= -1:
-                return cand
-        return datetime(posted.year, month, day, tzinfo=MSK)
-
     m = re.search(r"\b(\d{1,2})[./](\d{1,2})(?:[./](\d{2,4}))?\b", text)
     if m:
         day, month = int(m.group(1)), int(m.group(2))
@@ -187,12 +188,14 @@ def parse_date(text: str, posted: datetime):
                     return datetime(year, month, day, tzinfo=MSK), "явная дата"
                 except ValueError:
                     pass
-            return fix_year(month, day), "дата без года"
+            if _fix_year(month, day, posted):
+                return _fix_year(month, day, posted), "дата без года"
     m = re.search(r"\b(\d{1,2})\s+(" + "|".join(MONTHS) + r")\w*", text, re.I)
     if m:
         day = int(m.group(1))
         month = MONTHS[m.group(2).lower()]
-        return fix_year(month, day), "дата словом"
+        if _fix_year(month, day, posted):
+            return _fix_year(month, day, posted), "дата словом"
     m = re.search(r"\b(?:в\s+)?(эту|этот|ближайш\w+|следующ\w+)?\s*(" + "|".join(WEEKDAYS) + r")\w*", text, re.I)
     if m:
         target = WEEKDAYS[m.group(2).lower()]
@@ -343,11 +346,16 @@ def analyse(post: dict, cfg: dict, channel_cfg: dict, horizon_days: int):
     # концерт приходят и платят на входе, это режим «open».
     body.update({"signup_mode": "external", "external_registration_url": post["links"][0]}
                 if post["links"] else {"signup_mode": "open"})
-    # Обложка по умолчанию — изображение площадки (логотип или типографский
-    # плейсхолдер), загруженное заранее; его id лежит в default_venue. Только
-    # когда событие на домашней площадке канала: у «площадки из текста» своя.
-    if venue is channel_cfg["default_venue"] and venue.get("cover_file_id"):
-        body["cover_file_id"] = venue["cover_file_id"]
+    # Обложка — изображение площадки (логотип или типографский плейсхолдер,
+    # загружено заранее, id в default_venue / known_venues), а если у площадки
+    # его нет — логотип самого канала-организатора (channel.cover_file_id).
+    # Фото из поста не берём: права у канала. Событие без обложки в афишу не
+    # выпускаем — в отчёте это громкая пометка.
+    cover = venue.get("cover_file_id") or channel_cfg.get("cover_file_id")
+    if cover:
+        body["cover_file_id"] = cover
+    else:
+        notes.append("НЕТ ОБЛОЖКИ — без логотипа не публиковать: загрузить обложку площадки/канала (tools/venue-covers)")
     body.update(price or {"price_type": "free"})
     if not price:
         notes.append("цена не найдена — поставлено «бесплатно», проверить")
@@ -412,7 +420,7 @@ def main() -> int:
                   f"- когда: **{datetime.fromisoformat(ei['starts_at']):%d.%m %H:%M}**",
                   f"- канал: @{c['channel']} · [пост]({c['post_url']})",
                   f"- цена: {price}",
-                  f"- обложка: {'есть' if c['cover_url'] else 'нет'}",
+                  f"- обложка: {'логотип площадки/канала' if ei.get('cover_file_id') else '**НЕТ**'}",
                   ("- на что смотреть: " + "; ".join(c["notes"])) if c["notes"] else "",
                   "", "```", c["source_text"][:700], "```", ""]
     lines += ["## Отброшено", ""]

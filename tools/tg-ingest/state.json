@@ -17,7 +17,20 @@
   "audio_klub/686": "c29c501d-f82c-4d35-b227-f9514343df79",
   "nefiktiv/3531": "d3a26781-5b99-46d5-b835-4df005dfbf78",
   "f5noisegraph/1225": "39dd1d9a-ca45-431b-b5bb-7fa0e8d1b4d9",
-  "nefiktiv/3534": "56394ecf-ee5c-43e9-93af-c7e8d1328903"
+  "nefiktiv/3534": "56394ecf-ee5c-43e9-93af-c7e8d1328903",
+  "audio_klub/701": "61a3eb83-5786-40a4-8408-5bd98ab32d38",
+  "f5noisegraph/1226": "c475a686-fbbd-4fa9-b18f-186841ec13a9",
+  "nefiktiv/3535": "bc080b2b-6f1a-4a86-b18c-989c9ce19c4d",
+  "nefiktiv/3536": "e84f2bb0-f7e7-48d3-b6c7-92f3205d967e",
+  "admarginem/8613": "255afee6-12f1-45e7-9512-c346d8678a2c",
+  "admarginem/8653": "fa227c21-e1d0-4c15-a8ab-92c9e9935396",
+  "admarginem/8650": "e8d4ec0e-5fa8-4ccb-afdb-f81b198b4d01",
+  "admarginem/8641": "1d0c1541-c5d0-46a5-af1a-fa5339e737c1",
+  "admarginem/8649": "cefc531a-7ae7-4b5f-b152-0be687c30c95"
  },
- "skipped": {}
+ "skipped": {
+  "admarginem/8635": "розыгрыш, не событие",
+  "vmuzey/31525": "розыгрыш приглашений; канал без разрешения",
+  "privetpoidem/27925": "разрешение на републикацию не получено"
+ }
 }

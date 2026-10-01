@@ -34,10 +34,6 @@ func (m *Module) Name() string {
 func (m *Module) Init(_ context.Context) error {
 	logger.Log().Infof("initializing %s module with driver: %s on %s:%d with user %s", m.Name(), m.config.Driver, m.config.Host, m.config.Port, m.config.User)
 
-	fmt.Println(m.config.User)
-	fmt.Println(m.config.Password)
-	fmt.Println(m.config.Name)
-
 	db := pg.Connect(&pg.Options{
 		Addr:         fmt.Sprintf("%s:%d", m.config.Host, m.config.Port),
 		User:         m.config.User,
@@ -45,6 +41,10 @@ func (m *Module) Init(_ context.Context) error {
 		Database:     m.config.Name,
 		PoolSize:     m.config.MaxOpenConns,
 		MinIdleConns: m.config.MaxIdleConns,
+		// A pooled connection can die while idle; without retries the next
+		// query on it fails with a bare EOF (seen in prod as sporadic 503s and
+		// /cities reporting spb=false). go-pg retries only network errors.
+		MaxRetries: 2,
 	})
 
 	m.db = db

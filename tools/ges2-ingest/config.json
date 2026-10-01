@@ -1,0 +1,34 @@
+{
+  "organizer_id": "b9f7a9aa-ad06-4885-a8e9-f89c99bac567",
+  "api_base": "https://presencehq.ru",
+  "graphql": "https://ges-2.org/graphql",
+  "site": "https://ges-2.org",
+  "source_label": "Сайт Дома культуры «ГЭС-2»",
+  "city": "msk",
+  "venue": {
+    "id": "a0000000-0000-0000-0000-000000000002",
+    "name": "Дом культуры «ГЭС-2»",
+    "cover_file_id": "ff1b0c3d-3c50-48d7-91f0-1d59cc736b12"
+  },
+  "subtypes": {
+    "talk":                    {"bucket": "talk",      "category": "lecture"},
+    "lecture":                 {"bucket": "talk",      "category": "lecture"},
+    "discussion":              {"bucket": "talk",      "category": "lecture"},
+    "round-table":             {"bucket": "talk",      "category": "lecture"},
+    "film-screening-and-talk": {"bucket": "talk",      "category": "film"},
+    "book-club":               {"bucket": "talk",      "category": "reading-group"},
+    "public-programme":        {"bucket": "unsure",    "category": "lecture"},
+    "film-screening":          {"bucket": "inclusive", "category": "film"},
+    "concert":                 {"bucket": "inclusive", "category": "concert"},
+    "music-programme":         {"bucket": "inclusive", "category": "concert"},
+    "laboratory":              {"bucket": "inclusive", "category": "workshop"},
+    "workshop":                {"bucket": "inclusive", "category": "workshop"},
+    "master-class":            {"bucket": "inclusive", "category": "workshop"},
+    "mediated-tour":           {"bucket": "inclusive", "category": "mediation"},
+    "game":                    {"bucket": "inclusive", "category": "workshop"},
+    "performance":             {"bucket": "inclusive", "category": "performance"},
+    "dance-performance":       {"bucket": "inclusive", "category": "performance"}
+  },
+  "never": ["exhibition", "installation", "master-class-at-the-vaults"],
+  "skip_titles": ["йога", "индивидуальный медиаторский тур", "самостоятельная работа", "игровая"]
+}
